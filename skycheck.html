@@ -994,7 +994,7 @@ async function fetchZones(lat, lon) {
     + `&FORMAT=image/png&TRANSPARENT=true`
     + `&QUERY_LAYERS=${DIPUL_WMS_LAYER}&LAYERS=${DIPUL_WMS_LAYER}`
     + `&CRS=EPSG:4326&BBOX=${bbox}&WIDTH=101&HEIGHT=101&I=50&J=50`
-    + `&INFO_FORMAT=text/html`;
+    + `&INFO_FORMAT=text/html&FEATURE_COUNT=50`;
   
   try {
     const r = await fetch(url);
