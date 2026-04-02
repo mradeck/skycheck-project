@@ -389,6 +389,10 @@
     .fc-dot.warn { background: var(--warn); }
     .fc-dot.nogo { background: var(--nogo); }
 
+    /* --- INPUTS & BUTTONS --- */
+    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+    .btn-primary:hover { background: #0096c7; }
+
     /* --- MAP --- */
     .map-wrap {
       border-radius: var(--radius); overflow: hidden;
@@ -497,6 +501,27 @@
     .hidden { display: none !important; }
     .mono { font-variant-numeric: tabular-nums; }
 
+    /* --- MODAL --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.2s; }
+    .modal-overlay.hidden { display: none; opacity: 0; }
+    .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); width: 90%; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .modal-close { background: none; border: none; color: var(--text3); font-size: 1.5rem; cursor: pointer; padding: 0.25rem; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.25rem; max-height: 60vh; overflow-y: auto; }
+    
+    .s-radio { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: 0.2s; }
+    .s-radio:hover { border-color: var(--accent); background: rgba(0, 180, 216, 0.05); }
+    .s-radio input { margin-top: 4px; accent-color: var(--accent); }
+    .s-radio-content { display: flex; flex-direction: column; gap: 0.2rem; }
+    .s-radio-content strong { font-size: 0.95rem; }
+    .s-radio-content span { font-size: 0.8rem; color: var(--text2); line-height: 1.4; }
+    
+    .s-layers-list { font-size: 0.75rem; color: var(--text2); background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 5px; font-family: monospace; }
+    .s-layer-pill { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+    .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--bg); }
+
     /* ============================================================
        PRINT MEDIA QUERY (PDF REPORT)
     ============================================================ */
@@ -601,6 +626,12 @@
         <rect x="6" y="14" width="12" height="8"/>
       </svg>
     </button>
+    <button class="nav-icon-btn" id="btn-settings" title="Einstellungen">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
   </nav>
 
   <!-- STATUS BANNER -->
@@ -683,12 +714,23 @@
 'use strict';
 
 /* ================================================================
-   CONFIG
+   CONFIG / ENDPOINTS
 ================================================================ */
 // DiPUL WMS – adjust layer name if needed; see dipul.de for capabilities
-const DIPUL_WMS_URL   = 'https://uas-betrieb.de/geoservices/dipul/wms';
-const DIPUL_WMS_LAYER = 'flugbeschraenkungsgebiete,flughaefen,flugplaetze,kontrollzonen,nationalparks,naturschutzgebiete,temporaere_betriebseinschraenkungen,industrieanlagen,kraftwerke,polizei,behoerden,bundesautobahnen,bundesstrassen,schifffahrtsanlagen,vogelschutzgebiete';
+const DIPUL_ALL_LAYERS = 'bahnanlagen,behoerden,binnenwasserstrassen,bundesautobahnen,bundesstrassen,diplomatische_vertretungen,ffh-gebiete,flugbeschraenkungsgebiete,flughaefen,flugplaetze,freibaeder,haengegleiter,inaktive_temporaere_betriebseinschraenkungen,industrieanlagen,internationale_organisationen,justizvollzugsanstalten,kontrollzonen,kraftwerke,krankenhaeuser,labore,luftverkehr_info,militaerische_anlagen,modellflugplaetze,nationalparks,naturschutzgebiete,polizei,schifffahrtsanlagen,seewasserstrassen,sicherheitsbehoerden,stromleitungen,temporaere_betriebseinschraenkungen,umspannwerke,vogelschutzgebiete,windkraftanlagen,wohngrundstuecke';
+const DIPUL_REDUCED_LAYERS = 'flugbeschraenkungsgebiete,flughaefen,flugplaetze,kontrollzonen,nationalparks,naturschutzgebiete,temporaere_betriebseinschraenkungen,industrieanlagen,kraftwerke,polizei,behoerden,bundesautobahnen,bundesstrassen,schifffahrtsanlagen,vogelschutzgebiete';
 
+let CFG = { layerMode: 'reduced' };
+try { 
+  const saved = localStorage.getItem('skycheck_cfg'); 
+  if (saved) CFG = JSON.parse(saved); 
+} catch {}
+
+function getActiveDipulLayers() {
+  return CFG.layerMode === 'all' ? DIPUL_ALL_LAYERS : DIPUL_REDUCED_LAYERS;
+}
+
+const DIPUL_WMS_URL   = 'https://uas-betrieb.de/geoservices/dipul/wms';
 const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
 const KP_URL        = 'https://kp.gfz.de/app/json/';
 const OPENSKY_URL   = 'https://opensky-network.org/api/states/all';
@@ -741,6 +783,43 @@ $('btn-refresh').addEventListener('click', () => {
 
 $('btn-print').addEventListener('click', () => {
   window.print();
+});
+
+// Settings Modal Logic
+function renderSettingsLayers(mode) {
+  const currentLayers = mode === 'all' ? DIPUL_ALL_LAYERS : DIPUL_REDUCED_LAYERS;
+  const list = currentLayers.split(',').sort().map(l => `<span class="s-layer-pill">${l}</span>`).join('');
+  $('settings-active-layers').innerHTML = list;
+}
+
+$('btn-settings').addEventListener('click', () => {
+  document.querySelector(`input[name="layerMode"][value="${CFG.layerMode}"]`).checked = true;
+  renderSettingsLayers(CFG.layerMode);
+  $('settings-modal').classList.remove('hidden');
+});
+
+$('btn-close-settings').addEventListener('click', () => $('settings-modal').classList.add('hidden'));
+
+document.querySelectorAll('input[name="layerMode"]').forEach(radio => {
+  radio.addEventListener('change', (e) => renderSettingsLayers(e.target.value));
+});
+
+$('btn-save-settings').addEventListener('click', () => {
+  const selectedMode = document.querySelector('input[name="layerMode"]:checked').value;
+  $('settings-modal').classList.add('hidden');
+  
+  if (CFG.layerMode !== selectedMode) {
+    CFG.layerMode = selectedMode;
+    try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch {}
+    
+    // Update map immediately
+    if (S.layers.dipul) {
+      S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+    }
+    
+    // Rerun check if we are on a valid location
+    if (S.lat != null) runCheck();
+  }
 });
 
 /* ================================================================
@@ -990,9 +1069,11 @@ async function fetchAircraft(lat, lon) {
 async function fetchZones(lat, lon) {
   const δ   = 0.01;
   const bbox = `${lat-δ},${lon-δ},${lat+δ},${lon+δ}`;
+  const activeL = getActiveDipulLayers();
+  
   const url  = `${DIPUL_WMS_URL}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo`
     + `&FORMAT=image/png&TRANSPARENT=true`
-    + `&QUERY_LAYERS=${DIPUL_WMS_LAYER}&LAYERS=${DIPUL_WMS_LAYER}`
+    + `&QUERY_LAYERS=${activeL}&LAYERS=${activeL}`
     + `&CRS=EPSG:4326&BBOX=${bbox}&WIDTH=101&HEIGHT=101&I=50&J=50`
     + `&INFO_FORMAT=text/html&FEATURE_COUNT=50`;
   
@@ -1399,7 +1480,7 @@ function initMap(lat, lon, aircraft, zones) {
 
     // DiPUL WMS Overlay
     S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
-      layers: DIPUL_WMS_LAYER,
+      layers: getActiveDipulLayers(),
       format: 'image/png',
       transparent: true,
       version: '1.3.0',
@@ -1485,5 +1566,43 @@ function renderAircraftMarkers(aircraft) {
 }
 
 </script>
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>DiPUL Layer Einstellungen</h2>
+        <button id="btn-close-settings" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem; color:var(--text2); margin-bottom:1rem;">
+          Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden sollen.
+        </p>
+
+        <label class="s-radio">
+          <input type="radio" name="layerMode" value="reduced">
+          <div class="s-radio-content">
+            <strong>Kritische / Reduzierte Ansicht</strong>
+            <span>Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten (Flughäfen, Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.</span>
+          </div>
+        </label>
+
+        <label class="s-radio">
+          <input type="radio" name="layerMode" value="all">
+          <div class="s-radio-content">
+            <strong>Vollständige Ansicht (Alle verfügbaren Zonen)</strong>
+            <span>Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.</span>
+          </div>
+        </label>
+
+        <div style="margin-top: 1.5rem;">
+          <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);">Aktive Layer in der Übersicht:</strong>
+          <div id="settings-active-layers" class="s-layers-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn-primary" style="width:100%">Einstellung übernehmen</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
