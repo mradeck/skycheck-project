@@ -441,15 +441,16 @@
     .zones-body { display: none; }
     .zones-body.open { display: block; }
     .z-item {
-      display: flex; align-items: flex-start; gap: 0.7rem;
-      padding: 0.65rem 1rem; border-bottom: 1px solid var(--border);
-      font-size: 0.82rem;
+      padding: 1rem; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
     }
     .z-item:last-child { border-bottom: none; }
-    .z-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; margin-top: 4px; }
-    .z-name { font-weight: 600; color: var(--text); }
-    .z-type { color: var(--text2); font-size: 0.72rem; margin-top: 2px; }
-    .z-limit { color: var(--text3); font-size: 0.72rem; }
+    .z-name { font-weight: 700; color: var(--text); }
+    .z-details { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; margin-top: 0.5rem; }
+    .z-row { display: flex; flex-direction: column; margin-bottom: 0.5rem; }
+    .z-row:last-child { margin-bottom: 0; }
+    .z-lbl { font-size: 0.7rem; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .z-val { color: var(--text); font-weight: 500; font-size: 0.85rem; }
 
     /* --- WARNINGS --- */
     .warn-list { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -651,7 +652,7 @@
     <div class="zones-panel">
       <div class="zones-hdr" id="zones-hdr">
         <div class="zones-hdr-left">
-          Luftraumzonen in der Nähe
+          <span id="zones-hdr-text">Luftraumzonen in der Nähe</span>
           <span class="z-count" id="z-count">0</span>
         </div>
         <span class="zones-chevron" id="zones-chevron">▼</span>
@@ -993,16 +994,59 @@ async function fetchZones(lat, lon) {
     + `&FORMAT=image/png&TRANSPARENT=true`
     + `&QUERY_LAYERS=${DIPUL_WMS_LAYER}&LAYERS=${DIPUL_WMS_LAYER}`
     + `&CRS=EPSG:4326&BBOX=${bbox}&WIDTH=101&HEIGHT=101&I=50&J=50`
-    + `&INFO_FORMAT=application/json`;
-  const r = await fetch(url);
-  if (!r.ok) return [];
-  const d = await r.json();
-  return (d.features||[]).map(f => ({
-    name:  f.properties?.NAME || f.properties?.name  || 'Zone',
-    type:  f.properties?.TYPE || f.properties?.type  || '—',
-    upper: f.properties?.UPPER_LIMIT || f.properties?.upper_limit || '',
-    color: zoneColor(f.properties?.TYPE || f.properties?.type || ''),
-  }));
+    + `&INFO_FORMAT=text/html`;
+  
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const html = await r.text();
+    
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tables = doc.querySelectorAll('table.featureInfo');
+    const params = [];
+    
+    tables.forEach(table => {
+      const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim().toLowerCase());
+      const rows = table.querySelectorAll('tr');
+      
+      // index 0 is normally the headers row
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].querySelectorAll('td');
+        if (cells.length !== headers.length) continue;
+        
+        const f = {};
+        headers.forEach((h, idx) => f[h] = cells[idx].textContent.trim());
+        
+        const name = f.name || f.bezeichnung || 'Unbenannt';
+        const type = f.type_code || f.geozone_art || 'Spezifische Geozone';
+        const extRef = f.external_reference || f.identifikation || '';
+        
+        let lower = f.lower_limit_altitude || f.untere_grenze || '0.0';
+        let lowerRef = f.lower_limit_alt_ref || 'AGL';
+        let lowerUnit = f.lower_limit_unit || 'm';
+        if (lower === '0.0' && lowerRef === 'AGL') lower = 'GND';
+        else lower = `${lower} ${lowerUnit} ${lowerRef}`.trim();
+        
+        let upper = f.upper_limit_altitude || f.obere_grenze || '';
+        let upperRef = f.upper_limit_alt_ref || '';
+        let upperUnit = f.upper_limit_unit || '';
+        if (upper === '99999.0' || upper === 'UNL') upper = 'UNL';
+        else if (upper) upper = `${upper} ${upperUnit} ${upperRef}`.trim();
+        else upper = '—';
+        
+        const legal = f.legal_ref || f.rechtliche_grundlage || '—';
+        
+        params.push({
+          name: name + (extRef && extRef !== 'null' ? ` (${extRef})` : ''),
+          type: type, lower, upper, legal, color: zoneColor(type)
+        });
+      }
+    });
+    return params;
+  } catch(e) {
+    console.warn('Zones Fetch HTML parse error', e);
+    return [];
+  }
 }
 
 function zoneColor(t='') {
@@ -1294,14 +1338,23 @@ function renderZones(zones) {
   $zc.textContent = cnt;
   $zc.className   = 'z-count' + (cnt===0 ? ' ok' : '');
 
+  $('zones-hdr-text').innerHTML = cnt > 0 
+    ? `Es liegen Einschränkungen durch ${cnt} geografische Gebiet${cnt>1?'e':''} vor:` 
+    : `Keine Luftraumeinschränkungen erkannt.`;
+
   $('zones-body').innerHTML = cnt === 0
-    ? '<div class="z-item" style="color:var(--text3);font-size:.8rem">Keine Luftraumeinschränkungen erkannt.</div>'
+    ? ''
     : zones.map(z => `<div class="z-item">
-        <div class="z-dot" style="background:${z.color}"></div>
-        <div>
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+          <div style="background:${z.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.name}</div>
-          <div class="z-type">${z.type}</div>
-          ${z.upper ? `<div class="z-limit">Bis ${z.upper}</div>` : ''}
+        </div>
+        
+        <div class="z-details">
+          <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${z.type}</span></div>
+          <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${z.lower}</span></div>
+          <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${z.upper}</span></div>
+          <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">${z.legal}</span></div>
         </div>
       </div>`).join('');
 }
