@@ -291,6 +291,16 @@
       text-transform: uppercase; color: var(--text3); margin-bottom: 0.9rem;
     }
 
+    /* --- DASH SPLIT --- */
+    .dash-split {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 800px) {
+      .dash-split { grid-template-columns: 1fr; }
+    }
+
     /* --- METRICS GRID --- */
     .metrics-grid {
       display: grid;
@@ -601,16 +611,18 @@
     </div>
   </div>
 
-  <!-- CURRENT CONDITIONS -->
-  <div class="section">
-    <div class="sec-label">Aktuelle Bedingungen</div>
-    <div class="metrics-grid" id="metrics-grid"></div>
-  </div>
+  <div class="section dash-split">
+    <!-- CURRENT CONDITIONS -->
+    <div>
+      <div class="sec-label">Aktuelle Bedingungen</div>
+      <div class="metrics-grid" id="metrics-grid"></div>
+    </div>
 
-  <!-- WIND ALTITUDE PROFILE -->
-  <div class="section" style="padding-top:0">
-    <div class="sec-label">Windprofil nach Höhe</div>
-    <div class="wind-profile" id="wind-profile"></div>
+    <!-- WIND ALTITUDE PROFILE -->
+    <div>
+      <div class="sec-label">Windprofil nach Höhe</div>
+      <div class="wind-profile" id="wind-profile"></div>
+    </div>
   </div>
 
   <!-- 48H FORECAST -->
