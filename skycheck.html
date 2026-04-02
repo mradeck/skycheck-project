@@ -1049,6 +1049,18 @@ async function fetchZones(lat, lon) {
   }
 }
 
+function getLegalLink(text) {
+  const base = "https://www.dipul.de/homepage/de/informationen/geografische-gebiete/rechtsgrundlagen/";
+  const match = text.match(/\((\d+)\.\)/); // Extracts e.g. "9" from "(9.)"
+  if (match && match[1]) {
+    // DiPUL's accordion uses a zero-based index or slightly offset logic.
+    // Based on user feedback: (9.) -> accordion-1-8
+    const num = parseInt(match[1], 10);
+    return `${base}#/accordion-1-${num - 1}`;
+  }
+  return base;
+}
+
 function zoneColor(t='') {
   t = t.toUpperCase();
   if (t.includes('CONTROL_ZONE') || t.includes('CTR'))          return '#f59e0b';
@@ -1354,7 +1366,11 @@ function renderZones(zones) {
           <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${z.type}</span></div>
           <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${z.lower}</span></div>
           <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${z.upper}</span></div>
-          <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">${z.legal}</span></div>
+          <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">
+            <a href="${getLegalLink(z.legal)}" target="_blank" style="color:var(--accent); text-decoration:none;">
+              ${z.legal}${z.type !== '—' && z.legal !== '—' ? ' – ' + z.type : ''}
+            </a>
+          </span></div>
         </div>
       </div>`).join('');
 }
