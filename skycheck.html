@@ -1138,7 +1138,7 @@ function renderWindProfile(w) {
   const base = w.wind_speed ?? 0;
   // Power-law approximation: v(z) = v_ref * (z/z_ref)^α, α≈0.14
   const v = z => +(base * Math.pow(z/10, 0.14)).toFixed(1);
-  const levels = [10,50,100,150,200];
+  const levels = [200,150,100,50,10];
   const vMax   = v(200) || 1;
 
   $('wind-profile').innerHTML = levels.map(z => {
