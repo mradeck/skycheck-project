@@ -1385,48 +1385,70 @@ $('zones-hdr').addEventListener('click', () => {
    MAP
 ================================================================ */
 function initMap(lat, lon, aircraft, zones) {
-  if (S.map) { S.map.remove(); S.map = null; }
+  const popStr = `<b>${S.name}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
-  S.map = L.map('map', { center:[lat,lon], zoom:13, zoomControl:true });
+  if (!S.map) {
+    // Verhindert den Zoom bei Doppelklick
+    S.map = L.map('map', { center:[lat,lon], zoom:14, zoomControl:true, doubleClickZoom: false });
 
-  // Dark basemap
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap, © CARTO',
-    subdomains:'abcd', maxZoom:19,
-  }).addTo(S.map);
+    // Dark basemap
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:'© OpenStreetMap, © CARTO',
+      subdomains:'abcd', maxZoom:19,
+    }).addTo(S.map);
 
-  // DiPUL WMS Overlay
-  S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
-    layers: DIPUL_WMS_LAYER,
-    format: 'image/png',
-    transparent: true,
-    version: '1.3.0',
-    opacity: 0.55,
-    attribution: 'DiPUL / DFS',
-  });
-  if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+    // DiPUL WMS Overlay
+    S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
+      layers: DIPUL_WMS_LAYER,
+      format: 'image/png',
+      transparent: true,
+      version: '1.3.0',
+      opacity: 0.55,
+      attribution: 'DiPUL / DFS',
+    });
+    if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
 
-  // Location pin
-  const pinIcon = L.divIcon({
-    html:`<div style="width:12px;height:12px;background:${getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()};
-          border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 5px rgba(0,180,216,0.25)"></div>`,
-    iconSize:[12,12], iconAnchor:[6,6], className:'',
-  });
-  S.layers.pin = L.marker([lat,lon],{icon:pinIcon})
-    .bindPopup(`<b>${S.name}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`)
-    .addTo(S.map);
+    // Location pin
+    const pinIcon = L.divIcon({
+      html:`<div style="width:12px;height:12px;background:${getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()};
+            border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 5px rgba(0,180,216,0.25)"></div>`,
+      iconSize:[12,12], iconAnchor:[6,6], className:'',
+    });
+    S.layers.pin = L.marker([lat,lon],{icon:pinIcon})
+      .bindPopup(popStr)
+      .addTo(S.map);
 
-  // 100m radius circle
-  S.layers.radius = L.circle([lat,lon],{
-    radius:100, color:'#00b4d8',
-    fillColor:'rgba(0,180,216,0.05)', fillOpacity:0.15,
-    weight:1.5, dashArray:'5 5',
-  });
-  if (S.layerVisible.radius) S.layers.radius.addTo(S.map);
+    // 100m radius circle
+    S.layers.radius = L.circle([lat,lon],{
+      radius:100, color:'#00b4d8',
+      fillColor:'rgba(0,180,216,0.05)', fillOpacity:0.15,
+      weight:1.5, dashArray:'5 5',
+    });
+    if (S.layerVisible.radius) S.layers.radius.addTo(S.map);
+    
+    // Doppelklick Event (Neupositionierung)
+    S.map.on('dblclick', async (e) => {
+      S.lat = e.latlng.lat;
+      S.lon = e.latlng.lng;
+      try {
+        S.name = await reverseGeocode(S.lat, S.lon);
+      } catch {
+        S.name = `${S.lat.toFixed(4)}, ${S.lon.toFixed(4)}`;
+      }
+      $('nav-loc-name').textContent = S.name;
+      runCheck();
+    });
 
-  // Aircraft
+  } else {
+    // Map exists, just update state gently!
+    S.map.panTo([lat, lon]);
+    S.layers.pin.setLatLng([lat, lon]);
+    S.layers.pin.bindPopup(popStr);
+    S.layers.radius.setLatLng([lat, lon]);
+  }
+
+  // Always rendering aircraft markers visually
   renderAircraftMarkers(aircraft);
-
 }
 
 // Layer toggles — set up once (not inside initMap to avoid duplicate listeners)
