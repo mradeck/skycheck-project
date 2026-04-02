@@ -485,6 +485,26 @@
     ============================================================ */
     .hidden { display: none !important; }
     .mono { font-variant-numeric: tabular-nums; }
+
+    /* ============================================================
+       PRINT MEDIA QUERY (PDF REPORT)
+    ============================================================ */
+    @media print {
+      body { 
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+        background: #07101f !important;
+        color: #ddeeff !important;
+      }
+      .r-nav { position: static; border-bottom: 1px solid #1b3050 !important; }
+      .nav-back, #btn-refresh, #btn-print, .map-controls { display: none !important; }
+      .warn-close { display: none !important; }
+      .zones-body { display: block !important; } /* Always expand zones for print */
+      .zones-chevron { display: none !important; }
+      .fc-scroll { scrollbar-width: none; overflow: hidden; }
+      .map-wrap { page-break-inside: avoid; }
+      @page { margin: 1cm; }
+    }
   </style>
 </head>
 <body>
@@ -561,6 +581,13 @@
         <polyline points="23 4 23 10 17 10"/>
         <polyline points="1 20 1 14 7 14"/>
         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </button>
+    <button class="nav-icon-btn" id="btn-print" title="Als PDF speichern / Drucken">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
       </svg>
     </button>
   </nav>
@@ -697,6 +724,10 @@ $('btn-back').addEventListener('click', () => {
 
 $('btn-refresh').addEventListener('click', () => {
   if (S.lat != null) runCheck();
+});
+
+$('btn-print').addEventListener('click', () => {
+  window.print();
 });
 
 /* ================================================================
