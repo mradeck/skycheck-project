@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyCheck — Drohnenflugprüfung</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg:          #07101f;
+      --surface:     #0c1a2e;
+      --card:        #101f36;
+      --card-hover:  #132440;
+      --border:      #1b3050;
+      --border-hi:   #2a4a72;
+
+      --accent:      #00b4d8;
+      --accent-dim:  rgba(0, 180, 216, 0.12);
+      --accent-glow: rgba(0, 180, 216, 0.25);
+
+      --go:          #06d6a0;
+      --go-dim:      rgba(6, 214, 160, 0.1);
+      --nogo:        #ef476f;
+      --nogo-dim:    rgba(239, 71, 111, 0.1);
+      --warn:        #ffb703;
+      --warn-dim:    rgba(255, 183, 3, 0.1);
+
+      --text:        #ddeeff;
+      --text2:       #7e99bc;
+      --text3:       #3d5a7a;
+
+      --radius:      12px;
+      --radius-sm:   8px;
+      --shadow:      0 8px 32px rgba(0, 0, 0, 0.5);
+      --transition:  0.2s ease;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button { cursor: pointer; font-family: inherit; }
+    input  { font-family: inherit; }
+
+    /* ============================================================
+       LOADING OVERLAY
+    ============================================================ */
+    #loading {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+    #loading.active { display: flex; }
+    .loader-logo {
+      font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text);
+    }
+    .loader-logo span { color: var(--accent); }
+    .loader-ring {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .loader-msg { color: var(--text2); font-size: 0.875rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============================================================
+       LANDING PAGE
+    ============================================================ */
+    #landing {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* animated dot grid */
+    #landing::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,180,216,0.06) 1px, transparent 1px);
+      background-size: 36px 36px;
+      animation: bgDrift 30s linear infinite;
+      pointer-events: none;
+    }
+    /* radial fade at center */
+    #landing::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 30%, var(--bg) 100%);
+      pointer-events: none;
+    }
+    @keyframes bgDrift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 36px 36px; }
+    }
+
+    .l-inner {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; max-width: 560px;
+    }
+
+    .l-badge {
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,180,216,0.25);
+      color: var(--accent);
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 0.3rem 0.8rem; border-radius: 20px;
+      margin-bottom: 1.5rem;
+    }
+
+    .l-logo {
+      font-size: 3rem; font-weight: 900; letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+    .l-logo span { color: var(--accent); }
+
+    .l-sub {
+      color: var(--text2);
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    /* search */
+    .search-wrap { position: relative; width: 100%; }
+    .search-box {
+      display: flex; align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transition: border-color var(--transition), box-shadow var(--transition);
+      overflow: hidden;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow);
+    }
+
+    #loc-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      padding: 1rem 1.2rem; color: var(--text); font-size: 0.95rem;
+    }
+    #loc-input::placeholder { color: var(--text3); }
+
+    .btn-gps {
+      background: none; border: none; border-left: 1px solid var(--border);
+      padding: 0 0.9rem; color: var(--text3); height: 100%;
+      display: flex; align-items: center;
+      transition: color var(--transition), background var(--transition);
+    }
+    .btn-gps:hover { color: var(--accent); background: var(--accent-dim); }
+
+    .btn-check {
+      background: var(--accent); color: #000; border: none;
+      padding: 0 1.4rem; height: 52px;
+      font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;
+      transition: opacity var(--transition);
+      white-space: nowrap;
+    }
+    .btn-check:hover { opacity: 0.85; }
+
+    /* autocomplete */
+    .suggestions {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      z-index: 50; display: none; overflow: hidden;
+    }
+    .suggestions.open { display: block; }
+    .sug-item {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.875rem; color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+    .sug-item:last-child { border-bottom: none; }
+    .sug-item:hover { background: var(--card-hover); color: var(--text); }
+    .sug-item strong { color: var(--text); font-weight: 600; }
+
+    /* sources */
+    .l-sources {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;
+      margin-top: 2.5rem;
+    }
+    .l-src {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 0.25rem 0.7rem;
+      font-size: 0.7rem; color: var(--text3);
+      letter-spacing: 0.3px;
+    }
+
+    /* ============================================================
+       RESULTS PAGE
+    ============================================================ */
+    #results { display: none; min-height: 100vh; }
+
+    /* --- NAV --- */
+    .r-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(7, 16, 31, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.65rem 1.25rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .nav-back {
+      background: none; border: 1px solid var(--border);
+      color: var(--text2); padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-sm); font-size: 0.8rem;
+      transition: all var(--transition); white-space: nowrap;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .nav-back:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-loc {
+      flex: 1; overflow: hidden;
+    }
+    .nav-loc-name {
+      font-size: 0.9rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-loc-time {
+      font-size: 0.7rem; color: var(--text3); margin-top: 1px;
+    }
+    .nav-icon-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text2); width: 34px; height: 34px;
+      border-radius: var(--radius-sm); font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .nav-icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+    /* --- STATUS BANNER --- */
+    .status-banner {
+      margin: 1.25rem 1.25rem 0;
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      display: flex; align-items: center; gap: 1rem;
+      transition: all 0.3s;
+    }
+    .status-banner.go   { background: var(--go-dim);   border: 1px solid rgba(6,214,160,0.3);  }
+    .status-banner.warn { background: var(--warn-dim);  border: 1px solid rgba(255,183,3,0.3);  }
+    .status-banner.nogo { background: var(--nogo-dim);  border: 1px solid rgba(239,71,111,0.3); }
+
+    .status-icon {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .go   .status-icon { background: rgba(6,214,160,0.15); }
+    .warn .status-icon { background: rgba(255,183,3,0.15); }
+    .nogo .status-icon { background: rgba(239,71,111,0.15); }
+
+    .status-info h2 { font-size: 1.1rem; font-weight: 700; }
+    .go   .status-info h2 { color: var(--go); }
+    .warn .status-info h2 { color: var(--warn); }
+    .nogo .status-info h2 { color: var(--nogo); }
+    .status-info p { font-size: 0.8rem; color: var(--text2); margin-top: 0.2rem; }
+
+    /* --- SECTIONS --- */
+    .section { padding: 1.25rem; }
+    .sec-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 0.9rem;
+    }
+
+    /* --- METRICS GRID --- */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 0.65rem;
+    }
+    .m-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.9rem 1rem;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .m-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+    .m-lbl {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 0.45rem;
+    }
+    .m-val {
+      font-size: 1.55rem; font-weight: 700; color: var(--text); line-height: 1;
+    }
+    .m-unit { font-size: 0.75rem; font-weight: 400; color: var(--text2); }
+    .m-sub { font-size: 0.7rem; color: var(--text2); margin-top: 0.35rem; line-height: 1.3; }
+    .c-go   { color: var(--go)   !important; }
+    .c-warn { color: var(--warn) !important; }
+    .c-nogo { color: var(--nogo) !important; }
+
+    /* --- WIND ALTITUDE PROFILE --- */
+    .wind-profile {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .wp-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.55rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .wp-row:last-child { border-bottom: none; }
+    .wp-alt { font-size: 0.72rem; color: var(--text3); width: 64px; flex-shrink: 0; }
+    .wp-bar-wrap {
+      flex: 1; height: 3px; background: var(--border);
+      border-radius: 2px; overflow: hidden;
+    }
+    .wp-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
+    .wp-val { font-size: 0.82rem; font-weight: 600; color: var(--text); width: 56px; text-align: right; flex-shrink: 0; }
+
+    /* --- FORECAST TIMELINE --- */
+    .fc-scroll {
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .fc-scroll::-webkit-scrollbar { height: 4px; }
+    .fc-scroll::-webkit-scrollbar-track { background: transparent; }
+    .fc-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .fc-track { display: flex; gap: 0.45rem; min-width: max-content; padding: 2px; }
+
+    .fc-day-sep {
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; padding: 0 0.3rem; min-width: 28px;
+    }
+    .fc-day-sep-line {
+      width: 1px; flex: 1; background: var(--border);
+    }
+    .fc-day-sep-lbl {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--text3);
+      writing-mode: vertical-rl; padding: 0.5rem 0;
+    }
+
+    .fc-slot {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.65rem 0.5rem;
+      width: 72px; text-align: center;
+      transition: border-color var(--transition);
+      cursor: default;
+    }
+    .fc-slot.now {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--card) 60%, var(--accent-dim));
+    }
+    .fc-slot:hover { border-color: var(--border-hi); }
+    .fc-time  { font-size: 0.65rem; color: var(--text3); margin-bottom: 0.35rem; }
+    .fc-icon  { font-size: 1.25rem; line-height: 1; margin-bottom: 0.25rem; }
+    .fc-temp  { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .fc-wind  { font-size: 0.65rem; color: var(--text2); margin-top: 0.2rem; }
+    .fc-dot   { width: 5px; height: 5px; border-radius: 50%; margin: 0.3rem auto 0; }
+    .fc-dot.go   { background: var(--go); }
+    .fc-dot.warn { background: var(--warn); }
+    .fc-dot.nogo { background: var(--nogo); }
+
+    /* --- MAP --- */
+    .map-wrap {
+      border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border); height: 420px;
+    }
+    #map { width: 100%; height: 100%; }
+    .leaflet-container { background: var(--bg) !important; }
+    .leaflet-popup-content-wrapper {
+      background: var(--card) !important; color: var(--text) !important;
+      border: 1px solid var(--border) !important; border-radius: var(--radius-sm) !important;
+      box-shadow: var(--shadow) !important;
+    }
+    .leaflet-popup-tip { background: var(--card) !important; }
+    .leaflet-popup-content { font-size: 0.82rem !important; line-height: 1.5 !important; }
+    .ac-popup b { color: var(--accent); }
+
+    /* map layer toggle */
+    .map-controls {
+      display: flex; gap: 0.5rem; margin-bottom: 0.7rem; flex-wrap: wrap;
+    }
+    .map-toggle {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text2); padding: 0.3rem 0.75rem;
+      border-radius: 20px; font-size: 0.75rem;
+      transition: all var(--transition);
+    }
+    .map-toggle.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* --- ZONES PANEL --- */
+    .zones-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .zones-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1rem; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    .zones-hdr:hover { background: var(--card-hover); }
+    .zones-hdr-left { display: flex; align-items: center; gap: 0.65rem; font-size: 0.85rem; font-weight: 600; }
+    .z-count {
+      background: var(--nogo); color: #fff;
+      font-size: 0.68rem; font-weight: 700;
+      padding: 0.15rem 0.5rem; border-radius: 20px; min-width: 20px; text-align: center;
+    }
+    .z-count.ok { background: var(--go); }
+    .zones-chevron { color: var(--text3); transition: transform var(--transition); font-size: 0.75rem; }
+    .zones-chevron.open { transform: rotate(180deg); }
+    .zones-body { display: none; }
+    .zones-body.open { display: block; }
+    .z-item {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      padding: 0.65rem 1rem; border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .z-item:last-child { border-bottom: none; }
+    .z-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; margin-top: 4px; }
+    .z-name { font-weight: 600; color: var(--text); }
+    .z-type { color: var(--text2); font-size: 0.72rem; margin-top: 2px; }
+    .z-limit { color: var(--text3); font-size: 0.72rem; }
+
+    /* --- WARNINGS --- */
+    .warn-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .warn-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm); font-size: 0.82rem;
+    }
+    .warn-item.warn { background: var(--warn-dim); border: 1px solid rgba(255,183,3,0.25); }
+    .warn-item.nogo { background: var(--nogo-dim); border: 1px solid rgba(239,71,111,0.25); }
+    .warn-item.info { background: var(--accent-dim); border: 1px solid rgba(0,180,216,0.2); }
+    .warn-icon { font-size: 1rem; flex-shrink: 0; padding-top: 1px; }
+    .warn-body { flex: 1; }
+    .warn-title { font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    .warn-desc  { color: var(--text2); line-height: 1.4; }
+    .warn-close {
+      background: none; border: none; color: var(--text3);
+      font-size: 1rem; padding: 0; line-height: 1;
+      transition: color var(--transition);
+    }
+    .warn-close:hover { color: var(--text); }
+
+    /* --- FOOTER --- */
+    .r-footer {
+      text-align: center; color: var(--text3); font-size: 0.7rem;
+      padding: 0.5rem 1.25rem 2.5rem; line-height: 2;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .map-wrap { height: 300px; }
+      .section { padding: 1rem; }
+      .status-banner { margin: 1rem 1rem 0; }
+      .l-logo { font-size: 2.4rem; }
+    }
+
+    /* ============================================================
+       UTILITIES
+    ============================================================ */
+    .hidden { display: none !important; }
+    .mono { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOADING OVERLAY
+============================================================ -->
+<div id="loading">
+  <div class="loader-logo">Sky<span>Check</span></div>
+  <div class="loader-ring"></div>
+  <div class="loader-msg" id="loading-msg">Wird geladen…</div>
+</div>
+
+<!-- ============================================================
+     LANDING PAGE
+============================================================ -->
+<div id="landing">
+  <div class="l-inner">
+    <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
+    <h1 class="l-logo">Sky<span>Check</span></h1>
+    <p class="l-sub">Wetter, Luftraum und Flugbewegungen auf einen Blick</p>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <input type="text" id="loc-input"
+          placeholder="z. B. Marienplatz 1, München"
+          autocomplete="off" spellcheck="false">
+        <button class="btn-gps" id="btn-gps" title="Aktuellen Standort verwenden">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="6"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="6" y2="12"/>
+            <line x1="18" y1="12" x2="22" y2="12"/>
+          </svg>
+        </button>
+        <button class="btn-check" id="btn-check">Prüfen</button>
+      </div>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="l-sources">
+      <span class="l-src">DiPUL WMS</span>
+      <span class="l-src">DWD · Bright Sky</span>
+      <span class="l-src">GFZ Kp-Index</span>
+      <span class="l-src">OpenSky Network</span>
+      <span class="l-src">Nominatim</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     RESULTS PAGE
+============================================================ -->
+<div id="results">
+
+  <!-- NAV -->
+  <nav class="r-nav">
+    <button class="nav-back" id="btn-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Zurück
+    </button>
+    <div class="nav-loc">
+      <div class="nav-loc-name" id="nav-loc-name">—</div>
+      <div class="nav-loc-time" id="nav-loc-time">—</div>
+    </div>
+    <button class="nav-icon-btn" id="btn-refresh" title="Aktualisieren">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- STATUS BANNER -->
+  <div class="status-banner go" id="status-banner">
+    <div class="status-icon" id="status-icon">✈️</div>
+    <div class="status-info">
+      <h2 id="status-title">Wird geprüft…</h2>
+      <p  id="status-desc">Alle Daten werden abgerufen.</p>
+    </div>
+  </div>
+
+  <!-- CURRENT CONDITIONS -->
+  <div class="section">
+    <div class="sec-label">Aktuelle Bedingungen</div>
+    <div class="metrics-grid" id="metrics-grid"></div>
+  </div>
+
+  <!-- WIND ALTITUDE PROFILE -->
+  <div class="section" style="padding-top:0">
+    <div class="sec-label">Windprofil nach Höhe</div>
+    <div class="wind-profile" id="wind-profile"></div>
+  </div>
+
+  <!-- 48H FORECAST -->
+  <div class="section" style="padding-top:0">
+    <div class="sec-label">48-Stunden-Vorschau</div>
+    <div class="fc-scroll">
+      <div class="fc-track" id="fc-track"></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="section" style="padding-top:0">
+    <div class="sec-label">Karte &amp; Luftraum</div>
+    <div class="map-controls" id="map-controls">
+      <button class="map-toggle active" data-layer="dipul">DiPUL Zonen</button>
+      <button class="map-toggle active" data-layer="aircraft">Flugbewegungen</button>
+      <button class="map-toggle active" data-layer="radius">100m Radius</button>
+    </div>
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- AIRSPACE ZONES -->
+  <div class="section" style="padding-top:0">
+    <div class="zones-panel">
+      <div class="zones-hdr" id="zones-hdr">
+        <div class="zones-hdr-left">
+          Luftraumzonen in der Nähe
+          <span class="z-count" id="z-count">0</span>
+        </div>
+        <span class="zones-chevron" id="zones-chevron">▼</span>
+      </div>
+      <div class="zones-body" id="zones-body"></div>
+    </div>
+  </div>
+
+  <!-- WARNINGS -->
+  <div class="section" style="padding-top:0" id="warnings-section">
+    <div class="sec-label">Hinweise &amp; Warnungen</div>
+    <div class="warn-list" id="warn-list"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="r-footer">
+    SkyCheck v0.1 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung<br>
+    Quellen: DiPUL / DFS · DWD via Bright Sky · GFZ Potsdam · OpenSky Network · © OpenStreetMap
+  </footer>
+
+</div><!-- #results -->
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+
+/* ================================================================
+   CONFIG
+================================================================ */
+// DiPUL WMS – adjust layer name if needed; see dipul.de for capabilities
+const DIPUL_WMS_URL   = 'https://uas.dipul.de/geoserver/ows';
+const DIPUL_WMS_LAYER = 'dipul:uazone_de';
+
+const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
+const KP_URL        = 'https://kp.gfz.de/app/json/';
+const OPENSKY_URL   = 'https://opensky-network.org/api/states/all';
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
+
+/* ================================================================
+   STATE
+================================================================ */
+const S = {
+  lat: null, lon: null,
+  name: '',
+  map: null,
+  layers: { dipul: null, aircraft: null, radius: null, pin: null },
+  layerVisible: { dipul: true, aircraft: true, radius: true },
+};
+
+/* ================================================================
+   DOM
+================================================================ */
+const $       = id => document.getElementById(id);
+const $land   = $('landing');
+const $res    = $('results');
+const $load   = $('loading');
+const $loadMsg= $('loading-msg');
+const $input  = $('loc-input');
+const $sugs   = $('suggestions');
+
+/* ================================================================
+   LOADING
+================================================================ */
+function showLoad(msg='Wird geladen…') {
+  $loadMsg.textContent = msg;
+  $load.classList.add('active');
+}
+function hideLoad() { $load.classList.remove('active'); }
+
+/* ================================================================
+   NAVIGATION
+================================================================ */
+$('btn-back').addEventListener('click', () => {
+  $res.style.display = 'none';
+  $land.style.display = 'flex';
+  S.lat = S.lon = null;
+  if (S.map) { S.map.remove(); S.map = null; }
+});
+
+$('btn-refresh').addEventListener('click', () => {
+  if (S.lat != null) runCheck();
+});
+
+/* ================================================================
+   GEOCODING / AUTOCOMPLETE
+================================================================ */
+async function geocode(q) {
+  const url = `${NOMINATIM_URL}/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=de&accept-language=de`;
+  const r = await fetch(url, { headers: {'Accept-Language':'de'} });
+  return r.json();
+}
+
+async function reverseGeocode(lat, lon) {
+  const url = `${NOMINATIM_URL}/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`;
+  const r = await fetch(url, { headers: {'Accept-Language':'de'} });
+  const d = await r.json();
+  const a = d.address || {};
+  return [a.road||a.pedestrian||'', a.city||a.town||a.village||'', a.state||'']
+    .filter(Boolean).slice(0,3).join(', ') || d.display_name.split(',').slice(0,2).join(', ');
+}
+
+let acTimer = null;
+$input.addEventListener('input', () => {
+  S.lat = S.lon = null;
+  clearTimeout(acTimer);
+  const q = $input.value.trim();
+  if (q.length < 3) { $sugs.classList.remove('open'); return; }
+  acTimer = setTimeout(async () => {
+    try {
+      const results = await geocode(q);
+      if (!results.length) { $sugs.classList.remove('open'); return; }
+      $sugs.innerHTML = results.slice(0,5).map(r => {
+        const parts = r.display_name.split(',');
+        const main  = parts[0].trim();
+        const rest  = parts.slice(1,3).join(',').trim();
+        return `<div class="sug-item" data-lat="${r.lat}" data-lon="${r.lon}"
+                     data-name="${main}, ${rest}">
+                  <strong>${main}</strong>${rest ? ', '+rest : ''}
+                </div>`;
+      }).join('');
+      $sugs.classList.add('open');
+    } catch { $sugs.classList.remove('open'); }
+  }, 380);
+});
+
+$sugs.addEventListener('click', e => {
+  const item = e.target.closest('.sug-item');
+  if (!item) return;
+  S.lat  = parseFloat(item.dataset.lat);
+  S.lon  = parseFloat(item.dataset.lon);
+  S.name = item.dataset.name;
+  $input.value = S.name;
+  $sugs.classList.remove('open');
+  runCheck();
+});
+
+document.addEventListener('click', e => {
+  if (!$sugs.contains(e.target) && e.target !== $input)
+    $sugs.classList.remove('open');
+});
+
+$input.addEventListener('keydown', e => { if (e.key==='Enter') doCheck(); });
+
+/* ================================================================
+   GPS
+================================================================ */
+$('btn-gps').addEventListener('click', () => {
+  if (!navigator.geolocation) { alert('Geolokalisierung nicht verfügbar.'); return; }
+  showLoad('Standort wird ermittelt…');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    S.lat = pos.coords.latitude;
+    S.lon = pos.coords.longitude;
+    try {
+      S.name = await reverseGeocode(S.lat, S.lon);
+    } catch {
+      S.name = `${S.lat.toFixed(4)}, ${S.lon.toFixed(4)}`;
+    }
+    $input.value = S.name;
+    hideLoad();
+    runCheck();
+  }, () => { hideLoad(); alert('Standortzugriff verweigert.'); });
+});
+
+/* ================================================================
+   CHECK BUTTON
+================================================================ */
+$('btn-check').addEventListener('click', doCheck);
+
+async function doCheck() {
+  const q = $input.value.trim();
+  if (!q) return;
+  if (S.lat == null) {
+    showLoad('Standort wird gesucht…');
+    try {
+      const r = await geocode(q);
+      if (!r || !r.length) { hideLoad(); alert('Standort nicht gefunden.'); return; }
+      S.lat  = parseFloat(r[0].lat);
+      S.lon  = parseFloat(r[0].lon);
+      const pts = r[0].display_name.split(',');
+      S.name = pts.slice(0,3).join(',').trim();
+    } catch(e) { hideLoad(); alert('Fehler: '+e.message); return; }
+  }
+  runCheck();
+}
+
+/* ================================================================
+   MAIN CHECK
+================================================================ */
+async function runCheck() {
+  showLoad('Wetterdaten werden geladen…');
+  $land.style.display = 'none';
+  $res.style.display  = 'block';
+
+  $('nav-loc-name').textContent = S.name;
+  $('nav-loc-time').textContent = 'Wird aktualisiert…';
+
+  try {
+    $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
+    const [weatherArr, kp, aircraft] = await Promise.all([
+      fetchWeather(S.lat, S.lon),
+      fetchKp(),
+      fetchAircraft(S.lat, S.lon),
+    ]);
+
+    const now   = weatherArr[0] || null;
+    const kpVal = kp ?? 0;
+
+    // Evaluate overall flight status
+    const status = evalStatus(now, kpVal);
+
+    renderStatus(status);
+    renderMetrics(now, kpVal, aircraft);
+    renderWindProfile(now);
+    renderForecast(weatherArr, kpVal);
+    renderWarnings(status, kpVal, aircraft);
+
+    // Zones via WMS GetFeatureInfo (best-effort)
+    let zones = [];
+    try { zones = await fetchZones(S.lat, S.lon); } catch {}
+    renderZones(zones);
+
+    // Map
+    $loadMsg.textContent = 'Karte wird geladen…';
+    initMap(S.lat, S.lon, aircraft, zones);
+
+    $('nav-loc-time').textContent =
+      'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+    hideLoad();
+  } catch(e) {
+    hideLoad();
+    console.error(e);
+    setStatus('warn', '⚠️', 'Fehler beim Laden', e.message);
+  }
+}
+
+/* ================================================================
+   API: BRIGHT SKY (DWD)
+================================================================ */
+async function fetchWeather(lat, lon) {
+  const now  = new Date();
+  const end  = new Date(now.getTime() + 48*3600*1000);
+  const dFmt = d => d.toISOString().slice(0,10);
+  // units=si → wind in m/s (gewünscht), aber Temperatur in Kelvin → K→°C normalisieren
+  const url  = `${BRIGHTSKY_URL}?lat=${lat}&lon=${lon}&date=${dFmt(now)}&last_date=${dFmt(end)}&units=si`;
+  const r    = await fetch(url);
+  if (!r.ok) throw new Error('Bright Sky: ' + r.status);
+  const d    = await r.json();
+  // Kelvin → Celsius für alle Temperaturfelder
+  return (d.weather || []).map(w => ({
+    ...w,
+    temperature: w.temperature != null ? +(w.temperature - 273.15).toFixed(2) : null,
+    dew_point:   w.dew_point   != null ? +(w.dew_point   - 273.15).toFixed(2) : null,
+  }));
+}
+
+/* ================================================================
+   API: KP-INDEX
+   Primär: NOAA SWPC (öffentlich, CORS-frei, Echtzeit)
+   Fallback: GFZ Potsdam (nowcast, kein status=def da 24-48h Verzögerung)
+================================================================ */
+async function fetchKp() {
+  // 1) NOAA SWPC — 3-stündliche Kp-Werte, letzter Eintrag = aktuell
+  try {
+    const r = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+    if (r.ok) {
+      const d = await r.json();
+      // Format: [{"time_tag": "...", "Kp": 2.33}, ...] (Object Array)
+      // Oder (altes Format): [["time_tag","kp"], ["...", 2.33]] (Array of Arrays)
+      if (Array.isArray(d) && d.length > 0) {
+        const last = d[d.length - 1];
+        // Handle both possible formats from NOAA
+        const kpRaw = (last.Kp !== undefined) ? last.Kp : last[1];
+        const kp = parseFloat(kpRaw);
+        if (!isNaN(kp)) return kp;
+      }
+    }
+  } catch(e) { console.warn('NOAA Kp fetch:', e); }
+
+  // 2) GFZ Potsdam — nowcast (Echtzeit-Schätzwerte, nicht definitiv)
+  try {
+    const end   = new Date();
+    const start = new Date(end.getTime() - 6*3600*1000);
+    const fmt   = d => d.toISOString().slice(0,19) + 'Z';
+    const url   = `${KP_URL}?start=${fmt(start)}&end=${fmt(end)}&index=Kp&status=nowcast`;
+    const r     = await fetch(url);
+    if (r.ok) {
+      const d = await r.json();
+      // Format is {"Kp": [1.33, 2.66]} etc.
+      if (d.Kp && d.Kp.length > 0) {
+        const lastKpRaw = d.Kp[d.Kp.length - 1];
+        // Ensure it handles if it's an array for some reason
+        const kpRaw = Array.isArray(lastKpRaw) ? lastKpRaw[1] : lastKpRaw;
+        const kpVal = parseFloat(kpRaw);
+        if (!isNaN(kpVal)) return kpVal;
+      }
+    }
+  } catch(e) { console.warn('GFZ Kp fetch:', e); }
+
+  return null;
+}
+
+/* ================================================================
+   API: OPENSKY NETWORK
+================================================================ */
+async function fetchAircraft(lat, lon) {
+  try {
+    const d   = 0.15;
+    const url = `${OPENSKY_URL}?lamin=${lat-d}&lomin=${lon-d}&lamax=${lat+d}&lomax=${lon+d}`;
+    const r   = await fetch(url);
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.states||[])
+      .filter(s => s[5] && s[6] && !s[8])   // has position, not on ground
+      .map(s => ({
+        icao: s[0], callsign: (s[1]||'').trim(),
+        lon: s[5], lat: s[6],
+        altBaro: s[7], altGeo: s[13],
+        vel: s[9], hdg: s[10],
+        category: s[17],
+      }));
+  } catch(e) { console.warn('OpenSky:', e); return []; }
+}
+
+/* ================================================================
+   API: DIPUL WMS GetFeatureInfo
+================================================================ */
+async function fetchZones(lat, lon) {
+  const δ   = 0.01;
+  const bbox = `${lat-δ},${lon-δ},${lat+δ},${lon+δ}`;
+  const url  = `${DIPUL_WMS_URL}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo`
+    + `&FORMAT=image/png&TRANSPARENT=true`
+    + `&QUERY_LAYERS=${DIPUL_WMS_LAYER}&LAYERS=${DIPUL_WMS_LAYER}`
+    + `&CRS=EPSG:4326&BBOX=${bbox}&WIDTH=101&HEIGHT=101&I=50&J=50`
+    + `&INFO_FORMAT=application/json`;
+  const r = await fetch(url);
+  if (!r.ok) return [];
+  const d = await r.json();
+  return (d.features||[]).map(f => ({
+    name:  f.properties?.NAME || f.properties?.name  || 'Zone',
+    type:  f.properties?.TYPE || f.properties?.type  || '—',
+    upper: f.properties?.UPPER_LIMIT || f.properties?.upper_limit || '',
+    color: zoneColor(f.properties?.TYPE || f.properties?.type || ''),
+  }));
+}
+
+function zoneColor(t='') {
+  t = t.toUpperCase();
+  if (t.includes('CONTROL_ZONE') || t.includes('CTR'))          return '#f59e0b';
+  if (t.includes('RESTRICTED')   || t.includes('PROHIBITED'))   return '#ef4444';
+  if (t.includes('DANGER'))                                       return '#f97316';
+  if (t.includes('AIRPORT') || t.includes('HELIPORT'))          return '#f59e0b';
+  if (t.includes('NATIONAL_PARK') || t.includes('NATURE'))      return '#22c55e';
+  if (t.includes('MILITARY'))                                     return '#a855f7';
+  if (t.includes('POPULATED'))                                    return '#38bdf8';
+  return '#64748b';
+}
+
+/* ================================================================
+   STATUS EVALUATION
+================================================================ */
+function evalStatus(w, kp) {
+  const reasons = [];
+  let lvl = 'go';
+
+  if (!w) return { lvl:'warn', reasons:['Wetterdaten nicht verfügbar'] };
+
+  const gusts = w.wind_gust_speed ?? 0;
+  const wind  = w.wind_speed ?? 0;
+  const temp  = w.temperature ?? 0;
+  const rain  = w.precipitation ?? 0;
+  const dew   = w.dew_point;
+
+  if (gusts > 10) {
+    lvl = 'nogo';
+    reasons.push(`Böen ${gusts.toFixed(1)} m/s — Grenzwert 10 m/s überschritten`);
+  } else if (gusts > 7) {
+    if (lvl !== 'nogo') lvl = 'warn';
+    reasons.push(`Erhöhte Böen ${gusts.toFixed(1)} m/s`);
+  }
+
+  if (rain > 0.3) {
+    lvl = 'nogo';
+    reasons.push(`Niederschlag ${rain.toFixed(2)} mm — Flugbetrieb nicht empfohlen`);
+  } else if (rain > 0) {
+    if (lvl !== 'nogo') lvl = 'warn';
+    reasons.push(`Geringer Niederschlag ${rain.toFixed(2)} mm`);
+  }
+
+  if (temp < -15 || temp > 45) {
+    lvl = 'nogo';
+    reasons.push(`Temperatur außerhalb Betriebsbereich (${temp.toFixed(0)} °C)`);
+  }
+
+  if (dew != null && (temp - dew) < 2.5) {
+    if (lvl !== 'nogo') lvl = 'warn';
+    reasons.push('Nebelgefahr — Taupunkt nahe Lufttemperatur');
+  }
+
+  if (kp > 5) {
+    lvl = 'nogo';
+    reasons.push(`Kp-Index ${kp.toFixed(1)} — GPS-Signal stark gestört`);
+  } else if (kp > 3.3) {
+    if (lvl !== 'nogo') lvl = 'warn';
+    reasons.push(`Erhöhter Kp-Index ${kp.toFixed(1)} — GPS-Zuverlässigkeit reduziert`);
+  }
+
+  return { lvl, reasons };
+}
+
+/* ================================================================
+   RENDER: STATUS BANNER
+================================================================ */
+function renderStatus(s) {
+  const cfg = {
+    go:   { icon:'✅', title:'Flug möglich',           desc:'Alle Parameter im Normalbereich.' },
+    warn: { icon:'⚠️',  title:'Bedingt flugfähig',     desc:'Eingeschränkte Bedingungen — sorgfältig prüfen.' },
+    nogo: { icon:'🚫', title:'Flug nicht empfohlen',   desc:'Grenzwert überschritten.' },
+  };
+  const c = cfg[s.lvl];
+  const $b = $('status-banner');
+  $b.className = 'status-banner ' + s.lvl;
+  $('status-icon').textContent  = c.icon;
+  $('status-title').textContent = c.title;
+  $('status-desc').textContent  = s.reasons[0] || c.desc;
+}
+
+function setStatus(lvl, icon, title, desc) {
+  const $b = $('status-banner');
+  $b.className = 'status-banner ' + lvl;
+  $('status-icon').textContent  = icon;
+  $('status-title').textContent = title;
+  $('status-desc').textContent  = desc;
+}
+
+/* ================================================================
+   RENDER: METRICS GRID
+================================================================ */
+const DIRS = ['N','NO','O','SO','S','SW','W','NW'];
+function degToDir(d) { return d==null ? '—' : DIRS[Math.round(d/45)%8]; }
+
+function beaufort(ms) {
+  const b = [.5,1.6,3.4,5.5,8,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
+  const i = b.findIndex(v => ms < v);
+  return i === -1 ? 12 : i;
+}
+
+function renderMetrics(w, kp, aircraft) {
+  if (!w) { $('metrics-grid').innerHTML = '<p style="color:var(--text3)">Keine Wetterdaten</p>'; return; }
+
+  const wind  = w.wind_speed ?? 0;
+  const gusts = w.wind_gust_speed ?? 0;
+  const temp  = w.temperature ?? 0;
+  const dew   = w.dew_point;
+  const rain  = w.precipitation ?? 0;
+  const cloud = w.cloud_cover ?? 0;
+  const vis   = w.visibility;
+  const pres  = w.pressure_msl;
+
+  const gc = gusts > 10 ? 'c-nogo' : gusts > 7 ? 'c-warn' : 'c-go';
+  const rc = rain  > 0.3 ? 'c-nogo' : rain > 0 ? 'c-warn' : '';
+  const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
+
+  $('metrics-grid').innerHTML = [
+    card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`),
+    card('Böen',        `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s'),
+    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : ''),
+    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering'),
+    card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag'),
+    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal'),
+    card('Luftverkehr', `${aircraft.length}`, `Flugzeuge ~15 km`),
+    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '') : '',
+  ].join('');
+}
+
+function card(label, val, sub) {
+  return `<div class="m-card">
+    <div class="m-lbl">${label}</div>
+    <div class="m-val mono">${val}</div>
+    ${sub ? `<div class="m-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+/* ================================================================
+   RENDER: WIND ALTITUDE PROFILE
+================================================================ */
+function renderWindProfile(w) {
+  if (!w) return;
+  const base = w.wind_speed ?? 0;
+  // Power-law approximation: v(z) = v_ref * (z/z_ref)^α, α≈0.14
+  const v = z => +(base * Math.pow(z/10, 0.14)).toFixed(1);
+  const levels = [10,50,100,150,200];
+  const vMax   = v(200) || 1;
+
+  $('wind-profile').innerHTML = levels.map(z => {
+    const speed = v(z);
+    const pct   = Math.min(100, (speed/vMax)*100).toFixed(1);
+    const cls   = speed > 10 ? 'c-nogo' : speed > 7 ? 'c-warn' : '';
+    return `<div class="wp-row">
+      <span class="wp-alt">${z} m AGL</span>
+      <div class="wp-bar-wrap"><div class="wp-bar" style="width:${pct}%"></div></div>
+      <span class="wp-val mono ${cls}">${speed} m/s</span>
+    </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   RENDER: FORECAST TIMELINE
+================================================================ */
+const COND_ICON = {
+  'clear-day':'☀️','clear-night':'🌙','partly-cloudy-day':'⛅','partly-cloudy-night':'🌤',
+  'cloudy':'☁️','fog':'🌫','wind':'💨','rain':'🌧','sleet':'🌨','snow':'❄️',
+  'hail':'🌩','thunderstorm':'⛈','dry':'🌤','wet':'🌦','overcast':'☁️',
+};
+
+function condIcon(c) { return COND_ICON[c] || '🌡'; }
+
+function renderForecast(data, kp) {
+  if (!data?.length) { $('fc-track').innerHTML = '<span style="color:var(--text3);font-size:.8rem">Keine Daten</span>'; return; }
+
+  // Sample every 3h → 16 slots for 48h
+  const slots  = data.filter((_,i) => i%3===0).slice(0,17);
+  let lastDay  = null;
+  let html     = '';
+
+  slots.forEach((w, i) => {
+    const dt    = new Date(w.timestamp);
+    const day   = dt.toLocaleDateString('de-DE',{weekday:'short'});
+    const isNow = i===0;
+
+    if (day !== lastDay && i > 0) {
+      html += `<div class="fc-day-sep">
+        <div class="fc-day-sep-line"></div>
+        <div class="fc-day-sep-lbl">${day}</div>
+        <div class="fc-day-sep-line"></div>
+      </div>`;
+    }
+    lastDay = day;
+
+    const gusts = w.wind_gust_speed ?? 0;
+    const rain  = w.precipitation ?? 0;
+    let dot = 'go';
+    if (gusts>10 || rain>0.3) dot = 'nogo';
+    else if (gusts>7 || rain>0) dot = 'warn';
+
+    const timeStr = isNow ? 'Jetzt' : dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+    html += `<div class="fc-slot${isNow?' now':''}">
+      <div class="fc-time">${timeStr}</div>
+      <div class="fc-icon">${condIcon(w.condition)}</div>
+      <div class="fc-temp mono">${(w.temperature??0).toFixed(0)}°</div>
+      <div class="fc-wind mono">${(w.wind_speed??0).toFixed(0)} m/s</div>
+      <div class="fc-dot ${dot}"></div>
+    </div>`;
+  });
+
+  $('fc-track').innerHTML = html;
+}
+
+/* ================================================================
+   RENDER: WARNINGS
+================================================================ */
+function renderWarnings(status, kp, aircraft) {
+  const ws = $('warnings-section');
+  const wl = $('warn-list');
+  const items = [];
+
+  if (status.lvl === 'nogo') {
+    status.reasons.forEach(r =>
+      items.push({ cls:'nogo', icon:'🚫', title:'Flug nicht empfohlen', desc:r }));
+  } else if (status.lvl === 'warn') {
+    status.reasons.forEach(r =>
+      items.push({ cls:'warn', icon:'⚠️', title:'Hinweis', desc:r }));
+  }
+
+  if (aircraft.length > 8)
+    items.push({ cls:'warn', icon:'✈️', title:'Erhöhter Luftverkehr',
+      desc:`${aircraft.length} Flugzeuge im Umkreis von ~15 km detektiert.` });
+
+  if (kp > 3.3 && kp <= 5)
+    items.push({ cls:'warn', icon:'🛰️', title:'Geomagnetische Aktivität',
+      desc:`Kp-Index ${kp.toFixed(1)} — GPS-Präzision kann eingeschränkt sein.` });
+
+  if (!items.length) {
+    ws.style.display = 'none'; return;
+  }
+  ws.style.display = '';
+  wl.innerHTML = items.map((it,i) => `
+    <div class="warn-item ${it.cls}" id="wi-${i}">
+      <span class="warn-icon">${it.icon}</span>
+      <div class="warn-body">
+        <div class="warn-title">${it.title}</div>
+        <div class="warn-desc">${it.desc}</div>
+      </div>
+      <button class="warn-close" onclick="document.getElementById('wi-${i}').remove()">✕</button>
+    </div>`).join('');
+}
+
+/* ================================================================
+   RENDER: ZONES
+================================================================ */
+function renderZones(zones) {
+  const cnt = zones.length;
+  const $zc = $('z-count');
+  $zc.textContent = cnt;
+  $zc.className   = 'z-count' + (cnt===0 ? ' ok' : '');
+
+  $('zones-body').innerHTML = cnt === 0
+    ? '<div class="z-item" style="color:var(--text3);font-size:.8rem">Keine Luftraumeinschränkungen erkannt.</div>'
+    : zones.map(z => `<div class="z-item">
+        <div class="z-dot" style="background:${z.color}"></div>
+        <div>
+          <div class="z-name">${z.name}</div>
+          <div class="z-type">${z.type}</div>
+          ${z.upper ? `<div class="z-limit">Bis ${z.upper}</div>` : ''}
+        </div>
+      </div>`).join('');
+}
+
+// Zones toggle
+$('zones-hdr').addEventListener('click', () => {
+  $('zones-body').classList.toggle('open');
+  $('zones-chevron').classList.toggle('open');
+});
+
+/* ================================================================
+   MAP
+================================================================ */
+function initMap(lat, lon, aircraft, zones) {
+  if (S.map) { S.map.remove(); S.map = null; }
+
+  S.map = L.map('map', { center:[lat,lon], zoom:13, zoomControl:true });
+
+  // Dark basemap
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© OpenStreetMap, © CARTO',
+    subdomains:'abcd', maxZoom:19,
+  }).addTo(S.map);
+
+  // DiPUL WMS Overlay
+  S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
+    layers: DIPUL_WMS_LAYER,
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    opacity: 0.55,
+    attribution: 'DiPUL / DFS',
+  });
+  if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+
+  // Location pin
+  const pinIcon = L.divIcon({
+    html:`<div style="width:12px;height:12px;background:${getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()};
+          border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 5px rgba(0,180,216,0.25)"></div>`,
+    iconSize:[12,12], iconAnchor:[6,6], className:'',
+  });
+  S.layers.pin = L.marker([lat,lon],{icon:pinIcon})
+    .bindPopup(`<b>${S.name}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`)
+    .addTo(S.map);
+
+  // 100m radius circle
+  S.layers.radius = L.circle([lat,lon],{
+    radius:100, color:'#00b4d8',
+    fillColor:'rgba(0,180,216,0.05)', fillOpacity:0.15,
+    weight:1.5, dashArray:'5 5',
+  });
+  if (S.layerVisible.radius) S.layers.radius.addTo(S.map);
+
+  // Aircraft
+  renderAircraftMarkers(aircraft);
+
+}
+
+// Layer toggles — set up once (not inside initMap to avoid duplicate listeners)
+document.querySelectorAll('.map-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!S.map) return;
+    const key = btn.dataset.layer;
+    S.layerVisible[key] = !S.layerVisible[key];
+    btn.classList.toggle('active', S.layerVisible[key]);
+    const layer = S.layers[key];
+    if (!layer) return;
+    S.layerVisible[key] ? layer.addTo(S.map) : S.map.removeLayer(layer);
+  });
+});
+
+function renderAircraftMarkers(aircraft) {
+  if (S.layers.aircraft) S.map.removeLayer(S.layers.aircraft);
+  const markers = aircraft.map(a => {
+    const isHeli  = a.category === 18;
+    const icon    = L.divIcon({
+      html:`<div style="font-size:1.1rem;transform:rotate(${a.hdg??0}deg);line-height:1">${isHeli?'🚁':'✈️'}</div>`,
+      iconSize:[22,22], iconAnchor:[11,11], className:'',
+    });
+    const alt  = a.altGeo ?? a.altBaro;
+    const pop  = `<div class="ac-popup">
+      <b>${a.callsign||a.icao}</b><br>
+      ${alt ? 'Höhe: '+alt.toFixed(0)+' m<br>' : ''}
+      ${a.vel ? 'Speed: '+a.vel.toFixed(0)+' m/s' : ''}
+    </div>`;
+    return L.marker([a.lat,a.lon],{icon}).bindPopup(pop);
+  });
+  S.layers.aircraft = L.layerGroup(markers);
+  if (S.layerVisible.aircraft) S.layers.aircraft.addTo(S.map);
+}
+
+</script>
+</body>
+</html>
