@@ -1111,14 +1111,14 @@ function renderMetrics(w, kp, aircraft) {
   const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
 
   $('metrics-grid').innerHTML = [
+    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal'),
+    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '') : '',
+    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`),
-    card('Böen',        `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s'),
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : ''),
     card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag'),
-    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal'),
     card('Luftverkehr', `${aircraft.length}`, `Flugzeuge ~15 km`),
-    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '') : '',
   ].join('');
 }
 
@@ -1164,20 +1164,48 @@ const COND_ICON = {
 
 function condIcon(c) { return COND_ICON[c] || '🌡'; }
 
+function getDaylightHours(lat, lon, dateObj) {
+  const start = new Date(dateObj.getFullYear(), 0, 0);
+  const diff = dateObj - start;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const declination = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * Math.PI / 180);
+  const radLat = lat * Math.PI / 180;
+  const radDec = declination * Math.PI / 180;
+  const cosHourAngle = -Math.tan(radLat) * Math.tan(radDec);
+  
+  let hourAngle = 90;
+  if (cosHourAngle >= -1 && cosHourAngle <= 1) {
+    hourAngle = Math.acos(cosHourAngle) * 180 / Math.PI;
+  }
+  const daylightHours = (hourAngle / 15) * 2;
+  const solarNoonUtc = 12 - (lon / 15);
+  // Add 1 hour buffer before/after to include dawn/dusk hours
+  return {
+    startUtc: solarNoonUtc - (daylightHours / 2) - 1.0,
+    endUtc: solarNoonUtc + (daylightHours / 2) + 1.0
+  };
+}
+
 function renderForecast(data, kp) {
   if (!data?.length) { $('fc-track').innerHTML = '<span style="color:var(--text3);font-size:.8rem">Keine Daten</span>'; return; }
 
-  // Sample every 3h → 16 slots for 48h
-  const slots  = data.filter((_,i) => i%3===0).slice(0,17);
+  // Sample every 3h
+  const allSlots = data.filter((_,i) => i%3===0).slice(0,17);
   let lastDay  = null;
   let html     = '';
 
-  slots.forEach((w, i) => {
-    const dt    = new Date(w.timestamp);
-    const day   = dt.toLocaleDateString('de-DE',{weekday:'short'});
+  allSlots.forEach((w, i) => {
+    const dt = new Date(w.timestamp);
+    const { startUtc, endUtc } = getDaylightHours(S.lat, S.lon, dt);
+    const timeUtc = dt.getUTCHours() + (dt.getUTCMinutes() / 60);
+    
+    // Filter out night slices unless it's "now"
     const isNow = i===0;
+    if (!isNow && (timeUtc < startUtc || timeUtc > endUtc)) return;
 
-    if (day !== lastDay && i > 0) {
+    const day   = dt.toLocaleDateString('de-DE',{weekday:'short'});
+
+    if (day !== lastDay && i > 0 && html !== '') {
       html += `<div class="fc-day-sep">
         <div class="fc-day-sep-line"></div>
         <div class="fc-day-sep-lbl">${day}</div>
