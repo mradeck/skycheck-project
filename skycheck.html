@@ -393,6 +393,20 @@
     .fc-dot.go   { background: var(--go); }
     .fc-dot.warn { background: var(--warn); }
     .fc-dot.nogo { background: var(--nogo); }
+/* ── 5-Tage-Vorhersage-Kacheln ─────────────────────────────────────────── */
+.fc-days-wrap  { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 2px; }
+.fc-day-card   {
+  flex: 1 1 calc(20% - 0.5rem); min-width: 80px; max-width: 130px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.7rem 0.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  cursor: default;
+}
+.fc-day-card:hover { border-color: var(--border-hi); }
+.fc-day-name   { font-size: 0.7rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+.fc-day-icon   { font-size: 1.4rem; line-height: 1; }
+.fc-day-range  { font-size: 0.82rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.fc-day-wind   { font-size: 0.65rem; color: var(--text2); }
 
     /* --- INPUTS & BUTTONS --- */
     .btn-primary { background: var(--accent); color: #fff; border: none; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
@@ -712,6 +726,12 @@
     </div>
   </div>
 
+  <!-- 5-DAY FORECAST -->
+  <div class="section" style="padding-top:0">
+    <div class="sec-label">5-Tage-Überblick</div>
+    <div class="fc-days-wrap" id="fc-days-wrap"></div>
+  </div>
+
   <!-- MAP -->
   <div class="section" style="padding-top:0">
     <div class="sec-label">Karte &amp; Luftraum</div>
@@ -752,7 +772,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.4 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.5 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -775,7 +795,7 @@
   <div id="settings-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>DiPUL Layer Einstellungen</h2>
+        <h2>Einstellungen</h2>
         <button id="btn-close-settings" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
@@ -800,6 +820,27 @@
         </label>
 
         <div style="margin-top: 1.5rem;">
+          <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3); display:block; margin-bottom:0.5rem;">48h-Vorschau Modus</strong>
+          <p style="font-size:0.85rem; color:var(--text2); margin-bottom:0.75rem;">
+            Wähle, ob die 48h-Wettervorschau nur Taglichtstunden (Drohnenflug-Standard) oder alle Stunden inkl. Nacht anzeigt.
+          </p>
+          <label class="s-radio">
+            <input type="radio" name="forecastMode" value="daylight">
+            <div class="s-radio-content">
+              <strong>Nur Tageslicht</strong>
+              <span>Zeigt ausschließlich Stunden zwischen Sonnenaufgang und Sonnenuntergang (inkl. 1 h Puffer). Standard für Drohnenflug.</span>
+            </div>
+          </label>
+          <label class="s-radio">
+            <input type="radio" name="forecastMode" value="allday">
+            <div class="s-radio-content">
+              <strong>Ganzer Tag inkl. Nacht</strong>
+              <span>Alle 3-Stunden-Slots über 48 Stunden, auch in der Nacht.</span>
+            </div>
+          </label>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
           <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);">Aktive Layer in der Übersicht:</strong>
           <div id="settings-active-layers" class="s-layers-list"></div>
         </div>
@@ -820,7 +861,7 @@
 const DIPUL_ALL_LAYERS = 'bahnanlagen,behoerden,binnenwasserstrassen,bundesautobahnen,bundesstrassen,diplomatische_vertretungen,ffh-gebiete,flugbeschraenkungsgebiete,flughaefen,flugplaetze,freibaeder,haengegleiter,inaktive_temporaere_betriebseinschraenkungen,industrieanlagen,internationale_organisationen,justizvollzugsanstalten,kontrollzonen,kraftwerke,krankenhaeuser,labore,militaerische_anlagen,modellflugplaetze,nationalparks,naturschutzgebiete,polizei,schifffahrtsanlagen,seewasserstrassen,sicherheitsbehoerden,stromleitungen,temporaere_betriebseinschraenkungen,umspannwerke,vogelschutzgebiete,windkraftanlagen,wohngrundstuecke';
 const DIPUL_REDUCED_LAYERS = 'flugbeschraenkungsgebiete,flughaefen,flugplaetze,kontrollzonen,nationalparks,naturschutzgebiete,temporaere_betriebseinschraenkungen,industrieanlagen,kraftwerke,polizei,behoerden,bundesautobahnen,bundesstrassen,schifffahrtsanlagen,vogelschutzgebiete';
 
-let CFG = { layerMode: 'reduced' };
+let CFG = { layerMode: 'reduced', forecastMode: 'daylight' };
 try { 
   const saved = localStorage.getItem('skycheck_cfg'); 
   if (saved) CFG = JSON.parse(saved); 
@@ -896,6 +937,7 @@ function renderSettingsLayers(mode) {
 
 $('btn-settings').addEventListener('click', () => {
   document.querySelector(`input[name="layerMode"][value="${CFG.layerMode}"]`).checked = true;
+  document.querySelector(`input[name="forecastMode"][value="${CFG.forecastMode || 'daylight'}"]`).checked = true;
   renderSettingsLayers(CFG.layerMode);
   $('settings-modal').classList.remove('hidden');
 });
@@ -907,20 +949,25 @@ document.querySelectorAll('input[name="layerMode"]').forEach(radio => {
 });
 
 $('btn-save-settings').addEventListener('click', () => {
-  const selectedMode = document.querySelector('input[name="layerMode"]:checked').value;
+  const selectedMode     = document.querySelector('input[name="layerMode"]:checked').value;
+  const selectedForecast = document.querySelector('input[name="forecastMode"]:checked').value;
   $('settings-modal').classList.add('hidden');
-  
-  if (CFG.layerMode !== selectedMode) {
+
+  const layerChanged    = CFG.layerMode !== selectedMode;
+  const forecastChanged = (CFG.forecastMode || 'daylight') !== selectedForecast;
+
+  if (layerChanged) {
     CFG.layerMode = selectedMode;
+    if (S.layers.dipul) S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+  }
+  if (forecastChanged) {
+    CFG.forecastMode = selectedForecast;
+    // Forecast sofort neu rendern ohne vollständigen Reload
+    if (S._weatherArr) renderForecast(S._weatherArr, S._kpVal || 0);
+  }
+  if (layerChanged || forecastChanged) {
     try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch {}
-    
-    // Update map immediately
-    if (S.layers.dipul) {
-      S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
-    }
-    
-    // Rerun check if we are on a valid location
-    if (S.lat != null) runCheck();
+    if (layerChanged && S.lat != null) runCheck();
   }
 });
 
@@ -1059,7 +1106,9 @@ async function runCheck() {
     renderStatus(status);
     renderMetrics(now, kpVal, aircraft);
     renderWindProfile(now);
+    S._weatherArr = weatherArr; S._kpVal = kpVal;
     renderForecast(weatherArr, kpVal);
+    renderForecastDays(weatherArr, kpVal);
     renderWarnings(status, kpVal, aircraft);
 
     // Zones via WMS GetFeatureInfo (best-effort)
@@ -1087,7 +1136,7 @@ async function runCheck() {
 ================================================================ */
 async function fetchWeather(lat, lon) {
   const now  = new Date();
-  const end  = new Date(now.getTime() + 48*3600*1000);
+  const end  = new Date(now.getTime() + 7*24*3600*1000);
   const dFmt = d => d.toISOString().slice(0,10);
   // units=si → wind in m/s (gewünscht), aber Temperatur in Kelvin → K→°C normalisieren
   const url  = `${BRIGHTSKY_URL}?lat=${lat}&lon=${lon}&date=${dFmt(now)}&last_date=${dFmt(end)}&units=si`;
@@ -1572,7 +1621,7 @@ function renderForecast(data, kp) {
     
     // Filter out night slices unless it's "now"
     const isNow = i===0;
-    if (!isNow && (timeUtc < startUtc || timeUtc > endUtc)) return;
+    if (!isNow && (CFG.forecastMode || 'daylight') !== 'allday' && (timeUtc < startUtc || timeUtc > endUtc)) return;
 
     const day   = dt.toLocaleDateString('de-DE',{weekday:'short'});
 
@@ -1588,8 +1637,8 @@ function renderForecast(data, kp) {
     const gusts = w.wind_gust_speed ?? 0;
     const rain  = w.precipitation ?? 0;
     let dot = 'go';
-    if (gusts>10 || rain>0.3) dot = 'nogo';
-    else if (gusts>7 || rain>0) dot = 'warn';
+    if (gusts>10 || rain>0.3 || kp>5) dot = 'nogo';
+    else if (gusts>7 || rain>0 || kp>3.3) dot = 'warn';
 
     const timeStr = isNow ? 'Jetzt' : dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 
@@ -1603,6 +1652,64 @@ function renderForecast(data, kp) {
   });
 
   $('fc-track').innerHTML = html;
+}
+
+/* ================================================================
+   RENDER: 5-DAY FORECAST CARDS
+================================================================ */
+function renderForecastDays(data, kp) {
+  const wrap = $('fc-days-wrap');
+  if (!data?.length) { if (wrap) wrap.innerHTML = ''; return; }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Einträge nach Kalendertag gruppieren (heute überspringen, nächste 5 Tage)
+  const byDay = {};
+  data.forEach(w => {
+    const d = new Date(w.timestamp);
+    d.setHours(0,0,0,0);
+    const key = d.getTime();
+    if (key === today.getTime()) return;
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(w);
+  });
+
+  const dayKeys = Object.keys(byDay).map(Number).sort().slice(0, 5);
+  if (!dayKeys.length) { wrap.innerHTML = ''; return; }
+
+  const html = dayKeys.map(key => {
+    const entries = byDay[key];
+    const dt      = new Date(key);
+    const dayName = dt.toLocaleDateString('de-DE', { weekday: 'short' });
+    const dateStr = dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+
+    const temps = entries.map(w => w.temperature).filter(t => t != null);
+    const minT  = temps.length ? Math.min(...temps).toFixed(0) : '–';
+    const maxT  = temps.length ? Math.max(...temps).toFixed(0) : '–';
+    const maxG  = Math.max(...entries.map(w => w.wind_gust_speed ?? 0));
+    const sumR  = entries.reduce((a, w) => a + (w.precipitation ?? 0), 0);
+
+    // Dominante Wetterlage (häufigster condition-Wert)
+    const condCounts = {};
+    entries.forEach(w => { if (w.condition) condCounts[w.condition] = (condCounts[w.condition] || 0) + 1; });
+    const domCond = Object.entries(condCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+
+    // Ampel: nur Wetterdaten (Kp für künftige Tage nicht bekannt)
+    let dot = 'go';
+    if (maxG > 10 || sumR > 1) dot = 'nogo';
+    else if (maxG > 7 || sumR > 0.3) dot = 'warn';
+
+    return `<div class="fc-day-card">
+      <div class="fc-day-name">${dayName}<br><span style="font-size:0.6rem;font-weight:400;color:var(--text3)">${dateStr}</span></div>
+      <div class="fc-day-icon">${condIcon(domCond)}</div>
+      <div class="fc-day-range">${minT}° / ${maxT}°</div>
+      <div class="fc-day-wind">${maxG.toFixed(0)} m/s max.</div>
+      <div class="fc-dot ${dot}" style="width:8px;height:8px;margin-top:0.2rem"></div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = html;
 }
 
 /* ================================================================
