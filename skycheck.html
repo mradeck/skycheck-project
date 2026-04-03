@@ -592,7 +592,7 @@
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
       <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
       <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
-      <a href="https://opensky-network.org/" target="_blank" class="l-src">OpenSky Network</a>
+      <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
       <a href="https://nominatim.openstreetmap.org/" target="_blank" class="l-src">Nominatim</a>
       <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" class="l-src">Impressum</a>
       <a href="https://www.michael-radeck.de" target="_blank" class="l-src">michael-radeck.de</a>
@@ -714,7 +714,7 @@
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
       <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
       <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
-      <a href="https://opensky-network.org/" target="_blank" class="l-src">OpenSky Network</a>
+      <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
       <a href="https://nominatim.openstreetmap.org/" target="_blank" class="l-src">Nominatim</a>
       <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" class="l-src">Impressum</a>
       <a href="https://www.michael-radeck.de" target="_blank" class="l-src">michael-radeck.de</a>
@@ -789,7 +789,7 @@ function getActiveDipulLayers() {
 const DIPUL_WMS_URL   = 'https://uas-betrieb.de/geoservices/dipul/wms';
 const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
 const KP_URL        = 'https://kp.gfz.de/app/json/';
-const OPENSKY_URL   = 'https://opensky-network.org/api/states/all';
+const ADSB_URL      = 'https://api.airplanes.live/v2/point';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
 
 /* ================================================================
@@ -1101,25 +1101,26 @@ async function fetchKp() {
    API: OPENSKY NETWORK
 ================================================================ */
 async function fetchAircraft(lat, lon) {
-  const dLat = 200 / 111.0;
-  const dLon = dLat / Math.cos(lat * Math.PI / 180);
-  const url = OPENSKY_URL +
-    '?lamin=' + (lat - dLat).toFixed(4) + '&lomin=' + (lon - dLon).toFixed(4) +
-    '&lamax=' + (lat + dLat).toFixed(4) + '&lomax=' + (lon + dLon).toFixed(4);
+  // airplanes.live — CORS-enabled, kostenlos, kein API-Key
+  const distNm = 108; // ~200 km in Nautischen Meilen
+  const url = ADSB_URL + '/' + lat.toFixed(4) + '/' + lon.toFixed(4) + '/' + distNm;
   try {
     const r = await fetch(url);
-    if (r.status === 429) {
-      const retryAfter = r.headers.get('X-Rate-Limit-Retry-After-Seconds') || r.headers.get('Retry-After') || null;
-      const waitMin = retryAfter ? Math.ceil(parseInt(retryAfter) / 60) : null;
-      return [{ api_error: 'RATE_LIMIT', retryMin: waitMin }];
-    }
-    if (!r.ok) {
-      return [{ api_error: 'HTTP_ERROR', status: r.status }];
-    }
+    if (!r.ok) return [{ api_error: 'HTTP_ERROR', status: r.status }];
     const data = await r.json();
-    return (data.states || [])
-      .filter(s => s[5] && s[6] && !s[8])
-      .map(s => ({ icao: s[0], callsign: (s[1]||'').trim(), lon: s[5], lat: s[6], altBaro: s[7], altGeo: s[13], vel: s[9], hdg: s[10], category: s[17] }));
+    return (data.ac || [])
+      .filter(a => a.lat != null && a.lon != null)
+      .map(a => ({
+        icao:     a.hex,
+        callsign: (a.flight || '').trim(),
+        lon:      a.lon,
+        lat:      a.lat,
+        altBaro:  a.alt_baro,
+        altGeo:   a.alt_geom,
+        vel:      a.gs,
+        hdg:      a.track,
+        category: a.category
+      }));
   } catch (e) {
     return [{ api_error: 'FETCH_ERROR', msg: e.message }];
   }
