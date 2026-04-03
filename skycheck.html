@@ -1717,31 +1717,15 @@ function renderAircraftMarkers(aircraft) {
   if (S.layers.aircraft) S.map.removeLayer(S.layers.aircraft);
   const validAc = aircraft.filter(a => !a.api_error);
   const markers = validAc.map(a => {
-    let emoji = '✈️';
-    if (a.category === 9) emoji = '🚁'; // Rotorcraft
-    else if (a.category === 10) emoji = '🛩️'; // Glider
-    else if (a.category === 15) emoji = '🛸'; // UAV
-
-    const icon = L.divIcon({
-      html:`
-        <div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:1.3rem; filter:drop-shadow(0px 2px 3px rgba(0,0,0,0.8)); transform:rotate(${a.hdg??0}deg); line-height:1;">
-          ${emoji}
-        </div>
-        <div style="position:absolute; top:28px; left:-20px; width:70px; text-align:center; font-size:10px; font-weight:700; color:#fff; text-shadow:0 1px 3px #000, 0 0 2px #000; pointer-events:none;">
-          ${a.callsign||a.icao}
-        </div>`,
-      iconSize:[30,30], iconAnchor:[15,15], className:'',
-    });
-    
-    const alt  = a.altGeo ?? a.altBaro ?? 0;
-    const pop  = `<div class="ac-popup">
-      <b>${a.callsign||a.icao}</b><br>
-      ${alt > 0 ? 'Höhe: '+Math.round(alt)+' m<br>' : 'Boden<br>'}
-      ${a.vel ? 'Speed: '+Math.round(a.vel)+' km/h<br>' : ''}
-    </div>`;
-    const icon = getAircraftIcon(a);
-    return L.marker([a.lat,a.lon],{icon}).bindPopup(pop);
-  });
+                           const alt  = a.altGeo ?? a.altBaro ?? 0;
+                           const pop  = `<div class="ac-popup">
+                             <b>${a.callsign||a.icao}</b><br>
+                             ${alt > 0 ? 'Höhe: '+Math.round(alt)+' m<br>' : 'Boden<br>'}
+                             ${a.vel ? 'Speed: '+Math.round(a.vel)+' km/h' : ''}
+                           </div>`;
+                           const icon = getAircraftIcon(a);
+                           return L.marker([a.lat,a.lon],{icon}).bindPopup(pop);
+                         });
   S.layers.aircraft = L.layerGroup(markers);
   if (S.layerVisible.aircraft) S.layers.aircraft.addTo(S.map);
 }
