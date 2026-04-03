@@ -1266,9 +1266,9 @@ async function safeFetch(url, timeout=8000) {
   } catch(e) { clearTimeout(tid); throw e; }
 }
 
-async function gfzFetch(startMs, endMs) {
+async function gfzFetch(startMs, endMs, index='Kp') {
   const fmt    = d => new Date(d).toISOString().slice(0,19) + 'Z';
-  const gfzUrl = `${KP_URL}?start=${fmt(startMs)}&end=${fmt(endMs)}&index=Kp&status=nowcast`;
+  const gfzUrl = `${KP_URL}?start=${fmt(startMs)}&end=${fmt(endMs)}&index=${index}&status=nowcast`;
   // Direkt versuchen (falls Server CORS erlaubt)
   try {
     const r = await safeFetch(gfzUrl, 6000);
@@ -1312,16 +1312,30 @@ async function fetchKp() {
 
 async function fetchKpGfz() {
   try {
-    const now = Date.now();
-    const d   = await gfzFetch(now - 9*3600*1000, now);
-    if (d && d.Kp && d.Kp.length > 0) {
-      const idx = d.Kp.length - 1;
-      const val = parseFloat(d.Kp[idx]);
-      if (!isNaN(val)) return {
-        val,
-        dt:   d.datetime ? d.datetime[idx] : null,
-        stat: d.status   ? d.status[idx]   : 'pre'
-      };
+    const now  = Date.now();
+    const [d3, d30] = await Promise.all([
+      gfzFetch(now - 9*3600*1000, now, 'Kp'),
+      gfzFetch(now - 2.5*3600*1000, now, 'Hp30'),
+    ]);
+    if (d3 && d3.Kp && d3.Kp.length > 0) {
+      const idx  = d3.Kp.length - 1;
+      const val  = parseFloat(d3.Kp[idx]);
+      if (!isNaN(val)) {
+        // Hp30 Balken: letzte 4 Werte + aktueller Kp3h als Referenz
+        const bars = [];
+        if (d30 && d30.Hp30 && d30.Hp30.length > 0) {
+          const recent = d30.Hp30.slice(-4);
+          const dts    = d30.datetime ? d30.datetime.slice(-4) : [];
+          recent.forEach((v, i) => {
+            const t = dts[i] ? new Date(dts[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+            bars.push({ v: parseFloat(v), label: t, ref: false });
+          });
+        }
+        // 5. Balken: aktueller Kp3h als Referenz (gestrichelt)
+        const ts3 = d3.datetime ? new Date(d3.datetime[idx]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+        bars.push({ v: val, label: ts3, ref: true });
+        return { val, dt: d3.datetime ? d3.datetime[idx] : null, stat: d3.status ? d3.status[idx] : 'pre', bars };
+      }
     }
   } catch(e) { console.warn('fetchKpGfz:', e); }
   return null;
@@ -1664,7 +1678,21 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
       if (!kpGfz) return '';
       const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
       const ts  = kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC' : '-';
-      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>`, `${ts} · ${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
+            const bc   = v => v > 5 ? '#ef476f' : v > 3.3 ? '#ffb703' : '#06d6a0';
+      const bars = kpGfz.bars || [];
+      const maxK = 9, W = 130, H = 38, n = Math.max(bars.length, 1);
+      const bw   = Math.floor((W - n * 2) / n);
+      const svg  = bars.length ? '<svg width="' + W + '" height="' + H + '" style="display:block;margin-top:5px;overflow:visible">' +
+        bars.map((b, i) => {
+          const bh  = Math.max(2, Math.round(Math.min(b.v, maxK) / maxK * (H - 11)));
+          const x   = i * (bw + 2) + 1;
+          const col = bc(b.v);
+          const op  = b.ref ? '1' : '0.6';
+          const dsh = b.ref ? ' stroke="#fff" stroke-width="0.8" stroke-dasharray="2,1.5"' : '';
+          return '<rect x="' + x + '" y="' + (H-10-bh) + '" width="' + bw + '" height="' + bh + '" rx="1.5" fill="' + col + '" opacity="' + op + '"' + dsh + '/>' +
+                 '<text x="' + (x+bw/2) + '" y="' + (H-1) + '" text-anchor="middle" font-size="6" fill="#3d5a7a">' + b.label + '</text>';
+        }).join('') + '</svg>' : '';
+      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
     })(),
     vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
