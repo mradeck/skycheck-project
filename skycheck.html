@@ -783,7 +783,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.7 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.8 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1541,10 +1541,10 @@ function renderMetrics(w, kp, aircraft) {
   $('metrics-grid').innerHTML = [
     card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal', 'https://kp.gfz.de/hp30-hp60'),
     vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
-    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/windboeen.html'),
+    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
-    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://sat24.com/de/de'),
+    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/bewoelkung.html'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
     `<div class="m-card"><div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>${acHtml}</div>`,
   ].join('');
