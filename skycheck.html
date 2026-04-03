@@ -1251,8 +1251,10 @@ async function fetchWeather(lat, lon) {
 }
 
 
+
 /* ================================================================
-   API: KP-INDEX  (GFZ Potsdam zuerst, NOAA als Fallback)
+   API: KP-INDEX
+   GFZ Potsdam via corsproxy.io (CORS-frei), NOAA als Fallback
 ================================================================ */
 async function safeFetch(url, timeout=8000) {
   const ctrl = new AbortController();
@@ -1264,28 +1266,39 @@ async function safeFetch(url, timeout=8000) {
   } catch(e) { clearTimeout(tid); throw e; }
 }
 
-async function fetchKp() {
-  // 1) GFZ Potsdam nowcast — meist 3h aktueller als NOAA
+async function gfzFetch(startMs, endMs) {
+  const fmt    = d => new Date(d).toISOString().slice(0,19) + 'Z';
+  const gfzUrl = `${KP_URL}?start=${fmt(startMs)}&end=${fmt(endMs)}&index=Kp&status=nowcast`;
+  // Direkt versuchen (falls Server CORS erlaubt)
   try {
-    const end   = new Date();
-    const start = new Date(end.getTime() - 9*3600*1000);
-    const fmt   = d => d.toISOString().slice(0,19) + 'Z';
-    const url   = `${KP_URL}?start=${fmt(start)}&end=${fmt(end)}&index=Kp&status=nowcast`;
-    const r     = await safeFetch(url);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.Kp && d.Kp.length > 0) {
-        const v = parseFloat(d.Kp[d.Kp.length - 1]);
-        if (!isNaN(v)) return v;
-      }
+    const r = await safeFetch(gfzUrl, 6000);
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('GFZ direkt:', e.message); }
+  // CORS-Proxy Fallback
+  try {
+    const proxy = `https://corsproxy.io/?url=${encodeURIComponent(gfzUrl)}`;
+    const r = await safeFetch(proxy, 8000);
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('GFZ proxy:', e.message); }
+  return null;
+}
+
+async function fetchKp() {
+  // 1) GFZ Potsdam (direkter Versuch + CORS-Proxy)
+  try {
+    const now  = Date.now();
+    const d    = await gfzFetch(now - 9*3600*1000, now);
+    if (d && d.Kp && d.Kp.length > 0) {
+      const v = parseFloat(d.Kp[d.Kp.length - 1]);
+      if (!isNaN(v)) return v;
     }
-  } catch(e) { console.warn('GFZ Kp:', e); }
+  } catch(e) { console.warn('fetchKp GFZ:', e); }
 
   // 2) NOAA SWPC Fallback
   try {
     const r = await safeFetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
     if (r.ok) {
-      const d = await r.json();
+      const d    = await r.json();
       if (Array.isArray(d) && d.length > 0) {
         const last  = d[d.length - 1];
         const kpRaw = last.Kp !== undefined ? last.Kp : last[1];
@@ -1293,32 +1306,27 @@ async function fetchKp() {
         if (!isNaN(v)) return v;
       }
     }
-  } catch(e) { console.warn('NOAA Kp:', e); }
+  } catch(e) { console.warn('fetchKp NOAA:', e); }
   return null;
 }
 
 async function fetchKpGfz() {
   try {
-    const end   = new Date();
-    const start = new Date(end.getTime() - 9*3600*1000);
-    const fmt   = d => d.toISOString().slice(0,19) + 'Z';
-    const url   = `${KP_URL}?start=${fmt(start)}&end=${fmt(end)}&index=Kp&status=nowcast`;
-    const r     = await safeFetch(url);
-    if (r.ok) {
-      const d   = await r.json();
-      if (d.Kp && d.Kp.length > 0) {
-        const idx = d.Kp.length - 1;
-        const val = parseFloat(d.Kp[idx]);
-        if (!isNaN(val)) return {
-          val,
-          dt:   d.datetime ? d.datetime[idx] : null,
-          stat: d.status   ? d.status[idx]   : 'pre'
-        };
-      }
+    const now = Date.now();
+    const d   = await gfzFetch(now - 9*3600*1000, now);
+    if (d && d.Kp && d.Kp.length > 0) {
+      const idx = d.Kp.length - 1;
+      const val = parseFloat(d.Kp[idx]);
+      if (!isNaN(val)) return {
+        val,
+        dt:   d.datetime ? d.datetime[idx] : null,
+        stat: d.status   ? d.status[idx]   : 'pre'
+      };
     }
   } catch(e) { console.warn('fetchKpGfz:', e); }
   return null;
 }
+
 
 /* ================================================================
    API: OPENSKY NETWORK
