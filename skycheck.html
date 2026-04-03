@@ -1185,10 +1185,11 @@ async function runCheck() {
 
   try {
     $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
-    const [weatherArr, kp, aircraft] = await Promise.all([
+    const [weatherArr, kp, aircraft, kpGfz] = await Promise.all([
       fetchWeather(S.lat, S.lon),
       fetchKp(),
       fetchAircraft(S.lat, S.lon),
+      fetchKpGfz(),
     ]);
 
     const now   = weatherArr[0] || null;
@@ -1198,7 +1199,7 @@ async function runCheck() {
     const status = evalStatus(now, kpVal);
 
     renderStatus(status);
-    renderMetrics(now, kpVal, aircraft);
+    renderMetrics(now, kpVal, aircraft, kpGfz);
     renderWindProfile(now);
     S._weatherArr = weatherArr; S._kpVal = kpVal;
     renderForecast(weatherArr, kpVal);
@@ -1587,7 +1588,7 @@ function getClosest(lat, lon, arr) {
   return closest;
 }
 
-function renderMetrics(w, kp, aircraft) {
+function renderMetrics(w, kp, aircraft, kpGfz) {
   if (!w) { $('metrics-grid').innerHTML = '<p style="color:var(--text3)">Keine Wetterdaten</p>'; return; }
 
   const wind  = w.wind_speed ?? 0;
