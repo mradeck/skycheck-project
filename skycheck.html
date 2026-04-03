@@ -1185,12 +1185,16 @@ async function runCheck() {
 
   try {
     $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
-    const [weatherArr, kp, aircraft, kpGfz] = await Promise.all([
+    let kpGfz = null;
+    const [weatherArr, kp, aircraft, _kpGfz] = await Promise.all([
       fetchWeather(S.lat, S.lon),
       fetchKp(),
       fetchAircraft(S.lat, S.lon),
       fetchKpGfz(),
     ]);
+
+
+    kpGfz = _kpGfz;
 
     const now   = weatherArr[0] || null;
     const kpVal = kp ?? 0;
@@ -1246,49 +1250,73 @@ async function fetchWeather(lat, lon) {
   }));
 }
 
-/* ================================================================
-   API: KP-INDEX
-   Primär: NOAA SWPC (öffentlich, CORS-frei, Echtzeit)
-   Fallback: GFZ Potsdam (nowcast, kein status=def da 24-48h Verzögerung)
-================================================================ */
-async function fetchKp() {
-  // 1) NOAA SWPC — 3-stündliche Kp-Werte, letzter Eintrag = aktuell
-  try {
-    const r = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
-    if (r.ok) {
-      const d = await r.json();
-      // Format: [{"time_tag": "...", "Kp": 2.33}, ...] (Object Array)
-      // Oder (altes Format): [["time_tag","kp"], ["...", 2.33]] (Array of Arrays)
-      if (Array.isArray(d) && d.length > 0) {
-        const last = d[d.length - 1];
-        // Handle both possible formats from NOAA
-        const kpRaw = (last.Kp !== undefined) ? last.Kp : last[1];
-        const kp = parseFloat(kpRaw);
-        if (!isNaN(kp)) return kp;
-      }
-    }
-  } catch(e) { console.warn('NOAA Kp fetch:', e); }
 
-  // 2) GFZ Potsdam — nowcast (Echtzeit-Schätzwerte, nicht definitiv)
+/* ================================================================
+   API: KP-INDEX  (GFZ Potsdam zuerst, NOAA als Fallback)
+================================================================ */
+async function safeFetch(url, timeout=8000) {
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    return r;
+  } catch(e) { clearTimeout(tid); throw e; }
+}
+
+async function fetchKp() {
+  // 1) GFZ Potsdam nowcast — meist 3h aktueller als NOAA
   try {
     const end   = new Date();
-    const start = new Date(end.getTime() - 6*3600*1000);
+    const start = new Date(end.getTime() - 9*3600*1000);
     const fmt   = d => d.toISOString().slice(0,19) + 'Z';
     const url   = `${KP_URL}?start=${fmt(start)}&end=${fmt(end)}&index=Kp&status=nowcast`;
-    const r     = await fetch(url);
+    const r     = await safeFetch(url);
     if (r.ok) {
       const d = await r.json();
-      // Format is {"Kp": [1.33, 2.66]} etc.
       if (d.Kp && d.Kp.length > 0) {
-        const lastKpRaw = d.Kp[d.Kp.length - 1];
-        // Ensure it handles if it's an array for some reason
-        const kpRaw = Array.isArray(lastKpRaw) ? lastKpRaw[1] : lastKpRaw;
-        const kpVal = parseFloat(kpRaw);
-        if (!isNaN(kpVal)) return kpVal;
+        const v = parseFloat(d.Kp[d.Kp.length - 1]);
+        if (!isNaN(v)) return v;
       }
     }
-  } catch(e) { console.warn('GFZ Kp fetch:', e); }
+  } catch(e) { console.warn('GFZ Kp:', e); }
 
+  // 2) NOAA SWPC Fallback
+  try {
+    const r = await safeFetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d) && d.length > 0) {
+        const last  = d[d.length - 1];
+        const kpRaw = last.Kp !== undefined ? last.Kp : last[1];
+        const v     = parseFloat(kpRaw);
+        if (!isNaN(v)) return v;
+      }
+    }
+  } catch(e) { console.warn('NOAA Kp:', e); }
+  return null;
+}
+
+async function fetchKpGfz() {
+  try {
+    const end   = new Date();
+    const start = new Date(end.getTime() - 9*3600*1000);
+    const fmt   = d => d.toISOString().slice(0,19) + 'Z';
+    const url   = `${KP_URL}?start=${fmt(start)}&end=${fmt(end)}&index=Kp&status=nowcast`;
+    const r     = await safeFetch(url);
+    if (r.ok) {
+      const d   = await r.json();
+      if (d.Kp && d.Kp.length > 0) {
+        const idx = d.Kp.length - 1;
+        const val = parseFloat(d.Kp[idx]);
+        if (!isNaN(val)) return {
+          val,
+          dt:   d.datetime ? d.datetime[idx] : null,
+          stat: d.status   ? d.status[idx]   : 'pre'
+        };
+      }
+    }
+  } catch(e) { console.warn('fetchKpGfz:', e); }
   return null;
 }
 
