@@ -546,7 +546,39 @@
       .map-wrap { page-break-inside: avoid; }
       @page { margin: 1cm; }
     }
-  </style>
+  
+/* ── Alarm Banner ─────────────────────────────────────── */
+#alarm-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+  background: linear-gradient(135deg,#b71c1c,#c62828);
+  color: #fff; padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 700; font-size: 14px; letter-spacing: .02em;
+  transform: translateY(-110%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 4px 16px rgba(0,0,0,.55);
+}
+#alarm-banner.active { transform: translateY(0); }
+.alarm-dismiss {
+  background: none; border: 1.5px solid rgba(255,255,255,.55);
+  color: #fff; padding: 4px 14px; border-radius: 4px;
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  white-space: nowrap; margin-left: 12px; flex-shrink: 0;
+}
+.alarm-dismiss:hover { background: rgba(255,255,255,.15); }
+/* ── Radius group (5m / 100m) ─────────────────────────── */
+.radius-group {
+  display: inline-flex;
+  border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  vertical-align: middle;
+}
+.radius-group .radius-btn {
+  border-radius: 0 !important; border: none !important;
+  border-right: 1px solid rgba(255,255,255,.18) !important;
+}
+.radius-group .radius-btn:last-child { border-right: none !important; }
+</style>
 </head>
 <body>
 
@@ -678,7 +710,11 @@
     <div class="map-controls" id="map-controls">
       <button class="map-toggle active" data-layer="dipul">DiPUL Zonen</button>
       <button class="map-toggle active" data-layer="aircraft">Flugbewegungen</button>
-      <button class="map-toggle active" data-layer="radius">100m Radius</button>
+      <div class="radius-group">
+        <button class="radius-btn map-toggle" data-radius="5">5m</button>
+        <button class="radius-btn map-toggle active" data-radius="100">100m</button>
+      </div>
+      <button class="map-toggle active" data-layer="radius1500">1,5km</button>
     </div>
     <div class="map-wrap">
       <div id="map"></div>
@@ -799,8 +835,10 @@ const S = {
   lat: null, lon: null,
   name: '',
   map: null,
-  layers: { dipul: null, aircraft: null, radius: null, pin: null },
-  layerVisible: { dipul: true, aircraft: true , radius: true },
+  searchRadius: 100,
+  layers:       { dipul: null, aircraft: null, radius: null, radius1500: null, pin: null },
+  layerVisible: { dipul: true,  aircraft: true, radius: true, radius1500: true },
+  alarm:        { active: false, silenced: false, intervalId: null },
 };
 
 /* ================================================================
@@ -1667,13 +1705,20 @@ function initMap(lat, lon, aircraft, zones) {
       .bindPopup(popStr)
       .addTo(S.map);
 
-    // 100m radius circle
+    // Suchradius-Kreis (5m oder 100m, per Button wählbar)
     S.layers.radius = L.circle([lat,lon],{
-      radius:100, color:'#00b4d8',
+      radius: S.searchRadius, color:'#00b4d8',
       fillColor:'rgba(0,180,216,0.05)', fillOpacity:0.15,
-      weight:1.5, dashArray:'5 5',
+      weight:1.5, dashArray:'5 5', interactive:false,
     });
     if (S.layerVisible.radius) S.layers.radius.addTo(S.map);
+    // 1,5km Alarmzone (rot gestrichelt)
+    S.layers.radius1500 = L.circle([lat,lon],{
+      radius: 1500, color:'#e53935',
+      fillColor:'transparent', fillOpacity:0,
+      weight:2, dashArray:'10 7', interactive:false,
+    });
+    if (S.layerVisible.radius1500) S.layers.radius1500.addTo(S.map);
     
     // Doppelklick Event (Neupositionierung)
     S.map.on('dblclick', async (e) => {
@@ -1694,10 +1739,13 @@ function initMap(lat, lon, aircraft, zones) {
     S.layers.pin.setLatLng([lat, lon]);
     S.layers.pin.bindPopup(popStr);
     S.layers.radius.setLatLng([lat, lon]);
+    S.layers.radius.setRadius(S.searchRadius);
+    if (S.layers.radius1500) S.layers.radius1500.setLatLng([lat, lon]);
   }
 
   // Always rendering aircraft markers visually
   renderAircraftMarkers(aircraft);
+  checkAircraftAlarm(aircraft);
 }
 
 // Layer toggles — set up once (not inside initMap to avoid duplicate listeners)
@@ -1705,6 +1753,7 @@ document.querySelectorAll('.map-toggle').forEach(btn => {
   btn.addEventListener('click', () => {
     if (!S.map) return;
     const key = btn.dataset.layer;
+    if (!key) return;                          // radius-btn: eigener Handler
     S.layerVisible[key] = !S.layerVisible[key];
     btn.classList.toggle('active', S.layerVisible[key]);
     const layer = S.layers[key];
@@ -1712,6 +1761,95 @@ document.querySelectorAll('.map-toggle').forEach(btn => {
     S.layerVisible[key] ? layer.addTo(S.map) : S.map.removeLayer(layer);
   });
 });
+// ── Radius Radio-Buttons (5m / 100m) ─────────────────────────────────────
+document.querySelectorAll('.radius-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!S.map) return;
+    document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    S.searchRadius = parseInt(btn.dataset.radius, 10);
+    if (S.layers.radius) S.layers.radius.setRadius(S.searchRadius);
+  });
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  ALARM-SYSTEM: playBell · checkAircraftAlarm · silenceAlarm
+// ═══════════════════════════════════════════════════════════════════
+
+function playBell() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    // Erster Glockenschlag: 880 Hz → 440 Hz Abschwingen
+    const makeStrike = (freq, gainVal, decay, freqEnd, startOffset) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t + startOffset);
+      o.frequency.exponentialRampToValueAtTime(freqEnd, t + startOffset + decay * 0.7);
+      g.gain.setValueAtTime(gainVal, t + startOffset);
+      g.gain.exponentialRampToValueAtTime(0.001, t + startOffset + decay);
+      o.start(t + startOffset); o.stop(t + startOffset + decay);
+    };
+    makeStrike(880,  0.55, 2.0, 440,  0);      // Grundton
+    makeStrike(1320, 0.25, 1.5, 660,  0);      // Oberton
+    makeStrike(660,  0.40, 1.8, 330,  0.38);   // Zweiter Schlag versetzt
+    makeStrike(990,  0.20, 1.3, 495,  0.38);
+  } catch(e) { console.warn('[SkyCheck] Bell failed:', e); }
+}
+
+function _distM(la1, lo1, la2, lo2) {
+  const R = 6371000, dLat = (la2-la1)*Math.PI/180, dLon = (lo2-lo1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function checkAircraftAlarm(aircraft) {
+  if (!S.lat || !S.lon || !Array.isArray(aircraft)) return;
+  const threats = aircraft
+    .filter(a => {
+      if (a.api_error) return false;
+      const alt  = a.altGeo ?? a.altBaro ?? 9999;
+      const dist = _distM(S.lat, S.lon, a.lat, a.lon);
+      return alt < 300 && dist <= 1500;
+    })
+    .sort((a, b) => _distM(S.lat, S.lon, a.lat, a.lon) - _distM(S.lat, S.lon, b.lat, b.lon));
+
+  const banner = document.getElementById('alarm-banner');
+  if (!banner) return;
+
+  if (threats.length > 0 && !S.alarm.silenced) {
+    const t    = threats[0];
+    const alt  = Math.round(t.altGeo ?? t.altBaro ?? 0);
+    const dist = Math.round(_distM(S.lat, S.lon, t.lat, t.lon));
+    const id   = t.callsign || t.icao || '?';
+    const lbl  = threats.length > 1 ? `${threats.length} Fluggeräte` : id;
+    document.getElementById('alarm-text').textContent =
+      `⚠️  ${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`;
+    banner.classList.add('active');
+    if (!S.alarm.active) {
+      S.alarm.active = true;
+      playBell();
+      S.alarm.intervalId = setInterval(() => {
+        if (!S.alarm.silenced) playBell();
+      }, 30000);
+    }
+  } else if (threats.length === 0) {
+    banner.classList.remove('active');
+    S.alarm.active   = false;
+    S.alarm.silenced = false;
+    if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+  }
+}
+
+function silenceAlarm() {
+  S.alarm.silenced = true;
+  if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+  const b = document.getElementById('alarm-banner');
+  if (b) b.classList.remove('active');
+}
 
 function renderAircraftMarkers(aircraft) {
   if (S.layers.aircraft) S.map.removeLayer(S.layers.aircraft);
@@ -1731,5 +1869,9 @@ function renderAircraftMarkers(aircraft) {
 }
 
 </script>
+<div id="alarm-banner">
+  <span id="alarm-text">⚠️ Fluggerät in Alarmzone!</span>
+  <button class="alarm-dismiss" onclick="silenceAlarm()">Stumm schalten ✕</button>
+</div>
 </body>
 </html>
