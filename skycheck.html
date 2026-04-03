@@ -824,7 +824,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.9 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.10 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1311,33 +1311,35 @@ async function fetchKp() {
 }
 
 async function fetchKpGfz() {
-  try {
-    const now  = Date.now();
-    const [d3, d30] = await Promise.all([
-      gfzFetch(now - 9*3600*1000, now, 'Kp'),
-      gfzFetch(now - 2.5*3600*1000, now, 'Hp30'),
-    ]);
-    if (d3 && d3.Kp && d3.Kp.length > 0) {
-      const idx  = d3.Kp.length - 1;
-      const val  = parseFloat(d3.Kp[idx]);
-      if (!isNaN(val)) {
-        // Hp30 Balken: letzte 4 Werte + aktueller Kp3h als Referenz
-        const bars = [];
-        if (d30 && d30.Hp30 && d30.Hp30.length > 0) {
-          const recent = d30.Hp30.slice(-4);
-          const dts    = d30.datetime ? d30.datetime.slice(-4) : [];
-          recent.forEach((v, i) => {
-            const t = dts[i] ? new Date(dts[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
-            bars.push({ v: parseFloat(v), label: t, ref: i === recent.length - 1 });
-          });
-        }
-        // 5. Balken: aktueller Kp3h als Referenz (gestrichelt)
-        return { val, dt: d3.datetime ? d3.datetime[idx] : null, stat: d3.status ? d3.status[idx] : 'pre', bars };
+        try {
+          const now  = Date.now();
+          const [d3, d30] = await Promise.all([
+            gfzFetch(now - 9*3600*1000, now, 'Kp'),
+            gfzFetch(now - 2.5*3600*1000, now, 'Hp30'),
+          ]);
+          if (d30 && d30.Hp30 && d30.Hp30.length > 0) {
+            const recent = d30.Hp30.slice(-4);
+            const dts    = d30.datetime ? d30.datetime.slice(-4) : [];
+            const bars   = [];
+            recent.forEach((v, i) => {
+              const t = dts[i] ? new Date(dts[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+              bars.push({ v: parseFloat(v), label: t, ref: i === recent.length - 1, forecast: false });
+            });
+            if (d3 && d3.Kp && d3.Kp.length > 0) {
+              const ki  = d3.Kp.length - 1;
+              const kpV = parseFloat(d3.Kp[ki]);
+              const ts3 = d3.datetime ? new Date(d3.datetime[ki]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+              if (!isNaN(kpV)) bars.push({ v: kpV, label: ts3, ref: false, forecast: true });
+            }
+            const lastIdx = d30.Hp30.length - 1;
+            const val  = parseFloat(d30.Hp30[lastIdx]);
+            const dt   = d30.datetime ? d30.datetime[lastIdx] : null;
+            const stat = d3 && d3.status ? d3.status[d3.status.length - 1] : 'pre';
+            if (!isNaN(val)) return { val, dt, stat, bars };
+          }
+        } catch(e) { console.warn('fetchKpGfz:', e); }
+        return null;
       }
-    }
-  } catch(e) { console.warn('fetchKpGfz:', e); }
-  return null;
-}
 
 
 /* ================================================================
@@ -1685,8 +1687,8 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
           const bh  = Math.max(2, Math.round(Math.min(b.v, maxK) / maxK * (H - 11)));
           const x   = i * (bw + 2) + 1;
           const col = bc(b.v);
-          const op  = b.ref ? '1' : '0.6';
-          const dsh = b.ref ? ' stroke="#fff" stroke-width="0.8" stroke-dasharray="2,1.5"' : '';
+          const op  = b.ref ? '1' : b.forecast ? '0.75' : '0.55';
+          const dsh = b.forecast ? ' stroke="#8899aa" stroke-width="0.8" stroke-dasharray="2,1.5"' : b.ref ? ' stroke="#fff" stroke-width="0.8"' : '';
           return '<rect x="' + x + '" y="' + (H-10-bh) + '" width="' + bw + '" height="' + bh + '" rx="1.5" fill="' + col + '" opacity="' + op + '"' + dsh + '/>' +
                  '<text x="' + (x+bw/2) + '" y="' + (H-1) + '" text-anchor="middle" font-size="6" fill="#3d5a7a">' + b.label + '</text>';
         }).join('') + '</svg>' : '';
