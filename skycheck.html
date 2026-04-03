@@ -1331,6 +1331,24 @@ function renderMetrics(w, kp, aircraft) {
   const rc = rain  > 0.3 ? 'c-nogo' : rain > 0 ? 'c-warn' : '';
   const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
 
+  let acHtml = '<div class="fc-val">Keine Flugzeuge (~200km)</div>';
+  if (aircraft.length > 0 && aircraft[0].api_error) {
+    acHtml = `<div class="fc-val" style="color:var(--warn)">Blockiert: Bitte später prüfen (Rate Limit)</div>`;
+  } else if (aircraft.length > 0) {
+    const validAc = aircraft.filter(a => !a.api_error);
+    const cls = getClosest(S.lat, S.lon, validAc);
+    if (cls) {
+      const distKm = cls.dist/1000;
+      let clName = 'warn';
+      if (distKm > 10) clName = 'ok';
+      acHtml = `
+      <div class="fc-val ${clName}" style="font-size:0.95rem;line-height:1.2;">
+        ${distKm.toFixed(1)} km entfernt<br>
+        <span style="font-size:0.75rem; color:var(--text2)">${cls.ac.callsign||'Unbekannt'} / Flughöhe: ~${(cls.ac.altGeo??cls.ac.altBaro??0).toFixed(0)}m</span>
+      </div>`;
+    }
+  }
+
   $('metrics-grid').innerHTML = [
     card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal'),
     vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '') : '',
