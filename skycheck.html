@@ -1101,38 +1101,44 @@ async function fetchKp() {
    API: OPENSKY NETWORK
 ================================================================ */
 async function fetchAircraft(lat, lon) {
+  let arr = [];
   try {
     const d   = 1.0;
     const url = `${OPENSKY_URL}?lamin=${lat-d}&lomin=${lon-d}&lamax=${lat+d}&lomax=${lon+d}`;
     const r   = await fetch(url);
+    
     if (!r.ok) {
       if (r.status === 429) {
-        // We hit the OpenSky rate limit (too many reloads/scans)
-        return [{ api_error: 'RATE_LIMIT' }];
+        arr.push({ api_error: 'RATE_LIMIT' });
+      } else {
+         console.warn('OpenSky HTTP Error:', r.status);
       }
-      return [];
+    } else {
+      const data = await r.json();
+      const mapped = (data.states||[])
+        .filter(s => s[5] && s[6] && !s[8])   // has position, not on ground
+        .map(s => ({
+          icao: s[0], callsign: (s[1]||'').trim(),
+          lon: s[5], lat: s[6],
+          altBaro: s[7], altGeo: s[13],
+          vel: s[9], hdg: s[10],
+          category: s[17],
+        }));
+      arr.push(...mapped);
     }
-    const data = await r.json();
-    let arr = (data.states||[])
-      .filter(s => s[5] && s[6] && !s[8])   // has position, not on ground
-      .map(s => ({
-        icao: s[0], callsign: (s[1]||'').trim(),
-        lon: s[5], lat: s[6],
-        altBaro: s[7], altGeo: s[13],
-        vel: s[9], hdg: s[10],
-        category: s[17],
-      }));
-      
-    // Always inject a local "Test-Drohne" exactly 100m west of the user to prove Marker CSS works
-    arr.push({
-      icao: 'TEST1', callsign: 'UAV-TEST',
-      lat: lat, lon: lon - 0.001,
-      altBaro: 50, altGeo: 50,
-      vel: 0, hdg: 180, category: 15
-    });
+  } catch(e) { 
+    console.warn('OpenSky Exception:', e); 
+  }
 
-    return arr;
-  } catch(e) { console.warn('OpenSky:', e); return []; }
+  // Always inject a local "Test-Drohne" exactly 500m away to prove Marker CSS works
+  arr.push({
+    icao: 'TEST1', callsign: 'UAV-TEST',
+    lat: lat + 0.005, lon: lon + 0.005,
+    altBaro: 50, altGeo: 50,
+    vel: 0, hdg: 180, category: 15
+  });
+
+  return arr;
 }
 
 /* ================================================================
