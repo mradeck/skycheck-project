@@ -184,6 +184,17 @@
     }
     .btn-check:hover { opacity: 0.85; }
 
+    /* Mobile: Prüfen-Button in eigene Zeile umbrechen */
+    @media (max-width: 480px) {
+      #landing { padding: 1.25rem; }
+      .search-box { flex-wrap: wrap; }
+      .btn-check {
+        width: 100%;
+        height: 44px;
+        border-radius: 0 0 var(--radius) var(--radius);
+      }
+    }
+
     /* autocomplete */
     .suggestions {
       position: absolute; top: calc(100% + 6px); left: 0; right: 0;
@@ -620,7 +631,7 @@
   <div class="l-inner">
     <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
     <h1 class="l-logo">Sky<span>Check</span></h1>
-    <p class="l-sub">Wetter, Luftraum und Flugbewegungen auf einen Blick</p>
+    <p class="l-sub">Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</p>
 
     <div class="search-wrap">
       <div class="search-box">
@@ -772,7 +783,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.6 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.7 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
