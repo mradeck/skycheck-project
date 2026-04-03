@@ -1698,7 +1698,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
-    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/bewoelkung.html'),
+    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
     `<div class="m-card"><div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>${acHtml}</div>`,
   ].join('');
