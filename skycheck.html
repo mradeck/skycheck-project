@@ -1105,9 +1105,15 @@ async function fetchAircraft(lat, lon) {
     const d   = 1.0;
     const url = `${OPENSKY_URL}?lamin=${lat-d}&lomin=${lon-d}&lamax=${lat+d}&lomax=${lon+d}`;
     const r   = await fetch(url);
-    if (!r.ok) return [];
+    if (!r.ok) {
+      if (r.status === 429) {
+        // We hit the OpenSky rate limit (too many reloads/scans)
+        return [{ api_error: 'RATE_LIMIT' }];
+      }
+      return [];
+    }
     const data = await r.json();
-    return (data.states||[])
+    let arr = (data.states||[])
       .filter(s => s[5] && s[6] && !s[8])   // has position, not on ground
       .map(s => ({
         icao: s[0], callsign: (s[1]||'').trim(),
@@ -1116,6 +1122,16 @@ async function fetchAircraft(lat, lon) {
         vel: s[9], hdg: s[10],
         category: s[17],
       }));
+      
+    // Always inject a local "Test-Drohne" exactly 100m west of the user to prove Marker CSS works
+    arr.push({
+      icao: 'TEST1', callsign: 'UAV-TEST',
+      lat: lat, lon: lon - 0.001,
+      altBaro: 50, altGeo: 50,
+      vel: 0, hdg: 180, category: 15
+    });
+
+    return arr;
   } catch(e) { console.warn('OpenSky:', e); return []; }
 }
 
@@ -1323,7 +1339,7 @@ function renderMetrics(w, kp, aircraft) {
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : ''),
     card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag'),
-    card('Luftverkehr', `${aircraft.length}`, `Flugzeuge ~15 km`),
+    `<div class="m-card"><div class="m-lbl">Luftverkehr</div>${acHtml}</div>`,
   ].join('');
 }
 
@@ -1603,7 +1619,8 @@ document.querySelectorAll('.map-toggle').forEach(btn => {
 
 function renderAircraftMarkers(aircraft) {
   if (S.layers.aircraft) S.map.removeLayer(S.layers.aircraft);
-  const markers = aircraft.map(a => {
+  const validAc = aircraft.filter(a => !a.api_error);
+  const markers = validAc.map(a => {
     let emoji = '✈️';
     if (a.category === 9) emoji = '🚁'; // Rotorcraft
     else if (a.category === 10) emoji = '🛩️'; // Glider
