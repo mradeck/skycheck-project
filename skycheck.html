@@ -1196,7 +1196,13 @@ async function runCheck() {
 
     kpGfz = _kpGfz;
 
-    const now   = weatherArr[0] || null;
+      const nowMs = Date.now();
+      const now   = (weatherArr||[]).reduce((best, e) => {
+        if (best === null) return e;
+        const dt  = Math.abs(new Date(e.timestamp).getTime() - nowMs);
+        const dbt = Math.abs(new Date(best.timestamp).getTime() - nowMs);
+        return dt < dbt ? e : best;
+      }, null);
     const kpVal = kp ?? 0;
 
     // Evaluate overall flight status
