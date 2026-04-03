@@ -800,7 +800,7 @@ const S = {
   name: '',
   map: null,
   layers: { dipul: null, aircraft: null, radius: null, pin: null },
-  layerVisible: { dipul: true, aircraft: true, radius: true },
+  layerVisible: { dipul: true, aircraft: false, radius: true },
 };
 
 /* ================================================================
@@ -1101,36 +1101,28 @@ async function fetchKp() {
    API: OPENSKY NETWORK
 ================================================================ */
 async function fetchAircraft(lat, lon) {
-  let arr = [];
+  const dLat = 200 / 111.0;
+  const dLon = dLat / Math.cos(lat * Math.PI / 180);
+  const url = OPENSKY_URL +
+    '?lamin=' + (lat - dLat).toFixed(4) + '&lomin=' + (lon - dLon).toFixed(4) +
+    '&lamax=' + (lat + dLat).toFixed(4) + '&lomax=' + (lon + dLon).toFixed(4);
   try {
-    const d   = 1.0;
-    const url = `${OPENSKY_URL}?lamin=${lat-d}&lomin=${lon-d}&lamax=${lat+d}&lomax=${lon+d}`;
-    const r   = await fetch(url);
-    
-    if (!r.ok) {
-      if (r.status === 429) {
-        arr.push({ api_error: 'RATE_LIMIT' });
-      } else {
-         console.warn('OpenSky HTTP Error:', r.status);
-      }
-    } else {
-      const data = await r.json();
-      const mapped = (data.states||[])
-        .filter(s => s[5] && s[6] && !s[8])   // has position, not on ground
-        .map(s => ({
-          icao: s[0], callsign: (s[1]||'').trim(),
-          lon: s[5], lat: s[6],
-          altBaro: s[7], altGeo: s[13],
-          vel: s[9], hdg: s[10],
-          category: s[17],
-        }));
-      arr.push(...mapped);
+    const r = await fetch(url);
+    if (r.status === 429) {
+      const retryAfter = r.headers.get('X-Rate-Limit-Retry-After-Seconds') || r.headers.get('Retry-After') || null;
+      const waitMin = retryAfter ? Math.ceil(parseInt(retryAfter) / 60) : null;
+      return [{ api_error: 'RATE_LIMIT', retryMin: waitMin }];
     }
-  } catch(e) { 
-    console.warn('OpenSky Exception:', e); 
+    if (!r.ok) {
+      return [{ api_error: 'HTTP_ERROR', status: r.status }];
+    }
+    const data = await r.json();
+    return (data.states || [])
+      .filter(s => s[5] && s[6] && !s[8])
+      .map(s => ({ icao: s[0], callsign: (s[1]||'').trim(), lon: s[5], lat: s[6], altBaro: s[7], altGeo: s[13], vel: s[9], hdg: s[10], category: s[17] }));
+  } catch (e) {
+    return [{ api_error: 'FETCH_ERROR', msg: e.message }];
   }
-
-  return arr;
 }
 
 /* ================================================================
