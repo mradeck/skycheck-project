@@ -621,6 +621,25 @@
 .l-app-logo span { color: var(--accent); }
 .l-app-desc    { font-size: 0.78rem; color: var(--text2); line-height: 1.4; margin-top: 0.15rem; }
 .l-app-arrow   { margin-left: auto; color: var(--text3); font-size: 1.1rem; flex-shrink: 0; }
+
+/* ── Info-Button & Info-Modal ────────────────────────────────────────── */
+.l-info-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0 0 0 0.35rem;
+  color: var(--text3); font-size: 1rem; cursor: pointer;
+  vertical-align: middle; transition: color var(--transition);
+  line-height: 1;
+}
+.l-info-btn:hover { color: var(--accent); }
+.info-modal-body { padding: 1.4rem 1.5rem; max-height: 70vh; overflow-y: auto; line-height: 1.65; }
+.info-modal-body p  { color: var(--text2); font-size: 0.88rem; margin-bottom: 1rem; }
+.info-modal-body h3 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.8px;
+                      text-transform: uppercase; color: var(--accent);
+                      margin: 1.1rem 0 0.3rem; }
+.info-modal-body h3:first-child { margin-top: 0; }
+.info-modal-note { font-size: 0.78rem !important; color: var(--text3) !important;
+                   border-top: 1px solid var(--border); padding-top: 0.9rem;
+                   margin-top: 0.5rem !important; }
 </style>
 </head>
 <body>
@@ -641,7 +660,7 @@
   <div class="l-inner">
     <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
     <h1 class="l-logo">Sky<span>Check</span></h1>
-    <p class="l-sub">Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</p>
+    <p class="l-sub"><span>Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg></button></p>
 
     <div class="search-wrap">
       <div class="search-box">
@@ -820,6 +839,43 @@
 
 </div><!-- #results -->
 
+
+  <!-- INFO MODAL -->
+  <div id="info-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ueber SkyCheck</h2>
+        <button id="btn-close-info" class="modal-close">&times;</button>
+      </div>
+      <div class="info-modal-body">
+        <p>Die kostenlose Web-App fuer Drohnenpiloten in Deutschland &mdash; alle sicherheitsrelevanten
+        Informationen vor dem Abflug auf einen Blick.</p>
+        <h3>Geozonenkarte</h3>
+        <p>Zeigt Luftraumklassen, Flugverbotszonen, Naturschutzgebiete und NSG-Pufferzonen
+        direkt auf der Karte &mdash; basierend auf offiziellen DFS- und OpenAIP-Daten.</p>
+        <h3>Luftraumalarm</h3>
+        <p>Aktuelle NOTAMs und temporaere Luftraumbeschraenkungen (TFR / ED-R) fuer den
+        gewaehlten Standort werden automatisch abgerufen und als Ampel dargestellt.</p>
+        <h3>Flugbewegungen (ADS-B)</h3>
+        <p>Echtzeit-Luftverkehr im Umkreis: Flugzeuge, Hubschrauber und Segelflugzeuge
+        in der Naehe des geplanten Fluggebiets.</p>
+        <h3>Wetter &amp; Boen</h3>
+        <p>Aktuelle Wetterdaten via DWD / BrightSky &mdash; stuendliche 48h-Vorhersage und
+        5-Tages-Uebersicht mit maximalen Windboen, Niederschlag und Temperatur.</p>
+        <h3>KP-Index</h3>
+        <p>Der geomagnetische Aktivitaetsindex als Ampel &mdash; relevant fuer FPV-Piloten,
+        da hohe Kp-Werte GPS-Genauigkeit und Kompass-Stabilitaet beeinflussen koennen.</p>
+        <h3>Fuer wen?</h3>
+        <p>SkyCheck richtet sich an Hobbydrohnenpiloten, kommerzielle UAV-Operatoren
+        und FPV-Enthusiasten, die ihren Flug gemaess EU-Drohnenverordnung
+        (Kategorien A1 / A2 / A3) rechtssicher vorbereiten moechten.</p>
+        <p class="info-modal-note">&#9888; SkyCheck ist eine Orientierungshilfe. Die gesetzlich
+        vorgeschriebene Genehmigung und finale Luftraumfreigabe erfolgen ueber die
+        DFS Aviation Services App und weitere zugelassene Portale.</p>
+      </div>
+    </div>
+  </div>
+
 <!-- ============================================================
      SCRIPTS
 ============================================================ -->
@@ -976,6 +1032,11 @@ $('btn-settings').addEventListener('click', () => {
 });
 
 $('btn-close-settings').addEventListener('click', () => $('settings-modal').classList.add('hidden'));
+
+$('btn-info').addEventListener('click', () => $('info-modal').classList.remove('hidden'));
+$('btn-close-info').addEventListener('click', () => $('info-modal').classList.add('hidden'));
+$('info-modal').addEventListener('click', (e) => { if (e.target === $('info-modal')) $('info-modal').classList.add('hidden'); });
+
 
 document.querySelectorAll('input[name="layerMode"]').forEach(radio => {
   radio.addEventListener('change', (e) => renderSettingsLayers(e.target.value));
