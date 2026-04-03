@@ -578,6 +578,14 @@
   border-right: 1px solid rgba(255,255,255,.18) !important;
 }
 .radius-group .radius-btn:last-child { border-right: none !important; }
+
+/* ── Kachel-Titel als klickbarer Link ─────────────────────────────────────── */
+.m-lbl-link {
+  color: var(--text3); text-decoration: none;
+  border-bottom: 1px dotted rgba(255,255,255,.20);
+  transition: color .18s, border-color .18s;
+}
+.m-lbl-link:hover { color: var(--accent); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -744,7 +752,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.3 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.4 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1471,20 +1479,23 @@ function renderMetrics(w, kp, aircraft) {
   }
 
   $('metrics-grid').innerHTML = [
-    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal'),
-    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '') : '',
-    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s'),
-    card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`),
-    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : ''),
-    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering'),
-    card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag'),
-    `<div class="m-card"><div class="m-lbl">Luftverkehr</div>${acHtml}</div>`,
+    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal', 'https://kp.gfz.de/hp30-hp60'),
+    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/windboeen.html'),
+    card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
+    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
+    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://sat24.com/de/de'),
+    card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
+    `<div class="m-card"><div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>${acHtml}</div>`,
   ].join('');
 }
 
-function card(label, val, sub) {
+function card(label, val, sub, url='') {
+  const lbl = url
+    ? `<a href="${url}" target="_blank" class="m-lbl-link">${label}</a>`
+    : label;
   return `<div class="m-card">
-    <div class="m-lbl">${label}</div>
+    <div class="m-lbl">${lbl}</div>
     <div class="m-val mono">${val}</div>
     ${sub ? `<div class="m-sub">${sub}</div>` : ''}
   </div>`;
