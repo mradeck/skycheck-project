@@ -1102,7 +1102,7 @@ async function fetchKp() {
 ================================================================ */
 async function fetchAircraft(lat, lon) {
   try {
-    const d   = 0.15;
+    const d   = 1.0;
     const url = `${OPENSKY_URL}?lamin=${lat-d}&lomin=${lon-d}&lamax=${lat+d}&lomax=${lon+d}`;
     const r   = await fetch(url);
     if (!r.ok) return [];
