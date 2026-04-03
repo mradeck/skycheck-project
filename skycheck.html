@@ -1328,12 +1328,10 @@ async function fetchKpGfz() {
           const dts    = d30.datetime ? d30.datetime.slice(-4) : [];
           recent.forEach((v, i) => {
             const t = dts[i] ? new Date(dts[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
-            bars.push({ v: parseFloat(v), label: t, ref: false });
+            bars.push({ v: parseFloat(v), label: t, ref: i === recent.length - 1 });
           });
         }
         // 5. Balken: aktueller Kp3h als Referenz (gestrichelt)
-        const ts3 = d3.datetime ? new Date(d3.datetime[idx]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
-        bars.push({ v: val, label: ts3, ref: true });
         return { val, dt: d3.datetime ? d3.datetime[idx] : null, stat: d3.status ? d3.status[idx] : 'pre', bars };
       }
     }
