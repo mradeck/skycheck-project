@@ -625,7 +625,7 @@
       <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
       <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
       <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
-      <a href="https://nominatim.openstreetmap.org/" target="_blank" class="l-src">Nominatim</a>
+      <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
       <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" class="l-src">Impressum</a>
       <a href="https://www.michael-radeck.de" target="_blank" class="l-src">michael-radeck.de</a>
     </div>
@@ -744,14 +744,14 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.2 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.3 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
       <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
       <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
       <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
-      <a href="https://nominatim.openstreetmap.org/" target="_blank" class="l-src">Nominatim</a>
+      <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
       <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" class="l-src">Impressum</a>
       <a href="https://www.michael-radeck.de" target="_blank" class="l-src">michael-radeck.de</a>
     </div>
@@ -826,7 +826,7 @@ const DIPUL_WMS_URL   = 'https://uas-betrieb.de/geoservices/dipul/wms';
 const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
 const KP_URL        = 'https://kp.gfz.de/app/json/';
 const ADSB_URL      = 'https://api.airplanes.live/v2/point';
-const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
+const PHOTON_URL    = 'https://photon.komoot.io';
 
 /* ================================================================
    STATE
@@ -920,18 +920,23 @@ $('btn-save-settings').addEventListener('click', () => {
    GEOCODING / AUTOCOMPLETE
 ================================================================ */
 async function geocode(q) {
-  const url = `${NOMINATIM_URL}/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=de&accept-language=de`;
-  const r = await fetch(url, { headers: {'Accept-Language':'de'} });
-  return r.json();
+  const url = `${PHOTON_URL}/api/?q=${encodeURIComponent(q)}&lang=de&limit=5`
+             + `&bbox=5.5,47.2,15.5,55.1`;
+  const d = await (await fetch(url)).json();
+  return (d.features || []).map(f => ({
+    lat:          f.geometry.coordinates[1],
+    lon:          f.geometry.coordinates[0],
+    display_name: [f.properties.name, f.properties.city || f.properties.town,
+                   f.properties.state].filter(Boolean).join(', '),
+  }));
 }
 
 async function reverseGeocode(lat, lon) {
-  const url = `${NOMINATIM_URL}/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`;
-  const r = await fetch(url, { headers: {'Accept-Language':'de'} });
-  const d = await r.json();
-  const a = d.address || {};
-  return [a.road||a.pedestrian||'', a.city||a.town||a.village||'', a.state||'']
-    .filter(Boolean).slice(0,3).join(', ') || d.display_name.split(',').slice(0,2).join(', ');
+  const url = `${PHOTON_URL}/reverse?lat=${lat}&lon=${lon}&lang=de`;
+  const d = await (await fetch(url)).json();
+  const p = d.features?.[0]?.properties || {};
+  return [p.street || p.name, p.city || p.town || p.village, p.state]
+    .filter(Boolean).join(', ') || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 }
 
 let acTimer = null;
