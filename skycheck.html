@@ -710,6 +710,45 @@
      SCRIPTS
 ============================================================ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>DiPUL Layer Einstellungen</h2>
+        <button id="btn-close-settings" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem; color:var(--text2); margin-bottom:1rem;">
+          Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden sollen.
+        </p>
+
+        <label class="s-radio">
+          <input type="radio" name="layerMode" value="reduced">
+          <div class="s-radio-content">
+            <strong>Kritische / Reduzierte Ansicht</strong>
+            <span>Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten (Flughäfen, Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.</span>
+          </div>
+        </label>
+
+        <label class="s-radio">
+          <input type="radio" name="layerMode" value="all">
+          <div class="s-radio-content">
+            <strong>Vollständige Ansicht (Alle verfügbaren Zonen)</strong>
+            <span>Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.</span>
+          </div>
+        </label>
+
+        <div style="margin-top: 1.5rem;">
+          <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);">Aktive Layer in der Übersicht:</strong>
+          <div id="settings-active-layers" class="s-layers-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn-primary" style="width:100%">Einstellung übernehmen</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 'use strict';
 
@@ -1566,43 +1605,5 @@ function renderAircraftMarkers(aircraft) {
 }
 
 </script>
-  <!-- SETTINGS MODAL -->
-  <div id="settings-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>DiPUL Layer Einstellungen</h2>
-        <button id="btn-close-settings" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:0.85rem; color:var(--text2); margin-bottom:1rem;">
-          Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden sollen.
-        </p>
-
-        <label class="s-radio">
-          <input type="radio" name="layerMode" value="reduced">
-          <div class="s-radio-content">
-            <strong>Kritische / Reduzierte Ansicht</strong>
-            <span>Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten (Flughäfen, Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.</span>
-          </div>
-        </label>
-
-        <label class="s-radio">
-          <input type="radio" name="layerMode" value="all">
-          <div class="s-radio-content">
-            <strong>Vollständige Ansicht (Alle verfügbaren Zonen)</strong>
-            <span>Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.</span>
-          </div>
-        </label>
-
-        <div style="margin-top: 1.5rem;">
-          <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);">Aktive Layer in der Übersicht:</strong>
-          <div id="settings-active-layers" class="s-layers-list"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="btn-save-settings" class="btn-primary" style="width:100%">Einstellung übernehmen</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
