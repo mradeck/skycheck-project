@@ -212,7 +212,12 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 20px; padding: 0.25rem 0.7rem;
       font-size: 0.7rem; color: var(--text3);
-      letter-spacing: 0.3px;
+      letter-spacing: 0.3px; text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .l-src:hover {
+      color: var(--text);
+      border-color: var(--text3);
     }
 
     /* ============================================================
@@ -584,11 +589,13 @@
     </div>
 
     <div class="l-sources">
-      <span class="l-src">DiPUL WMS</span>
-      <span class="l-src">DWD · Bright Sky</span>
-      <span class="l-src">GFZ Kp-Index</span>
-      <span class="l-src">OpenSky Network</span>
-      <span class="l-src">Nominatim</span>
+      <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
+      <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
+      <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
+      <a href="https://opensky-network.org/" target="_blank" class="l-src">OpenSky Network</a>
+      <a href="https://nominatim.openstreetmap.org/" target="_blank" class="l-src">Nominatim</a>
+      <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" class="l-src">Impressum</a>
+      <a href="https://www.michael-radeck.de" target="_blank" class="l-src">michael-radeck.de</a>
     </div>
   </div>
 </div>
