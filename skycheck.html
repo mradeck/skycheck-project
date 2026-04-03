@@ -1130,14 +1130,6 @@ async function fetchAircraft(lat, lon) {
     console.warn('OpenSky Exception:', e); 
   }
 
-  // Always inject a local "Test-Drohne" exactly 500m away to prove Marker CSS works
-  arr.push({
-    icao: 'TEST1', callsign: 'UAV-TEST',
-    lat: lat + 0.005, lon: lon + 0.005,
-    altBaro: 50, altGeo: 50,
-    vel: 0, hdg: 180, category: 15
-  });
-
   return arr;
 }
 
