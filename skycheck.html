@@ -1321,6 +1321,25 @@ function beaufort(ms) {
   return i === -1 ? 12 : i;
 }
 
+function distance(lat1, lon1, lat2, lon2) {
+  const p = 0.017453292519943295;
+  const c = Math.cos;
+  const a = 0.5 - c((lat2 - lat1) * p)/2 + 
+            c(lat1 * p) * c(lat2 * p) * 
+            (1 - c((lon2 - lon1) * p))/2;
+  return 12742 * Math.asin(Math.sqrt(a)) * 1000;
+}
+
+function getClosest(lat, lon, arr) {
+  if (!arr || !arr.length) return null;
+  let minDiff = Infinity, closest = null;
+  for (let a of arr) {
+    const d = distance(lat, lon, a.lat, a.lon);
+    if (d < minDiff) { minDiff = d; closest = {ac: a, dist: d}; }
+  }
+  return closest;
+}
+
 function renderMetrics(w, kp, aircraft) {
   if (!w) { $('metrics-grid').innerHTML = '<p style="color:var(--text3)">Keine Wetterdaten</p>'; return; }
 
