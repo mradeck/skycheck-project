@@ -611,6 +611,16 @@
   transition: color .18s, border-color .18s;
 }
 .m-lbl-link:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── MetaLens Teaser ─────────────────────────────────────────────────── */
+.l-other-apps  { width: 100%; margin-top: 1.75rem; }
+.l-other-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); text-align: center; margin-bottom: 0.6rem; }
+.l-app-card    { display: flex; align-items: center; gap: 1rem; background: rgba(0,180,216,0.04); border: 1px solid rgba(0,180,216,0.14); border-radius: var(--radius); padding: 0.9rem 1.1rem; text-decoration: none; transition: border-color 0.2s, background 0.2s; }
+.l-app-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+.l-app-logo    { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text); white-space: nowrap; }
+.l-app-logo span { color: var(--accent); }
+.l-app-desc    { font-size: 0.78rem; color: var(--text2); line-height: 1.4; margin-top: 0.15rem; }
+.l-app-arrow   { margin-left: auto; color: var(--text3); font-size: 1.1rem; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -651,6 +661,18 @@
         <button class="btn-check" id="btn-check">Prüfen</button>
       </div>
       <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="l-other-apps">
+      <div class="l-other-label">Weitere App</div>
+      <a href="https://incomparable-cucurucho-f663f3.netlify.app/" target="_blank" class="l-app-card">
+        <div>
+          <div class="l-app-logo">Meta<span>Lens</span></div>
+          <div class="l-app-desc">Panorama &amp; Metadata Inspector &mdash; Bild-Metadaten lesen,
+            bearbeiten &amp; exportieren (JPEG, PNG, WEBP, HEIC)</div>
+        </div>
+        <div class="l-app-arrow">&#8594;</div>
+      </a>
     </div>
 
     <div class="l-sources">
@@ -783,7 +805,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.8 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.9 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
