@@ -1623,6 +1623,12 @@ function renderMetrics(w, kp, aircraft) {
 
   $('metrics-grid').innerHTML = [
     card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal', 'https://kp.gfz.de/hp30-hp60'),
+    (() => {
+      if (!kpGfz) return '';
+      const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
+      const ts  = kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC' : '-';
+      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>`, `${ts} · ${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
+    })(),
     vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
