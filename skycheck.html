@@ -832,7 +832,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.14 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.15 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1193,16 +1193,13 @@ async function runCheck() {
 
   try {
     $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
+    // GFZ wird async geladen - blockiert nicht die Hauptanzeige
     let kpGfz = null;
-    const [weatherArr, kp, aircraft, _kpGfz] = await Promise.all([
+    const [weatherArr, kp, aircraft] = await Promise.all([
       fetchWeather(S.lat, S.lon),
       fetchKp(),
       fetchAircraft(S.lat, S.lon),
-      fetchKpGfz(),
     ]);
-
-
-    kpGfz = _kpGfz;
 
       const nowMs = Date.now();
       const now   = (weatherArr||[]).reduce((best, e) => {
@@ -1217,7 +1214,11 @@ async function runCheck() {
     const status = evalStatus(now, kpVal);
 
     renderStatus(status);
-    renderMetrics(now, kpVal, aircraft, kpGfz);
+    renderMetrics(now, kpVal, aircraft, null);
+    // GFZ async nachladen und Kachel aktualisieren
+    fetchKpGfz().then(result => {
+      if (result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
+    });
     renderWindProfile(now);
     S._weatherArr = weatherArr; S._kpVal = kpVal;
     renderForecast(weatherArr, kpVal);
@@ -1284,17 +1285,17 @@ async function gfzFetch(startMs, endMs, index='Kp') {
   const fmt    = d => new Date(d).toISOString().slice(0,19) + 'Z';
   const start  = fmt(startMs), end = fmt(endMs);
   const gfzUrl = `${KP_URL}?start=${start}&end=${end}&index=${index}&status=nowcast`;
-  try { const r = await safeFetch(gfzUrl, 6000); if (r.ok) return await r.json(); }
+  try { const r = await safeFetch(gfzUrl, 4000); if (r.ok) return await r.json(); }
   catch(e) { console.warn('GFZ direkt:', e.message); }
-  try {
-    const r = await safeFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(gfzUrl)}`, 8000);
-    if (r.ok) return await r.json();
-  } catch(e) { console.warn('GFZ allorigins:', e.message); }
   try {
     const fnUrl = `/.netlify/functions/gfz?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&index=${index}`;
     const r = await safeFetch(fnUrl, 8000);
     if (r.ok) return await r.json();
   } catch(e) { console.warn('GFZ netlify-fn:', e.message); }
+  try {
+    const r = await safeFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(gfzUrl)}`, 2000);
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('GFZ allorigins:', e.message); }
   return null;
 }
 
