@@ -1,6 +1,6 @@
 # SkyCheck — Drohnenflugprüfung für Deutschland
 
-**SkyCheck** ist eine Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen in Deutschland. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung.
+**SkyCheck** ist eine Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen in Deutschland. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung. Unser Verwendungszweck: Vermessung, Inspektion, Imagefilm, TV&Film-Produktionen, sowie Schulungen für den Drohnenführerschein A2/STS bei der www.multikopterschule.de
 
 🌐 **Live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
