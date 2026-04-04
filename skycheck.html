@@ -405,9 +405,16 @@
     .fc-dot.warn { background: var(--warn); }
     .fc-dot.nogo { background: var(--nogo); }
 /* ── 5-Tage-Vorhersage-Kacheln ─────────────────────────────────────────── */
-.fc-days-wrap  { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 2px; }
+.fc-days-wrap  {
+  display: flex; gap: 0.5rem; flex-wrap: nowrap; padding: 2px; padding-bottom: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.fc-days-wrap::-webkit-scrollbar { height: 4px; }
+.fc-days-wrap::-webkit-scrollbar-track { background: transparent; }
+.fc-days-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .fc-day-card   {
-  flex: 1 1 calc(20% - 0.5rem); min-width: 80px; max-width: 130px;
+  flex: 0 0 auto; min-width: 80px; width: 110px;
   background: var(--card); border: 1px solid var(--border);
   border-radius: 10px; padding: 0.7rem 0.5rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
@@ -819,12 +826,13 @@
   <div class="section" style="padding-top:0" id="warnings-section">
     <div class="sec-label">Hinweise &amp; Warnungen</div>
     <div class="warn-list" id="warn-list"></div>
+    <div id="aircraft-info" style="margin-top:0.5rem;"></div>
   </div>
 
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.12 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.13 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1706,8 +1714,16 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
     card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
-    `<div class="m-card"><div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>${acHtml}</div>`,
   ].join('');
+
+  // Luftverkehr in Hinweise & Warnungen rendern
+  const $ai = document.getElementById('aircraft-info');
+  if ($ai) {
+    $ai.innerHTML = `<div class="m-card" style="width:100%;box-sizing:border-box;">
+      <div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>
+      ${acHtml}
+    </div>`;
+  }
 }
 
 function card(label, val, sub, url='') {
@@ -1729,8 +1745,8 @@ function renderWindProfile(w) {
   const base = w.wind_speed ?? 0;
   // Power-law approximation: v(z) = v_ref * (z/z_ref)^α, α≈0.14
   const v = z => +(base * Math.pow(z/10, 0.14)).toFixed(1);
-  const levels = [200,150,100,50,10];
-  const vMax   = v(200) || 1;
+  const levels = [150,120,60,10];
+  const vMax   = v(150) || 1;
 
   $('wind-profile').innerHTML = levels.map(z => {
     const speed = v(z);
@@ -1908,10 +1924,11 @@ function renderWarnings(status, kp, aircraft) {
     items.push({ cls:'warn', icon:'🛰️', title:'Geomagnetische Aktivität',
       desc:`Kp-Index ${kp.toFixed(1)} — GPS-Präzision kann eingeschränkt sein.` });
 
-  if (!items.length) {
-    ws.style.display = 'none'; return;
-  }
   ws.style.display = '';
+  if (!items.length) {
+    wl.innerHTML = '';
+    return;
+  }
   wl.innerHTML = items.map((it,i) => `
     <div class="warn-item ${it.cls}" id="wi-${i}">
       <span class="warn-icon">${it.icon}</span>
