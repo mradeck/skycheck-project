@@ -832,7 +832,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.13 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.14 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1282,18 +1282,19 @@ async function safeFetch(url, timeout=8000) {
 
 async function gfzFetch(startMs, endMs, index='Kp') {
   const fmt    = d => new Date(d).toISOString().slice(0,19) + 'Z';
-  const gfzUrl = `${KP_URL}?start=${fmt(startMs)}&end=${fmt(endMs)}&index=${index}&status=nowcast`;
-  // Direkt versuchen (falls Server CORS erlaubt)
+  const start  = fmt(startMs), end = fmt(endMs);
+  const gfzUrl = `${KP_URL}?start=${start}&end=${end}&index=${index}&status=nowcast`;
+  try { const r = await safeFetch(gfzUrl, 6000); if (r.ok) return await r.json(); }
+  catch(e) { console.warn('GFZ direkt:', e.message); }
   try {
-    const r = await safeFetch(gfzUrl, 6000);
+    const r = await safeFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(gfzUrl)}`, 8000);
     if (r.ok) return await r.json();
-  } catch(e) { console.warn('GFZ direkt:', e.message); }
-  // CORS-Proxy Fallback
+  } catch(e) { console.warn('GFZ allorigins:', e.message); }
   try {
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(gfzUrl)}`;
-    const r = await safeFetch(proxy, 8000);
+    const fnUrl = `/.netlify/functions/gfz?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&index=${index}`;
+    const r = await safeFetch(fnUrl, 8000);
     if (r.ok) return await r.json();
-  } catch(e) { console.warn('GFZ proxy:', e.message); }
+  } catch(e) { console.warn('GFZ netlify-fn:', e.message); }
   return null;
 }
 
