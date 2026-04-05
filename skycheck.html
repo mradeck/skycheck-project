@@ -1002,7 +1002,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.25';
+const APP_VER = '0.26';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -2136,14 +2136,16 @@ function renderMapStatus(now, zones) {
 
   // Wind + Pfeil
   if (now) {
-    const spd   = (now.wind_speed ?? 0).toFixed(1);
-    const gust  = (now.wind_gust_speed ?? 0).toFixed(0);
+    const spd   = (now.wind_speed ?? 0);
+    const gust  = (now.wind_gust_speed ?? 0);
     const dir   = now.wind_direction ?? 0;
     // Pfeil zeigt in Windrichtung (wohin der Wind weht = dir + 180)
     const rot   = (dir + 180) % 360;
+    const wc    = spd  > 10 ? 'c-nogo' : spd  > 7 ? 'c-warn' : '';
+    const gc    = gust > 10 ? 'c-nogo' : gust > 7 ? 'c-warn' : '';
     html += `<div class="ms-wind">
       <span class="ms-arrow" style="transform:rotate(${rot}deg);display:inline-block">↑</span>
-      <span>${spd}&nbsp;m/s &nbsp;Böen&nbsp;${gust}&nbsp;m/s</span>
+      <span class="${wc}">${spd.toFixed(1)}&nbsp;m/s</span><span>&nbsp;Böen&nbsp;</span><span class="${gc}">${gust.toFixed(0)}&nbsp;m/s</span>
     </div>`;
   }
 
@@ -2217,12 +2219,30 @@ function initMap(lat, lon, aircraft, zones) {
       runCheck();
     });
 
+    // Initiales Offset: Info-Overlay (rechts) sofort freihalten
+    {
+      const _msEl0 = document.getElementById('map-status');
+      const _msW0  = (_msEl0 && !_msEl0.classList.contains('hidden'))
+        ? Math.round(_msEl0.getBoundingClientRect().width) : 0;
+      const _pxOff0 = _msW0 > 0
+        ? Math.round((_msW0 + 24) / 2)
+        : Math.round(S.map.getSize().x * 0.10);
+      const _mkPx0 = S.map.latLngToContainerPoint([lat, lon]);
+      const _tgt0  = S.map.containerPointToLatLng([_mkPx0.x + _pxOff0, _mkPx0.y]);
+      S.map.panTo(_tgt0, {animate: false});
+    }
+
   } else {
     // Map exists, just update state gently!
-    // Marker leicht nach links – Platz fuer Popup auf kleinen Displays
-    const _pxOff = Math.round(S.map.getSize().x * 0.10);
+    // Marker aus dem Info-Overlay (rechts) freistellen – dynamische Breite
+    const _msEl = document.getElementById('map-status');
+    const _msW  = (_msEl && !_msEl.classList.contains('hidden'))
+      ? Math.round(_msEl.getBoundingClientRect().width) : 0;
+    const _pxOff = _msW > 0
+      ? Math.round((_msW + 24) / 2)
+      : Math.round(S.map.getSize().x * 0.10);
     const _mkPx = S.map.latLngToContainerPoint([lat, lon]);
-    const _tgt = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
+    const _tgt  = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
     S.map.panTo(_tgt);
     S.layers.pin.setLatLng([lat, lon]);
     S.layers.pin.bindPopup(popStr);
