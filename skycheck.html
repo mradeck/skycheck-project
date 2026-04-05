@@ -137,6 +137,7 @@
       margin-bottom: 0.6rem;
     }
     .l-logo span { color: var(--accent); }
+    .l-ver { font-size: 0.35em; vertical-align: 0.45em; opacity: 0.5; font-weight: 400; letter-spacing: 0; margin-left: 0.25em; }
 
     .l-sub {
       color: var(--text2);
@@ -711,7 +712,7 @@
 <div id="landing">
   <div class="l-inner">
     <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
-    <h1 class="l-logo">Sky<span>Check</span></h1>
+    <h1 class="l-logo">Sky<span>Check</span><sup class="l-ver">v0.18</sup></h1>
     <p class="l-sub"><span>Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg></button></p>
 
     <div class="search-wrap">
@@ -882,7 +883,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.17 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.18 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1749,7 +1750,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
   }
 
   $('metrics-grid').innerHTML = [
-    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal', 'https://kp.gfz.de/hp30-hp60'),
+    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, (kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal')+' · Grenzwert 3.3', 'https://kp.gfz.de/hp30-hp60'),
     (() => {
       if (!kpGfz) return '';
       const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
@@ -1771,9 +1772,9 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
       return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
     })(),
     vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
-    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
     card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
     card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
   ].join('');
@@ -2207,7 +2208,11 @@ function initMap(lat, lon, aircraft, zones) {
 
   } else {
     // Map exists, just update state gently!
-    S.map.panTo([lat, lon]);
+    // Marker leicht nach links – Platz fuer Popup auf kleinen Displays
+    const _pxOff = Math.round(S.map.getSize().x * 0.10);
+    const _mkPx = S.map.latLngToContainerPoint([lat, lon]);
+    const _tgt = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
+    S.map.panTo(_tgt);
     S.layers.pin.setLatLng([lat, lon]);
     S.layers.pin.bindPopup(popStr);
     S.layers.radius.setLatLng([lat, lon]);
