@@ -712,7 +712,7 @@
 <div id="landing">
   <div class="l-inner">
     <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
-    <h1 class="l-logo">Sky<span>Check</span><sup class="l-ver">v0.18</sup></h1>
+    <h1 class="l-logo">Sky<span>Check</span><sup class="l-ver"></sup></h1>
     <p class="l-sub"><span>Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg></button></p>
 
     <div class="search-wrap">
@@ -883,7 +883,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.19 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v${APP_VER} &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1403,7 +1403,7 @@ async function fetchKpGfz() {
               kpSlice.forEach((v, i) => {
                 const t = dtSlice[i] ? new Date(dtSlice[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
                 const kpV = parseFloat(v);
-                if (!isNaN(kpV)) bars.push({ v: kpV, label: t, ref: false, forecast: false });
+                if (!isNaN(kpV)) bars.push({ v: kpV, label: t, ref: i === kpSlice.length - 1, forecast: false });
               });
             }
             // Hp30-Nowcast gestrichelt (= Kp-Index-Kachel Wert)
@@ -1664,6 +1664,8 @@ function evalStatus(w, kp) {
    RENDER: STATUS BANNER
 ================================================================ */
 function renderStatus(s) {
+  const APP_VER = '0.20';
+  document.querySelectorAll('.l-ver').forEach(e => e.textContent = 'v' + APP_VER);
   const cfg = {
     go:   { icon:'✅', title:'Flug möglich',           desc:'Alle Parameter im Normalbereich.' },
     warn: { icon:'⚠️',  title:'Bedingt flugfähig',     desc:'Eingeschränkte Bedingungen — sorgfältig prüfen.' },
@@ -1773,9 +1775,9 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
           return '<rect x="' + x + '" y="' + (H-10-bh) + '" width="' + bw + '" height="' + bh + '" rx="1.5" fill="' + col + '" opacity="' + op + '"' + dsh + '/>' +
                  '<text x="' + (x+bw/2) + '" y="' + (H-1) + '" text-anchor="middle" font-size="6" fill="#3d5a7a">' + b.label + '</text>';
         }).join('') + '</svg>' : '';
-      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
+      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+ts+' UTC</span>':''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
     })(),
-    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, 'min: G≥1,5 km · CTR-D≥5 km', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, 'min: G≥1,5 km<br>CTR-D≥5 km', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
