@@ -622,7 +622,7 @@
   border-radius: 0 !important; border: none !important;
   border-right: 1px solid rgba(255,255,255,.18) !important;
   background: var(--card); color: var(--text2);
-  padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: pointer;
+  padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: default; pointer-events: none;
   font-family: inherit;
 }
 .zone-group .zone-btn:last-child { border-right: none !important; }
@@ -882,7 +882,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.16 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.17 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1013,6 +1013,8 @@ try {
   const saved = localStorage.getItem('skycheck_cfg'); 
   if (saved) CFG = JSON.parse(saved); 
 } catch {}
+// Versionsmigration: v0.15-Default war 'reduced', v0.16+ Default ist 'all'
+if (!CFG._ver || CFG._ver < 17) { CFG.layerMode = 'all'; CFG._ver = 17; try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch {} }
 // Zone-Buttons initial synchronisieren
 document.querySelectorAll('.zone-btn').forEach(b =>
   b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
@@ -2242,20 +2244,7 @@ document.querySelectorAll('.radius-btn').forEach(btn => {
   });
 });
 // ── Zone-Mode-Buttons (Alle / Nur Risikozonen) ────────────────────────────
-document.querySelectorAll('.zone-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const mode = btn.dataset.zone;
-    document.querySelectorAll('.zone-btn').forEach(b => b.classList.toggle('active', b === btn));
-    // Settings-Radios synchron halten
-    const radio = document.querySelector(`input[name="layerMode"][value="${mode}"]`);
-    if (radio) radio.checked = true;
-    if (CFG.layerMode !== mode) {
-      CFG.layerMode = mode;
-      if (S.layers.dipul) S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
-      try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch {}
-    }
-  });
-});
+// Zone-Mode-Buttons sind reine Statusanzeigen – Umschalten nur ueber Einstellungen
 
 
 
