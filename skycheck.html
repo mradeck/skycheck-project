@@ -1002,7 +1002,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.24';
+const APP_VER = '0.25';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1413,7 +1413,12 @@ async function fetchKpGfz() {
             const val  = lastEntry.v;
             const dt   = lastEntry.dt;
             const stat = d3 && d3.status ? d3.status[d3.status.length - 1] : 'pre';
-            if (!isNaN(val)) return { val, dt, stat, bars };
+            // 4. Balken: letzter Kp-Vorhersagewert (gestrichelt, End-Zeitstempel des 3h-Fensters)
+            const kpFV  = d3 && d3.Kp && d3.Kp.length > 0 ? parseFloat(d3.Kp[d3.Kp.length - 1]) : NaN;
+            const kpFDt = d3 && d3.datetime && d3.datetime.length > 0 ? d3.datetime[d3.datetime.length - 1] : null;
+            const kpFL  = kpFDt ? new Date(kpFDt).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', timeZone:'UTC'}) : '';
+            if (!isNaN(kpFV) && kpFL) bars.push({ v: kpFV, label: kpFL, ref: false, forecast: true });
+            if (!isNaN(val)) return { val, dt, stat, bars, kpForecastDt: kpFDt };
           }
         } catch(e) { console.warn('fetchKpGfz:', e); }
         return null;
@@ -1731,8 +1736,8 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
   const gc = gusts > 10 ? 'c-nogo' : gusts > 7 ? 'c-warn' : 'c-go';
   const rc = rain  > 0.3 ? 'c-nogo' : rain > 0 ? 'c-warn' : '';
   const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
-  const kpTs = kpGfz && kpGfz.dt
-    ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'
+  const kpTs = kpGfz && kpGfz.kpForecastDt
+    ? new Date(kpGfz.kpForecastDt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'
     : '';
 
   let acHtml = '<div class="fc-val">Keine Flugzeuge (~200km)</div>';
