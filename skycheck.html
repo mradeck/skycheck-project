@@ -883,7 +883,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v${APP_VER} &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck <span class="f-ver"></span> &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1664,8 +1664,8 @@ function evalStatus(w, kp) {
    RENDER: STATUS BANNER
 ================================================================ */
 function renderStatus(s) {
-  const APP_VER = '0.20';
-  document.querySelectorAll('.l-ver').forEach(e => e.textContent = 'v' + APP_VER);
+  const APP_VER = '0.21';
+  document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
   const cfg = {
     go:   { icon:'✅', title:'Flug möglich',           desc:'Alle Parameter im Normalbereich.' },
     warn: { icon:'⚠️',  title:'Bedingt flugfähig',     desc:'Eingeschränkte Bedingungen — sorgfältig prüfen.' },
