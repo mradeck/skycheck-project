@@ -432,6 +432,7 @@
 
     /* --- MAP --- */
     .map-wrap {
+      position: relative;
       border-radius: var(--radius); overflow: hidden;
       border: 1px solid var(--border); height: 420px;
     }
@@ -610,6 +611,50 @@
   border-right: 1px solid rgba(255,255,255,.18) !important;
 }
 .radius-group .radius-btn:last-child { border-right: none !important; }
+/* ── Zone group (Alle / Nur Risikozonen) ───────────────── */
+.zone-group {
+  display: inline-flex;
+  border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  vertical-align: middle;
+}
+.zone-group .zone-btn {
+  border-radius: 0 !important; border: none !important;
+  border-right: 1px solid rgba(255,255,255,.18) !important;
+  background: var(--card); color: var(--text2);
+  padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: pointer;
+  font-family: inherit;
+}
+.zone-group .zone-btn:last-child { border-right: none !important; }
+.zone-group .zone-btn.active { background: var(--accent); color: #fff; }
+/* ── Map-Status-Overlay ────────────────────────────────── */
+.map-status {
+  position: absolute; right: 8px; top: 8px;
+  z-index: 1000;
+  background: rgba(10,20,40,.84);
+  border: 1px solid rgba(100,160,255,.25);
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.71rem;
+  min-width: 120px; max-width: 185px;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+  line-height: 1.5;
+}
+.map-status.hidden { display: none; }
+.ms-zone-item {
+  display: flex; align-items: center; gap: 0.3rem;
+  color: var(--text2); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ms-zone-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ms-wind {
+  margin-top: 0.35rem; padding-top: 0.35rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; gap: 0.4rem;
+  color: var(--text2);
+}
+.ms-arrow { display: inline-block; font-size: 1rem; line-height: 1; }
 
 /* ── Kachel-Titel als klickbarer Link ─────────────────────────────────────── */
 .m-lbl-link {
@@ -797,6 +842,10 @@
     <div class="map-controls" id="map-controls">
       <button class="map-toggle active" data-layer="dipul">DiPUL Zonen</button>
       <button class="map-toggle active" data-layer="aircraft">Flugbewegungen</button>
+      <div class="zone-group" id="zone-group">
+        <button class="zone-btn active" data-zone="all">Alle Geozonen</button>
+        <button class="zone-btn" data-zone="reduced">Nur Risikozonen</button>
+      </div>
       <div class="radius-group">
         <button class="radius-btn map-toggle" data-radius="5">5m</button>
         <button class="radius-btn map-toggle active" data-radius="100">100m</button>
@@ -805,6 +854,7 @@
     </div>
     <div class="map-wrap">
       <div id="map"></div>
+      <div class="map-status hidden" id="map-status"></div>
     </div>
   </div>
 
@@ -832,7 +882,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.15 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.16 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -958,11 +1008,15 @@
 const DIPUL_ALL_LAYERS = 'bahnanlagen,behoerden,binnenwasserstrassen,bundesautobahnen,bundesstrassen,diplomatische_vertretungen,ffh-gebiete,flugbeschraenkungsgebiete,flughaefen,flugplaetze,freibaeder,haengegleiter,inaktive_temporaere_betriebseinschraenkungen,industrieanlagen,internationale_organisationen,justizvollzugsanstalten,kontrollzonen,kraftwerke,krankenhaeuser,labore,militaerische_anlagen,modellflugplaetze,nationalparks,naturschutzgebiete,polizei,schifffahrtsanlagen,seewasserstrassen,sicherheitsbehoerden,stromleitungen,temporaere_betriebseinschraenkungen,umspannwerke,vogelschutzgebiete,windkraftanlagen,wohngrundstuecke';
 const DIPUL_REDUCED_LAYERS = 'flugbeschraenkungsgebiete,flughaefen,flugplaetze,kontrollzonen,nationalparks,naturschutzgebiete,temporaere_betriebseinschraenkungen,industrieanlagen,kraftwerke,polizei,behoerden,bundesautobahnen,bundesstrassen,schifffahrtsanlagen,vogelschutzgebiete';
 
-let CFG = { layerMode: 'reduced', forecastMode: 'daylight' };
+let CFG = { layerMode: 'all', forecastMode: 'daylight' };
 try { 
   const saved = localStorage.getItem('skycheck_cfg'); 
   if (saved) CFG = JSON.parse(saved); 
 } catch {}
+// Zone-Buttons initial synchronisieren
+document.querySelectorAll('.zone-btn').forEach(b =>
+  b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
+);
 
 function getActiveDipulLayers() {
   return CFG.layerMode === 'all' ? DIPUL_ALL_LAYERS : DIPUL_REDUCED_LAYERS;
@@ -1061,6 +1115,9 @@ $('btn-save-settings').addEventListener('click', () => {
   if (layerChanged) {
     CFG.layerMode = selectedMode;
     if (S.layers.dipul) S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+    document.querySelectorAll('.zone-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
+    );
   }
   if (forecastChanged) {
     CFG.forecastMode = selectedForecast;
@@ -1229,6 +1286,7 @@ async function runCheck() {
     let zones = [];
     try { zones = await fetchZones(S.lat, S.lon); } catch {}
     renderZones(zones);
+    renderMapStatus(now, zones);
 
     // Map
     $loadMsg.textContent = 'Karte wird geladen…';
@@ -1799,7 +1857,17 @@ function renderForecast(data, kp) {
   if (!data?.length) { $('fc-track').innerHTML = '<span style="color:var(--text3);font-size:.8rem">Keine Daten</span>'; return; }
 
   // Sample every 3h
-  const allSlots = data.filter((_,i) => i%3===0).slice(0,17);
+  const rawSlots = data.filter((_,i) => i%3===0);
+  // Startindex: erstes Slot >= jetzt - 30min (naechste relevante Stunde)
+  const nowMs = Date.now();
+  let startIdx = 0;
+  for (let i = 0; i < rawSlots.length; i++) {
+    if (new Date(rawSlots[i].timestamp).getTime() >= nowMs - 30*60*1000) {
+      startIdx = i; break;
+    }
+    startIdx = i;
+  }
+  const allSlots = rawSlots.slice(startIdx, startIdx + 17);
   let lastDay  = null;
   let html     = '';
 
@@ -1983,6 +2051,94 @@ $('zones-hdr').addEventListener('click', () => {
 });
 
 /* ================================================================
+   RENDER: MAP-STATUS-OVERLAY (Zonen + Wind am 1,5km-Kreis)
+================================================================ */
+function renderMapStatus(now, zones) {
+  const el = $('map-status');
+  if (!el) return;
+
+  // Vereinfachte Zonen-Labels
+  const simplify = (type, name) => {
+    const t = (type || '').toLowerCase();
+    const n = (name || '');
+    if (t.includes('flughafen') || t.includes('airport') || t === 'ctr' || t === 'atz')
+      return { label: 'Flughafen', color: '#e05252' };
+    if (t.includes('flugplatz') || t.includes('flugplaetze'))
+      return { label: 'Flugplatz', color: '#e07832' };
+    if (t.includes('kontrollzone') || t === 'ctr')
+      return { label: 'Kontrollzone', color: '#e05252' };
+    if (t.includes('flugbeschraenkung') || t.includes('beschraenkung') || t.includes('tfr') || t.includes('prohibited'))
+      return { label: 'Flugverbot', color: '#cc2244' };
+    if (t.includes('temporaere') || t.includes('teb'))
+      return { label: 'Temp. Einschränkung', color: '#dd6600' };
+    if (t.includes('bundesautobahn') || t.includes('autobahn')) {
+      const m = n.match(/(?:BAB\s*|A\s*)(\d+)/i) || n.match(/(\d+)/);
+      return { label: 'Autobahn' + (m ? ' A'+m[1] : ''), color: '#4488cc' };
+    }
+    if (t.includes('bundesstrasse') || t.includes('bundesstraße')) {
+      const m = n.match(/(?:B\s*|B)(\d+)/i) || n.match(/(\d+)/);
+      return { label: 'Bundesstraße' + (m ? ' B'+m[1] : ''), color: '#5599aa' };
+    }
+    if (t.includes('binnenwasser') || t.includes('seewasser') || t.includes('schifffahrt')) {
+      const known = ['Rhein','Elbe','Donau','Main','Mosel','Oder','Spree','Isar','Weser','Neckar','Saar','Havel'];
+      const found = known.find(r => n.toLowerCase().includes(r.toLowerCase()));
+      return { label: 'Wasserstraße' + (found ? ' '+found : ''), color: '#3399bb' };
+    }
+    if (t.includes('nationalpark') || t.includes('naturschutz') || t.includes('ffh') || t.includes('vogelschutz'))
+      return { label: 'Naturschutz', color: '#44aa66' };
+    if (t.includes('wohngrundstuck') || t.includes('wohngrundstueck') || t.includes('wohn'))
+      return { label: 'Siedlung', color: '#8866cc' };
+    if (t.includes('militar') || t.includes('militär'))
+      return { label: 'Militär', color: '#aa4455' };
+    if (t.includes('industrie') || t.includes('kraftwerk') || t.includes('umspann'))
+      return { label: 'Industrie/Energie', color: '#887733' };
+    if (t.includes('krankenhaus') || t.includes('hospital'))
+      return { label: 'Krankenhaus', color: '#ff6688' };
+    return { label: name.length > 28 ? name.slice(0,26)+'…' : name, color: '#6688aa' };
+  };
+
+  // Unique simplified zone labels
+  const seen = new Set();
+  const items = [];
+  (zones || []).forEach(z => {
+    const { label, color } = simplify(z.type, z.name);
+    if (!seen.has(label)) {
+      seen.add(label);
+      items.push({ label, color });
+    }
+  });
+
+  let html = '';
+  if (items.length === 0) {
+    html += '<div class="ms-zone-item" style="color:var(--go)">✓ Keine Einschränkungen</div>';
+  } else {
+    items.forEach(it => {
+      html += `<div class="ms-zone-item">
+        <span class="ms-zone-dot" style="background:${it.color}"></span>
+        <span>${it.label}</span>
+      </div>`;
+    });
+  }
+
+  // Wind + Pfeil
+  if (now) {
+    const spd   = (now.wind_speed ?? 0).toFixed(1);
+    const gust  = (now.wind_gust_speed ?? 0).toFixed(0);
+    const dir   = now.wind_direction ?? 0;
+    // Pfeil zeigt in Windrichtung (wohin der Wind weht = dir + 180)
+    const rot   = (dir + 180) % 360;
+    html += `<div class="ms-wind">
+      <span class="ms-arrow" style="transform:rotate(${rot}deg);display:inline-block">↑</span>
+      <span>${spd}&nbsp;m/s &nbsp;Böen&nbsp;${gust}&nbsp;m/s</span>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+  el.classList.toggle('hidden', !now && items.length === 0);
+  el.classList.remove('hidden');
+}
+
+/* ================================================================
    MAP
 ================================================================ */
 function initMap(lat, lon, aircraft, zones) {
@@ -2083,6 +2239,21 @@ document.querySelectorAll('.radius-btn').forEach(btn => {
     btn.classList.add('active');
     S.searchRadius = parseInt(btn.dataset.radius, 10);
     if (S.layers.radius) S.layers.radius.setRadius(S.searchRadius);
+  });
+});
+// ── Zone-Mode-Buttons (Alle / Nur Risikozonen) ────────────────────────────
+document.querySelectorAll('.zone-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.zone;
+    document.querySelectorAll('.zone-btn').forEach(b => b.classList.toggle('active', b === btn));
+    // Settings-Radios synchron halten
+    const radio = document.querySelector(`input[name="layerMode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+    if (CFG.layerMode !== mode) {
+      CFG.layerMode = mode;
+      if (S.layers.dipul) S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+      try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch {}
+    }
   });
 });
 
