@@ -1002,6 +1002,9 @@
 <script>
 'use strict';
 
+const APP_VER = '0.22';
+document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
+
 /* ================================================================
    CONFIG / ENDPOINTS
 ================================================================ */
@@ -1664,8 +1667,6 @@ function evalStatus(w, kp) {
    RENDER: STATUS BANNER
 ================================================================ */
 function renderStatus(s) {
-  const APP_VER = '0.21';
-  document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
   const cfg = {
     go:   { icon:'✅', title:'Flug möglich',           desc:'Alle Parameter im Normalbereich.' },
     warn: { icon:'⚠️',  title:'Bedingt flugfähig',     desc:'Eingeschränkte Bedingungen — sorgfältig prüfen.' },
