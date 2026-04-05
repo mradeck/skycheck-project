@@ -1002,7 +1002,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.22';
+const APP_VER = '0.23';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1761,9 +1761,11 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
     (() => {
       if (!kpGfz) return '';
       const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
-      const ts  = kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC' : '-';
-            const bc   = v => v > 5 ? '#ef476f' : v > 3.3 ? '#ffb703' : '#06d6a0';
       const bars = kpGfz.bars || [];
+      const lastRef = bars.slice().reverse().find(b => b.ref);
+      const ts = lastRef ? lastRef.label
+        : (kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '-');
+            const bc   = v => v > 5 ? '#ef476f' : v > 3.3 ? '#ffb703' : '#06d6a0';
       const maxK = 9, W = 130, H = 38, n = Math.max(bars.length, 1);
       const bw   = Math.floor((W - n * 2) / n);
       const svg  = bars.length ? '<svg width="' + W + '" height="' + H + '" style="display:block;margin-top:5px;overflow:visible">' +
