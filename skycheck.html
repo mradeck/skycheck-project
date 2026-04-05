@@ -883,7 +883,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck v0.18 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck v0.19 &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -1395,23 +1395,24 @@ async function fetchKpGfz() {
             gfzFetch(now - 2.5*3600*1000, now, 'Hp30'),
           ]);
           if (d30 && d30.Hp30 && d30.Hp30.length > 0) {
-            const recent = d30.Hp30.slice(-4);
-            const dts    = d30.datetime ? d30.datetime.slice(-4) : [];
-            const bars   = [];
-            recent.forEach((v, i) => {
-              const t = dts[i] ? new Date(dts[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
-              bars.push({ v: parseFloat(v), label: t, ref: i === recent.length - 1, forecast: false });
-            });
+            const bars = [];
+            // Histor. 3h-Kp-Werte solid
             if (d3 && d3.Kp && d3.Kp.length > 0) {
-              const ki  = d3.Kp.length - 1;
-              const kpV = parseFloat(d3.Kp[ki]);
-              const ts3 = d3.datetime ? new Date(d3.datetime[ki]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
-              if (!isNaN(kpV)) bars.push({ v: kpV, label: ts3, ref: false, forecast: true });
+              const kpSlice = d3.Kp.slice(-4);
+              const dtSlice = d3.datetime ? d3.datetime.slice(-4) : [];
+              kpSlice.forEach((v, i) => {
+                const t = dtSlice[i] ? new Date(dtSlice[i]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+                const kpV = parseFloat(v);
+                if (!isNaN(kpV)) bars.push({ v: kpV, label: t, ref: false, forecast: false });
+              });
             }
+            // Hp30-Nowcast gestrichelt (= Kp-Index-Kachel Wert)
             const lastIdx = d30.Hp30.length - 1;
             const val  = parseFloat(d30.Hp30[lastIdx]);
             const dt   = d30.datetime ? d30.datetime[lastIdx] : null;
             const stat = d3 && d3.status ? d3.status[d3.status.length - 1] : 'pre';
+            const tsNow = dt ? new Date(dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) : '';
+            if (!isNaN(val)) bars.push({ v: val, label: tsNow, ref: false, forecast: true });
             if (!isNaN(val)) return { val, dt, stat, bars };
           }
         } catch(e) { console.warn('fetchKpGfz:', e); }
@@ -1730,6 +1731,9 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
   const gc = gusts > 10 ? 'c-nogo' : gusts > 7 ? 'c-warn' : 'c-go';
   const rc = rain  > 0.3 ? 'c-nogo' : rain > 0 ? 'c-warn' : '';
   const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
+  const kpTs = kpGfz && kpGfz.dt
+    ? new Date(kpGfz.dt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'
+    : '';
 
   let acHtml = '<div class="fc-val">Keine Flugzeuge (~200km)</div>';
   if (aircraft.length > 0 && aircraft[0].api_error) {
@@ -1750,7 +1754,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
   }
 
   $('metrics-grid').innerHTML = [
-    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>`, (kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal')+' · Grenzwert 3.3', 'https://kp.gfz.de/hp30-hp60'),
+    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>${kpTs?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+kpTs+'</span>':''}`, (kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal')+' · Grenzwert 3.3', 'https://kp.gfz.de/hp30-hp60'),
     (() => {
       if (!kpGfz) return '';
       const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
@@ -1771,7 +1775,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
         }).join('') + '</svg>' : '';
       return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
     })(),
-    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, '', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, 'min: G≥1,5 km · CTR-D≥5 km', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
     card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
     card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
