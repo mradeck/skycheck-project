@@ -273,6 +273,15 @@
     }
     .nav-icon-btn:hover { border-color: var(--accent); color: var(--accent); }
     .nav-icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    .lang-wrap { position: relative; }
+    .lang-flag-btn { font-size: 1.05rem; padding: 0.15rem 0.25rem; line-height: 1; }
+    .lang-menu { position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.4); z-index: 9999; min-width: 130px; }
+    .lang-opt { display: block; width: 100%; text-align: left; padding: 0.55rem 0.85rem;
+      background: none; border: none; color: var(--text); font-size: 0.85rem;
+      cursor: pointer; transition: background .15s; }
+    .lang-opt:hover { background: var(--card-hover); }
 
     /* --- STATUS BANNER --- */
     .status-banner {
@@ -703,7 +712,7 @@
 <div id="loading">
   <div class="loader-logo">Sky<span>Check</span></div>
   <div class="loader-ring"></div>
-  <div class="loader-msg" id="loading-msg">Wird geladen…</div>
+  <div class="loader-msg" id="loading-msg" data-i18n="loading">Wird geladen…</div>
 </div>
 
 <!-- ============================================================
@@ -711,16 +720,16 @@
 ============================================================ -->
 <div id="landing">
   <div class="l-inner">
-    <div class="l-badge">Drohnenflugprüfung · Deutschland</div>
+    <div class="l-badge" data-i18n="badge">Drohnenflugprüfung · Deutschland</div>
     <h1 class="l-logo">Sky<span>Check</span><sup class="l-ver"></sup></h1>
-    <p class="l-sub"><span>Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg></button></p>
+    <p class="l-sub"><span data-i18n="subtitle">Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg></button></p>
 
     <div class="search-wrap">
       <div class="search-box">
         <input type="text" id="loc-input"
-          placeholder="z. B. Brandenburger Tor, Berlin"
+          placeholder="z. B. Brandenburger Tor, Berlin" data-i18n-placeholder="placeholder"
           autocomplete="off" spellcheck="false">
-        <button class="btn-gps" id="btn-gps" title="Aktuellen Standort verwenden">
+        <button class="btn-gps" id="btn-gps" title="Aktuellen Standort verwenden" data-i18n-title="gpsTitle">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="3"/>
@@ -730,13 +739,13 @@
             <line x1="18" y1="12" x2="22" y2="12"/>
           </svg>
         </button>
-        <button class="btn-check" id="btn-check">Prüfen</button>
+        <button class="btn-check" id="btn-check" data-i18n="btnCheck">Prüfen</button>
       </div>
       <div class="suggestions" id="suggestions"></div>
     </div>
 
     <div class="l-other-apps">
-      <div class="l-other-label">Weitere App</div>
+      <div class="l-other-label" data-i18n="otherApps">Weitere App</div>
       <a href="https://incomparable-cucurucho-f663f3.netlify.app/" target="_blank" class="l-app-card">
         <div>
           <div class="l-app-logo">Meta<span>Lens</span></div>
@@ -766,18 +775,17 @@
 
   <!-- NAV -->
   <nav class="r-nav">
-    <button class="nav-back" id="btn-back">
+    <button class="nav-back" id="btn-back" data-i18n-title="btnBack">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
-      Zurück
     </button>
     <div class="nav-loc">
       <div class="nav-loc-name" id="nav-loc-name">—</div>
       <div class="nav-loc-time" id="nav-loc-time">—</div>
     </div>
-    <button class="nav-icon-btn" id="btn-refresh" title="Aktualisieren">
+    <button class="nav-icon-btn" id="btn-refresh" title="Aktualisieren" data-i18n-title="btnRefresh">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <polyline points="23 4 23 10 17 10"/>
@@ -785,47 +793,54 @@
         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
       </svg>
     </button>
-    <button class="nav-icon-btn" id="btn-print" title="Als PDF speichern / Drucken">
+    <button class="nav-icon-btn" id="btn-print" title="Als PDF speichern / Drucken" data-i18n-title="btnPrint">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
         <rect x="6" y="14" width="12" height="8"/>
       </svg>
     </button>
-    <button class="nav-icon-btn" id="btn-settings" title="Einstellungen">
+    <button class="nav-icon-btn" id="btn-settings" title="Einstellungen" data-i18n-title="btnSettings">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
       </svg>
     </button>
+    <div class="lang-wrap" id="lang-wrap">
+      <button class="nav-icon-btn lang-flag-btn" id="btn-lang" title="Sprache / Language">🇩🇪</button>
+      <div class="lang-menu hidden" id="lang-menu">
+        <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+        <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+      </div>
+    </div>
   </nav>
 
   <!-- STATUS BANNER -->
   <div class="status-banner go" id="status-banner">
     <div class="status-icon" id="status-icon">✈️</div>
     <div class="status-info">
-      <h2 id="status-title">Wird geprüft…</h2>
-      <p  id="status-desc">Alle Daten werden abgerufen.</p>
+      <h2 id="status-title" data-i18n="checking">Wird geprüft…</h2>
+      <p  id="status-desc" data-i18n="checkingDesc">Alle Daten werden abgerufen.</p>
     </div>
   </div>
 
   <div class="section dash-split">
     <!-- CURRENT CONDITIONS -->
     <div>
-      <div class="sec-label">Aktuelle Bedingungen</div>
+      <div class="sec-label" data-i18n="secConditions">Aktuelle Bedingungen</div>
       <div class="metrics-grid" id="metrics-grid"></div>
     </div>
 
     <!-- WIND ALTITUDE PROFILE -->
     <div>
-      <div class="sec-label">Windprofil nach Höhe</div>
+      <div class="sec-label" data-i18n="secWind">Windprofil nach Höhe</div>
       <div class="wind-profile" id="wind-profile"></div>
     </div>
   </div>
 
   <!-- 48H FORECAST -->
   <div class="section" style="padding-top:0">
-    <div class="sec-label">48-Stunden-Vorschau</div>
+    <div class="sec-label" data-i18n="secForecast48">48-Stunden-Vorschau</div>
     <div class="fc-scroll">
       <div class="fc-track" id="fc-track"></div>
     </div>
@@ -833,19 +848,19 @@
 
   <!-- 5-DAY FORECAST -->
   <div class="section" style="padding-top:0">
-    <div class="sec-label">5-Tage-Überblick</div>
+    <div class="sec-label" data-i18n="sec5day">5-Tage-Überblick</div>
     <div class="fc-days-wrap" id="fc-days-wrap"></div>
   </div>
 
   <!-- MAP -->
   <div class="section" style="padding-top:0">
-    <div class="sec-label">Karte &amp; Luftraum</div>
+    <div class="sec-label" data-i18n="secMap">Karte &amp; Luftraum</div>
     <div class="map-controls" id="map-controls">
-      <button class="map-toggle active" data-layer="dipul">DiPUL Zonen</button>
-      <button class="map-toggle active" data-layer="aircraft">Flugbewegungen</button>
+      <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">DiPUL Zonen</button>
+      <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
       <div class="zone-group" id="zone-group">
-        <button class="zone-btn active" data-zone="all">Alle Geozonen</button>
-        <button class="zone-btn" data-zone="reduced">Nur Risikozonen</button>
+        <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
+        <button class="zone-btn" data-zone="reduced" data-i18n="mapRiskyZones">Nur Risikozonen</button>
       </div>
       <div class="radius-group">
         <button class="radius-btn map-toggle" data-radius="5">5m</button>
@@ -864,7 +879,7 @@
     <div class="zones-panel">
       <div class="zones-hdr" id="zones-hdr">
         <div class="zones-hdr-left">
-          <span id="zones-hdr-text">Luftraumzonen in der Nähe</span>
+          <span id="zones-hdr-text" data-i18n="zonesNearby">Luftraumzonen in der Nähe</span>
           <span class="z-count" id="z-count">0</span>
         </div>
         <span class="zones-chevron" id="zones-chevron">▼</span>
@@ -875,7 +890,7 @@
 
   <!-- WARNINGS -->
   <div class="section" style="padding-top:0" id="warnings-section">
-    <div class="sec-label">Hinweise &amp; Warnungen</div>
+    <div class="sec-label" data-i18n="secWarnings">Hinweise &amp; Warnungen</div>
     <div class="warn-list" id="warn-list"></div>
     <div id="aircraft-info" style="margin-top:0.5rem;"></div>
   </div>
@@ -883,7 +898,7 @@
   <!-- FOOTER -->
   <footer class="r-footer">
     <div style="margin-bottom: 1rem;">
-      SkyCheck <span class="f-ver"></span> &nbsp;·&nbsp; Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung
+      SkyCheck <span class="f-ver"></span> &nbsp;·&nbsp; <span data-i18n="footerText">Nur für Deutschland &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung</span>
     </div>
     <div class="l-sources" style="margin-top: 0;">
       <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
@@ -903,7 +918,7 @@
   <div id="info-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Ueber SkyCheck</h2>
+        <h2 data-i18n="infoTitle">Ueber SkyCheck</h2>
         <button id="btn-close-info" class="modal-close">&times;</button>
       </div>
       <div class="info-modal-body">
@@ -943,7 +958,7 @@
   <div id="settings-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Einstellungen</h2>
+        <h2 data-i18n="settingsTitle">Einstellungen</h2>
         <button id="btn-close-settings" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
@@ -994,7 +1009,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button id="btn-save-settings" class="btn-primary" style="width:100%">Einstellung übernehmen</button>
+        <button id="btn-save-settings" class="btn-primary" style="width:100%" data-i18n="settingsSave">Einstellung übernehmen</button>
       </div>
     </div>
   </div>
@@ -1002,8 +1017,173 @@
 <script>
 'use strict';
 
-const APP_VER = '0.26';
+const APP_VER = '0.27';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
+
+/* ================================================================
+   I18N – Lightweight localisation (de = default, en)
+================================================================ */
+const I18N = {
+  de: {
+    loading:'Wird geladen…',
+    badge:'Drohnenflugprüfung · Deutschland',
+    subtitle:'Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index',
+    placeholder:'z. B. Brandenburger Tor, Berlin',
+    btnCheck:'Prüfen', gpsTitle:'Aktuellen Standort verwenden',
+    btnBack:'Zurück', btnRefresh:'Aktualisieren',
+    btnPrint:'Als PDF speichern / Drucken', btnSettings:'Einstellungen',
+    checking:'Wird geprüft…', checkingDesc:'Alle Daten werden abgerufen.',
+    goTitle:'Flug möglich',       goDesc:'Alle Parameter im Normalbereich.',
+    warnTitle:'Bedingt flugfähig', warnDesc:'Eingeschränkte Bedingungen — sorgfältig prüfen.',
+    nogoTitle:'Flug nicht empfohlen', nogoDesc:'Grenzwert überschritten.',
+    noWeather:'Wetterdaten nicht verfügbar',
+    gustsNogo:v=>`Böen ${v} m/s — Grenzwert 10 m/s überschritten`,
+    gustsWarn:v=>`Erhöhte Böen ${v} m/s`,
+    rainNogo:v=>`Niederschlag ${v} mm — Flugbetrieb nicht empfohlen`,
+    rainWarn:v=>`Geringer Niederschlag ${v} mm`,
+    tempNogo:v=>`Temperatur außerhalb Betriebsbereich (${v} °C)`,
+    fogWarn:'Nebelgefahr — Taupunkt nahe Lufttemperatur',
+    kpNogo:v=>`Kp-Index ${v} — GPS-Signal stark gestört`,
+    kpWarn:v=>`Erhöhter Kp-Index ${v} — GPS-Zuverlässigkeit reduziert`,
+    secConditions:'Aktuelle Bedingungen', secWind:'Windprofil nach Höhe',
+    secForecast48:'48-Stunden-Vorschau',  sec5day:'5-Tage-Überblick',
+    secMap:'Karte & Luftraum',            secWarnings:'Hinweise & Warnungen',
+    mapDipul:'DiPUL Zonen',    mapAircraft:'Flugbewegungen',
+    mapAllZones:'Alle Geozonen', mapRiskyZones:'Nur Risikozonen',
+    zonesNearby:'Luftraumzonen in der Nähe',
+    zonesCount:n=>`Es liegen Einschränkungen durch ${n} geografische Gebiet${n>1?'e':''} vor:`,
+    zonesNone:'Keine Luftraumeinschränkungen erkannt.',
+    warnNogoTitle:'Flug nicht empfohlen', warnHintTitle:'Hinweis',
+    warnAircraftTitle:'Erhöhter Luftverkehr',
+    warnAircraftDesc:n=>`${n} Flugzeuge im Umkreis von ~15 km detektiert.`,
+    warnKpTitle:'Geomagnetische Aktivität',
+    warnKpDesc:v=>`Kp-Index ${v} — GPS-Präzision kann eingeschränkt sein.`,
+    cardKp:'Kp-Index',         cardKpMeas:'Kp Messung (GFZ)',
+    cardVis:'Sichtweite',      cardTemp:'Temperatur',
+    cardGusts:'Windböen',  cardWind:'Wind',
+    cardCloud:'Bewölkung', cardRain:'Niederschlag', cardAir:'Luftverkehr',
+    noAircraft:'Keine Flugzeuge (~200 km)',
+    airBlocked:'Blockiert: Bitte später prüfen (Rate Limit)',
+    airDist:d=>`${d} km entfernt`, airAlt:'Flughöhe', airUnknown:'Unbekannt',
+    kpGps:v=>v>5?'GPS unzuverlässig':v>3.3?'GPS beeinträchtigt':'GPS normal',
+    kpLimit:'Grenzwert 3.3',   gustLimit:'Grenzwert 10 m/s',
+    visMin:'min: G≥1,5 km<br>CTR-D≥5 km',
+    rainActive:'Aktiver Niederschlag', rainNone:'Kein Niederschlag',
+    cloudHigh:'Stark bewölkt', cloudMid:'Teilweise', cloudLow:'Gering',
+    msNoRestr:'✓ Keine Einschränkungen', msGusts:'Böen',
+    msAirport:'Flughafen',    msAerodrome:'Flugplatz', msCTR:'Kontrollzone',
+    msProhibited:'Flugverbot', msTempRestr:'Temp. Einschränkung',
+    msHighway:'Autobahn',     msFedRoad:'Bundesstraße', msWaterway:'Wasserstraße',
+    msNature:'Naturschutz',   msResidential:'Siedlung',   msMilitary:'Militär',
+    msIndustry:'Industrie/Energie',                        msHospital:'Krankenhaus',
+    footerText:'Nur für Deutschland · Betrieb in VLOS · Keine Haftung',
+    infoTitle:'Ueber SkyCheck', settingsTitle:'Einstellungen',
+    settingsSave:'Einstellung übernehmen', otherApps:'Weitere App',
+  },
+  en: {
+    loading:'Loading…',
+    badge:'Drone Flight Check · Germany',
+    subtitle:'Geo-zone map, airspace alerts, flight movements and weather with Kp-Index',
+    placeholder:'e.g. Brandenburg Gate, Berlin',
+    btnCheck:'Check', gpsTitle:'Use current location',
+    btnBack:'Back', btnRefresh:'Refresh',
+    btnPrint:'Save as PDF / Print', btnSettings:'Settings',
+    checking:'Checking…', checkingDesc:'Fetching all data.',
+    goTitle:'Flight possible',         goDesc:'All parameters within normal range.',
+    warnTitle:'Conditionally flyable', warnDesc:'Limited conditions — check carefully.',
+    nogoTitle:'Flight not recommended', nogoDesc:'Limit exceeded.',
+    noWeather:'Weather data unavailable',
+    gustsNogo:v=>`Gusts ${v} m/s — limit 10 m/s exceeded`,
+    gustsWarn:v=>`Elevated gusts ${v} m/s`,
+    rainNogo:v=>`Precipitation ${v} mm — flight not recommended`,
+    rainWarn:v=>`Light precipitation ${v} mm`,
+    tempNogo:v=>`Temperature outside operating range (${v} °C)`,
+    fogWarn:'Fog risk — dew point near air temperature',
+    kpNogo:v=>`Kp-Index ${v} — GPS signal severely disturbed`,
+    kpWarn:v=>`Elevated Kp-Index ${v} — GPS reliability reduced`,
+    secConditions:'Current Conditions', secWind:'Wind Profile by Altitude',
+    secForecast48:'48-Hour Forecast',   sec5day:'5-Day Overview',
+    secMap:'Map & Airspace',            secWarnings:'Notes & Warnings',
+    mapDipul:'DiPUL Zones',    mapAircraft:'Flight Movements',
+    mapAllZones:'All Geo-zones', mapRiskyZones:'Risk Zones Only',
+    zonesNearby:'Airspace zones nearby',
+    zonesCount:n=>`${n} geographic area${n>1?'s':''} with restrictions:`,
+    zonesNone:'No airspace restrictions detected.',
+    warnNogoTitle:'Flight not recommended', warnHintTitle:'Notice',
+    warnAircraftTitle:'Elevated Air Traffic',
+    warnAircraftDesc:n=>`${n} aircraft detected within ~15 km.`,
+    warnKpTitle:'Geomagnetic Activity',
+    warnKpDesc:v=>`Kp-Index ${v} — GPS precision may be reduced.`,
+    cardKp:'Kp-Index',    cardKpMeas:'Kp Reading (GFZ)',
+    cardVis:'Visibility', cardTemp:'Temperature',
+    cardGusts:'Wind Gusts', cardWind:'Wind',
+    cardCloud:'Cloud Cover', cardRain:'Precipitation', cardAir:'Air Traffic',
+    noAircraft:'No aircraft (~200 km)',
+    airBlocked:'Blocked: Please retry later (Rate Limit)',
+    airDist:d=>`${d} km away`, airAlt:'Altitude', airUnknown:'Unknown',
+    kpGps:v=>v>5?'GPS unreliable':v>3.3?'GPS impaired':'GPS normal',
+    kpLimit:'Limit 3.3',   gustLimit:'Limit 10 m/s',
+    visMin:'min: G≥1.5 km<br>CTR-D≥5 km',
+    rainActive:'Active precipitation', rainNone:'No precipitation',
+    cloudHigh:'Heavily overcast', cloudMid:'Partly cloudy', cloudLow:'Low cloud cover',
+    msNoRestr:'✓ No restrictions', msGusts:'Gusts',
+    msAirport:'Airport',    msAerodrome:'Airfield', msCTR:'Control Zone',
+    msProhibited:'No-fly Zone', msTempRestr:'Temp. Restriction',
+    msHighway:'Motorway',   msFedRoad:'Federal Road', msWaterway:'Waterway',
+    msNature:'Nature Reserve', msResidential:'Residential', msMilitary:'Military',
+    msIndustry:'Industry/Energy',                            msHospital:'Hospital',
+    footerText:'Germany only · VLOS operations · No liability',
+    infoTitle:'About SkyCheck', settingsTitle:'Settings',
+    settingsSave:'Apply settings', otherApps:'More Apps',
+  }
+};
+let LANG = localStorage.getItem('skycheck-lang') || 'de';
+function _t(k) { return (I18N[LANG]||I18N.de)[k] ?? I18N.de[k] ?? k; }
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = _t(el.getAttribute('data-i18n'));
+    if (typeof v === 'string') el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const v = _t(el.getAttribute('data-i18n-placeholder'));
+    if (typeof v === 'string') el.placeholder = v;
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const v = _t(el.getAttribute('data-i18n-title'));
+    if (typeof v === 'string') el.title = v;
+  });
+  const lb = document.getElementById('btn-lang');
+  if (lb) lb.textContent = LANG === 'en' ? '🇬🇧' : '🇩🇪';
+}
+// Lang-switcher wiring – runs after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  applyLang();
+  const btn  = document.getElementById('btn-lang');
+  const menu = document.getElementById('lang-menu');
+  if (btn && menu) {
+    btn.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('hidden'); });
+    menu.querySelectorAll('.lang-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        LANG = opt.dataset.lang;
+        localStorage.setItem('skycheck-lang', LANG);
+        menu.classList.add('hidden');
+        applyLang();
+        if (S.lat != null) {
+          renderStatus(lastStatus);
+          renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
+          renderWarnings(lastStatus, lastKp, lastAircraft);
+          renderZones(lastZones);
+          if (S.map) renderMapStatus(lastWeather, lastZones);
+        }
+      });
+    });
+    document.addEventListener('click', () => menu.classList.add('hidden'));
+  }
+});
+// State cache for lang re-render
+let lastStatus={lvl:'go',reasons:[]}, lastWeather=null, lastKp=null,
+    lastAircraft=[], lastKpGfz=null, lastZones=[];
+
 
 /* ================================================================
    CONFIG / ENDPOINTS
@@ -1620,7 +1800,7 @@ function evalStatus(w, kp) {
   const reasons = [];
   let lvl = 'go';
 
-  if (!w) return { lvl:'warn', reasons:['Wetterdaten nicht verfügbar'] };
+  if (!w) return { lvl:'warn', reasons:[_t('noWeather')] };
 
   const gusts = w.wind_gust_speed ?? 0;
   const wind  = w.wind_speed ?? 0;
@@ -1630,36 +1810,36 @@ function evalStatus(w, kp) {
 
   if (gusts > 10) {
     lvl = 'nogo';
-    reasons.push(`Böen ${gusts.toFixed(1)} m/s — Grenzwert 10 m/s überschritten`);
+    reasons.push(_t('gustsNogo')(gusts.toFixed(1)));
   } else if (gusts > 7) {
     if (lvl !== 'nogo') lvl = 'warn';
-    reasons.push(`Erhöhte Böen ${gusts.toFixed(1)} m/s`);
+    reasons.push(_t('gustsWarn')(gusts.toFixed(1)));
   }
 
   if (rain > 0.3) {
     lvl = 'nogo';
-    reasons.push(`Niederschlag ${rain.toFixed(2)} mm — Flugbetrieb nicht empfohlen`);
+    reasons.push(_t('rainNogo')(rain.toFixed(2)));
   } else if (rain > 0) {
     if (lvl !== 'nogo') lvl = 'warn';
-    reasons.push(`Geringer Niederschlag ${rain.toFixed(2)} mm`);
+    reasons.push(_t('rainWarn')(rain.toFixed(2)));
   }
 
   if (temp < -15 || temp > 45) {
     lvl = 'nogo';
-    reasons.push(`Temperatur außerhalb Betriebsbereich (${temp.toFixed(0)} °C)`);
+    reasons.push(_t('tempNogo')(temp.toFixed(0)));
   }
 
   if (dew != null && (temp - dew) < 2.5) {
     if (lvl !== 'nogo') lvl = 'warn';
-    reasons.push('Nebelgefahr — Taupunkt nahe Lufttemperatur');
+    reasons.push(_t('fogWarn'));
   }
 
   if (kp > 5) {
     lvl = 'nogo';
-    reasons.push(`Kp-Index ${kp.toFixed(1)} — GPS-Signal stark gestört`);
+    reasons.push(_t('kpNogo')(kp.toFixed(1)));
   } else if (kp > 3.3) {
     if (lvl !== 'nogo') lvl = 'warn';
-    reasons.push(`Erhöhter Kp-Index ${kp.toFixed(1)} — GPS-Zuverlässigkeit reduziert`);
+    reasons.push(_t('kpWarn')(kp.toFixed(1)));
   }
 
   return { lvl, reasons };
@@ -1669,10 +1849,11 @@ function evalStatus(w, kp) {
    RENDER: STATUS BANNER
 ================================================================ */
 function renderStatus(s) {
+  lastStatus = s;
   const cfg = {
-    go:   { icon:'✅', title:'Flug möglich',           desc:'Alle Parameter im Normalbereich.' },
-    warn: { icon:'⚠️',  title:'Bedingt flugfähig',     desc:'Eingeschränkte Bedingungen — sorgfältig prüfen.' },
-    nogo: { icon:'🚫', title:'Flug nicht empfohlen',   desc:'Grenzwert überschritten.' },
+    go:   { icon:'✅', title:_t('goTitle'),   desc:_t('goDesc') },
+    warn: { icon:'⚠️',  title:_t('warnTitle'), desc:_t('warnDesc') },
+    nogo: { icon:'🚫', title:_t('nogoTitle'), desc:_t('nogoDesc') },
   };
   const c = cfg[s.lvl];
   const $b = $('status-banner');
@@ -1722,7 +1903,8 @@ function getClosest(lat, lon, arr) {
 }
 
 function renderMetrics(w, kp, aircraft, kpGfz) {
-  if (!w) { $('metrics-grid').innerHTML = '<p style="color:var(--text3)">Keine Wetterdaten</p>'; return; }
+  lastWeather = w; lastKp = kp; lastAircraft = aircraft; lastKpGfz = kpGfz;
+  if (!w) { $('metrics-grid').innerHTML = `<p style="color:var(--text3)">${_t('noWeather')}</p>`; return; }
 
   const wind  = w.wind_speed ?? 0;
   const gusts = w.wind_gust_speed ?? 0;
@@ -1740,9 +1922,9 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
     ? new Date(kpGfz.kpForecastDt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'
     : '';
 
-  let acHtml = '<div class="fc-val">Keine Flugzeuge (~200km)</div>';
+  let acHtml = `<div class="fc-val">${_t('noAircraft')}</div>`;
   if (aircraft.length > 0 && aircraft[0].api_error) {
-    acHtml = `<div class="fc-val" style="color:var(--warn)">Blockiert: Bitte später prüfen (Rate Limit)</div>`;
+    acHtml = `<div class="fc-val" style="color:var(--warn)">${_t('airBlocked')}</div>`;
   } else if (aircraft.length > 0) {
     const validAc = aircraft.filter(a => !a.api_error);
     const cls = getClosest(S.lat, S.lon, validAc);
@@ -1752,14 +1934,14 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
       if (distKm > 10) clName = 'ok';
       acHtml = `
       <div class="fc-val ${clName}" style="font-size:0.95rem;line-height:1.2;">
-        ${distKm.toFixed(1)} km entfernt<br>
-        <span style="font-size:0.75rem; color:var(--text2)">${cls.ac.callsign||'Unbekannt'} / Flughöhe: ~${(cls.ac.altGeo??cls.ac.altBaro??0).toFixed(0)}m</span>
+        ${_t('airDist')(distKm.toFixed(1))}<br>
+        <span style="font-size:0.75rem; color:var(--text2)">${cls.ac.callsign||_t('airUnknown')} / ${_t('airAlt')}: ~${(cls.ac.altGeo??cls.ac.altBaro??0).toFixed(0)}m</span>
       </div>`;
     }
   }
 
   $('metrics-grid').innerHTML = [
-    card('Kp-Index',    `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>${kpTs?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+kpTs+'</span>':''}`, (kp>5?'GPS unzuverlässig':kp>3.3?'GPS beeinträchtigt':'GPS normal')+' · Grenzwert 3.3', 'https://kp.gfz.de/'),
+    card(_t('cardKp'), `<span class="${kc}">${kp!=null?kp.toFixed(1):'—'}</span>${kpTs?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+kpTs+'</span>':''}`, _t('kpGps')(kp)+' · '+_t('kpLimit'), 'https://kp.gfz.de/'),
     (() => {
       if (!kpGfz) return '';
       const gkc = kpGfz.val > 5 ? 'c-nogo' : kpGfz.val > 3.3 ? 'c-warn' : 'c-go';
@@ -1780,21 +1962,21 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
           return '<rect x="' + x + '" y="' + (H-10-bh) + '" width="' + bw + '" height="' + bh + '" rx="1.5" fill="' + col + '" opacity="' + op + '"' + dsh + '/>' +
                  '<text x="' + (x+bw/2) + '" y="' + (H-1) + '" text-anchor="middle" font-size="6" fill="#3d5a7a">' + b.label + '</text>';
         }).join('') + '</svg>' : '';
-      return card('Kp Messung (GFZ)', `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+ts+' UTC</span>':''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/hp30-hp60');
+      return card(_t('cardKpMeas'), `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+ts+' UTC</span>':''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
     })(),
-    vis  ? card('Sichtweite', `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, 'min: G≥1,5 km<br>CTR-D≥5 km', 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
-    card('Temperatur',  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
-    card('Windböen',    `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, 'Grenzwert 10 m/s', 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
-    card('Wind',        `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
-    card('Bewölkung',   `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?'Stark bewölkt':cloud>40?'Teilweise':'Gering', 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
-    card('Niederschlag',`<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?'Aktiver Niederschlag':'Kein Niederschlag', 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
+    vis  ? card(_t('cardVis'),  `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, _t('visMin'), 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+    card(_t('cardTemp'),  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
+    card(_t('cardGusts'), `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, _t('gustLimit'), 'https://kachelmannwetter.com/de/messwerte/boeen-ms.html'),
+    card(_t('cardWind'),  `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
+    card(_t('cardCloud'), `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?_t('cloudHigh'):cloud>40?_t('cloudMid'):_t('cloudLow'), 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
+    card(_t('cardRain'),  `<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?_t('rainActive'):_t('rainNone'), 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
   ].join('');
 
   // Luftverkehr in Hinweise & Warnungen rendern
   const $ai = document.getElementById('aircraft-info');
   if ($ai) {
     $ai.innerHTML = `<div class="m-card" style="width:100%;box-sizing:border-box;">
-      <div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">Luftverkehr</a></div>
+      <div class="m-lbl"><a href="https://globe.airplanes.live/" target="_blank" class="m-lbl-link">${_t('cardAir')}</a></div>
       ${acHtml}
     </div>`;
   }
@@ -1988,25 +2170,26 @@ function renderForecastDays(data, kp) {
    RENDER: WARNINGS
 ================================================================ */
 function renderWarnings(status, kp, aircraft) {
+  lastAircraft = aircraft;
   const ws = $('warnings-section');
   const wl = $('warn-list');
   const items = [];
 
   if (status.lvl === 'nogo') {
     status.reasons.forEach(r =>
-      items.push({ cls:'nogo', icon:'🚫', title:'Flug nicht empfohlen', desc:r }));
+      items.push({ cls:'nogo', icon:'🚫', title:_t('warnNogoTitle'), desc:r }));
   } else if (status.lvl === 'warn') {
     status.reasons.forEach(r =>
-      items.push({ cls:'warn', icon:'⚠️', title:'Hinweis', desc:r }));
+      items.push({ cls:'warn', icon:'⚠️', title:_t('warnHintTitle'), desc:r }));
   }
 
   if (aircraft.length > 8)
-    items.push({ cls:'warn', icon:'✈️', title:'Erhöhter Luftverkehr',
-      desc:`${aircraft.length} Flugzeuge im Umkreis von ~15 km detektiert.` });
+    items.push({ cls:'warn', icon:'✈️', title:_t('warnAircraftTitle'),
+      desc:_t('warnAircraftDesc')(aircraft.length) });
 
   if (kp > 3.3 && kp <= 5)
-    items.push({ cls:'warn', icon:'🛰️', title:'Geomagnetische Aktivität',
-      desc:`Kp-Index ${kp.toFixed(1)} — GPS-Präzision kann eingeschränkt sein.` });
+    items.push({ cls:'warn', icon:'🛰️', title:_t('warnKpTitle'),
+      desc:_t('warnKpDesc')(kp.toFixed(1)) });
 
   ws.style.display = '';
   if (!items.length) {
@@ -2033,9 +2216,10 @@ function renderZones(zones) {
   $zc.textContent = cnt;
   $zc.className   = 'z-count' + (cnt===0 ? ' ok' : '');
 
+  lastZones = zones;
   $('zones-hdr-text').innerHTML = cnt > 0 
-    ? `Es liegen Einschränkungen durch ${cnt} geografische Gebiet${cnt>1?'e':''} vor:` 
-    : `Keine Luftraumeinschränkungen erkannt.`;
+    ? _t('zonesCount')(cnt)
+    : _t('zonesNone');
 
   $('zones-body').innerHTML = cnt === 0
     ? ''
@@ -2076,38 +2260,38 @@ function renderMapStatus(now, zones) {
     const t = (type || '').toLowerCase();
     const n = (name || '');
     if (t.includes('flughafen') || t.includes('airport') || t === 'ctr' || t === 'atz')
-      return { label: 'Flughafen', color: '#e05252' };
+      return { label: _t('msAirport'), color: '#e05252' };
     if (t.includes('flugplatz') || t.includes('flugplaetze'))
-      return { label: 'Flugplatz', color: '#e07832' };
+      return { label: _t('msAerodrome'), color: '#e07832' };
     if (t.includes('kontrollzone') || t === 'ctr')
-      return { label: 'Kontrollzone', color: '#e05252' };
+      return { label: _t('msCTR'), color: '#e05252' };
     if (t.includes('flugbeschraenkung') || t.includes('beschraenkung') || t.includes('tfr') || t.includes('prohibited'))
-      return { label: 'Flugverbot', color: '#cc2244' };
+      return { label: _t('msProhibited'), color: '#cc2244' };
     if (t.includes('temporaere') || t.includes('teb'))
-      return { label: 'Temp. Einschränkung', color: '#dd6600' };
+      return { label: _t('msTempRestr'), color: '#dd6600' };
     if (t.includes('bundesautobahn') || t.includes('autobahn')) {
       const m = n.match(/(?:BAB\s*|A\s*)(\d+)/i) || n.match(/(\d+)/);
-      return { label: 'Autobahn' + (m ? ' A'+m[1] : ''), color: '#4488cc' };
+      return { label: _t('msHighway') + (m ? ' A'+m[1] : ''), color: '#4488cc' };
     }
     if (t.includes('bundesstrasse') || t.includes('bundesstraße')) {
       const m = n.match(/(?:B\s*|B)(\d+)/i) || n.match(/(\d+)/);
-      return { label: 'Bundesstraße' + (m ? ' B'+m[1] : ''), color: '#5599aa' };
+      return { label: _t('msFedRoad') + (m ? ' B'+m[1] : ''), color: '#5599aa' };
     }
     if (t.includes('binnenwasser') || t.includes('seewasser') || t.includes('schifffahrt')) {
       const known = ['Rhein','Elbe','Donau','Main','Mosel','Oder','Spree','Isar','Weser','Neckar','Saar','Havel'];
       const found = known.find(r => n.toLowerCase().includes(r.toLowerCase()));
-      return { label: 'Wasserstraße' + (found ? ' '+found : ''), color: '#3399bb' };
+      return { label: _t('msWaterway') + (found ? ' '+found : ''), color: '#3399bb' };
     }
     if (t.includes('nationalpark') || t.includes('naturschutz') || t.includes('ffh') || t.includes('vogelschutz'))
-      return { label: 'Naturschutz', color: '#44aa66' };
+      return { label: _t('msNature'), color: '#44aa66' };
     if (t.includes('wohngrundstuck') || t.includes('wohngrundstueck') || t.includes('wohn'))
-      return { label: 'Siedlung', color: '#8866cc' };
+      return { label: _t('msResidential'), color: '#8866cc' };
     if (t.includes('militar') || t.includes('militär'))
-      return { label: 'Militär', color: '#aa4455' };
+      return { label: _t('msMilitary'), color: '#aa4455' };
     if (t.includes('industrie') || t.includes('kraftwerk') || t.includes('umspann'))
-      return { label: 'Industrie/Energie', color: '#887733' };
+      return { label: _t('msIndustry'), color: '#887733' };
     if (t.includes('krankenhaus') || t.includes('hospital'))
-      return { label: 'Krankenhaus', color: '#ff6688' };
+      return { label: _t('msHospital'), color: '#ff6688' };
     return { label: name.length > 28 ? name.slice(0,26)+'…' : name, color: '#6688aa' };
   };
 
@@ -2124,7 +2308,7 @@ function renderMapStatus(now, zones) {
 
   let html = '';
   if (items.length === 0) {
-    html += '<div class="ms-zone-item" style="color:var(--go)">✓ Keine Einschränkungen</div>';
+    html += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
   } else {
     items.forEach(it => {
       html += `<div class="ms-zone-item">
@@ -2145,7 +2329,7 @@ function renderMapStatus(now, zones) {
     const gc    = gust > 10 ? 'c-nogo' : gust > 7 ? 'c-warn' : '';
     html += `<div class="ms-wind">
       <span class="ms-arrow" style="transform:rotate(${rot}deg);display:inline-block">↑</span>
-      <span class="${wc}">${spd.toFixed(1)}&nbsp;m/s</span><span>&nbsp;Böen&nbsp;</span><span class="${gc}">${gust.toFixed(0)}&nbsp;m/s</span>
+      <span class="${wc}">${spd.toFixed(1)}&nbsp;m/s</span><span>&nbsp;${_t('msGusts')}&nbsp;</span><span class="${gc}">${gust.toFixed(0)}&nbsp;m/s</span>
     </div>`;
   }
 
