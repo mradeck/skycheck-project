@@ -471,6 +471,8 @@
     .leaflet-popup-content { font-size: 0.82rem !important; line-height: 1.5 !important; }
     .ac-popup b { color: var(--accent); }
 
+    .map-fs-btn { position: absolute; bottom: 8px; left: 8px; z-index: 1001; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+    .map-wrap.map-fs { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100dvh !important; z-index: 9999; border-radius: 0 !important; }
     /* map layer toggle */
     .map-controls {
       display: flex; gap: 0.5rem; margin-bottom: 0.7rem; flex-wrap: wrap;
@@ -884,6 +886,7 @@
     </div>
     <div class="map-wrap">
       <div id="map"></div>
+    <button class="map-fs-btn" id="btn-map-fs" title="Vollbild">⛶</button>
       <div class="map-status hidden" id="map-status"></div>
     </div>
   </div>
@@ -1031,7 +1034,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.33';
+const APP_VER = '0.34';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1450,6 +1453,13 @@ $('btn-gps').addEventListener('click', () => {
    CHECK BUTTON
 ================================================================ */
 $('btn-check').addEventListener('click', doCheck);
+  $('btn-map-fs').addEventListener('click', () => {
+    const wrap = document.querySelector('.map-wrap');
+    const fs = wrap.classList.toggle('map-fs');
+    $('btn-map-fs').textContent = fs ? '✕' : '⛶';
+    document.body.style.overflow = fs ? 'hidden' : '';
+    if (S.map) setTimeout(() => S.map.invalidateSize(), 50);
+  });
 
 async function doCheck() {
   const q = $input.value.trim();
