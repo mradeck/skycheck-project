@@ -1017,7 +1017,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.27';
+const APP_VER = '0.28';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1962,7 +1962,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
           return '<rect x="' + x + '" y="' + (H-10-bh) + '" width="' + bw + '" height="' + bh + '" rx="1.5" fill="' + col + '" opacity="' + op + '"' + dsh + '/>' +
                  '<text x="' + (x+bw/2) + '" y="' + (H-1) + '" text-anchor="middle" font-size="6" fill="#3d5a7a">' + b.label + '</text>';
         }).join('') + '</svg>' : '';
-      return card(_t('cardKpMeas'), `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+ts+' UTC</span>':''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/');
+      return card(_t('cardKpMeas'), `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts?'<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">'+ts+' UTC</span>':''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/hp30-hp60');
     })(),
     vis  ? card(_t('cardVis'),  `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, _t('visMin'), 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card(_t('cardTemp'),  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
