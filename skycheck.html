@@ -1031,7 +1031,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.29';
+const APP_VER = '0.30';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1422,7 +1422,7 @@ document.addEventListener('click', e => {
 });
 
 $input.addEventListener('keydown', e => { if (e.key==='Enter') doCheck(); });
-$i", "nput.addEventListener('focus', () => {
+$input.addEventListener('focus', () => {
   if ($input.value.trim().length < 3) showHistory();
 });
 
