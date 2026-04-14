@@ -204,6 +204,20 @@
       z-index: 50; display: none; overflow: hidden;
     }
     .suggestions.open { display: block; }
+    .sug-hist-label {
+      padding: 0.45rem 1.2rem 0.3rem;
+      font-size: 0.72rem; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+    }
+    .sug-hist-item { display: flex; align-items: center; justify-content: space-between; }
+    .sug-hist-item > span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sug-hist-del {
+      background: none; border: none; color: var(--text3);
+      font-size: 1.1rem; padding: 0 0 0 0.7rem;
+      cursor: pointer; flex-shrink: 0; line-height: 1;
+    }
+    .sug-hist-del:hover { color: var(--text); }
     .sug-item {
       padding: 0.7rem 1.2rem;
       font-size: 0.875rem; color: var(--text2);
@@ -1017,7 +1031,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.28';
+const APP_VER = '0.29';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1238,6 +1252,30 @@ const $loadMsg= $('loading-msg');
 const $input  = $('loc-input');
 const $sugs   = $('suggestions');
 
+/* ---- Address History ---------------------------------------------------- */
+const HIST_KEY = 'skycheck-addr-hist';
+const HIST_LBL = {de:'Zuletzt gesucht', en:'Recently searched'};
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch { return []; }
+}
+function saveToHistory(name, lat, lon) {
+  let h = getHistory().filter(e => e.name !== name);
+  h.unshift({name, lat:+lat, lon:+lon});
+  localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0,5)));
+}
+function removeFromHistory(name) {
+  localStorage.setItem(HIST_KEY,
+    JSON.stringify(getHistory().filter(e => e.name !== name)));
+}
+function showHistory() {
+  const h = getHistory();
+  if (!h.length) { $sugs.classList.remove('open'); return; }
+  const lbl = (typeof LANG!=='undefined') ? (HIST_LBL[LANG]||HIST_LBL.de) : HIST_LBL.de;
+  $sugs.innerHTML = `<div class="sug-hist-label">${lbl}</div>` +
+    h.map(e => `<div class="sug-item sug-hist-item" data-lat="${e.lat}" data-lon="${e.lon}" data-name="${e.name}"><span>${e.name}</span><button class="sug-hist-del" data-name="${e.name}" title="Entfernen">×</button></div>`).join('');
+  $sugs.classList.add('open');
+}
+
 /* ================================================================
    LOADING
 ================================================================ */
@@ -1344,7 +1382,7 @@ $input.addEventListener('input', () => {
   S.lat = S.lon = null;
   clearTimeout(acTimer);
   const q = $input.value.trim();
-  if (q.length < 3) { $sugs.classList.remove('open'); return; }
+  if (q.length < 3) { showHistory(); return; }
   acTimer = setTimeout(async () => {
     try {
       const results = await geocode(q);
@@ -1364,6 +1402,9 @@ $input.addEventListener('input', () => {
 });
 
 $sugs.addEventListener('click', e => {
+    // Verlauf: Delete-Button
+  const del = e.target.closest('.sug-hist-del');
+  if (del) { e.stopPropagation(); removeFromHistory(del.dataset.name); showHistory(); return; }
   const item = e.target.closest('.sug-item');
   if (!item) return;
   S.lat  = parseFloat(item.dataset.lat);
@@ -1371,6 +1412,7 @@ $sugs.addEventListener('click', e => {
   S.name = item.dataset.name;
   $input.value = S.name;
   $sugs.classList.remove('open');
+  saveToHistory(S.name, S.lat, S.lon);
   runCheck();
 });
 
@@ -1380,6 +1422,9 @@ document.addEventListener('click', e => {
 });
 
 $input.addEventListener('keydown', e => { if (e.key==='Enter') doCheck(); });
+$i", "nput.addEventListener('focus', () => {
+  if ($input.value.trim().length < 3) showHistory();
+});
 
 /* ================================================================
    GPS
@@ -1420,6 +1465,7 @@ async function doCheck() {
       S.name = pts.slice(0,3).join(',').trim();
     } catch(e) { hideLoad(); alert('Fehler: '+e.message); return; }
   }
+  saveToHistory(S.name, S.lat, S.lon);
   runCheck();
 }
 
