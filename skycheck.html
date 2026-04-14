@@ -1031,7 +1031,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.31';
+const APP_VER = '0.32';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -2012,7 +2012,7 @@ function renderMetrics(w, kp, aircraft, kpGfz) {
     })(),
     vis  ? card(_t('cardVis'),  `${(vis/1000).toFixed(1)}<span class="m-unit"> km</span>`, _t('visMin'), 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
     card(_t('cardTemp'),  `${temp.toFixed(1)}<span class="m-unit"> °C</span>`,      dew!=null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
-    card(_t('cardGusts'), `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, _t('gustLimit'), 'https://windy.com/de/?gust'),
+    card(_t('cardGusts'), `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, _t('gustLimit'), `https://www.windy.com/de/-Windb%C3%B6en-gust?gust,${S.lat.toFixed(3)},${S.lon.toFixed(3)},8`),
     card(_t('cardWind'),  `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`,     `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
     card(_t('cardCloud'), `${cloud}<span class="m-unit"> %</span>`,                 cloud>80?_t('cloudHigh'):cloud>40?_t('cloudMid'):_t('cloudLow'), 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
     card(_t('cardRain'),  `<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain>0?_t('rainActive'):_t('rainNone'), 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
