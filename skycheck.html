@@ -1031,7 +1031,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.32';
+const APP_VER = '0.33';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1783,7 +1783,8 @@ async function fetchZones(lat, lon) {
         const f = {};
         headers.forEach((h, idx) => f[h] = cells[idx].textContent.trim());
         
-        const name = f.name || f.bezeichnung || 'Unbenannt';
+        const rawName = f.name || f.bezeichnung || '';
+        const name = rawName || type;
         const type = f.type_code || f.geozone_art || 'Spezifische Geozone';
         const extRef = f.external_reference || f.identifikation || '';
         
@@ -1803,7 +1804,7 @@ async function fetchZones(lat, lon) {
         const legal = f.legal_ref || f.rechtliche_grundlage || '—';
         
         params.push({
-          name: name + (extRef && extRef !== 'null' ? ` (${extRef})` : ''),
+          name: name + (rawName && extRef && extRef !== 'null' ? ` (${extRef})` : ''),
           type: type, lower, upper, legal, color: zoneColor(type)
         });
       }
