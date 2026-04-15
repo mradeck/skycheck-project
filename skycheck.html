@@ -472,6 +472,28 @@
     .ac-popup b { color: var(--accent); }
 
     .map-fs-btn { position: absolute; bottom: 8px; left: 8px; z-index: 1001; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+
+    /* === ALARM VIEW === */
+    #alarm-view { position: fixed; inset: 0; z-index: 10000; display: none; }
+    #alarm-view.av-open { display: block; }
+    #alarm-map { position: absolute; inset: 0; }
+    .av-topbar { position: absolute; top: 0; left: 0; right: 0; z-index: 1002; display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; background: rgba(15,15,15,0.82); backdrop-filter: blur(4px); }
+    .av-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; padding: 0.25rem 0.65rem; cursor: pointer; font-size: 0.85rem; white-space: nowrap; }
+    .av-loc { flex: 1; font-size: 0.75rem; color: rgba(255,255,255,0.75); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .av-stat { font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+    .av-stat.watch { background: rgba(60,200,80,0.25); color: #4f4; border: 1px solid #4f4; }
+    .av-stat.alarm { background: rgba(255,50,50,0.35); color: #f55; border: 1px solid #f55; animation: av-blink 0.6s ease-in-out infinite; }
+    @keyframes av-blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+    .av-banner { position: absolute; top: 36px; left: 0; right: 0; z-index: 1003; background: rgba(200,0,0,0.92); color: #fff; padding: 0.45rem 1rem; text-align: center; font-size: 0.82rem; font-weight: 700; display: none; }
+    .av-banner.show { display: block; }
+    .av-ctrl { position: absolute; bottom: 38px; right: 8px; z-index: 1002; display: flex; flex-direction: column; gap: 5px; }
+    .av-btn { width: 34px; height: 34px; background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.22); color: #fff; border-radius: 6px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+    .av-btn.on { border-color: var(--accent); color: var(--accent); }
+    #alarm-view.av-light .av-topbar { background: rgba(240,240,240,0.9); }
+    #alarm-view.av-light .av-back, #alarm-view.av-light .av-btn { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.18); color: #222; }
+    #alarm-view.av-light .av-loc { color: #333; }
+    #alarm-view.av-light .av-stat.watch { background: rgba(0,160,40,0.15); color: #080; border-color: #080; }
+    .btn-av-open { background: var(--card); border: 1px solid var(--accent); color: var(--accent); padding: 0.25rem 0.65rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
     .map-wrap.map-fs { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100dvh !important; z-index: 9999; border-radius: 0 !important; }
     /* map layer toggle */
     .map-controls {
@@ -883,6 +905,7 @@
         <button class="radius-btn map-toggle active" data-radius="100">100m</button>
       </div>
       <button class="map-toggle active" data-layer="radius1500">1,5km</button>
+        <button class="btn-av-open" id="btn-av-open">‚úà Alarm</button>
     </div>
     <div class="map-wrap">
       <div id="map"></div>
@@ -891,7 +914,25 @@
     </div>
   </div>
 
-  <!-- AIRSPACE ZONES -->
+  
+<!-- ALARM VIEW -->
+<div id="alarm-view">
+  <div class="av-topbar">
+    <button class="av-back" id="av-back">‚Üê Zur√ºck</button>
+    <span class="av-loc" id="av-loc">‚Äî</span>
+    <span class="av-stat watch" id="av-stat">‚óè Beobachte</span>
+  </div>
+  <div class="av-banner" id="av-banner"></div>
+  <div id="alarm-map"></div>
+  <div class="av-ctrl">
+    <button class="av-btn" id="av-gps" title="GPS">Ì†ΩÌ≥ç</button>
+    <button class="av-btn on" id="av-zones" title="Geozonen">Ì†ΩÌ∑∫</button>
+    <button class="av-btn" id="av-style" title="Kartenstil">‚ßâ</button>
+    <button class="av-btn" id="av-theme" title="Hell/Dunkel">‚òÄ</button>
+  </div>
+</div>
+
+<!-- AIRSPACE ZONES -->
   <div class="section" style="padding-top:0">
     <div class="zones-panel">
       <div class="zones-hdr" id="zones-hdr">
@@ -1034,7 +1075,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.34';
+const APP_VER = '0.35';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1458,6 +1499,161 @@ $('btn-check').addEventListener('click', doCheck);
     const fs = wrap.classList.toggle('map-fs');
     $('btn-map-fs').textContent = fs ? '‚úï' : '‚õ∂';
     document.body.style.overflow = fs ? 'hidden' : '';
+  // ‚ïê‚ïê‚ïê‚ïê ALARM VIEW ‚ïê‚ïê‚ïê‚ïê
+  const AV = {
+    map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null,
+    interval: null, lat: null, lon: null,
+    zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
+    RADIUS_KM: 2, POLL_MS: 2000,
+    STYLES: [
+      { n:'Dark',      u:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', a:'\u00a9CARTO' },
+      { n:'OSM',       u:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',            a:'\u00a9OSM' },
+      { n:'Satellite', u:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', a:'\u00a9Esri' },
+      { n:'Hell',      u:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', a:'\u00a9CARTO' },
+    ]
+  };
+
+  function avOpen() {
+    AV.lat = S.lat || 48.137; AV.lon = S.lon || 11.575;
+    $('alarm-view').classList.add('av-open');
+    document.body.style.overflow = 'hidden';
+    $('av-loc').textContent = S.name || (AV.lat.toFixed(4) + ', ' + AV.lon.toFixed(4));
+    if (!AV.map) avInitMap();
+    else { AV.map.setView([AV.lat, AV.lon], 13); setTimeout(() => AV.map.invalidateSize(), 80); }
+    avStartPoll();
+  }
+
+  function avClose() {
+    avStopPoll();
+    $('alarm-view').classList.remove('av-open');
+    document.body.style.overflow = '';
+    AV.alarmOn = false;
+  }
+
+  function avInitMap() {
+    const s0 = AV.STYLES[0];
+    AV.map = L.map('alarm-map', { center: [AV.lat, AV.lon], zoom: 13, zoomControl: true, doubleClickZoom: false });
+    AV.tileL = L.tileLayer(s0.u, { attribution: s0.a, maxZoom: 19 }).addTo(AV.map);
+    AV.dipulL = L.tileLayer.wms(DIPUL_WMS_URL, {
+      layers: getActiveDipulLayers(), format: 'image/png', transparent: true, opacity: 0.55, version: '1.3.0'
+    }).addTo(AV.map);
+    AV.acLayer  = L.layerGroup().addTo(AV.map);
+    AV.radiusCirc = L.circle([AV.lat, AV.lon], {
+      radius: AV.RADIUS_KM * 1000, color: '#ff4444', fill: false, weight: 1.5, dashArray: '6 4'
+    }).addTo(AV.map);
+    AV.map.on('dblclick', e => {
+      AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
+      $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
+      AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
+    });
+  }
+
+  function avStartPoll() { avPoll(); AV.interval = setInterval(avPoll, AV.POLL_MS); }
+  function avStopPoll()  { clearInterval(AV.interval); AV.interval = null; }
+
+  async function avPoll() {
+    try {
+      const r = await fetch(ADSB_URL + '/' + AV.lat + '/' + AV.lon + '/10');
+      const d = await r.json();
+      avUpdateMarkers(d.ac || []);
+      avCheckProx(d.ac || []);
+    } catch(e) {}
+  }
+
+  function avUpdateMarkers(planes) {
+    AV.acLayer.clearLayers();
+    planes.forEach(a => {
+      if (!a.lat || !a.lon) return;
+      const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
+      const clr  = dist < AV.RADIUS_KM ? '#ff4444' : dist < 5 ? '#ffaa00' : '#44ee88';
+      const rot  = a.track || 0;
+      const icon = L.divIcon({
+        html: '<div style="font-size:18px;line-height:1;color:' + clr + ';transform:rotate(' + rot + 'deg)">\u2708</div>',
+        className: '', iconSize: [20,20], iconAnchor: [10,10]
+      });
+      const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
+      const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+      m.bindPopup('<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + (a.alt_baro||'?') + ' ft \u00b7 ' + (a.gs||'?') + ' kts');
+    });
+  }
+
+  function avCheckProx(planes) {
+    const near = planes.filter(a => a.lat && a.lon && avDist(AV.lat, AV.lon, a.lat, a.lon) < AV.RADIUS_KM);
+    if (near.length) {
+      const a  = near[0];
+      const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+      const d  = avDist(AV.lat, AV.lon, a.lat, a.lon);
+      $('av-stat').className  = 'av-stat alarm';
+      $('av-stat').textContent = '\u26a0 ' + near.length + ' Flugzeug' + (near.length > 1 ? 'e' : '');
+      $('av-banner').className = 'av-banner show';
+      $('av-banner').textContent = '\u26a0 ' + cs + ' \u2014 ' + d.toFixed(2) + ' km \u00b7 ' + (a.alt_baro||'?') + ' ft';
+      if (!AV.alarmOn) {
+        AV.alarmOn = true;
+        avBeep();
+        if (navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+      }
+    } else {
+      AV.alarmOn = false;
+      $('av-stat').className  = 'av-stat watch';
+      $('av-stat').textContent = '\u25cf Beobachte';
+      $('av-banner').className = 'av-banner';
+    }
+  }
+
+  function avBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [[880,0],[1100,0.35],[880,0.7]].forEach(([freq, t]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.25, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.28);
+        o.start(ctx.currentTime + t);
+        o.stop(ctx.currentTime + t + 0.3);
+      });
+    } catch(e) {}
+  }
+
+  function avDist(la1, lo1, la2, lo2) {
+    const R = 6371, dL = (la2-la1)*Math.PI/180, dO = (lo2-lo1)*Math.PI/180;
+    const a = Math.sin(dL/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  $('btn-av-open').addEventListener('click', avOpen);
+  $('av-back').addEventListener('click', avClose);
+
+  $('av-gps').addEventListener('click', () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      AV.lat = pos.coords.latitude; AV.lon = pos.coords.longitude;
+      $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
+      if (AV.map) { AV.map.setView([AV.lat, AV.lon], 14); AV.radiusCirc.setLatLng([AV.lat, AV.lon]); }
+    });
+  });
+
+  $('av-zones').addEventListener('click', () => {
+    AV.zonesOn = !AV.zonesOn;
+    AV.zonesOn ? AV.map.addLayer(AV.dipulL) : AV.map.removeLayer(AV.dipulL);
+    $('av-zones').classList.toggle('on', AV.zonesOn);
+  });
+
+  $('av-style').addEventListener('click', () => {
+    AV.styleIdx = (AV.styleIdx + 1) % AV.STYLES.length;
+    const s = AV.STYLES[AV.styleIdx];
+    AV.map.removeLayer(AV.tileL);
+    AV.tileL = L.tileLayer(s.u, { attribution: s.a, maxZoom: 19 }).addTo(AV.map);
+    AV.tileL.bringToBack();
+    $('av-style').title = s.n;
+  });
+
+  $('av-theme').addEventListener('click', () => {
+    AV.lightMode = !AV.lightMode;
+    $('alarm-view').classList.toggle('av-light', AV.lightMode);
+    $('av-theme').textContent = AV.lightMode ? '\ud83c\udf19' : '\u2600';
+  });
+
     if (S.map) setTimeout(() => S.map.invalidateSize(), 50);
   });
 
