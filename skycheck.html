@@ -1075,7 +1075,7 @@
 <script>
 'use strict';
 
-const APP_VER = '0.35';
+const APP_VER = '0.36';
 document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
 /* ================================================================
@@ -1499,8 +1499,9 @@ $('btn-check').addEventListener('click', doCheck);
     const fs = wrap.classList.toggle('map-fs');
     $('btn-map-fs').textContent = fs ? '✕' : '⛶';
     document.body.style.overflow = fs ? 'hidden' : '';
-  // ════ ALARM VIEW ════
-  const AV = {
+});
+
+const AV = {
     map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null,
     interval: null, lat: null, lon: null,
     zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
@@ -1655,8 +1656,6 @@ $('btn-check').addEventListener('click', doCheck);
   });
 
     if (S.map) setTimeout(() => S.map.invalidateSize(), 50);
-  });
-
 async function doCheck() {
   const q = $input.value.trim();
   if (!q) return;
