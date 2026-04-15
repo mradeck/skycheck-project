@@ -28,7 +28,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~4000 Zeilen, ~126 kB)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.37 — Sektions-Index mit 38 eindeutigen Tags
+**Aktuell:** v0.38 — Alarm-Optimierung (persistenter AudioContext, 5s-Wiederholung)
 **Projektpfad (Mac):** `/Users/michaelradeck/Documents/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 
