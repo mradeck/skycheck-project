@@ -3,7 +3,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~100 kB)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.35
+**Aktuell:** v0.36
 **Lokaler Pfad:** `~/Documents/skycheck_project/` (Cowork-Ordner, direkt mountbar)
 
 ---
