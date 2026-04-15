@@ -2295,7 +2295,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.37';
+    const APP_VER = '0.38';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2723,7 +2723,7 @@
 
     const AV = {
       map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null,
-      interval: null, lat: null, lon: null,
+      interval: null, beepInterval: null, lat: null, lon: null,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
       RADIUS_KM: 2, POLL_MS: 2000,
       STYLES: [
@@ -2746,6 +2746,7 @@
 
     function avClose() {
       avStopPoll();
+      if (AV.beepInterval) { clearInterval(AV.beepInterval); AV.beepInterval = null; }
       $('alarm-view').classList.remove('av-open');
       document.body.style.overflow = '';
       AV.alarmOn = false;
@@ -2812,8 +2813,13 @@
           AV.alarmOn = true;
           avBeep();
           if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+          AV.beepInterval = setInterval(() => {
+            avBeep();
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          }, 5000);
         }
       } else {
+        if (AV.alarmOn && AV.beepInterval) { clearInterval(AV.beepInterval); AV.beepInterval = null; }
         AV.alarmOn = false;
         $('av-stat').className = 'av-stat watch';
         $('av-stat').textContent = '\u25cf Beobachte';
@@ -2821,9 +2827,16 @@
       }
     }
 
+    let _avAudioCtx = null;
+    function _avCtx() {
+      if (!_avAudioCtx) _avAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_avAudioCtx.state === 'suspended') _avAudioCtx.resume();
+      return _avAudioCtx;
+    }
+
     function avBeep() {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = _avCtx();
         [[880, 0], [1100, 0.35], [880, 0.7]].forEach(([freq, t]) => {
           const o = ctx.createOscillator(), g = ctx.createGain();
           o.connect(g); g.connect(ctx.destination);
@@ -3948,9 +3961,16 @@
     //  ALARM-SYSTEM: playBell · checkAircraftAlarm · silenceAlarm
     // ═══════════════════════════════════════════════════════════════════
 
+    let _bellAudioCtx = null;
+    function _bellCtx() {
+      if (!_bellAudioCtx) _bellAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_bellAudioCtx.state === 'suspended') _bellAudioCtx.resume();
+      return _bellAudioCtx;
+    }
+
     function playBell() {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = _bellCtx();
         const t = ctx.currentTime;
         // Erster Glockenschlag: 880 Hz → 440 Hz Abschwingen
         const makeStrike = (freq, gainVal, decay, freqEnd, startOffset) => {
@@ -4004,7 +4024,7 @@
           playBell();
           S.alarm.intervalId = setInterval(() => {
             if (!S.alarm.silenced) playBell();
-          }, 30000);
+          }, 5000);
         }
       } else if (threats.length === 0) {
         banner.classList.remove('active');
