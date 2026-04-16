@@ -2360,7 +2360,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.46';
+    const APP_VER = '0.47';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -3453,8 +3453,8 @@
             headers.forEach((h, idx) => f[h] = cells[idx].textContent.trim());
 
             const rawName = f.name || f.bezeichnung || '';
-            const name = rawName || type;
             const type = f.type_code || f.geozone_art || 'Spezifische Geozone';
+            const name = rawName || type;
             const extRef = f.external_reference || f.identifikation || '';
 
             let lower = f.lower_limit_altitude || f.untere_grenze || '0.0';
