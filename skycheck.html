@@ -2332,7 +2332,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.40';
+    const APP_VER = '0.41';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2828,10 +2828,12 @@
         const alt = altFt(a);
         const isLow = alt < AV.ALT_LIMIT_FT;
         const clr = (isLow && dist < AV.RADIUS_KM) ? '#ff4444' : isLow ? '#ffaa00' : dist < 5 ? '#88bb88' : '#557755';
-        const sz = isLow ? 22 : 16;
+        const sz = isLow ? 28 : 22;
         const rot = a.track || 0;
+        const cat = (a.category || '').toUpperCase();
+        const isHelo = /^A7|^B/.test(cat);
         const icon = L.divIcon({
-          html: '<div style="font-size:' + sz + 'px;line-height:1;color:' + clr + ';transform:rotate(' + rot + 'deg)">\u2708</div>',
+          html: _acSvg(rot, clr, isHelo, sz),
           className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
         });
         const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
@@ -3183,40 +3185,40 @@
     }
 
     // ── Aircraft-Icon-Factory ─────────────────────────────────────────────────────
+    /* Shared SVG icon renderer for aircraft (airplane + helicopter) */
+    function _acSvg(hdg, col, isHelo, sz) {
+      sz = sz || 26;
+      if (isHelo) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '" viewBox="-12 -12 24 24" style="transform:rotate(' + hdg + 'deg);display:block">'
+          + '<circle cx="0" cy="0" r="9.5" fill="none" stroke="' + col + '" stroke-width="0.7" stroke-dasharray="3,2.5" opacity="0.4"/>'
+          + '<ellipse cx="0" cy="0.5" rx="2.8" ry="5.5" fill="' + col + '" stroke="rgba(0,0,0,0.45)" stroke-width="0.5"/>'
+          + '<line x1="0" y1="-5.5" x2="0" y2="-10" stroke="' + col + '" stroke-width="1.3" stroke-linecap="round"/>'
+          + '<line x1="-4" y1="5.5" x2="4" y2="5.5" stroke="' + col + '" stroke-width="1.3" stroke-linecap="round"/>'
+          + '</svg>';
+      }
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '" viewBox="-12 -12 24 24" style="transform:rotate(' + hdg + 'deg);display:block">'
+        + '<polygon points="0,-10 2,-6 2,-1 9,3 9,4.5 2,2 1.5,7 4.5,9 4.5,10.5 0,8.5 -4.5,10.5 -4.5,9 -1.5,7 -2,2 -9,4.5 -9,3 -2,-1 -2,-6" fill="' + col + '" stroke="rgba(0,0,0,0.45)" stroke-width="0.5" stroke-linejoin="round"/>'
+        + '</svg>';
+    }
+
     function getAircraftIcon(ac) {
       const hdg = ac.hdg ?? 0;
       const alt = ac.altGeo ?? ac.altBaro ?? 0;
       const cat = (ac.category || '').toUpperCase();
 
-      // Farbe nach Höhenrisiko
       let col;
-      if (alt <= 0) col = '#888888';  // am Boden – grau
-      else if (alt < 300) col = '#e53935';  // <300 m – rot (Risikobereich)
-      else if (alt < 1000) col = '#fb8c00';  // 300–1000 m – orange
-      else col = '#00bcd4';  // >1000 m – cyan
+      if (alt <= 0) col = '#888888';
+      else if (alt < 300) col = '#e53935';
+      else if (alt < 1000) col = '#fb8c00';
+      else col = '#00bcd4';
 
-      // Hubschrauber: ICAO-Kategorie A7 oder B*
       const isHelo = /^A7|^B/.test(cat);
 
-      let svg;
-      if (isHelo) {
-        svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24" style="transform:rotate(${hdg}deg);display:block;overflow:visible">
-      <line x1="-11" y1="0" x2="11" y2="0" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
-      <line x1="0" y1="-11" x2="0" y2="11" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="0" cy="0" r="3.5" fill="${col}"/>
-    </svg>`;
-      } else {
-        svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24" style="transform:rotate(${hdg}deg);display:block;overflow:visible">
-      <polygon points="0,-11 3,-3 11,2 3,0 2,5 0,4 -2,5 -3,0 -11,2 -3,-3"
-               fill="${col}" stroke="#000" stroke-width="0.5"/>
-    </svg>`;
-      }
-
       return L.divIcon({
-        html: svg,
+        html: _acSvg(hdg, col, isHelo, 26),
         className: '',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
         popupAnchor: [0, -14]
       });
     }
