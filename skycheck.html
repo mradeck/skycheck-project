@@ -2160,6 +2160,32 @@
     </div>
 
 
+    <!-- TEMPERATURE ALTITUDE PROFILE (DFS UTM) -->
+    <div class="section" style="padding-top:0">
+      <div class="sec-label" data-i18n="secTempProfile">Temperaturprofil nach Höhe</div>
+      <div class="wind-profile" id="temp-profile"></div>
+    </div>
+    <!-- DEW POINT ANALYSIS (Magnus-Tetens per altitude) -->
+    <div class="section" style="padding-top:0">
+      <div class="sec-label" data-i18n="secDewpoint">Taupunktanalyse nach Höhe</div>
+      <div id="dewpoint-card"></div>
+    </div>
+    <!-- ESTIMATED CLOUD BASE -->
+    <div class="section" style="padding-top:0">
+      <div class="sec-label" data-i18n="secCloudBase">Wolkenuntergrenze (geschätzt)</div>
+      <div id="cloudbase-card"></div>
+    </div>
+    <!-- FREEZING RAIN WARNING -->
+    <div class="section" style="padding-top:0;display:none" id="freezing-rain-section">
+      <div class="warn-item nogo" style="margin:0;">
+        <span class="warn-icon">🧊</span>
+        <div class="warn-body">
+          <div class="warn-title" id="fz-rain-title">Gefrierender Regen — Absolutes Flugverbot</div>
+          <div class="warn-desc" id="fz-rain-desc">Niederschlag bei ≤ 0 °C. Eisbildung auf Oberflächen und Drohne.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- [H-ALARM] === ALARM VIEW === -->
     <div id="alarm-view">
       <div class="av-topbar">
@@ -2207,6 +2233,7 @@
       </div>
       <div class="l-sources" style="margin-top: 0;">
         <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
+        <a href="https://utm.dfs.de/" target="_blank" class="l-src">DFS UTM</a>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
@@ -2332,7 +2359,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.43';
+    const APP_VER = '0.44';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2360,6 +2387,13 @@
         fogWarn: 'Nebelgefahr — Taupunkt nahe Lufttemperatur',
         kpNogo: v => `Kp-Index ${v} — GPS-Signal stark gestört`,
         kpWarn: v => `Erhöhter Kp-Index ${v} — GPS-Zuverlässigkeit reduziert`,
+        secTempProfile: 'Temperaturprofil nach Höhe (DFS)',
+        secDewpoint: 'Taupunktanalyse nach Höhe',
+        secCloudBase: 'Wolkenuntergrenze (geschätzt)',
+        freezingRainNogo: v => `Gefrierender Regen (${v} mm bei ≤ 0 °C) — Absolutes Flugverbot`,
+        dpFog: 'Nebelgefahr / Klareis',
+        dpCrit: 'Kritische Vereisung',
+        dpClear: 'Keine Vereisungsgefahr',
         secConditions: 'Aktuelle Bedingungen', secWind: 'Windprofil nach Höhe',
         secForecast48: '48-Stunden-Vorschau', sec5day: '5-Tage-Überblick',
         secMap: 'Karte & Luftraum', secWarnings: 'Hinweise & Warnungen',
@@ -2416,6 +2450,13 @@
         fogWarn: 'Fog risk — dew point near air temperature',
         kpNogo: v => `Kp-Index ${v} — GPS signal severely disturbed`,
         kpWarn: v => `Elevated Kp-Index ${v} — GPS reliability reduced`,
+        secTempProfile: 'Temperature Profile by Altitude (DFS)',
+        secDewpoint: 'Dew Point Analysis by Altitude',
+        secCloudBase: 'Estimated Cloud Base',
+        freezingRainNogo: v => `Freezing rain (${v} mm at ≤ 0 °C) — Absolute NoGo`,
+        dpFog: 'Fog risk / Clear ice',
+        dpCrit: 'Critical icing risk',
+        dpClear: 'No icing risk',
         secConditions: 'Current Conditions', secWind: 'Wind Profile by Altitude',
         secForecast48: '48-Hour Forecast', sec5day: '5-Day Overview',
         secMap: 'Map & Airspace', secWarnings: 'Notes & Warnings',
@@ -3018,6 +3059,15 @@
           if (result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
         });
         renderWindProfile(now);
+        renderFreezingRain(now);
+
+        // DFS UTM altitude weather data (non-blocking, best-effort)
+        fetchDfsWeather(S.lat, S.lon).then(dfs => {
+          renderTempProfile(dfs);
+          renderDewpointCard(dfs);
+          renderCloudBase(now, dfs);
+        }).catch(e => console.warn('DFS render:', e));
+
         S._weatherArr = weatherArr; S._kpVal = kpVal;
         renderForecast(weatherArr, kpVal);
         renderForecastDays(weatherArr, kpVal);
@@ -3065,6 +3115,57 @@
     }
 
 
+
+    /* [J-API-DFS] ========================================================
+       API: DFS UTM Weather (Temp, Wind, Humidity at altitude levels)
+       POST to utm-service.dfs.de — no API key required
+    ================================================================ */
+    async function fetchDfsWeather(lat, lon) {
+      try {
+        const now = new Date();
+        now.setMinutes(0, 0, 0);
+        const ts = now.toISOString().replace('.000Z', 'Z');
+        const body = { positions: [{ longitude: lon, latitude: lat, forecasts: [ts],
+            temperature: { unit: 'C', heights: [
+              { reference: 'AGL', unit: 'm', value: 2 },
+              { reference: 'AGL', unit: 'm', value: 50 },
+              { reference: 'AGL', unit: 'm', value: 100 },
+              { reference: 'AGL', unit: 'm', value: 150 }]},
+            wind: { unit: 'm/s', heights: [
+              { reference: 'AGL', unit: 'm', value: 10 },
+              { reference: 'AGL', unit: 'm', value: 50 },
+              { reference: 'AGL', unit: 'm', value: 100 },
+              { reference: 'AGL', unit: 'm', value: 150 }]},
+            rainPrecipitation: { unit: 'mm' }, snowPrecipitation: { unit: 'cm' },
+            totalCloudCover: { unit: '%' },
+            airHumidity: { unit: '%', heights: [
+              { reference: 'AGL', unit: 'm', value: 50 },
+              { reference: 'AGL', unit: 'm', value: 100 },
+              { reference: 'AGL', unit: 'm', value: 150 }]}
+        }]};
+        const r = await fetch('https://utm-service.dfs.de/api/weather/v1/weather', {
+          method: 'POST', headers: { 'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
+            'Origin': 'https://utm.dfs.de', 'Referer': 'https://utm.dfs.de/' },
+          body: JSON.stringify(body) });
+        if (!r.ok) { console.warn('DFS UTM HTTP', r.status); return null; }
+        const d = await r.json();
+        const fc = d?.positions?.[0]?.forecasts?.[0];
+        if (!fc) return null;
+        return {
+          temperatures: (fc.temperature || []).map(t => ({ height: t.height?.value ?? 0, value: t.value })).sort((a, b) => a.height - b.height),
+          winds: (fc.wind || []).map(w => ({ height: w.height?.value ?? 0, speed: Math.sqrt((w.uComponent || 0) ** 2 + (w.vComponent || 0) ** 2), gust: w.windSpeedGust ?? 0 })).sort((a, b) => a.height - b.height),
+          humidity: (fc.airHumidity || []).map(h => ({ height: h.height?.value ?? 0, value: h.value })).sort((a, b) => a.height - b.height),
+          rain: fc.rainPrecipitation?.value ?? 0, snow: fc.snowPrecipitation?.value ?? 0,
+          cloud: fc.totalCloudCover?.value ?? null };
+      } catch (e) { console.warn('DFS UTM:', e); return null; }
+    }
+    function calcDewPoint(t, rh) {
+      if (rh == null || rh <= 0) return null;
+      const a = 17.625, b = 243.04;
+      const alpha = Math.log(rh / 100) + (a * t) / (b + t);
+      return +((b * alpha) / (a - alpha)).toFixed(1);
+    }
 
     /* [J-API-KP] ========================================================
        API: KP-INDEX
@@ -3398,6 +3499,12 @@
         reasons.push(_t('kpWarn')(kp.toFixed(1)));
       }
 
+      // Freezing rain
+      if (rain > 0 && temp <= 0) {
+        lvl = 'nogo';
+        reasons.push(_t('freezingRainNogo')(rain.toFixed(2)));
+      }
+
       return { lvl, reasons };
     }
 
@@ -3570,6 +3677,63 @@
       <span class="wp-val mono ${cls}">${speed} m/s</span>
     </div>`;
       }).join('');
+    }
+
+    /* [J-RENDER-TEMP] ===================================================
+       RENDER: TEMPERATURE ALTITUDE PROFILE (DFS UTM data)
+    ================================================================ */
+    function renderTempProfile(dfs) {
+      const el = $('temp-profile'); if (!el) return;
+      if (!dfs || !dfs.temperatures || !dfs.temperatures.length) {
+        el.innerHTML = '<div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">Keine DFS-Daten</span></div>'; return; }
+      const temps = dfs.temperatures.slice().sort((a, b) => b.height - a.height);
+      const maxAbs = Math.max(...temps.map(t => Math.abs(t.value)), 1);
+      el.innerHTML = temps.map(t => {
+        const pct = Math.min(100, (Math.abs(t.value) / maxAbs) * 100).toFixed(1);
+        const cls = t.value <= 0 ? 'c-nogo' : t.value < 5 ? 'c-warn' : '';
+        const color = t.value <= 0 ? 'var(--nogo,#ef476f)' : t.value < 5 ? 'var(--warn,#ffb703)' : 'var(--accent)';
+        return `<div class="wp-row"><span class="wp-alt">${t.height} m AGL</span><div class="wp-bar-wrap"><div class="wp-bar" style="width:${pct}%;background:${color}"></div></div><span class="wp-val mono ${cls}">${t.value.toFixed(1)} °C</span></div>`;
+      }).join('');
+    }
+    function renderDewpointCard(dfs) {
+      const el = document.getElementById('dewpoint-card'); if (!el) return;
+      if (!dfs || !dfs.temperatures || !dfs.humidity || !dfs.humidity.length) {
+        el.innerHTML = '<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">Keine Feuchtigkeitsdaten</span></div></div>'; return; }
+      const rows = [];
+      for (const t of dfs.temperatures) {
+        const h = dfs.humidity.find(x => x.height === t.height); if (!h) continue;
+        const td = calcDewPoint(t.value, h.value); if (td == null) continue;
+        const spread = +(t.value - td).toFixed(1); let warn, cls;
+        if (t.value >= -10 && t.value <= 0 && spread < 1) { warn = _t('dpCrit'); cls = 'c-nogo'; }
+        else if (t.value < 3 && spread < 2) { warn = _t('dpFog'); cls = 'c-warn'; }
+        else { warn = _t('dpClear'); cls = 'c-go'; }
+        rows.push({ height: t.height, temp: t.value, rh: h.value, td, spread, warn, cls });
+      }
+      if (!rows.length) { el.innerHTML = ''; return; }
+      rows.sort((a, b) => b.height - a.height);
+      el.innerHTML = `<div class="wind-profile">${rows.map(r => `<div class="wp-row" style="flex-wrap:wrap;gap:0.4rem;"><span class="wp-alt">${r.height} m</span><span class="mono" style="font-size:0.78rem;flex:1;min-width:120px">T ${r.temp.toFixed(1)}° / Td ${r.td}°</span><span class="mono ${r.cls}" style="font-size:0.78rem;font-weight:600">Δ ${r.spread}°C</span><div style="width:100%;padding-left:64px;font-size:0.68rem;color:var(--text3);margin-top:-2px">${r.warn}${r.rh != null ? ' · RH ' + r.rh.toFixed(0) + '%' : ''}</div></div>`).join('')}</div>`;
+    }
+    function renderCloudBase(w, dfs) {
+      const el = document.getElementById('cloudbase-card'); if (!el) return;
+      let temp = w?.temperature; let td = w?.dew_point;
+      if (dfs && dfs.temperatures && dfs.humidity) {
+        const t2 = dfs.temperatures.find(t => t.height <= 2);
+        const h50 = dfs.humidity.find(h => h.height === 50);
+        if (t2 && h50) { temp = t2.value; td = calcDewPoint(t2.value, h50.value); } }
+      if (temp == null || td == null) {
+        el.innerHTML = '<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">—</span></div></div>'; return; }
+      const spread = temp - td; const base = Math.round(spread * 125);
+      const cls = base < 150 ? 'c-nogo' : base < 300 ? 'c-warn' : 'c-go';
+      el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">Basis</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${spread.toFixed(1)} °C &nbsp;(T ${temp.toFixed(1)}° − Td ${td.toFixed(1)}°)</span></div></div>`;
+    }
+    function renderFreezingRain(w) {
+      const el = document.getElementById('freezing-rain-section'); if (!el) return;
+      const rain = w?.precipitation ?? 0; const temp = w?.temperature ?? 99;
+      if (rain > 0 && temp <= 0) { el.style.display = '';
+        const t = document.getElementById('fz-rain-title'); const d = document.getElementById('fz-rain-desc');
+        if (t) t.textContent = LANG === 'en' ? 'Freezing Rain — Absolute NoGo' : 'Gefrierender Regen — Absolutes Flugverbot';
+        if (d) d.textContent = LANG === 'en' ? `${rain.toFixed(2)} mm precipitation at ${temp.toFixed(1)} °C surface temperature. Ice formation on surfaces and drone.` : `${rain.toFixed(2)} mm Niederschlag bei ${temp.toFixed(1)} °C Bodentemperatur. Eisbildung auf Oberflächen und Drohne.`;
+      } else { el.style.display = 'none'; }
     }
 
     /* [J-RENDER-FC] =====================================================
