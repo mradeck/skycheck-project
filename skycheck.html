@@ -1271,6 +1271,7 @@
       height: 100dvh !important;
       z-index: 9999;
       border-radius: 0 !important;
+      border: none !important;
     }
 
     /* map layer toggle */
@@ -2359,7 +2360,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.45';
+    const APP_VER = '0.46';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2797,6 +2798,26 @@
       const fs = wrap.classList.toggle('map-fs');
       $('btn-map-fs').textContent = fs ? '✕' : '⛶';
       document.body.style.overflow = fs ? 'hidden' : '';
+      if (S.map) {
+        setTimeout(() => {
+          S.map.invalidateSize();
+          if (S.lat != null) {
+            if (fs) {
+              S.map.setView([S.lat, S.lon], S.map.getZoom(), { animate: false });
+            } else {
+              const msEl = document.getElementById('map-status');
+              const msW = (msEl && !msEl.classList.contains('hidden'))
+                ? Math.round(msEl.getBoundingClientRect().width) : 0;
+              const pxOff = msW > 0
+                ? Math.round((msW + 24) / 2)
+                : Math.round(S.map.getSize().x * 0.10);
+              const mkPx = S.map.latLngToContainerPoint([S.lat, S.lon]);
+              const tgt = S.map.containerPointToLatLng([mkPx.x + pxOff, mkPx.y]);
+              S.map.panTo(tgt, { animate: false });
+            }
+          }
+        }, 120);
+      }
     });
 
     const AV = {
@@ -4165,8 +4186,8 @@
           runCheck();
         });
 
-        // Initiales Offset: Info-Overlay (rechts) sofort freihalten
-        {
+        // Initiales Offset: Info-Overlay (rechts) sofort freihalten (nicht im Fullscreen)
+        if (!document.querySelector('.map-wrap.map-fs')) {
           const _msEl0 = document.getElementById('map-status');
           const _msW0 = (_msEl0 && !_msEl0.classList.contains('hidden'))
             ? Math.round(_msEl0.getBoundingClientRect().width) : 0;
@@ -4180,16 +4201,18 @@
 
       } else {
         // Map exists, just update state gently!
-        // Marker aus dem Info-Overlay (rechts) freistellen – dynamische Breite
-        const _msEl = document.getElementById('map-status');
-        const _msW = (_msEl && !_msEl.classList.contains('hidden'))
-          ? Math.round(_msEl.getBoundingClientRect().width) : 0;
-        const _pxOff = _msW > 0
-          ? Math.round((_msW + 24) / 2)
-          : Math.round(S.map.getSize().x * 0.10);
-        const _mkPx = S.map.latLngToContainerPoint([lat, lon]);
-        const _tgt = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
-        S.map.panTo(_tgt);
+        // Marker aus dem Info-Overlay (rechts) freistellen (nicht im Fullscreen)
+        if (!document.querySelector('.map-wrap.map-fs')) {
+          const _msEl = document.getElementById('map-status');
+          const _msW = (_msEl && !_msEl.classList.contains('hidden'))
+            ? Math.round(_msEl.getBoundingClientRect().width) : 0;
+          const _pxOff = _msW > 0
+            ? Math.round((_msW + 24) / 2)
+            : Math.round(S.map.getSize().x * 0.10);
+          const _mkPx = S.map.latLngToContainerPoint([lat, lon]);
+          const _tgt = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
+          S.map.panTo(_tgt);
+        }
         S.layers.pin.setLatLng([lat, lon]);
         S.layers.pin.bindPopup(popStr);
         S.layers.radius.setLatLng([lat, lon]);
