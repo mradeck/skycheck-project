@@ -2332,7 +2332,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.42';
+    const APP_VER = '0.43';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2759,10 +2759,10 @@
     });
 
     const AV = {
-      map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null,
+      map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null, scanCirc: null,
       interval: null, beepInterval: null, lat: null, lon: null,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
-      RADIUS_KM: 2, POLL_MS: 2000, ALT_LIMIT_FT: 984,
+      RADIUS_KM: 2, POLL_MS: 2000, ALT_LIMIT_FT: 984, SCAN_KM: 18.52,
       STYLES: [
         { n: 'Dark', u: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', a: '\u00a9CARTO' },
         { n: 'OSM', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '\u00a9OSM' },
@@ -2800,10 +2800,14 @@
       AV.radiusCirc = L.circle([AV.lat, AV.lon], {
         radius: AV.RADIUS_KM * 1000, color: '#ff4444', fill: false, weight: 1.5, dashArray: '6 4'
       }).addTo(AV.map);
+      AV.scanCirc = L.circle([AV.lat, AV.lon], {
+        radius: AV.SCAN_KM * 1000, color: '#f5c542', fill: false, weight: 1.2, dashArray: '8 6', opacity: 0.5
+      }).addTo(AV.map);
       AV.map.on('dblclick', e => {
         AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
+        AV.scanCirc.setLatLng([AV.lat, AV.lon]);
       });
     }
 
@@ -2930,7 +2934,7 @@
       navigator.geolocation.getCurrentPosition(pos => {
         AV.lat = pos.coords.latitude; AV.lon = pos.coords.longitude;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
-        if (AV.map) { AV.map.setView([AV.lat, AV.lon], 14); AV.radiusCirc.setLatLng([AV.lat, AV.lon]); }
+        if (AV.map) { AV.map.setView([AV.lat, AV.lon], 14); AV.radiusCirc.setLatLng([AV.lat, AV.lon]); AV.scanCirc.setLatLng([AV.lat, AV.lon]); }
       });
     });
 
