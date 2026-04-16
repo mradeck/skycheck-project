@@ -1163,6 +1163,42 @@
       display: block;
     }
 
+    .av-lowalt {
+      position: absolute;
+      bottom: 90px;
+      left: 8px;
+      right: 8px;
+      z-index: 1003;
+      background: rgba(0,0,0,0.82);
+      border: 1px solid rgba(255,170,0,0.6);
+      border-radius: 8px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.72rem;
+      color: #ffaa00;
+      max-height: 30vh;
+      overflow-y: auto;
+      display: none;
+    }
+    .av-lowalt.show { display: block; }
+    .av-lowalt-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.15rem 0;
+      border-bottom: 1px solid rgba(255,170,0,0.15);
+    }
+    .av-lowalt-row:last-child { border-bottom: none; }
+    .av-lowalt-hdr {
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+      font-size: 0.68rem;
+      opacity: 0.7;
+    }
+    #alarm-view.av-light .av-lowalt {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(200,130,0,0.5);
+      color: #b87000;
+    }
+
     .av-ctrl {
       position: absolute;
       bottom: 38px;
@@ -2132,6 +2168,7 @@
         <span class="av-stat watch" id="av-stat">● Beobachte</span>
       </div>
       <div class="av-banner" id="av-banner"></div>
+      <div class="av-lowalt" id="av-lowalt"></div>
       <div id="alarm-map"></div>
       <div class="av-ctrl">
         <button class="av-btn" id="av-gps" title="GPS">⊕</button>
@@ -2295,7 +2332,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.39';
+    const APP_VER = '0.40';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2725,7 +2762,7 @@
       map: null, tileL: null, dipulL: null, acLayer: null, radiusCirc: null,
       interval: null, beepInterval: null, lat: null, lon: null,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
-      RADIUS_KM: 2, POLL_MS: 2000,
+      RADIUS_KM: 2, POLL_MS: 2000, ALT_LIMIT_FT: 984,
       STYLES: [
         { n: 'Dark', u: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', a: '\u00a9CARTO' },
         { n: 'OSM', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '\u00a9OSM' },
@@ -2784,23 +2821,33 @@
 
     function avUpdateMarkers(planes) {
       AV.acLayer.clearLayers();
+      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
       planes.forEach(a => {
         if (!a.lat || !a.lon) return;
         const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
-        const clr = dist < AV.RADIUS_KM ? '#ff4444' : dist < 5 ? '#ffaa00' : '#44ee88';
+        const alt = altFt(a);
+        const isLow = alt < AV.ALT_LIMIT_FT;
+        const clr = (isLow && dist < AV.RADIUS_KM) ? '#ff4444' : isLow ? '#ffaa00' : dist < 5 ? '#88bb88' : '#557755';
+        const sz = isLow ? 22 : 16;
         const rot = a.track || 0;
         const icon = L.divIcon({
-          html: '<div style="font-size:18px;line-height:1;color:' + clr + ';transform:rotate(' + rot + 'deg)">\u2708</div>',
-          className: '', iconSize: [20, 20], iconAnchor: [10, 10]
+          html: '<div style="font-size:' + sz + 'px;line-height:1;color:' + clr + ';transform:rotate(' + rot + 'deg)">\u2708</div>',
+          className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
         });
         const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
         const cs = a.flight ? a.flight.trim() : (a.hex || '?');
-        m.bindPopup('<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + (a.alt_baro || '?') + ' ft \u00b7 ' + (a.gs || '?') + ' kts');
+        const altM = Math.round(alt * 0.3048);
+        const info = '<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + altM + ' m (' + (a.alt_baro || '?') + ' ft) \u00b7 ' + (a.gs || '?') + ' kts';
+        m.bindPopup(info);
+        if (isLow) m.bindTooltip(cs + ' ' + altM + 'm', { permanent: true, direction: 'right', className: 'av-tt-low', offset: [12, 0] });
       });
     }
 
     function avCheckProx(planes) {
-      const near = planes.filter(a => a.lat && a.lon && avDist(AV.lat, AV.lon, a.lat, a.lon) < AV.RADIUS_KM);
+      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
+      const low = planes.filter(a => a.lat && a.lon && altFt(a) < AV.ALT_LIMIT_FT);
+      avUpdateLowAlt(low);
+      const near = low.filter(a => avDist(AV.lat, AV.lon, a.lat, a.lon) < AV.RADIUS_KM);
       if (near.length) {
         const a = near[0];
         const cs = a.flight ? a.flight.trim() : (a.hex || '?');
@@ -2808,7 +2855,8 @@
         $('av-stat').className = 'av-stat alarm';
         $('av-stat').textContent = '\u26a0 ' + near.length + ' Flugzeug' + (near.length > 1 ? 'e' : '');
         $('av-banner').className = 'av-banner show';
-        $('av-banner').textContent = '\u26a0 ' + cs + ' \u2014 ' + d.toFixed(2) + ' km \u00b7 ' + (a.alt_baro || '?') + ' ft';
+        const altM = Math.round(altFt(a) * 0.3048);
+        $('av-banner').textContent = '\u26a0 ' + cs + ' \u2014 ' + d.toFixed(2) + ' km \u00b7 ' + altM + ' m';
         if (!AV.alarmOn) {
           AV.alarmOn = true;
           avBeep();
@@ -2825,6 +2873,23 @@
         $('av-stat').textContent = '\u25cf Beobachte';
         $('av-banner').className = 'av-banner';
       }
+    }
+
+    function avUpdateLowAlt(lowPlanes) {
+      const el = $('av-lowalt');
+      if (!lowPlanes.length) { el.className = 'av-lowalt'; el.innerHTML = ''; return; }
+      el.className = 'av-lowalt show';
+      const rows = lowPlanes
+        .map(a => {
+          const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+          const alt = (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
+          const altM = Math.round(alt * 0.3048);
+          const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
+          const spd = a.gs ? Math.round(a.gs * 1.852) : '?';
+          return '<div class="av-lowalt-row"><span>\u2708 ' + cs + '</span><span>' + altM + ' m</span><span>' + dist.toFixed(1) + ' km</span><span>' + spd + ' km/h</span></div>';
+        })
+        .join('');
+      el.innerHTML = '<div class="av-lowalt-hdr">\u26a0 Tiefflieger (&lt;300 m)</div>' + rows;
     }
 
     let _avAudioCtx = null;
