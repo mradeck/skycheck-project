@@ -1817,6 +1817,11 @@
       display: none;
     }
 
+    #av-map-status {
+      z-index: 1004;
+      max-width: 220px;
+    }
+
     .ms-zone-item {
       display: flex;
       align-items: center;
@@ -2197,6 +2202,7 @@
       <div class="av-banner" id="av-banner"></div>
       <div class="av-lowalt" id="av-lowalt"></div>
       <div id="alarm-map"></div>
+      <div class="map-status hidden" id="av-map-status"></div>
       <div class="av-ctrl">
         <button class="av-btn" id="av-gps" title="GPS">⊕</button>
         <button class="av-btn on" id="av-zones" title="Geozonen">⬡</button>
@@ -2360,7 +2366,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.47';
+    const APP_VER = '0.48';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2841,6 +2847,7 @@
       if (!AV.map) avInitMap();
       else { AV.map.setView([AV.lat, AV.lon], 13); setTimeout(() => AV.map.invalidateSize(), 80); }
       avStartPoll();
+      renderMapStatus(lastWeather, lastZones, $('av-map-status'));
     }
 
     function avClose() {
@@ -2868,11 +2875,15 @@
       AV.scanCirc = L.circle([AV.lat, AV.lon], {
         radius: AV.SCAN_KM * 1000, color: '#f5c542', fill: false, weight: 1.2, dashArray: '8 6', opacity: 0.5
       }).addTo(AV.map);
-      AV.map.on('dblclick', e => {
+      AV.map.on('dblclick', async e => {
         AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
         AV.scanCirc.setLatLng([AV.lat, AV.lon]);
+        try {
+          const z = await fetchZones(AV.lat, AV.lon);
+          renderMapStatus(lastWeather, z, $('av-map-status'));
+        } catch {}
       });
     }
 
@@ -3137,6 +3148,9 @@
         try { zones = await fetchZones(S.lat, S.lon); } catch { }
         renderZones(zones);
         renderMapStatus(now, zones);
+        if ($('alarm-view').classList.contains('av-open')) {
+          renderMapStatus(now, zones, $('av-map-status'));
+        }
 
         // Map
         $loadMsg.textContent = 'Karte wird geladen…';
@@ -4034,8 +4048,8 @@
     /* [J-RENDER-MAP] ====================================================
        RENDER: MAP-STATUS-OVERLAY (Zonen + Wind am 1,5km-Kreis)
     ================================================================ */
-    function renderMapStatus(now, zones) {
-      const el = $('map-status');
+    function renderMapStatus(now, zones, targetEl) {
+      const el = targetEl || $('map-status');
       if (!el) return;
 
       // Vereinfachte Zonen-Labels
