@@ -2218,7 +2218,7 @@
       </div>
     </div>
 
-    <!-- AIRSPACE ZONES -->
+    <!-- METAR/TAF -->\n    <div id="metar-section" class="section" style="padding-top:0"></div>\n\n    <!-- AIRSPACE ZONES -->
     <div class="section" style="padding-top:0">
       <div class="zones-panel">
         <div class="zones-hdr" id="zones-hdr">
@@ -2374,7 +2374,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.53';
+    const APP_VER = '0.54';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2405,6 +2405,21 @@
         cloudBaseNogo: v => `Wolkenbasis ~${v} m — Nebel/tiefe Wolken`,
         cloudBaseWarn: v => `Wolkenbasis ~${v} m — Luftraum aufmerksam beobachten`,
         zoneOk: '✓ Keine Luftraumeinschränkungen',
+        metarTitle: 'METAR/TAF',
+        metarNearest: 'Nächster Flugplatz',
+        metarVis: 'Sicht',
+        metarCeiling: 'Wolkenuntergrenze',
+        metarWind: 'Wind',
+        metarGusts: 'Böen',
+        metarTemp: 'Temp',
+        metarDewp: 'Taupunkt',
+        metarFltCat: 'Flugkategorie',
+        metarRaw: 'METAR',
+        metarTaf: 'TAF-Vorhersage',
+        metarCavok: 'CAVOK — Ceiling & Visibility OK',
+        metarNoData: 'Keine METAR-Daten verfügbar',
+        metarAge: 'Alter',
+        metarMin: 'min',
         kpNogo: v => `Kp-Index ${v} — GPS-Signal stark gestört`,
         kpWarn: v => `Erhöhter Kp-Index ${v} — GPS-Zuverlässigkeit reduziert`,
         secTempProfile: 'Temperaturprofil nach Höhe (DFS)',
@@ -2473,6 +2488,21 @@
         cloudBaseNogo: v => `Cloud base ~${v} m — fog/low clouds`,
         cloudBaseWarn: v => `Cloud base ~${v} m — monitor airspace closely`,
         zoneOk: '✓ No airspace restrictions',
+        metarTitle: 'METAR/TAF',
+        metarNearest: 'Nearest airfield',
+        metarVis: 'Visibility',
+        metarCeiling: 'Ceiling',
+        metarWind: 'Wind',
+        metarGusts: 'Gusts',
+        metarTemp: 'Temp',
+        metarDewp: 'Dewpoint',
+        metarFltCat: 'Flight category',
+        metarRaw: 'METAR',
+        metarTaf: 'TAF forecast',
+        metarCavok: 'CAVOK — Ceiling & Visibility OK',
+        metarNoData: 'No METAR data available',
+        metarAge: 'Age',
+        metarMin: 'min',
         kpNogo: v => `Kp-Index ${v} — GPS signal severely disturbed`,
         kpWarn: v => `Elevated Kp-Index ${v} — GPS reliability reduced`,
         secTempProfile: 'Temperature Profile by Altitude (DFS)',
@@ -3172,6 +3202,33 @@
           renderMapStatus(now, zones, $('av-map-status'));
         }
 
+        // METAR/TAF (non-blocking)
+        fetchMetar(S.lat, S.lon).then(async metars => {
+          metars.forEach(m => { const dLat = m.lat - S.lat, dLon = m.lon - S.lon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
+          let tafData = null, tafCache = {};
+          if (metars.length > 0) {
+            const sorted = [...metars].sort((a, b) => a._dist - b._dist);
+            tafData = await fetchTaf(sorted[0].icaoId);
+            tafCache[sorted[0].icaoId] = tafData;
+            const others = sorted.slice(1, 5);
+            const tr = await Promise.allSettled(others.map(m => fetchTaf(m.icaoId)));
+            tr.forEach((r, i) => { if (r.status === 'fulfilled' && r.value) tafCache[others[i].icaoId] = r.value; });
+          }
+          renderMetarCard(metars, tafData);
+          if (S.map) renderMetarMarkers(metars, tafCache);
+          if (metars.length > 0) {
+            const sorted = [...metars].sort((a, b) => a._dist - b._dist);
+            const ceil = parseMetarCeiling(sorted[0]);
+            if (ceil && ceil.m < 300 && ceil.m !== Infinity) {
+              const ms = evalStatus(now, kpVal);
+              if (ceil.m < 150) ms.lvl = 'nogo'; else if (ms.lvl !== 'nogo') ms.lvl = 'warn';
+              const msg = LANG === 'de' ? `METAR ${sorted[0].icaoId}: Wolkenbasis ${ceil.text}` : `METAR ${sorted[0].icaoId}: Ceiling ${ceil.text}`;
+              if (!ms.reasons.some(r => r.includes('METAR'))) ms.reasons.push(msg);
+              renderStatus(ms, lastZoneStatus);
+            }
+          }
+        }).catch(e => console.warn('METAR flow error:', e));
+
         // Map
         $loadMsg.textContent = 'Karte wird geladen…';
         initMap(S.lat, S.lon, aircraft, zones);
@@ -3449,6 +3506,54 @@
       } catch (e) {
         return [{ api_error: 'FETCH_ERROR', msg: e.message }];
       }
+    }
+
+    /* [J-FETCH-METAR] ===================================================
+       API: NOAA Aviation Weather Center - METAR + TAF
+    ================================================================ */
+    const NOAA_AWC = 'https://aviationweather.gov/api/data';
+    async function fetchMetar(lat, lon) {
+      const d = 0.8;
+      const url = `${NOAA_AWC}/metar?bbox=${(lat-d).toFixed(2)},${(lon-d).toFixed(2)},${(lat+d).toFixed(2)},${(lon+d).toFixed(2)}&format=json`;
+      try { const r = await fetch(url); if (!r.ok) return []; const data = await r.json(); return Array.isArray(data) ? data : []; }
+      catch (e) { console.warn('METAR fetch error:', e); return []; }
+    }
+    async function fetchTaf(icao) {
+      try { const r = await fetch(`${NOAA_AWC}/taf?ids=${icao}&format=json`); if (!r.ok) return null; const data = await r.json(); return Array.isArray(data) && data.length > 0 ? data[0] : null; }
+      catch (e) { console.warn('TAF fetch error:', e); return null; }
+    }
+    function parseMetarCeiling(m) {
+      if (!m || !m.clouds || m.clouds.length === 0) {
+        if (m && m.cover === 'CAVOK') return { ft: Infinity, m: Infinity, text: 'CAVOK' };
+        if (m && m.cover === 'CLR') return { ft: Infinity, m: Infinity, text: 'CLR' };
+        return null;
+      }
+      for (const c of m.clouds) {
+        if (c.cover === 'BKN' || c.cover === 'OVC') { const ft = c.base || 0; return { ft, m: Math.round(ft * 0.3048), text: `${c.cover} ${ft} ft (${Math.round(ft * 0.3048)} m)` }; }
+      }
+      const first = m.clouds[0]; const ft = first.base || 0;
+      return { ft, m: Math.round(ft * 0.3048), text: `${first.cover} ${ft} ft (${Math.round(ft * 0.3048)} m)`, noCeiling: true };
+    }
+    function metarVisKm(m) {
+      if (!m) return null; const v = m.visib;
+      if (v === '6+' || v === 'P6SM' || v === '9999') return 10;
+      const n = parseFloat(v); return isNaN(n) ? null : n;
+    }
+    function metarWindKt(m) {
+      if (!m) return { spd: 0, gust: 0, dir: 'VRB' };
+      return { spd: m.wspd || 0, gust: m.wgst || 0, dir: m.wdir || 'VRB' };
+    }
+    function formatTafCompact(taf) {
+      if (!taf || !taf.fcsts) return '';
+      return taf.fcsts.map(f => {
+        const from = new Date(f.timeFrom * 1000), to = new Date(f.timeTo * 1000);
+        const hFr = String(from.getHours()).padStart(2,'0'), hTo = String(to.getHours()).padStart(2,'0');
+        const vis = f.visib === '6+' ? '>10km' : (parseFloat(f.visib) || '?') + 'km';
+        const w = f.wspd ? `${f.wdir||'VRB'}${f.wspd}kt` : '', g = f.wgst ? `G${f.wgst}` : '';
+        let cl = ''; if (f.clouds && f.clouds.length > 0) cl = f.clouds.map(c => c.cover === 'NSC' ? 'NSC' : `${c.cover}${c.base||''}`).join(' ');
+        const ch = f.fcstChange ? ` ${f.fcstChange}` : '';
+        return `${hFr}-${hTo}${ch}: ${w}${g} ${vis} ${cl}`.trim();
+      }).join('\n');
     }
 
     /* [J-API-DIPUL] =====================================================
@@ -3893,6 +3998,27 @@
       const cls = base < 150 ? 'c-nogo' : base < 300 ? 'c-warn' : 'c-go';
       el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">Basis</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${spread.toFixed(1)} °C &nbsp;(T ${temp.toFixed(1)}° − Td ${td.toFixed(1)}°)</span></div></div>`;
     }
+    /* [J-RENDER-METAR] */
+    function renderMetarCard(metars, taf) {
+      const container = $('metar-section'); if (!container) return;
+      if (!metars || metars.length === 0) { container.innerHTML = `<div class="card">${_t('metarNoData')}</div>`; return; }
+      const sorted = [...metars].sort((a, b) => (a._dist || 0) - (b._dist || 0));
+      const nearest = sorted[0];
+      const ceil = parseMetarCeiling(nearest), vis = metarVisKm(nearest), wind = metarWindKt(nearest);
+      const age = nearest.obsTime ? Math.round((Date.now() / 1000 - nearest.obsTime) / 60) : '?';
+      const fltColors = { VFR: 'var(--go)', MVFR: '#d4a017', IFR: 'var(--warn)', LIFR: 'var(--nogo)' };
+      const fltColor = fltColors[nearest.fltCat] || 'var(--fg)';
+      let ceilHtml = '\u2014';
+      if (ceil) { const cc = ceil.m < 150 ? 'c-nogo' : ceil.m < 300 ? 'c-warn' : ''; ceilHtml = (ceil.text === 'CAVOK' || ceil.text === 'CLR') ? `<span class="c-go">${ceil.text}</span>` : `<span class="${cc}">${ceil.text}</span>`; }
+      let visHtml = '\u2014';
+      if (vis !== null) { const vc = vis < 1.5 ? 'c-nogo' : vis < 3 ? 'c-warn' : ''; visHtml = vis >= 10 ? `<span class="c-go">>10 km</span>` : `<span class="${vc}">${vis} km</span>`; }
+      const windMs = (wind.spd * 0.5144).toFixed(1), gustMs = wind.gust ? (wind.gust * 0.5144).toFixed(1) : null;
+      const wc = parseFloat(windMs) > 10 ? 'c-nogo' : parseFloat(windMs) > 7 ? 'c-warn' : '';
+      let tafHtml = '';
+      if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${compact}</pre></div>`; }
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span class="${wc}">${wind.dir} ${windMs} m/s${gustMs ? ` (G ${gustMs})` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'}</span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+    }
+
     function renderFreezingRain(w) {
       const el = document.getElementById('freezing-rain-section'); if (!el) return;
       const rain = w?.precipitation ?? 0; const temp = w?.temperature ?? 99;
@@ -4274,6 +4400,8 @@
         });
         if (S.layerVisible.radius) S.layers.radius.addTo(S.map);
         // 1,5km Alarmzone (rot gestrichelt)
+        S.layers.metarGroup = L.layerGroup().addTo(S.map);
+
         S.layers.radius1500 = L.circle([lat, lon], {
           radius: 1500, color: '#e53935',
           fillColor: 'transparent', fillOpacity: 0,
@@ -4443,6 +4571,26 @@
       if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
       const b = document.getElementById('alarm-banner');
       if (b) b.classList.remove('active');
+    }
+
+    function renderMetarMarkers(metars, tafCache) {
+      if (!S.map || !S.layers.metarGroup) return;
+      S.layers.metarGroup.clearLayers();
+      (metars || []).forEach(m => {
+        const ceil = parseMetarCeiling(m), vis = metarVisKm(m), wind = metarWindKt(m);
+        const windMs = (wind.spd * 0.5144).toFixed(1), gustMs = wind.gust ? (wind.gust * 0.5144).toFixed(1) : null;
+        const age = m.obsTime ? Math.round((Date.now() / 1000 - m.obsTime) / 60) : '?';
+        const fltColors = { VFR: '#22c55e', MVFR: '#d4a017', IFR: '#f59e0b', LIFR: '#ef4444' };
+        const fc = fltColors[m.fltCat] || '#888';
+        const icon = L.divIcon({ html: `<div style="position:relative;width:28px;height:28px"><div style="width:12px;height:12px;background:${fc};border:2px solid rgba(255,255,255,0.8);border-radius:50%;position:absolute;top:8px;left:8px;box-shadow:0 0 6px ${fc}"></div><div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:9px;color:#fff;text-shadow:0 1px 3px #000;white-space:nowrap;font-weight:700">${m.icaoId}</div></div>`, iconSize: [28, 28], iconAnchor: [14, 14], className: '' });
+        let ceilText = ceil ? ceil.text : '\u2014';
+        let visText = vis !== null ? (vis >= 10 ? '>10 km' : vis + ' km') : '\u2014';
+        const taf = tafCache ? tafCache[m.icaoId] : null;
+        let tafBlock = '';
+        if (taf) { const compact = formatTafCompact(taf); tafBlock = `<div style="margin-top:6px;padding-top:4px;border-top:1px solid #555"><div style="font-size:10px;opacity:0.7">TAF</div><pre style="font-size:10px;margin:2px 0 0;white-space:pre-wrap;font-family:monospace">${compact}</pre></div>`; }
+        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${m.name || m.icaoId} <span style="color:${fc}">${m.fltCat || '?'}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir} ${windMs} m/s${gustMs ? ' G'+gustMs : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${m.rawOb || ''}</div>${tafBlock}</div>`;
+        L.marker([m.lat, m.lon], { icon }).bindPopup(pop).addTo(S.layers.metarGroup);
+      });
     }
 
     function renderAircraftMarkers(aircraft) {
