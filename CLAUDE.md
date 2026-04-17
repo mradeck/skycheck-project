@@ -70,10 +70,13 @@ Cowork eignet sich für Aufgaben, die über reines Coding hinausgehen:
 - **Computer-Use:** Screenshots, App-Steuerung, visuelle Inspektion
 - **MCP-Integrationen:** Google Drive, Slack, etc.
 
-**⚠️ Cowork-Einschränkung bei Code-Änderungen:**
-Cowork Read/Edit-Tools arbeiten auf einem Overlay-Dateisystem. Änderungen über Edit/Write
-sind in der Sandbox sichtbar, aber **nicht persistent auf dem Mac-Dateisystem**.
-Für Code-Patches daher immer Claude Code verwenden.
+**⚠️ Cowork-Einschränkungen:**
+- **Schreiben:** Read/Edit-Tools arbeiten auf einem Overlay-Dateisystem. Änderungen sind in der Sandbox sichtbar, aber **nicht persistent auf dem Mac**.
+- **Lesen:** Das Overlay ist ein Snapshot vom Mount-Zeitpunkt. Jede Änderung via Claude Code macht das Overlay veraltet. **Vor Prompts immer die Live-Version prüfen:**
+  ```bash
+  curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" | grep -o "APP_VER = '0\.[0-9]*'"
+  ```
+- Für Code-Patches und aktuelle Code-Analyse immer Claude Code oder curl verwenden.
 
 ### Fallback: Antigravity-Console
 
@@ -171,6 +174,7 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 | `.git/index.lock` blockiert | Abgebrochener Git-Prozess | `rm -f .git/index.lock` (in Claude Code direkt möglich) |
 | Cowork-Edits nicht persistent | Overlay-Dateisystem | Code-Änderungen immer über Claude Code |
 | Gemountete Version veraltet | Lokales Repo nicht gefetcht | `git fetch origin && git reset --hard origin/master` |
+| Cowork-Overlay veraltet | Snapshot vom Mount-Zeitpunkt, danach entkoppelt vom Mac | Vor jedem Prompt: `curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" \| grep ...` statt lokales Grep |
 
 ---
 
