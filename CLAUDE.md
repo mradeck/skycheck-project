@@ -130,6 +130,38 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 ---
 
+## WMS GetFeatureInfo — δ-Formel (empirisch, 2026-04-17)
+
+**Server:** `https://uas-betrieb.de/geoservices/dipul/wms` (GeoServer, WMS 1.3.0)
+
+**Mechanismus:** GetFeatureInfo rendert intern ein virtuelles Pixelraster (WIDTH×HEIGHT) über die BBOX. Der Parameter `I,J` wählt das Zentrumspixel. Features werden erkannt, wenn sie dieses Pixel geometrisch schneiden. Die Erkennungsreichweite hängt daher von der **Pixelgröße** ab — nicht vom BBOX-Radius.
+
+**Formeln:**
+```
+pixel_size  = 2 × δ × 111320 / WIDTH          (in Metern, Breitengrad-Richtung)
+detection   ≈ 2–2.5 × pixel_size               (empirisch bestätigt)
+```
+
+**Korrekte δ-Berechnung für `fetchZones`:**
+```javascript
+// radiusM = gewünschter Suchradius in Metern (5 oder 100)
+// WIDTH = 101 (Pixelraster, wie in der URL)
+// 111320 = Meter pro Grad Breite
+const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
+```
+
+**Empirische Verifikation (CTR München, Grenze bei lat ≈ 48.43553):**
+
+| δ-Formel | δ | BBOX | Pixel | Erkennt bis | Verfehlt ab |
+|---|---|---|---|---|---|
+| Alt: fest 0.01 | 0.010000 | 2226 m | 22 m | ~50 m | 100 m |
+| Neu: radius=5 m | 0.001134 | 252 m | 2.5 m | ~5 m | 10 m |
+| Neu: radius=100 m | 0.022682 | 5050 m | 50 m | ~120 m | 150 m |
+
+**Wichtig:** Das alte feste δ=0.01 entsprach einem effektiven Suchradius von ~50 m. Die Formel `radiusM * 101 / (4 * 111320)` skaliert korrekt für beliebige Radien. Der `Math.max(0.001134, ...)` stellt sicher, dass die BBOX nie kleiner als ~252 m wird (Minimum für stabile Serverergebnisse).
+
+---
+
 ## Bekannte Fallstricke
 
 | Problem | Ursache | Fix |
