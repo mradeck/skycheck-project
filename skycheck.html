@@ -2417,7 +2417,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.57';
+    const APP_VER = '0.58';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2984,7 +2984,7 @@
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
         AV.scanCirc.setLatLng([AV.lat, AV.lon]);
         try {
-          const z = await fetchZones(AV.lat, AV.lon);
+          const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
           renderMapStatus(lastWeather, z, $('av-map-status'));
         } catch {}
       });
@@ -3145,10 +3145,14 @@
 
     $('av-gps').addEventListener('click', () => {
       if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(pos => {
+      navigator.geolocation.getCurrentPosition(async pos => {
         AV.lat = pos.coords.latitude; AV.lon = pos.coords.longitude;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         if (AV.map) { AV.map.setView([AV.lat, AV.lon], 14); AV.radiusCirc.setLatLng([AV.lat, AV.lon]); AV.scanCirc.setLatLng([AV.lat, AV.lon]); }
+        try {
+          const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
+          renderMapStatus(lastWeather, z, $('av-map-status'));
+        } catch {}
       });
     });
 
@@ -3248,7 +3252,7 @@
 
         // Zones via WMS GetFeatureInfo (best-effort)
         let zones = [];
-        try { zones = await fetchZones(S.lat, S.lon); } catch { }
+        try { zones = await fetchZones(S.lat, S.lon, S.searchRadius); } catch { }
         renderZones(zones);
         renderMapStatus(now, zones);
         const zoneStatus = evalZoneStatus(zones);
@@ -3614,8 +3618,8 @@
     /* [J-API-DIPUL] =====================================================
        API: DIPUL WMS GetFeatureInfo
     ================================================================ */
-    async function fetchZones(lat, lon) {
-      const δ = 0.01;
+    async function fetchZones(lat, lon, radiusM) {
+      const δ = radiusM ? Math.max(0.0005, (radiusM * 2) / 111320) : 0.01;
       const bbox = `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
       const activeL = getActiveDipulLayers();
 
@@ -4537,6 +4541,18 @@
         btn.classList.add('active');
         S.searchRadius = parseInt(btn.dataset.radius, 10);
         if (S.layers.radius) S.layers.radius.setRadius(S.searchRadius);
+        // Re-fetch zones with new radius
+        if (S.lat && S.lon) {
+          fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
+            renderZones(zones);
+            const zoneStatus = evalZoneStatus(zones);
+            renderStatus(lastStatus || { lvl: 'go', reasons: [] }, zoneStatus);
+            renderMapStatus(lastWeather, zones);
+            if (document.getElementById('alarm-view').classList.contains('av-open')) {
+              renderMapStatus(lastWeather, zones, document.getElementById('av-map-status'));
+            }
+          }).catch(() => {});
+        }
       });
     });
     // ── Zone-Mode-Buttons (Alle / Nur Risikozonen) ────────────────────────────
