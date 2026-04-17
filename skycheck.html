@@ -2374,7 +2374,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.51';
+    const APP_VER = '0.52';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2390,9 +2390,9 @@
         btnBack: 'Zurück', btnRefresh: 'Aktualisieren',
         btnPrint: 'Als PDF speichern / Drucken', btnSettings: 'Einstellungen',
         checking: 'Wird geprüft…', checkingDesc: 'Alle Daten werden abgerufen.',
-        goTitle: 'Flug möglich', goDesc: 'Alle Parameter im Normalbereich.',
-        warnTitle: 'Bedingt flugfähig', warnDesc: 'Eingeschränkte Bedingungen — sorgfältig prüfen.',
-        nogoTitle: 'Flug nicht empfohlen', nogoDesc: 'Grenzwert überschritten.',
+        goTitle: 'Flug möglich', goDesc: 'Wetter: Alle Parameter im Normalbereich.',
+        warnTitle: 'Bedingt flugfähig', warnDesc: 'Wetter: Eingeschränkte Bedingungen.',
+        nogoTitle: 'Flug nicht empfohlen', nogoDesc: 'Wetter: Grenzwert überschritten.',
         noWeather: 'Wetterdaten nicht verfügbar',
         gustsNogo: v => `Böen ${v} m/s — Grenzwert 10 m/s überschritten`,
         gustsWarn: v => `Erhöhte Böen ${v} m/s`,
@@ -2400,6 +2400,11 @@
         rainWarn: v => `Geringer Niederschlag ${v} mm`,
         tempNogo: v => `Temperatur außerhalb Betriebsbereich (${v} °C)`,
         fogWarn: 'Nebelgefahr — Taupunkt nahe Lufttemperatur',
+        visNogo: v => `Sichtweite ${v} km — unter 1,5 km (Flugverbot)`,
+        visWarn: v => `Sicht ${v} km — eingeschränkt`,
+        cloudBaseNogo: v => `Wolkenbasis ~${v} m — Nebel/tiefe Wolken`,
+        cloudBaseWarn: v => `Wolkenbasis ~${v} m — Luftraum aufmerksam beobachten`,
+        zoneOk: '✓ Keine Luftraumeinschränkungen',
         kpNogo: v => `Kp-Index ${v} — GPS-Signal stark gestört`,
         kpWarn: v => `Erhöhter Kp-Index ${v} — GPS-Zuverlässigkeit reduziert`,
         secTempProfile: 'Temperaturprofil nach Höhe (DFS)',
@@ -2453,9 +2458,9 @@
         btnBack: 'Back', btnRefresh: 'Refresh',
         btnPrint: 'Save as PDF / Print', btnSettings: 'Settings',
         checking: 'Checking…', checkingDesc: 'Fetching all data.',
-        goTitle: 'Flight possible', goDesc: 'All parameters within normal range.',
-        warnTitle: 'Conditionally flyable', warnDesc: 'Limited conditions — check carefully.',
-        nogoTitle: 'Flight not recommended', nogoDesc: 'Limit exceeded.',
+        goTitle: 'Flight possible', goDesc: 'Weather: All parameters within normal range.',
+        warnTitle: 'Conditionally flyable', warnDesc: 'Weather: Limited conditions.',
+        nogoTitle: 'Flight not recommended', nogoDesc: 'Weather: Limit exceeded.',
         noWeather: 'Weather data unavailable',
         gustsNogo: v => `Gusts ${v} m/s — limit 10 m/s exceeded`,
         gustsWarn: v => `Elevated gusts ${v} m/s`,
@@ -2463,6 +2468,11 @@
         rainWarn: v => `Light precipitation ${v} mm`,
         tempNogo: v => `Temperature outside operating range (${v} °C)`,
         fogWarn: 'Fog risk — dew point near air temperature',
+        visNogo: v => `Visibility ${v} km — below 1.5 km (no-fly)`,
+        visWarn: v => `Visibility ${v} km — reduced`,
+        cloudBaseNogo: v => `Cloud base ~${v} m — fog/low clouds`,
+        cloudBaseWarn: v => `Cloud base ~${v} m — monitor airspace closely`,
+        zoneOk: '✓ No airspace restrictions',
         kpNogo: v => `Kp-Index ${v} — GPS signal severely disturbed`,
         kpWarn: v => `Elevated Kp-Index ${v} — GPS reliability reduced`,
         secTempProfile: 'Temperature Profile by Altitude (DFS)',
@@ -3156,6 +3166,8 @@
         try { zones = await fetchZones(S.lat, S.lon); } catch { }
         renderZones(zones);
         renderMapStatus(now, zones);
+        const zoneStatus = evalZoneStatus(zones);
+        renderStatus(status, zoneStatus);
         if ($('alarm-view').classList.contains('av-open')) {
           renderMapStatus(now, zones, $('av-map-status'));
         }
@@ -3572,6 +3584,29 @@
         reasons.push(_t('fogWarn'));
       }
 
+      // Visibility check
+      const vis = w.visibility;
+      if (vis != null && vis < 1500) {
+        lvl = 'nogo';
+        reasons.push(_t('visNogo')((vis / 1000).toFixed(1)));
+      } else if (vis != null && vis < 3000) {
+        if (lvl !== 'nogo') lvl = 'warn';
+        reasons.push(_t('visWarn')((vis / 1000).toFixed(1)));
+      }
+
+      // Cloud base check (spread formula)
+      if (dew != null) {
+        const spread = temp - dew;
+        const cloudBase = Math.round(spread * 125);
+        if (cloudBase < 150) {
+          lvl = 'nogo';
+          reasons.push(_t('cloudBaseNogo')(cloudBase));
+        } else if (cloudBase < 300) {
+          if (lvl !== 'nogo') lvl = 'warn';
+          reasons.push(_t('cloudBaseWarn')(cloudBase));
+        }
+      }
+
       if (kp > 5) {
         lvl = 'nogo';
         reasons.push(_t('kpNogo')(kp.toFixed(1)));
@@ -3589,22 +3624,73 @@
       return { lvl, reasons };
     }
 
+    function evalZoneStatus(zones) {
+      if (!zones || zones.length === 0) return { lvl: 'go', reasons: [] };
+      const reasons = []; let lvl = 'go';
+      const seen = new Set();
+      for (const z of zones) {
+        const t = (z.type || '').toLowerCase();
+        let msg = '', zLvl = 'warn';
+        if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Flugverbot/-beschränkung' : 'No-fly/restricted zone';
+        } else if (t.includes('ctr') || t.includes('control_zone') || t.includes('kontrollzone')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Kontrollzone — genehmigungspflichtig' : 'Control zone — permit required';
+        } else if (t.includes('airport') || t.includes('flughafen') || t.includes('flugplatz') || t.includes('aerodrome')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Flugplatz — genehmigungspflichtig' : 'Airfield — permit required';
+        } else if (t.includes('heliport')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Heliport — genehmigungspflichtig' : 'Heliport — permit required';
+        } else if (t.includes('military') || t.includes('milit')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Militärgebiet — Flugverbot' : 'Military zone — no-fly';
+        } else if (t.includes('hospital') || t.includes('krankenhaus')) {
+          zLvl = 'nogo'; msg = LANG === 'de' ? 'Krankenhaus — 100m Flugverbot' : 'Hospital — 100m no-fly zone';
+        } else if (t.includes('populated') || t.includes('siedlung') || t.includes('wohngebiet')) {
+          msg = LANG === 'de' ? 'Siedlung — Überflugverbot Wohngrundstuecke' : 'Residential — no overflight of private property';
+        } else if (t.includes('nature') || t.includes('naturschutz') || t.includes('national_park')) {
+          msg = LANG === 'de' ? 'Naturschutzgebiet — Überflugverbot' : 'Nature reserve — no overflight';
+        } else if (t.includes('industry') || t.includes('industrie') || t.includes('energie')) {
+          msg = LANG === 'de' ? 'Industrieanlage — Überflugverbot' : 'Industrial site — no overflight';
+        } else if (t.includes('highway') || t.includes('autobahn') || t.includes('bundesstra') || t.includes('road')) {
+          msg = LANG === 'de' ? 'Verkehrsweg — Seitenabstand einhalten' : 'Road — maintain lateral distance';
+        } else if (t.includes('railway') || t.includes('bahn')) {
+          msg = LANG === 'de' ? 'Bahnanlage — Seitenabstand einhalten' : 'Railway — maintain lateral distance';
+        } else if (t.includes('waterway') || t.includes('wasserstra')) {
+          msg = LANG === 'de' ? 'Bundeswasserstraße — Seitenabstand' : 'Waterway — maintain lateral distance';
+        } else {
+          msg = z.name || (LANG === 'de' ? 'Einschränkung vorhanden' : 'Restriction applies');
+        }
+        if (zLvl === 'nogo') lvl = 'nogo';
+        else if (lvl !== 'nogo') lvl = 'warn';
+        if (!seen.has(msg)) { seen.add(msg); reasons.push(msg); }
+      }
+      return { lvl, reasons };
+    }
+
     /* [J-RENDER-BNR] ====================================================
        RENDER: STATUS BANNER
     ================================================================ */
-    function renderStatus(s) {
-      lastStatus = s;
+    function renderStatus(s, zs) {
+      lastStatus = s; lastZoneStatus = zs || lastZoneStatus;
+      const zoneS = lastZoneStatus || { lvl: 'go', reasons: [] };
       const cfg = {
         go: { icon: '✅', title: _t('goTitle'), desc: _t('goDesc') },
         warn: { icon: '⚠️', title: _t('warnTitle'), desc: _t('warnDesc') },
         nogo: { icon: '🚫', title: _t('nogoTitle'), desc: _t('nogoDesc') },
       };
-      const c = cfg[s.lvl];
+      let combinedLvl = s.lvl;
+      if (zoneS.lvl === 'nogo') combinedLvl = 'nogo';
+      else if (zoneS.lvl === 'warn' && combinedLvl !== 'nogo') combinedLvl = 'warn';
+      const c = cfg[combinedLvl];
       const $b = $('status-banner');
-      $b.className = 'status-banner ' + s.lvl;
+      $b.className = 'status-banner ' + combinedLvl;
       $('status-icon').textContent = c.icon;
       $('status-title').textContent = c.title;
-      $('status-desc').textContent = s.reasons[0] || c.desc;
+      const wLine = s.reasons[0] || c.desc;
+      const zLine = zoneS.reasons.length > 0
+        ? zoneS.reasons.slice(0, 2).join(' · ')
+        : _t('zoneOk');
+      $('status-desc').innerHTML =
+        '<span style="display:block">' + wLine + '</span>' +
+        '<span style="display:block;font-size:0.78em;opacity:0.85;margin-top:2px">' + zLine + '</span>';
     }
 
     function setStatus(lvl, icon, title, desc) {
