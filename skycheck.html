@@ -2417,7 +2417,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.62';
+    const APP_VER = '0.63';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -3630,8 +3630,8 @@
     /* [J-API-DIPUL] =====================================================
        API: DIPUL WMS GetFeatureInfo
     ================================================================ */
-    async function fetchZones(lat, lon, radiusM) {
-      const δ = radiusM ? Math.max(0.00005, radiusM / 111320) : 0.01;
+    async function fetchZones(lat, lon, radiusM = 100) {
+      const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
       const bbox = `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
       const activeL = getActiveDipulLayers();
 
