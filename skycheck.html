@@ -2374,7 +2374,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.52';
+    const APP_VER = '0.53';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2562,7 +2562,7 @@
       }
     });
     // State cache for lang re-render
-    let lastStatus = { lvl: 'go', reasons: [] }, lastWeather = null, lastKp = null,
+    let lastStatus = { lvl: 'go', reasons: [] }, lastWeather = null, lastKp = null, lastZoneStatus = null,
       lastAircraft = [], lastKpGfz = null, lastZones = [];
 
 
