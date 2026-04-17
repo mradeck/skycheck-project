@@ -82,6 +82,14 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 
 ---
 
+## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
+
+**Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
+`const APP_VER` (Zeile ~2377) wird um 0.01 hochgezählt (z. B. 0.54 → 0.55).
+Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
+
+---
+
 ## Patch-Checkliste
 
 1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2377)
