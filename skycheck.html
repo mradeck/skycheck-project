@@ -2417,7 +2417,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.58';
+    const APP_VER = '0.59';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2978,11 +2978,21 @@
       AV.scanCirc = L.circle([AV.lat, AV.lon], {
         radius: AV.SCAN_KM * 1000, color: '#f5c542', fill: false, weight: 1.2, dashArray: '8 6', opacity: 0.5
       }).addTo(AV.map);
+      AV.posMarker = L.circleMarker([AV.lat, AV.lon], {
+        radius: 5, color: '#00b4d8', fillColor: '#00b4d8', fillOpacity: 0.9, weight: 2
+      }).addTo(AV.map);
+      AV.searchCirc = L.circle([AV.lat, AV.lon], {
+        radius: S.searchRadius, color: '#00b4d8',
+        fillColor: 'rgba(0,180,216,0.05)', fillOpacity: 0.15,
+        weight: 1.5, dashArray: '5 5', interactive: false
+      }).addTo(AV.map);
       AV.map.on('dblclick', async e => {
         AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
         AV.scanCirc.setLatLng([AV.lat, AV.lon]);
+        if (AV.posMarker) AV.posMarker.setLatLng([AV.lat, AV.lon]);
+        if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
           renderMapStatus(lastWeather, z, $('av-map-status'));
@@ -3149,6 +3159,8 @@
         AV.lat = pos.coords.latitude; AV.lon = pos.coords.longitude;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         if (AV.map) { AV.map.setView([AV.lat, AV.lon], 14); AV.radiusCirc.setLatLng([AV.lat, AV.lon]); AV.scanCirc.setLatLng([AV.lat, AV.lon]); }
+        if (AV.posMarker) AV.posMarker.setLatLng([AV.lat, AV.lon]);
+        if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
           renderMapStatus(lastWeather, z, $('av-map-status'));
@@ -3619,7 +3631,7 @@
        API: DIPUL WMS GetFeatureInfo
     ================================================================ */
     async function fetchZones(lat, lon, radiusM) {
-      const δ = radiusM ? Math.max(0.0005, (radiusM * 2) / 111320) : 0.01;
+      const δ = radiusM ? Math.max(0.0005, (101 * radiusM) / (2 * 111320)) : 0.01;
       const bbox = `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
       const activeL = getActiveDipulLayers();
 
@@ -4541,6 +4553,7 @@
         btn.classList.add('active');
         S.searchRadius = parseInt(btn.dataset.radius, 10);
         if (S.layers.radius) S.layers.radius.setRadius(S.searchRadius);
+        if (AV.searchCirc) AV.searchCirc.setRadius(S.searchRadius);
         // Re-fetch zones with new radius
         if (S.lat && S.lon) {
           fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
