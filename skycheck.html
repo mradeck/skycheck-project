@@ -2374,7 +2374,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.54';
+    const APP_VER = '0.55';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2405,6 +2405,7 @@
         cloudBaseNogo: v => `Wolkenbasis ~${v} m — Nebel/tiefe Wolken`,
         cloudBaseWarn: v => `Wolkenbasis ~${v} m — Luftraum aufmerksam beobachten`,
         zoneOk: '✓ Keine Luftraumeinschränkungen',
+        zoneNogo: 'Luftraum: Einschränkung aktiv.',
         metarTitle: 'METAR/TAF',
         metarNearest: 'Nächster Flugplatz',
         metarVis: 'Sicht',
@@ -2488,6 +2489,7 @@
         cloudBaseNogo: v => `Cloud base ~${v} m — fog/low clouds`,
         cloudBaseWarn: v => `Cloud base ~${v} m — monitor airspace closely`,
         zoneOk: '✓ No airspace restrictions',
+        zoneNogo: 'Airspace: Restriction active.',
         metarTitle: 'METAR/TAF',
         metarNearest: 'Nearest airfield',
         metarVis: 'Visibility',
@@ -3789,7 +3791,7 @@
       $b.className = 'status-banner ' + combinedLvl;
       $('status-icon').textContent = c.icon;
       $('status-title').textContent = c.title;
-      const wLine = s.reasons[0] || c.desc;
+      const wLine = s.reasons[0] || (zoneS.lvl !== 'go' && s.lvl === 'go' ? _t('zoneNogo') : c.desc);
       const zLine = zoneS.reasons.length > 0
         ? zoneS.reasons.slice(0, 2).join(' · ')
         : _t('zoneOk');
