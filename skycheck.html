@@ -664,6 +664,39 @@
       margin-top: 0.2rem;
     }
 
+    .pwa-banner {
+      margin: 0.75rem 1.25rem 0;
+      padding: 0.75rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .pwa-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .pwa-actions button:first-child {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .pwa-actions button:last-child {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.4rem 0.5rem;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
     /* --- SECTIONS --- */
     .section {
       padding: 1.25rem;
@@ -1510,6 +1543,8 @@
         margin: 1rem 1rem 0;
       }
 
+      .pwa-banner { flex-direction: column; text-align: center; }
+
       .l-logo {
         font-size: 2.4rem;
       }
@@ -2120,6 +2155,14 @@
       </div>
     </div>
 
+    <div id="pwa-banner" class="pwa-banner" style="display:none">
+      <span>📲 <span data-i18n="pwaText">SkyCheck als App installieren — Schnellzugriff vom Startbildschirm</span></span>
+      <div class="pwa-actions">
+        <button id="pwa-install" data-i18n="pwaInstall">Installieren</button>
+        <button id="pwa-dismiss" aria-label="Schließen">✕</button>
+      </div>
+    </div>
+
     <div class="section dash-split">
       <!-- CURRENT CONDITIONS -->
       <div>
@@ -2374,7 +2417,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.56';
+    const APP_VER = '0.57';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2424,6 +2467,8 @@
         metarNoData: 'Keine METAR-Daten verfügbar',
         metarAge: 'Alter',
         metarMin: 'min',
+        pwaText: 'SkyCheck als App installieren — Schnellzugriff vom Startbildschirm',
+        pwaInstall: 'Installieren',
         kpNogo: v => `Kp-Index ${v} — GPS-Signal stark gestört`,
         kpWarn: v => `Erhöhter Kp-Index ${v} — GPS-Zuverlässigkeit reduziert`,
         secTempProfile: 'Temperaturprofil nach Höhe (DFS)',
@@ -2511,6 +2556,8 @@
         metarNoData: 'No METAR data available',
         metarAge: 'Age',
         metarMin: 'min',
+        pwaText: 'Install SkyCheck as app — quick access from home screen',
+        pwaInstall: 'Install',
         kpNogo: v => `Kp-Index ${v} — GPS signal severely disturbed`,
         kpWarn: v => `Elevated Kp-Index ${v} — GPS reliability reduced`,
         secTempProfile: 'Temperature Profile by Altitude (DFS)',
@@ -4624,6 +4671,33 @@
     <button class="alarm-dismiss" onclick="silenceAlarm()">Stumm schalten ✕</button>
   </div>
 <script>
+  // [J-PWA-INSTALL] PWA Install Banner
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const dismissed = localStorage.getItem('pwa-dismissed');
+    if (dismissed && Date.now() - parseInt(dismissed) < 30 * 86400000) return;
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.style.display = 'flex';
+  });
+  document.getElementById('pwa-install')?.addEventListener('click', () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('pwa-banner').style.display = 'none';
+    });
+  });
+  document.getElementById('pwa-dismiss')?.addEventListener('click', () => {
+    document.getElementById('pwa-banner').style.display = 'none';
+    localStorage.setItem('pwa-dismissed', Date.now().toString());
+  });
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('pwa-banner').style.display = 'none';
+    deferredPrompt = null;
+  });
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
