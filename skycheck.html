@@ -1098,6 +1098,27 @@
       line-height: 1;
     }
 
+    .map-style-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      z-index: 1001;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      height: 30px;
+      padding: 0 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      line-height: 1;
+    }
+    .map-style-btn:hover { background: rgba(0,0,0,0.82); }
+    .map-style-btn .ms-icon { font-size: 14px; }
+
     /* [S-ALARM] === ALARM VIEW === */
     #alarm-view {
       position: fixed;
@@ -1206,7 +1227,7 @@
       position: absolute;
       bottom: 90px;
       left: 8px;
-      right: 8px;
+      right: 52px;
       z-index: 1003;
       background: rgba(0,0,0,0.82);
       border: 1px solid rgba(255,170,0,0.6);
@@ -1214,7 +1235,7 @@
       padding: 0.4rem 0.6rem;
       font-size: 0.72rem;
       color: #ffaa00;
-      max-height: 30vh;
+      max-height: 22vh;
       overflow-y: auto;
       display: none;
     }
@@ -2211,6 +2232,7 @@
       <div class="map-wrap">
         <div id="map"></div>
         <button class="map-fs-btn" id="btn-map-fs" title="Vollbild">⛶</button>
+        <button class="map-style-btn" id="btn-map-style" title="Kartenstil"><span class="ms-icon">⧉</span><span id="map-style-label">Dark</span></button>
         <div class="map-status hidden" id="map-status"></div>
       </div>
     </div>
@@ -2420,7 +2442,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.65';
+    const APP_VER = '0.66';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2690,11 +2712,18 @@
       lat: null, lon: null,
       name: '',
       map: null,
+      tileL: null, styleIdx: 0,
       searchRadius: 100,
       layers: { dipul: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       alarm: { active: false, silenced: false, intervalId: null },
     };
+    const MAP_STYLES = [
+      { n: 'Dark', u: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', a: '© OpenStreetMap, © CARTO', s: 'abcd' },
+      { n: 'OSM', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '© OpenStreetMap', s: 'abc' },
+      { n: 'Satellit', u: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', a: '© Esri', s: '' },
+      { n: 'Hell', u: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', a: '© OpenStreetMap, © CARTO', s: 'abcd' },
+    ];
 
     /* [J-DOM] ===========================================================
        DOM
@@ -2905,6 +2934,20 @@
        CHECK BUTTON
     ================================================================ */
     $('btn-check').addEventListener('click', doCheck);
+    $('btn-map-style').addEventListener('click', () => {
+      if (!S.map || !S.tileL) return;
+      S.styleIdx = (S.styleIdx + 1) % MAP_STYLES.length;
+      const ms = MAP_STYLES[S.styleIdx];
+      S.map.removeLayer(S.tileL);
+      S.tileL = L.tileLayer(ms.u, {
+        attribution: ms.a,
+        subdomains: ms.s || 'abc', maxZoom: 19,
+      }).addTo(S.map);
+      S.tileL.bringToBack();
+      const lbl = document.getElementById('map-style-label');
+      if (lbl) lbl.textContent = ms.n;
+      $('btn-map-style').title = 'Kartenstil: ' + ms.n;
+    });
     $('btn-map-fs').addEventListener('click', () => {
       const wrap = document.querySelector('.map-wrap');
       const fs = wrap.classList.toggle('map-fs');
@@ -4439,10 +4482,11 @@
         // Verhindert den Zoom bei Doppelklick
         S.map = L.map('map', { center: [lat, lon], zoom: 14, zoomControl: true, doubleClickZoom: false });
 
-        // Dark basemap
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          attribution: '© OpenStreetMap, © CARTO',
-          subdomains: 'abcd', maxZoom: 19,
+        // Basemap mit Stil-Wechsel-Unterstützung
+        const _ms0 = MAP_STYLES[S.styleIdx];
+        S.tileL = L.tileLayer(_ms0.u, {
+          attribution: _ms0.a,
+          subdomains: _ms0.s || 'abc', maxZoom: 19,
         }).addTo(S.map);
 
         // DiPUL WMS Overlay
