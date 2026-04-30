@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Claude/Cowork lokale Konfiguration
+.claude/
+
+# Diagnose- und Extrakt-Artefakte
+diag_out.txt
+skycheck_extract.txt
+
+# Patch- und Scratch-Skripte (historische Hilfsdateien)
+patch27.py
+temp.js
+temp2.js
+temp3.js

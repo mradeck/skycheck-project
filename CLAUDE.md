@@ -17,21 +17,22 @@
      5. `claude-llm-wiki/wiki/projects/skycheck-arbeitsregeln.md` — Verbindliche Arbeitsregeln
      6. `claude-llm-wiki/wiki/projects/skycheck-changelog.md` — Versionshistorie
      7. `claude-llm-wiki/wiki/log.md` — Letzter Log-Eintrag (nächste Schritte)
-3. **Projektpfad auf dem Mac:** `/Users/michaelradeck/Documents/skycheck_project` — kein anderer Pfad ist korrekt.
+3. **Projektpfad auf dem Mac:** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project` — kein anderer Pfad ist korrekt.
 4. **Version prüfen:** `grep APP_VER skycheck.html` — bei Abweichung zum Wiki:
    ```bash
    git fetch origin && git reset --hard origin/master
    ```
-5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-04-17 14:30 — SkyCheck v0.54`).
+5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-04-18 10:00 — SkyCheck v0.65`).
 
 ---
 
-**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~4750 Zeilen)
+**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~4740 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.54 — METAR/TAF-Integration (NOAA AWC API)
-**Projektpfad (Mac):** `/Users/michaelradeck/Documents/skycheck_project`
+**Aktuell:** v0.65 — CORS-Proxy (Netlify Function) für NOAA AWC, fetchZones-δ-Formel empirisch kalibriert, PWA-Install-Banner, Geozonen-Radius-Kopplung
+**Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
+**Netlify-Funktion:** `netlify/functions/awc.js` — Proxy für `aviationweather.gov/api/data/{metar,taf}` (CORS-Header, 10 s Timeout, 90 s Cache)
 
 ---
 
@@ -44,7 +45,7 @@ Kein Overlay, kein Clipboard-Transfer, kein index.lock-Problem.
 
 ```bash
 # Start:
-cd ~/Documents/skycheck_project && claude
+cd ~/Downloads/code/cowork/skycheck_project && claude
 
 # Typischer Ablauf innerhalb von Claude Code:
 # 1. Sektion finden:
@@ -88,14 +89,14 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
 **Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2377) wird um 0.01 hochgezählt (z. B. 0.54 → 0.55).
+`const APP_VER` (Zeile ~2423) wird um 0.01 hochgezählt (z. B. 0.65 → 0.66).
 Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
 
 ---
 
 ## Patch-Checkliste
 
-1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2377)
+1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2423)
 2. Anker-Eindeutigkeit vorab mit `grep` prüfen (genau 1 Treffer)
 3. Änderungen vornehmen (Claude Code: direkte Edits / Cowork: nur Analyse)
 4. **JS-Syntaxcheck:** `node --check` auf extrahiertem Script-Block
@@ -109,15 +110,19 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.54';` | ~2377 | **Versionsvariable** – hier ändern für neue Version |
-| `document.querySelectorAll('.l-ver, .f-ver')` | ~2378 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
+| `const APP_VER = '0.65';` | ~2423 | **Versionsvariable** – hier ändern für neue Version |
+| `document.querySelectorAll('.l-ver, .f-ver')` | ~2424 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
 | `const cfg = {` | nach `<script>` | Go/Warn/NoGo-Konfigurationsobjekt |
 | `const DIPUL_ALL_LAYERS` | js_start+256 | Erster const im Script |
+| `const NOAA_AWC = '/.netlify/functions/awc'` | `[J-FETCH-METAR]` | CORS-Proxy-Endpoint (seit v0.64) |
 | `fetchKpGfz` | Mitte Script | KP-Datenabruf |
-| `fetchMetar` | vor `[J-API-DIPUL]` | METAR-Datenabruf (NOAA AWC) |
+| `fetchMetar` | vor `[J-API-DIPUL]` | METAR-Datenabruf über AWC-Proxy |
+| `fetchZones` | `[J-API-DIPUL]` | Geozonen-Abruf; δ-Formel `radiusM * 101 / (4 * 111320)` |
 | `renderMetarCard` | vor `renderFreezingRain` | METAR-Card Renderer |
 | `renderMetarMarkers` | vor `renderAircraftMarkers` | Flugplatz-Marker auf Karte |
 | `card('Kp-Index'` | Render-Bereich | KP-Index Render-Block |
+| `.pwa-banner` (CSS) | ~664 | PWA-Install-Banner (seit v0.57) |
+| `<div id="metar-section"` | ~2262 | METAR/TAF-Render-Container |
 | `<span class="f-ver"></span>` | HTML-Footer | Footer-Versionsspan |
 | `<sup class="l-ver"></sup>` | HTML-Header | h1-sup Versionsanzeige |
 
@@ -182,6 +187,17 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.65 | Fix: literale `\n` im HTML-Markup der METAR-Sektion durch reale Zeilenumbrüche ersetzt |
+| v0.64 | CORS-Fix für NOAA AWC: neue Netlify-Function `awc.js` als Proxy; `NOAA_AWC` auf `/.netlify/functions/awc` umgestellt |
+| v0.63 | `fetchZones`-δ-Formel mit Default-Radius 100 m; empirisch kalibrierte Detektionsreichweite |
+| v0.62 | `fetchZones` BBOX = exakt Suchradius (festes 101×101-Raster bei `WIDTH/HEIGHT`, Zentrum `I=J=50`) |
+| v0.61 | `fetchZones`: dynamisches 3×3-Pixel-Raster exakt am Suchradius (später durch v0.62 verworfen) |
+| v0.60 | δ-Formel korrigiert: proportional `radiusM * 0.0001` (Zwischenschritt auf Weg zu v0.63) |
+| v0.59 | Geozonen-δ-Fix + Suchradius-Kreis im Aircraft-Alarm-View (`AV.scanCirc`) |
+| v0.58 | Geozonen-Radius-Kopplung: `fetchZones` nutzt `S.searchRadius` aus AV-Kontext und GPS-Callback |
+| v0.57 | PWA-Install-Banner (CSS `.pwa-banner`, `beforeinstallprompt`-Handler) |
+| v0.56 | I18N-Schlüssel `weatherOk/Warn/Nogo`; Status-Banner differenziert nach Wetter- und Zonenstatus |
+| v0.55 | I18N-Schlüssel `zoneNogo`; Status-Banner berücksichtigt Zonenstatus auch bei wetter-seitig grünem Ergebnis |
 | v0.54 | METAR/TAF-Integration: NOAA AWC API, Flugplatz-Marker auf Karte, METAR-Card, Ceiling-Cross-Check |
 | v0.35 | Flugzeug-Alarm-View: Fullscreen-Overlay, ADS-B, Haversine, Web Audio, Leaflet-Map |
 | v0.34 | Karten-Fullscreen-Toggle |
