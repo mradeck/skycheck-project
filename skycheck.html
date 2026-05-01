@@ -1975,6 +1975,10 @@
       color: var(--accent);
     }
 
+    .l-app-logo .sa-alarm {
+      color: #ef4444;
+    }
+
     .l-app-desc {
       font-size: 0.78rem;
       color: var(--text2);
@@ -2092,8 +2096,17 @@
       </div>
 
       <div class="l-other-apps">
-        <div class="l-other-label" data-i18n="otherApps">Weitere App</div>
-        <a href="https://incomparable-cucurucho-f663f3.netlify.app/" target="_blank" class="l-app-card">
+        <div class="l-other-label" data-i18n="otherApps">Weitere Apps</div>
+        <a href="https://skyalarm.netlify.app/skyalarm.html" target="_blank" rel="noopener" class="l-app-card">
+          <div>
+            <div class="l-app-logo"><span>Sky</span><span class="sa-alarm">Alarm</span></div>
+            <div class="l-app-desc" data-i18n="skyAlarmDesc">Echtzeit-Tiefflieger-Alarm und Geozonen-Karte
+              &mdash; akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen</div>
+          </div>
+          <div class="l-app-arrow">&#8594;</div>
+        </a>
+        <a href="https://incomparable-cucurucho-f663f3.netlify.app/" target="_blank" class="l-app-card"
+          style="margin-top:0.6rem;">
           <div>
             <div class="l-app-logo">Meta<span>Lens</span></div>
             <div class="l-app-desc">Panorama &amp; Metadata Inspector &mdash; Bild-Metadaten lesen,
@@ -2442,7 +2455,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.67';
+    const APP_VER = '0.68';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2536,7 +2549,8 @@
         msIndustry: 'Industrie/Energie', msHospital: 'Krankenhaus',
         footerText: 'Nur für Deutschland · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
-        settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere App',
+        settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
+        skyAlarmDesc: 'Echtzeit-Tiefflieger-Alarm und Geozonen-Karte — akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen',
       },
       en: {
         loading: 'Loading…',
@@ -2626,6 +2640,7 @@
         footerText: 'Germany only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
+        skyAlarmDesc: 'Real-time low-altitude aircraft alarm and geozone map — acoustic and visual warning when aircraft approach',
       }
     };
     let LANG = localStorage.getItem('skycheck-lang') || 'de';
