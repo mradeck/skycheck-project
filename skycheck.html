@@ -2379,6 +2379,16 @@
     </div>
   </div>
 
+  <div id="fltcat-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:540px">
+      <div class="modal-header">
+        <h2 id="fltcat-modal-title"></h2>
+        <button id="btn-close-fltcat" class="modal-close">&times;</button>
+      </div>
+      <div class="info-modal-body" id="fltcat-modal-body"></div>
+    </div>
+  </div>
+
   <!-- [H-SCRIPTS] ================================================
      SCRIPTS
 ============================================================ -->
@@ -2455,7 +2465,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.69';
+    const APP_VER = '0.70';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -2499,6 +2509,26 @@
         metarTemp: 'Temp',
         metarDewp: 'Taupunkt',
         metarFltCat: 'Flugkategorie',
+        fltcatTitle: 'Flugkategorien (Flight Categories)',
+        fltcatVfrTitle: 'VFR — Visual Flight Rules',
+        fltcatVfrDesc: 'Gute Sichtflugwetterbedingungen. Piloten koennen nach Sicht navigieren und den Luftraum visuell ueberwachen.',
+        fltcatVfrCrit: 'Wolkenuntergrenze >&thinsp;3.000&thinsp;ft AGL &middot; Sichtweite >&thinsp;5&thinsp;sm (>&thinsp;8&thinsp;km)',
+        fltcatVfrNote: 'Gruen',
+        fltcatMvfrTitle: 'MVFR — Marginal Visual Flight Rules',
+        fltcatMvfrDesc: 'Eingeschraenkte Sichtflugwetterbedingungen — noch fuer VFR-Fluege zugelassen, aber nahe an der Grenze zur Instrumentenfliegerei (IFR).',
+        fltcatMvfrCrit: 'Wolkenuntergrenze 1.000–3.000&thinsp;ft AGL &middot; Sichtweite 3–5&thinsp;sm (ca. 5–8&thinsp;km)',
+        fltcatMvfrNote: 'MVFR ist eine Grauzone — Bedingungen koennen schnell zu IFR verschlechtern. Erhoehte Aufmerksamkeit erforderlich, insbesondere bei unbekanntem Gelaende.',
+        fltcatIfrTitle: 'IFR — Instrument Flight Rules',
+        fltcatIfrDesc: 'Instrumentenflugbedingungen — Sichtflug ist nicht mehr sicher moeglich. Piloten benoetigen Instrumentenflugberechtigung und entsprechende Ausruestung.',
+        fltcatIfrCrit: 'Wolkenuntergrenze 500–999&thinsp;ft AGL &middot; Sichtweite 1–3&thinsp;sm (ca. 1,6–5&thinsp;km)',
+        fltcatIfrNote: 'Fuer Drohnen-Piloten bedeutet IFR in der Regel: kein Flug moeglich, da Sichtflugbedingungen vorgeschrieben sind.',
+        fltcatLifrTitle: 'LIFR — Low Instrument Flight Rules',
+        fltcatLifrDesc: 'Extrem eingeschraenkte Sicht — selbst fuer instrumentenflugberechtigte Piloten herausfordernd.',
+        fltcatLifrCrit: 'Wolkenuntergrenze <&thinsp;500&thinsp;ft AGL &middot; Sichtweite <&thinsp;1&thinsp;sm (<&thinsp;1,6&thinsp;km)',
+        fltcatLifrNote: 'Absolutes Flugverbot fuer Drohnen.',
+        fltcatDisclaimer: 'Fuer Drohnenflug in Deutschland gelten grundsaetzlich Sichtflugbedingungen (VLOS). Bei MVFR ist erhoehte Vorsicht geboten, bei IFR und LIFR ist ein Drohnenflug nicht zulaessig.',
+        fltcatCritLabel: 'Kriterien:',
+        fltcatColorLabel: 'Kennzeichnung:',
         metarRaw: 'METAR',
         metarTaf: 'TAF-Vorhersage',
         metarCavok: 'CAVOK — Ceiling & Visibility OK',
@@ -2589,6 +2619,26 @@
         metarTemp: 'Temp',
         metarDewp: 'Dewpoint',
         metarFltCat: 'Flight category',
+        fltcatTitle: 'Flight Categories',
+        fltcatVfrTitle: 'VFR — Visual Flight Rules',
+        fltcatVfrDesc: 'Good visual flight conditions. Pilots can navigate by sight and visually monitor the airspace.',
+        fltcatVfrCrit: 'Ceiling >&thinsp;3,000&thinsp;ft AGL &middot; Visibility >&thinsp;5&thinsp;sm (>&thinsp;8&thinsp;km)',
+        fltcatVfrNote: 'Green',
+        fltcatMvfrTitle: 'MVFR — Marginal Visual Flight Rules',
+        fltcatMvfrDesc: 'Marginal visual flight conditions — still permitted for VFR flights, but close to the threshold for instrument flight (IFR).',
+        fltcatMvfrCrit: 'Ceiling 1,000–3,000&thinsp;ft AGL &middot; Visibility 3–5&thinsp;sm (approx. 5–8&thinsp;km)',
+        fltcatMvfrNote: 'MVFR is a grey area — conditions can quickly deteriorate to IFR. Heightened awareness required, especially over unfamiliar terrain.',
+        fltcatIfrTitle: 'IFR — Instrument Flight Rules',
+        fltcatIfrDesc: 'Instrument flight conditions — visual flight is no longer safe. Pilots need an instrument rating and appropriate equipment.',
+        fltcatIfrCrit: 'Ceiling 500–999&thinsp;ft AGL &middot; Visibility 1–3&thinsp;sm (approx. 1.6–5&thinsp;km)',
+        fltcatIfrNote: 'For drone pilots, IFR typically means: no flight possible, as visual line of sight conditions are mandatory.',
+        fltcatLifrTitle: 'LIFR — Low Instrument Flight Rules',
+        fltcatLifrDesc: 'Extremely restricted visibility — challenging even for instrument-rated pilots.',
+        fltcatLifrCrit: 'Ceiling <&thinsp;500&thinsp;ft AGL &middot; Visibility <&thinsp;1&thinsp;sm (<&thinsp;1.6&thinsp;km)',
+        fltcatLifrNote: 'Absolute no-fly for drones.',
+        fltcatDisclaimer: 'Drone flights in Germany require visual line of sight conditions (VLOS). Exercise increased caution at MVFR; IFR and LIFR prohibit drone operations.',
+        fltcatCritLabel: 'Criteria:',
+        fltcatColorLabel: 'Designation:',
         metarRaw: 'METAR',
         metarTaf: 'TAF forecast',
         metarCavok: 'CAVOK — Ceiling & Visibility OK',
@@ -2821,6 +2871,20 @@
     $('btn-info').addEventListener('click', () => $('info-modal').classList.remove('hidden'));
     $('btn-close-info').addEventListener('click', () => $('info-modal').classList.add('hidden'));
     $('info-modal').addEventListener('click', (e) => { if (e.target === $('info-modal')) $('info-modal').classList.add('hidden'); });
+
+    $('btn-close-fltcat').addEventListener('click', () => $('fltcat-modal').classList.add('hidden'));
+    $('fltcat-modal').addEventListener('click', (e) => { if (e.target === $('fltcat-modal')) $('fltcat-modal').classList.add('hidden'); });
+    function renderFltcatModal() {
+      $('fltcat-modal-title').textContent = _t('fltcatTitle');
+      const cats = [
+        { key: 'Vfr', color: 'var(--go)' },
+        { key: 'Mvfr', color: '#d4a017' },
+        { key: 'Ifr', color: 'var(--warn)' },
+        { key: 'Lifr', color: 'var(--nogo)' }
+      ];
+      $('fltcat-modal-body').innerHTML = cats.map(c => `<h3 style="color:${c.color}">${_t('fltcat' + c.key + 'Title')}</h3><p>${_t('fltcat' + c.key + 'Desc')}</p><p><b>${_t('fltcatCritLabel')}</b> ${_t('fltcat' + c.key + 'Crit')}</p><p style="font-size:0.82rem;opacity:0.8">${_t('fltcatColorLabel')} ${_t('fltcat' + c.key + 'Note')}</p>`).join('') + `<p class="info-modal-note">&#9888; ${_t('fltcatDisclaimer')}</p>`;
+    }
+    document.addEventListener('click', (e) => { if (e.target.closest('.fltcat-info-btn')) { renderFltcatModal(); $('fltcat-modal').classList.remove('hidden'); } });
 
 
     document.querySelectorAll('input[name="layerMode"]').forEach(radio => {
@@ -4149,7 +4213,7 @@
       const wgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
       let tafHtml = '';
       if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${compact}</pre></div>`; }
-      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'}</span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="Flugkategorien erklaert">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
     }
 
     function renderFreezingRain(w) {
