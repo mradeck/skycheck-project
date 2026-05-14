@@ -2455,7 +2455,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.68';
+    const APP_VER = '0.69';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -4035,7 +4035,7 @@
         card(_t('cardTemp'), `${temp.toFixed(1)}<span class="m-unit"> °C</span>`, dew != null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
         card(_t('cardGusts'), `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, _t('gustLimit'), `https://www.windy.com/de/-Windb%C3%B6en-gust?gust,${S.lat.toFixed(3)},${S.lon.toFixed(3)},8`),
         card(_t('cardWind'), `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`, `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
-        card(_t('cardCloud'), `${cloud}<span class="m-unit"> %</span>`, cloud > 80 ? _t('cloudHigh') : cloud > 40 ? _t('cloudMid') : _t('cloudLow'), 'https://kachelmannwetter.com/de/messwerte/deutschland/bewoelkungsgrad/'),
+        card(_t('cardCloud'), `${cloud}<span class="m-unit"> %</span>`, cloud > 80 ? _t('cloudHigh') : cloud > 40 ? _t('cloudMid') : _t('cloudLow'), `https://www.windy.com/${S.lat.toFixed(3)}/${S.lon.toFixed(3)}/meteogram?clouds,${S.lat.toFixed(3)},${S.lon.toFixed(3)},8`),
         card(_t('cardRain'), `<span class="${rc}">${rain.toFixed(2)}<span class="m-unit"> mm</span></span>`, rain > 0 ? _t('rainActive') : _t('rainNone'), 'https://www.dwd.de/DE/leistungen/radolan/radolan.html'),
       ].join('');
 
@@ -4146,9 +4146,10 @@
       if (vis !== null) { const vc = vis < 1.5 ? 'c-nogo' : vis < 3 ? 'c-warn' : ''; visHtml = vis >= 10 ? `<span class="c-go">>10 km</span>` : `<span class="${vc}">${vis} km</span>`; }
       const windMs = (wind.spd * 0.5144).toFixed(1), gustMs = wind.gust ? (wind.gust * 0.5144).toFixed(1) : null;
       const wc = parseFloat(windMs) > 10 ? 'c-nogo' : parseFloat(windMs) > 7 ? 'c-warn' : '';
+      const wgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
       let tafHtml = '';
       if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${compact}</pre></div>`; }
-      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span class="${wc}">${wind.dir} ${windMs} m/s${gustMs ? ` (G ${gustMs})` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'}</span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'}</span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
     }
 
     function renderFreezingRain(w) {
@@ -4725,6 +4726,8 @@
       (metars || []).forEach(m => {
         const ceil = parseMetarCeiling(m), vis = metarVisKm(m), wind = metarWindKt(m);
         const windMs = (wind.spd * 0.5144).toFixed(1), gustMs = wind.gust ? (wind.gust * 0.5144).toFixed(1) : null;
+        const pwc = parseFloat(windMs) > 10 ? 'c-nogo' : parseFloat(windMs) > 7 ? 'c-warn' : '';
+        const pgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
         const age = m.obsTime ? Math.round((Date.now() / 1000 - m.obsTime) / 60) : '?';
         const fltColors = { VFR: '#22c55e', MVFR: '#d4a017', IFR: '#f59e0b', LIFR: '#ef4444' };
         const fc = fltColors[m.fltCat] || '#888';
@@ -4734,7 +4737,7 @@
         const taf = tafCache ? tafCache[m.icaoId] : null;
         let tafBlock = '';
         if (taf) { const compact = formatTafCompact(taf); tafBlock = `<div style="margin-top:6px;padding-top:4px;border-top:1px solid #555"><div style="font-size:10px;opacity:0.7">TAF</div><pre style="font-size:10px;margin:2px 0 0;white-space:pre-wrap;font-family:monospace">${compact}</pre></div>`; }
-        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${m.name || m.icaoId} <span style="color:${fc}">${m.fltCat || '?'}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir} ${windMs} m/s${gustMs ? ' G'+gustMs : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${m.rawOb || ''}</div>${tafBlock}</div>`;
+        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${m.name || m.icaoId} <span style="color:${fc}">${m.fltCat || '?'}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${m.rawOb || ''}</div>${tafBlock}</div>`;
         L.marker([m.lat, m.lon], { icon }).bindPopup(pop).addTo(S.layers.metarGroup);
       });
     }
