@@ -13,3 +13,6 @@ patch27.py
 temp.js
 temp2.js
 temp3.js
+
+# Local Netlify folder
+.netlify

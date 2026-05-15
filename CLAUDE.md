@@ -22,14 +22,14 @@
    ```bash
    git fetch origin && git reset --hard origin/master
    ```
-5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-04-18 10:00 — SkyCheck v0.65`).
+5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.71`).
 
 ---
 
-**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~4740 Zeilen)
+**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5185 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.65 — CORS-Proxy (Netlify Function) für NOAA AWC, fetchZones-δ-Formel empirisch kalibriert, PWA-Install-Banner, Geozonen-Radius-Kopplung
+**Aktuell:** v0.71 — 5 Sprachen (DE/EN/FR/ES/PL), Sprachbutton auf Landing-Page, Flugkategorien-Info-Modal, METAR-Wind-Farbcodes
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktion:** `netlify/functions/awc.js` — Proxy für `aviationweather.gov/api/data/{metar,taf}` (CORS-Header, 10 s Timeout, 90 s Cache)
@@ -89,14 +89,14 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
 **Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2423) wird um 0.01 hochgezählt (z. B. 0.65 → 0.66).
+`const APP_VER` (Zeile ~2482) wird um 0.01 hochgezählt (z. B. 0.71 → 0.72).
 Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
 
 ---
 
 ## Patch-Checkliste
 
-1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2423)
+1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2482)
 2. Anker-Eindeutigkeit vorab mit `grep` prüfen (genau 1 Treffer)
 3. Änderungen vornehmen (Claude Code: direkte Edits / Cowork: nur Analyse)
 4. **JS-Syntaxcheck:** `node --check` auf extrahiertem Script-Block
@@ -110,8 +110,8 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.65';` | ~2423 | **Versionsvariable** – hier ändern für neue Version |
-| `document.querySelectorAll('.l-ver, .f-ver')` | ~2424 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
+| `const APP_VER = '0.71';` | ~2482 | **Versionsvariable** – hier ändern für neue Version |
+| `document.querySelectorAll('.l-ver, .f-ver')` | ~2483 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
 | `const cfg = {` | nach `<script>` | Go/Warn/NoGo-Konfigurationsobjekt |
 | `const DIPUL_ALL_LAYERS` | js_start+256 | Erster const im Script |
 | `const NOAA_AWC = '/.netlify/functions/awc'` | `[J-FETCH-METAR]` | CORS-Proxy-Endpoint (seit v0.64) |
@@ -121,8 +121,8 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 | `renderMetarCard` | vor `renderFreezingRain` | METAR-Card Renderer |
 | `renderMetarMarkers` | vor `renderAircraftMarkers` | Flugplatz-Marker auf Karte |
 | `card('Kp-Index'` | Render-Bereich | KP-Index Render-Block |
-| `.pwa-banner` (CSS) | ~664 | PWA-Install-Banner (seit v0.57) |
-| `<div id="metar-section"` | ~2262 | METAR/TAF-Render-Container |
+| `.pwa-banner` (CSS) | ~667 | PWA-Install-Banner (seit v0.57) |
+| `<div id="metar-section"` | ~2314 | METAR/TAF-Render-Container |
 | `<span class="f-ver"></span>` | HTML-Footer | Footer-Versionsspan |
 | `<sup class="l-ver"></sup>` | HTML-Header | h1-sup Versionsanzeige |
 
@@ -187,6 +187,12 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.71 | 5 Sprachen (DE/EN/FR/ES/PL), Sprachbutton auf Landing-Page |
+| v0.70 | Flugkategorien-Info-Modal (VFR/MVFR/IFR/LIFR), zweisprachig DE/EN |
+| v0.69 | Bewölkung-Link auf Windy, METAR-Wind °-Zeichen + Farbcodes |
+| v0.68 | SkyAlarm-Link auf Landing-Page (Sky in --accent, Alarm in #ef4444) |
+| v0.67 | Kartenstil-Button über Leaflet-Attribution anheben |
+| v0.66 | Tiefflieger-Overlay verschmälert, Kartenstil-Cycler in Hauptkarte |
 | v0.65 | Fix: literale `\n` im HTML-Markup der METAR-Sektion durch reale Zeilenumbrüche ersetzt |
 | v0.64 | CORS-Fix für NOAA AWC: neue Netlify-Function `awc.js` als Proxy; `NOAA_AWC` auf `/.netlify/functions/awc` umgestellt |
 | v0.63 | `fetchZones`-δ-Formel mit Default-Radius 100 m; empirisch kalibrierte Detektionsreichweite |
