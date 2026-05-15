@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.73';
+    const APP_VER = '0.74';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -3242,7 +3242,7 @@
 
       if (layerChanged) {
         CFG.layerMode = selectedMode;
-        if (S.layers.dipul) S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+        if (S.layers.dipul && typeof S.layers.dipul.setParams === 'function') S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
         document.querySelectorAll('.zone-btn').forEach(b =>
           b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
         );
@@ -3437,7 +3437,8 @@
           layers: getActiveDipulLayers(), format: 'image/png', transparent: true, opacity: 0.55, version: '1.3.0'
         }).addTo(AV.map);
       } else {
-        AV.dipulL = null;
+        // FR & andere: LayerGroup, via drawZoneOverlay(zones, AV.dipulL) befüllt
+        AV.dipulL = L.layerGroup().addTo(AV.map);
       }
       AV.acLayer = L.layerGroup().addTo(AV.map);
       AV.trailLayer = L.layerGroup().addTo(AV.map);
@@ -3465,6 +3466,7 @@
         if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
+          drawZoneOverlay(z, AV.dipulL);
           renderMapStatus(lastWeather, z, $('av-map-status'));
         } catch {}
       });
@@ -3633,6 +3635,7 @@
         if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
+          drawZoneOverlay(z, AV.dipulL);
           renderMapStatus(lastWeather, z, $('av-map-status'));
         } catch {}
       });
@@ -3734,10 +3737,11 @@
         renderForecastDays(weatherArr, kpVal);
         renderWarnings(status, kpVal, aircraft);
 
-        // Zones via WMS GetFeatureInfo (best-effort)
+        // Zones via Country-Provider (best-effort)
         let zones = [];
         try { zones = await fetchZones(S.lat, S.lon, S.searchRadius); } catch { }
         renderZones(zones);
+        drawZoneOverlay(zones, S.layers.dipul);
         renderMapStatus(now, zones);
         const zoneStatus = evalZoneStatus(zones);
         renderStatus(status, zoneStatus);
@@ -4824,6 +4828,36 @@
       </div>`).join('');
     }
 
+    // Map-Overlay für Geozonen aus dem Country-Provider (z. B. FR via JSON).
+    // DE liefert keine geometry → wird einfach übersprungen (DiPUL-WMS rendert direkt).
+    function drawZoneOverlay(zones, layerGroup) {
+      if (!layerGroup || typeof layerGroup.clearLayers !== 'function') return;
+      layerGroup.clearLayers();
+      if (!Array.isArray(zones)) return;
+      zones.forEach(z => {
+        if (!Array.isArray(z.geometry)) return;
+        z.geometry.forEach(g => {
+          try {
+            if (g.type === 'Polygon' && Array.isArray(g.coordinates)) {
+              // GeoJSON: [lon, lat] → Leaflet erwartet [lat, lon]
+              const rings = g.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon]));
+              L.polygon(rings, {
+                color: z.color, weight: 1, opacity: 0.9,
+                fillColor: z.color, fillOpacity: 0.18,
+              }).bindTooltip(`${z.name} · ${z.type}`, { sticky: true }).addTo(layerGroup);
+            } else if (g.type === 'Circle' && Array.isArray(g.center)) {
+              const [lon, lat] = g.center;
+              L.circle([lat, lon], {
+                radius: g.radius || 0,
+                color: z.color, weight: 1, opacity: 0.9,
+                fillColor: z.color, fillOpacity: 0.18,
+              }).bindTooltip(`${z.name} · ${z.type}`, { sticky: true }).addTo(layerGroup);
+            }
+          } catch (_) { /* ignore single bad geometry */ }
+        });
+      });
+    }
+
     // Zones toggle
     $('zones-hdr').addEventListener('click', () => {
       $('zones-body').classList.toggle('open');
@@ -4937,7 +4971,7 @@
           subdomains: _ms0.s || 'abc', maxZoom: 19,
         }).addTo(S.map);
 
-        // DiPUL WMS Overlay (nur DE — andere Länder haben eigene Provider, kein WMS-Layer)
+        // Zonen-Overlay: DE = WMS-Tiles (DiPUL), FR = Client-Side Polygone/Kreise aus JSON
         if (COUNTRY === 'de') {
           S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
             layers: getActiveDipulLayers(),
@@ -4947,10 +4981,11 @@
             opacity: 0.55,
             attribution: 'DiPUL / DFS',
           });
-          if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         } else {
-          S.layers.dipul = null;
+          // FR & andere: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
+          S.layers.dipul = L.layerGroup();
         }
+        if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
 
         // Location pin
         const pinIcon = L.divIcon({
@@ -5057,6 +5092,7 @@
         if (S.lat && S.lon) {
           fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
             renderZones(zones);
+            drawZoneOverlay(zones, S.layers.dipul);
             const zoneStatus = evalZoneStatus(zones);
             renderStatus(lastStatus || { lvl: 'go', reasons: [] }, zoneStatus);
             renderMapStatus(lastWeather, zones);

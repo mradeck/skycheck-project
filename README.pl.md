@@ -8,7 +8,7 @@
 
 🌐 **Wersja live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Aktualna wersja:** v0.73
+📦 **Aktualna wersja:** v0.74
 
 ---
 
@@ -143,6 +143,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.74 | Nakładka mapowa FR: geostrefy w trybie FR są teraz rysowane jako poligony / okręgi Leaflet na mapie (oprócz listy). `zones-fr.js` zwraca geometrię; `drawZoneOverlay()` renderuje po stronie klienta. Przełącznik stref pozostaje kompatybilny |
 | v0.73 | Architektura adaptera krajów (etap 1): wsparcie wielokrajowe dla geostref. Wykrywanie kraju przez parametr URL (`?country=fr`) lub nazwę hosta; nowa funkcja Netlify `zones-fr.js` czyta JSON ED-269 dla Francji (`data/uas-zones-fr.json`, ~3,6k stref), DE zachowuje DiPUL WMS |
 | v0.72 | Tekst modala Info poprawiony (grupa docelowa, kategoria szczególna, nowa sekcja prywatności); README rozszerzone z tylko niemieckiego → 5 języków |
 | v0.71 | Wsparcie dla 5 języków (DE / EN / FR / ES / PL); przełącznik na stronie startowej |

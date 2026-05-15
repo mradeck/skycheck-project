@@ -111,6 +111,20 @@ function normalize(f) {
 
   const typeLabel = RESTRICTION_LABEL[restriction] || (restriction || 'UAS_ZONE');
 
+  // Geometry für Map-Overlay (Leaflet-Renderer auf Client-Seite)
+  // GeoJSON-Koordinaten bleiben [lon, lat]; Client konvertiert für L.polygon/L.circle.
+  const geometry = (f.geometry || []).map(g => {
+    const hp = g.horizontalProjection;
+    if (!hp) return null;
+    if (hp.type === 'Polygon') {
+      return { type: 'Polygon', coordinates: hp.coordinates };
+    }
+    if (hp.type === 'Circle' && Array.isArray(hp.center)) {
+      return { type: 'Circle', center: hp.center, radius: hp.radius || 0 };
+    }
+    return null;
+  }).filter(Boolean);
+
   return {
     name: (f.name || f.identifier || '—') + (country ? ` [${country}]` : ''),
     type: typeLabel,
@@ -118,6 +132,7 @@ function normalize(f) {
     upper,
     legal,
     color: zoneColor(restriction),
+    geometry,
   };
 }
 
