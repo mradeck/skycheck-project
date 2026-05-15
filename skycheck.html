@@ -2485,7 +2485,21 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.72';
+    const APP_VER = '0.73';
+
+    // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
+    // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
+    // Default: 'de'. Nur Geozonen-Provider unterscheidet sich aktuell; Wetter/ADS-B/Kp/METAR global.
+    const COUNTRY = (() => {
+      try {
+        const p = new URLSearchParams(location.search).get('country');
+        if (p && /^[a-z]{2}$/i.test(p)) return p.toLowerCase();
+        const host = (location.hostname || '').toLowerCase();
+        if (host.includes('skycheck-fr') || host.endsWith('skycheck.fr')) return 'fr';
+        return 'de';
+      } catch (_) { return 'de'; }
+    })();
+    console.info('[SkyCheck] country=' + COUNTRY);
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================
@@ -3418,9 +3432,13 @@
       const s0 = AV.STYLES[0];
       AV.map = L.map('alarm-map', { center: [AV.lat, AV.lon], zoom: 13, zoomControl: true, doubleClickZoom: false });
       AV.tileL = L.tileLayer(s0.u, { attribution: s0.a, maxZoom: 19 }).addTo(AV.map);
-      AV.dipulL = L.tileLayer.wms(DIPUL_WMS_URL, {
-        layers: getActiveDipulLayers(), format: 'image/png', transparent: true, opacity: 0.55, version: '1.3.0'
-      }).addTo(AV.map);
+      if (COUNTRY === 'de') {
+        AV.dipulL = L.tileLayer.wms(DIPUL_WMS_URL, {
+          layers: getActiveDipulLayers(), format: 'image/png', transparent: true, opacity: 0.55, version: '1.3.0'
+        }).addTo(AV.map);
+      } else {
+        AV.dipulL = null;
+      }
       AV.acLayer = L.layerGroup().addTo(AV.map);
       AV.trailLayer = L.layerGroup().addTo(AV.map);
       AV.trails = {};
@@ -3622,7 +3640,9 @@
 
     $('av-zones').addEventListener('click', () => {
       AV.zonesOn = !AV.zonesOn;
-      AV.zonesOn ? AV.map.addLayer(AV.dipulL) : AV.map.removeLayer(AV.dipulL);
+      if (AV.dipulL) {
+        AV.zonesOn ? AV.map.addLayer(AV.dipulL) : AV.map.removeLayer(AV.dipulL);
+      }
       $('av-zones').classList.toggle('on', AV.zonesOn);
     });
 
@@ -4079,10 +4099,31 @@
       }).join('\n');
     }
 
-    /* [J-API-DIPUL] =====================================================
-       API: DIPUL WMS GetFeatureInfo
+    /* [J-API-ZONES] ======================================================
+       Geozonen-Dispatcher (Country-Adapter, seit v0.73)
+       DE → DiPUL WMS GetFeatureInfo (uas-betrieb.de)
+       FR → Netlify-Function zones-fr (data/uas-zones-fr.json, ED-269)
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
+      return COUNTRY === 'fr' ? fetchZonesFR(lat, lon, radiusM) : fetchZonesDE(lat, lon, radiusM);
+    }
+
+    async function fetchZonesFR(lat, lon, radiusM = 100) {
+      try {
+        const r = await fetch(`/.netlify/functions/zones-fr?lat=${lat}&lon=${lon}&radius=${radiusM}`);
+        if (!r.ok) return [];
+        const data = await r.json();
+        return Array.isArray(data.zones) ? data.zones : [];
+      } catch (e) {
+        console.warn('Zones FR fetch error', e);
+        return [];
+      }
+    }
+
+    /* [J-API-DIPUL] =====================================================
+       API: DIPUL WMS GetFeatureInfo (Deutschland)
+    ================================================================ */
+    async function fetchZonesDE(lat, lon, radiusM = 100) {
       const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
       const bbox = `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
       const activeL = getActiveDipulLayers();
@@ -4896,16 +4937,20 @@
           subdomains: _ms0.s || 'abc', maxZoom: 19,
         }).addTo(S.map);
 
-        // DiPUL WMS Overlay
-        S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
-          layers: getActiveDipulLayers(),
-          format: 'image/png',
-          transparent: true,
-          version: '1.3.0',
-          opacity: 0.55,
-          attribution: 'DiPUL / DFS',
-        });
-        if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        // DiPUL WMS Overlay (nur DE — andere Länder haben eigene Provider, kein WMS-Layer)
+        if (COUNTRY === 'de') {
+          S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
+            layers: getActiveDipulLayers(),
+            format: 'image/png',
+            transparent: true,
+            version: '1.3.0',
+            opacity: 0.55,
+            attribution: 'DiPUL / DFS',
+          });
+          if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        } else {
+          S.layers.dipul = null;
+        }
 
         // Location pin
         const pinIcon = L.divIcon({

@@ -8,7 +8,7 @@
 
 🌐 **Live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Current version:** v0.72
+📦 **Current version:** v0.73
 
 ---
 
@@ -65,12 +65,28 @@ sw.js                       ← service worker (caching)
 icon-192x192.png            ← app icon (small)
 icon-512x512.png            ← app icon (large)
 skycheck-icon.svg           ← source icon (vector)
+netlify.toml                ← Netlify config (function bundle includes)
 netlify/
   functions/
     awc.js                  ← NOAA AWC proxy for METAR/TAF (CORS workaround)
     gfz.js                  ← GFZ Potsdam proxy for Kp-index/Hp30
+    zones-fr.js             ← France UAS zones (reads data/uas-zones-fr.json, bbox-filtered)
+data/
+  uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
 redirect.html               ← optional redirect page
 ```
+
+### Multi-country support (since v0.73)
+
+SkyCheck uses an **adapter pattern** for country-specific data sources. Country is detected from the URL parameter `?country=fr` or the hostname (e.g. `skycheck-fr.netlify.app`). Default: `de`.
+
+| Country | Geo-zones source | Status |
+|---|---|---|
+| **DE** (default) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | live |
+| **FR** | Netlify function `zones-fr.js` + monthly ED-269 JSON file | live |
+| (others) | placeholder — adapter ready for further providers | — |
+
+Weather, ADS-B, METAR/TAF, Kp-index and geocoding are global and used as-is in every country variant.
 
 ### Netlify Functions (CORS proxies)
 
@@ -127,6 +143,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.73 | Country-adapter architecture (stage 1): multi-country support for geo-zones. Country detection via URL param (`?country=fr`) or hostname; new Netlify function `zones-fr.js` reads ED-269 JSON for France (`data/uas-zones-fr.json`, ~3.6k zones), DE keeps DiPUL WMS |
 | v0.72 | Info modal text corrected (target audience, specific category, new privacy section); README converted from German-only → 5 languages |
 | v0.71 | 5 languages supported (DE / EN / FR / ES / PL); language switcher on landing page |
 | v0.70 | Flight-category info modal (VFR / MVFR / IFR / LIFR) |

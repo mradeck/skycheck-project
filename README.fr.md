@@ -8,7 +8,7 @@
 
 🌐 **En direct :** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Version actuelle :** v0.72
+📦 **Version actuelle :** v0.73
 
 ---
 
@@ -65,12 +65,28 @@ sw.js                       ← Service Worker (mise en cache)
 icon-192x192.png            ← icône de l'app (petite)
 icon-512x512.png            ← icône de l'app (grande)
 skycheck-icon.svg           ← icône source (vectorielle)
+netlify.toml                ← config Netlify (includes du bundle de fonctions)
 netlify/
   functions/
     awc.js                  ← proxy NOAA AWC pour METAR/TAF (contournement CORS)
     gfz.js                  ← proxy GFZ Potsdam pour Kp/Hp30
+    zones-fr.js             ← zones UAS France (lit data/uas-zones-fr.json, filtré par bbox)
+data/
+  uas-zones-fr.json         ← zones UAS France ED-269 (snapshot mensuel, remplaçable)
 redirect.html               ← page de redirection optionnelle
 ```
+
+### Support multi-pays (depuis v0.73)
+
+SkyCheck utilise un **pattern d'adaptateur** pour les sources de données par pays. Le pays est détecté via le paramètre URL `?country=fr` ou via le nom d'hôte (ex. `skycheck-fr.netlify.app`). Défaut : `de`.
+
+| Pays | Source des géozones | État |
+|---|---|---|
+| **DE** (défaut) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | en ligne |
+| **FR** | Fonction Netlify `zones-fr.js` + JSON ED-269 mensuel | en ligne |
+| (autres) | placeholder — adaptateur prêt pour de nouveaux fournisseurs | — |
+
+Météo, ADS-B, METAR/TAF, indice Kp et géocodage sont mondiaux et utilisés tels quels dans chaque variante pays.
 
 ### Netlify Functions (proxys CORS)
 
@@ -127,6 +143,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v0.73 | Architecture d'adaptateur par pays (étape 1) : support multi-pays pour les géozones. Détection du pays via paramètre URL (`?country=fr`) ou nom d'hôte ; nouvelle fonction Netlify `zones-fr.js` lit le JSON ED-269 pour la France (`data/uas-zones-fr.json`, ~3,6k zones), DE conserve DiPUL WMS |
 | v0.72 | Texte de la modale Info corrigé (public cible, catégorie spécifique, nouvelle section confidentialité) ; README étendu de l'allemand uniquement → 5 langues |
 | v0.71 | 5 langues supportées (DE / EN / FR / ES / PL) ; sélecteur sur la page d'accueil |
 | v0.70 | Modale info catégorie de vol (VFR / MVFR / IFR / LIFR) |

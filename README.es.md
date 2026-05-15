@@ -8,7 +8,7 @@
 
 🌐 **En vivo:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Versión actual:** v0.72
+📦 **Versión actual:** v0.73
 
 ---
 
@@ -65,12 +65,28 @@ sw.js                       ← Service Worker (caché)
 icon-192x192.png            ← icono de la app (pequeño)
 icon-512x512.png            ← icono de la app (grande)
 skycheck-icon.svg           ← icono fuente (vectorial)
+netlify.toml                ← config Netlify (includes del bundle de funciones)
 netlify/
   functions/
     awc.js                  ← proxy NOAA AWC para METAR/TAF (sortea CORS)
     gfz.js                  ← proxy GFZ Potsdam para Kp/Hp30
+    zones-fr.js             ← zonas UAS Francia (lee data/uas-zones-fr.json, filtrado por bbox)
+data/
+  uas-zones-fr.json         ← zonas UAS Francia ED-269 (snapshot mensual, sustituible)
 redirect.html               ← página de redirección opcional
 ```
+
+### Soporte multi-país (desde v0.73)
+
+SkyCheck usa un **patrón de adaptador** para las fuentes de datos por país. El país se detecta a través del parámetro URL `?country=fr` o del nombre de host (p. ej. `skycheck-fr.netlify.app`). Por defecto: `de`.
+
+| País | Fuente de geozonas | Estado |
+|---|---|---|
+| **DE** (por defecto) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | online |
+| **FR** | Función Netlify `zones-fr.js` + JSON ED-269 mensual | online |
+| (otros) | marcador de posición — adaptador listo para más proveedores | — |
+
+Meteo, ADS-B, METAR/TAF, índice Kp y geocodificación son globales y se usan tal cual en cada variante de país.
 
 ### Netlify Functions (proxys CORS)
 
@@ -127,6 +143,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v0.73 | Arquitectura de adaptador por país (etapa 1): soporte multi-país para geozonas. Detección de país vía parámetro URL (`?country=fr`) o nombre de host; nueva función Netlify `zones-fr.js` lee JSON ED-269 para Francia (`data/uas-zones-fr.json`, ~3,6k zonas), DE conserva DiPUL WMS |
 | v0.72 | Texto de modal Info corregido (público objetivo, categoría específica, nueva sección de privacidad); README ampliado de solo alemán → 5 idiomas |
 | v0.71 | 5 idiomas soportados (DE / EN / FR / ES / PL); selector en la página de inicio |
 | v0.70 | Modal info categoría de vuelo (VFR / MVFR / IFR / LIFR) |

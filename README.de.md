@@ -8,7 +8,7 @@
 
 🌐 **Live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Aktuelle Version:** v0.72
+📦 **Aktuelle Version:** v0.73
 
 ---
 
@@ -65,12 +65,28 @@ sw.js                       ← Service Worker (Caching)
 icon-192x192.png            ← App-Icon (klein)
 icon-512x512.png            ← App-Icon (groß)
 skycheck-icon.svg           ← Quell-Icon (Vektor)
+netlify.toml                ← Netlify-Config (Function-Bundle-Includes)
 netlify/
   functions/
     awc.js                  ← NOAA AWC Proxy für METAR/TAF (CORS-Umgehung)
     gfz.js                  ← GFZ Potsdam Proxy für Kp-Index/Hp30
+    zones-fr.js             ← Frankreich UAS-Zonen (liest data/uas-zones-fr.json, bbox-gefiltert)
+data/
+  uas-zones-fr.json         ← ED-269 Frankreich UAS-Zonen (monatlicher Snapshot, austauschbar)
 redirect.html               ← optionale Weiterleitungsseite
 ```
+
+### Multi-Country-Support (seit v0.73)
+
+SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Datenquellen. Country wird aus URL-Param `?country=fr` oder Hostname (z. B. `skycheck-fr.netlify.app`) erkannt. Default: `de`.
+
+| Country | Geozonen-Quelle | Status |
+|---|---|---|
+| **DE** (Default) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | live |
+| **FR** | Netlify-Function `zones-fr.js` + monatliches ED-269-JSON | live |
+| (weitere) | Platzhalter — Adapter bereit für zusätzliche Provider | — |
+
+Wetter, ADS-B, METAR/TAF, Kp-Index und Geocoding sind global und werden in jeder Country-Variante unverändert verwendet.
 
 ### Netlify Functions (CORS-Proxies)
 
@@ -127,6 +143,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v0.73 | Country-Adapter-Architektur (Stufe 1): Multi-Country-Support für Geozonen. Country-Detection via URL-Param (`?country=fr`) oder Hostname; neue Netlify-Function `zones-fr.js` liest ED-269-JSON für Frankreich (`data/uas-zones-fr.json`, ~3,6k Zonen), DE behält DiPUL-WMS |
 | v0.72 | Info-Modal-Text korrigiert (Zielgruppe, Spezifik-Kategorie, neuer Datenschutz-Abschnitt); README zweisprachig umgestellt → später auf 5 Sprachen erweitert |
 | v0.71 | 5 Sprachen unterstützt (DE / EN / FR / ES / PL); Sprachbutton auf Landing-Page |
 | v0.70 | Flugkategorien-Info-Modal (VFR / MVFR / IFR / LIFR) |

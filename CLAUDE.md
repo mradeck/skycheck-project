@@ -22,17 +22,20 @@
    ```bash
    git fetch origin && git reset --hard origin/master
    ```
-5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.72`).
+5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.73`).
 
 ---
 
-**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5191 Zeilen)
+**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5236 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.72 — Info-Modal-Text korrigiert (Zielgruppe, Spezifik-Kategorie, Datenschutz-Abschnitt); README in 5 Sprachen (EN default + DE/FR/ES/PL) inhaltlich auf v0.72 aktualisiert
+**Aktuell:** v0.73 — **Country-Adapter-Architektur (Stufe 1):** `COUNTRY`-Detection (URL-Param `?country=` / Hostname), Geozonen-Dispatcher `fetchZones` → DE: DiPUL-WMS, FR: neue Netlify-Function `zones-fr.js` (ED-269-JSON `data/uas-zones-fr.json`, 8,4 MB, 3642 Zonen, bbox-Filter)
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
-**Netlify-Funktion:** `netlify/functions/awc.js` — Proxy für `aviationweather.gov/api/data/{metar,taf}` (CORS-Header, 10 s Timeout, 90 s Cache)
+**Netlify-Funktionen:**
+- `netlify/functions/awc.js` — Proxy für `aviationweather.gov/api/data/{metar,taf}` (CORS-Header, 10 s Timeout, 90 s Cache)
+- `netlify/functions/gfz.js` — GFZ Potsdam Proxy für Kp-Index/Hp30
+- `netlify/functions/zones-fr.js` — FR-Geozonen aus `data/uas-zones-fr.json` (bbox-Filter, 300 s Cache); inkludiert via `netlify.toml` → `[functions] included_files = ["data/**/*"]`
 
 ---
 
@@ -89,7 +92,7 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
 **Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.72 → 0.73).
+`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.73 → 0.74).
 Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
 
 ---
@@ -110,8 +113,12 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.72';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
-| `document.querySelectorAll('.l-ver, .f-ver')` | ~2489 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
+| `const APP_VER = '0.73';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `const COUNTRY = (() => {` | ~2490 | **Country-Detection** (URL-Param `?country=fr` oder Hostname `skycheck-fr.*`); Default `'de'` |
+| `async function fetchZones(` | `[J-API-ZONES]` | **Dispatcher** — leitet an `fetchZonesDE` (DiPUL-WMS) oder `fetchZonesFR` (Netlify-Function) |
+| `async function fetchZonesFR(` | `[J-API-ZONES]` | Ruft `/.netlify/functions/zones-fr?lat=…&lon=…&radius=…` auf |
+| `async function fetchZonesDE(` | `[J-API-DIPUL]` | Bisheriges DiPUL-WMS-GetFeatureInfo (umbenannt aus `fetchZones`) |
+| `document.querySelectorAll('.l-ver, .f-ver')` | ~2500 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
 | `<div id="info-modal"` | ~2361 | Landing-Page Info-Modal (deutscher Text, kein i18n im Body) |
 | `const cfg = {` | nach `<script>` | Go/Warn/NoGo-Konfigurationsobjekt |
 | `const DIPUL_ALL_LAYERS` | js_start+256 | Erster const im Script |
@@ -188,6 +195,7 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.73 | **Country-Adapter-Architektur (Stufe 1):** Multi-Country-Support für Geozonen. `COUNTRY`-Detection via URL-Param oder Hostname; Dispatcher `fetchZones` → DE: DiPUL-WMS, FR: neue Netlify-Function `zones-fr.js` mit ED-269-JSON (`data/uas-zones-fr.json`, 8,4 MB, 3642 Zonen, bbox-Filter, monatlich austauschbar). DiPUL-WMS-Karten-Layer nur noch für DE aktiv. `netlify.toml` mit `included_files` für FR-Daten |
 | v0.72 | Info-Modal-Text korrigiert (Zielgruppe Hobby/kommerziell/FPV, Spezifik-Kategorie, neuer Datenschutz-Abschnitt); README inhaltlich auf v0.72 gebracht und in 5 Sprachen aufgesetzt (EN default + DE/FR/ES/PL mit Sprach-Switcher) |
 | v0.71 | 5 Sprachen (DE/EN/FR/ES/PL), Sprachbutton auf Landing-Page |
 | v0.70 | Flugkategorien-Info-Modal (VFR/MVFR/IFR/LIFR), zweisprachig DE/EN |
