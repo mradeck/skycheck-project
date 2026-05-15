@@ -37,6 +37,10 @@
 - `netlify/functions/gfz.js` — GFZ Potsdam Proxy für Kp-Index/Hp30
 - `netlify/functions/zones-fr.js` — FR-Geozonen aus `data/uas-zones-fr.json` (bbox-Filter, 300 s Cache); inkludiert via `netlify.toml` → `[functions] included_files = ["data/**/*"]`
 
+**`netlify.toml`-Routing:**
+- `[functions] included_files = ["data/**/*"]` — bringt `data/uas-zones-fr.json` ins Function-Bundle
+- `[[redirects]] from = "/" to = "/skycheck.html" status = 200` — Rewrite, damit die Domain-Wurzel (`skycheck-de.netlify.app/`, `skycheck-fr.netlify.app/`) ohne `/skycheck.html`-Suffix funktioniert; URL bleibt `/`; Hostname-basierte COUNTRY-Detection bleibt wirksam
+
 ---
 
 ## Hybrid-Workflow (seit v0.54)

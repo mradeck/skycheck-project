@@ -65,7 +65,7 @@ sw.js                       ← Service Worker (mise en cache)
 icon-192x192.png            ← icône de l'app (petite)
 icon-512x512.png            ← icône de l'app (grande)
 skycheck-icon.svg           ← icône source (vectorielle)
-netlify.toml                ← config Netlify (includes du bundle de fonctions)
+netlify.toml                ← config Netlify (includes du bundle + réécriture d'URL racine)
 netlify/
   functions/
     awc.js                  ← proxy NOAA AWC pour METAR/TAF (contournement CORS)

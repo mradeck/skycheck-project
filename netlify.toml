@@ -1,2 +1,10 @@
 [functions]
   included_files = ["data/**/*"]
+
+# Root-URL liefert die App ohne /skycheck.html-Suffix.
+# Rewrite (Status 200) — die URL in der Adresszeile bleibt "/".
+# Hostname-basierte COUNTRY-Detection in skycheck.html funktioniert weiter.
+[[redirects]]
+  from = "/"
+  to = "/skycheck.html"
+  status = 200
