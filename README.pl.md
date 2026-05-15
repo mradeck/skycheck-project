@@ -8,7 +8,7 @@
 
 🌐 **Wersja live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Aktualna wersja:** v0.75
+📦 **Aktualna wersja:** v0.76
 
 ---
 
@@ -143,6 +143,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.76 | Naprawa race condition: poligony / okręgi geostref FR pokazują się teraz przy pierwszym renderowaniu mapy (wcześniej dopiero po podwójnym kliknięciu z re-fetch). `drawZoneOverlay` wykonywał się przed utworzeniem mapy; teraz po inicjalizacji następuje ponowne narysowanie z cache'a `lastZones` |
 | v0.75 | i18n nazwy kraju: baner strony startowej i stopka pokazują aktywną nazwę kraju w wybranym języku UI (np. domena FR + UI ES → „Verificación de vuelo de dron · Francia"). Nowa tabela `COUNTRY_NAMES`, helper `_country()`, placeholder `{country}` interpolowany przez `_t()`. `fltcatDisclaimer` odkrajowiony (zasada UE obowiązuje bez wymieniania kraju) |
 | v0.74 | Nakładka mapowa FR: geostrefy w trybie FR są teraz rysowane jako poligony / okręgi Leaflet na mapie (oprócz listy). `zones-fr.js` zwraca geometrię; `drawZoneOverlay()` renderuje po stronie klienta. Przełącznik stref pozostaje kompatybilny |
 | v0.73 | Architektura adaptera krajów (etap 1): wsparcie wielokrajowe dla geostref. Wykrywanie kraju przez parametr URL (`?country=fr`) lub nazwę hosta; nowa funkcja Netlify `zones-fr.js` czyta JSON ED-269 dla Francji (`data/uas-zones-fr.json`, ~3,6k stref), DE zachowuje DiPUL WMS |

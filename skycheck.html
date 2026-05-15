@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.75';
+    const APP_VER = '0.76';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -4999,6 +4999,11 @@
           S.layers.dipul = L.layerGroup();
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
+        // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
+        if (COUNTRY !== 'de' && Array.isArray(lastZones) && lastZones.length > 0) {
+          drawZoneOverlay(lastZones, S.layers.dipul);
+        }
 
         // Location pin
         const pinIcon = L.divIcon({
