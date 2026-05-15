@@ -8,7 +8,7 @@
 
 🌐 **En vivo:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
 
-📦 **Versión actual:** v0.74
+📦 **Versión actual:** v0.75
 
 ---
 
@@ -143,6 +143,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v0.75 | i18n del nombre de país: el banner de la página de inicio y el pie de página muestran el nombre del país activo en el idioma de UI elegido (p. ej. dominio FR + UI ES → "Verificación de vuelo de dron · Francia"). Nueva tabla `COUNTRY_NAMES`, helper `_country()`, marcador `{country}` interpolado por `_t()`. `fltcatDisclaimer` despaisificado (regla UE válida sin mención de país) |
 | v0.74 | Superposición cartográfica FR: las geozonas en modo FR se dibujan ahora como polígonos / círculos Leaflet en el mapa (además de la lista). `zones-fr.js` devuelve la geometría; `drawZoneOverlay()` renderiza en el cliente. El conmutador de zonas sigue siendo compatible |
 | v0.73 | Arquitectura de adaptador por país (etapa 1): soporte multi-país para geozonas. Detección de país vía parámetro URL (`?country=fr`) o nombre de host; nueva función Netlify `zones-fr.js` lee JSON ED-269 para Francia (`data/uas-zones-fr.json`, ~3,6k zonas), DE conserva DiPUL WMS |
 | v0.72 | Texto de modal Info corregido (público objetivo, categoría específica, nueva sección de privacidad); README ampliado de solo alemán → 5 idiomas |

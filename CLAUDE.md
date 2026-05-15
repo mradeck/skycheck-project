@@ -22,14 +22,14 @@
    ```bash
    git fetch origin && git reset --hard origin/master
    ```
-5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.74`).
+5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.75`).
 
 ---
 
-**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5272 Zeilen)
+**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5285 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.74 — **Country-Adapter (Stufe 1, FR-Map-Overlay):** Polygone/Kreise für FR-Zonen werden jetzt direkt auf der Leaflet-Karte gezeichnet (Haupt + Aircraft-Alarm-View). `zones-fr.js` liefert Geometrie mit; `drawZoneOverlay()` rendert per `L.polygon` / `L.circle`. `S.layers.dipul` und `AV.dipulL` sind im FR-Modus `L.layerGroup()` (Zone-Toggle bleibt kompatibel)
+**Aktuell:** v0.75 — **Country-Name-i18n:** Badge/Footer zeigen den aktiven Country-Namen in der jeweiligen UI-Sprache (z. B. FR-Modus + EN-Sprache → „Drone Flight Check · France"). Neue `COUNTRY_NAMES`-Tabelle (5 Sprachen × 2 Länder), `_country()`-Helper, `{country}`-Placeholder via `_t()` interpoliert. `fltcatDisclaimer` entcountrifiziert (EU-weit gültig)
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -96,7 +96,7 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
 **Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.74 → 0.75).
+`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.75 → 0.76).
 Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
 
 ---
@@ -117,7 +117,9 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.74';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `const APP_VER = '0.75';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `const COUNTRY_NAMES = {` | nach `_t()` | Lookup-Tabelle pro UI-Sprache × Country (nominativ); neuen Country: neue Zeile, neue UI-Sprache: neue Spalte |
+| `function _country()` | nach `COUNTRY_NAMES` | Liefert lokalisierten Country-Namen für aktuellen `COUNTRY`/`LANG` |
 | `function drawZoneOverlay(zones, layerGroup)` | nach `renderZones` | Zeichnet FR-Geozonen (Polygon/Circle) auf Leaflet-Map; DE-Zonen ohne `geometry`-Feld werden übersprungen |
 | `const COUNTRY = (() => {` | ~2490 | **Country-Detection** (URL-Param `?country=fr` oder Hostname `skycheck-fr.*`); Default `'de'` |
 | `async function fetchZones(` | `[J-API-ZONES]` | **Dispatcher** — leitet an `fetchZonesDE` (DiPUL-WMS) oder `fetchZonesFR` (Netlify-Function) |
@@ -200,6 +202,7 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.75 | **Country-Name-i18n:** Badge (Landing-Page-Titel) und Footer zeigen den aktiven Country-Namen in der jeweiligen UI-Sprache. `COUNTRY_NAMES`-Tabelle (DE/EN/FR/ES/PL × DE/FR), `_country()`-Helper, `{country}`-Placeholder wird von `_t()` interpoliert. 10 i18n-Strings angepasst (5×badge + 5×footerText); `fltcatDisclaimer` entcountrifiziert (EU-weite Regelung). Hostname-Wechsel zu `skycheck-fr.netlify.app` reicht für komplettes FR-Branding |
 | v0.74 | **FR-Map-Overlay:** Geozonen werden im FR-Modus jetzt direkt auf der Karte gezeichnet (Polygone und Kreise via `L.polygon` / `L.circle`). `zones-fr.js` liefert Geometrie mit, `drawZoneOverlay(zones, layerGroup)` rendert. `S.layers.dipul` + `AV.dipulL` sind im FR-Modus `L.layerGroup()` (Zone-Toggle bleibt kompatibel). `setParams`-Aufruf null-safe via typeof-Check |
 | v0.73 | **Country-Adapter-Architektur (Stufe 1):** Multi-Country-Support für Geozonen. `COUNTRY`-Detection via URL-Param oder Hostname; Dispatcher `fetchZones` → DE: DiPUL-WMS, FR: neue Netlify-Function `zones-fr.js` mit ED-269-JSON (`data/uas-zones-fr.json`, 8,4 MB, 3642 Zonen, bbox-Filter, monatlich austauschbar). DiPUL-WMS-Karten-Layer nur noch für DE aktiv. `netlify.toml` mit `included_files` für FR-Daten |
 | v0.72 | Info-Modal-Text korrigiert (Zielgruppe Hobby/kommerziell/FPV, Spezifik-Kategorie, neuer Datenschutz-Abschnitt); README inhaltlich auf v0.72 gebracht und in 5 Sprachen aufgesetzt (EN default + DE/FR/ES/PL mit Sprach-Switcher) |

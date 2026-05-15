@@ -2065,7 +2065,7 @@
 ============================================================ -->
   <div id="landing">
     <div class="l-inner">
-      <div class="l-badge" data-i18n="badge">Drohnenflugprüfung · Deutschland</div>
+      <div class="l-badge" data-i18n="badge">Drohnenflugprüfung · Deutschland</div><!-- Wird via _t() / data-i18n überschrieben (countryname dynamisch) -->
       <h1 class="l-logo">Sky<span>Check</span><sup class="l-ver"></sup></h1>
       <p class="l-sub"><span data-i18n="subtitle">Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit
           KP-Index</span><button class="l-info-btn" id="btn-info" title="Mehr ueber SkyCheck" aria-label="Info"><svg
@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.74';
+    const APP_VER = '0.75';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -2508,7 +2508,7 @@
     const I18N = {
       de: {
         loading: 'Wird geladen…',
-        badge: 'Drohnenflugprüfung · Deutschland',
+        badge: 'Drohnenflugprüfung · {country}',
         subtitle: 'Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index',
         placeholder: 'z. B. Brandenburger Tor, Berlin',
         btnCheck: 'Prüfen', gpsTitle: 'Aktuellen Standort verwenden',
@@ -2560,7 +2560,7 @@
         fltcatLifrDesc: 'Extrem eingeschraenkte Sicht — selbst fuer instrumentenflugberechtigte Piloten herausfordernd.',
         fltcatLifrCrit: 'Wolkenuntergrenze <&thinsp;500&thinsp;ft AGL &middot; Sichtweite <&thinsp;1&thinsp;sm (<&thinsp;1,6&thinsp;km)',
         fltcatLifrNote: 'Absolutes Flugverbot fuer Drohnen.',
-        fltcatDisclaimer: 'Fuer Drohnenflug in Deutschland gelten grundsaetzlich Sichtflugbedingungen (VLOS). Bei MVFR ist erhoehte Vorsicht geboten, bei IFR und LIFR ist ein Drohnenflug nicht zulaessig.',
+        fltcatDisclaimer: 'Fuer Drohnenflug gelten grundsaetzlich Sichtflugbedingungen (VLOS). Bei MVFR ist erhoehte Vorsicht geboten, bei IFR und LIFR ist ein Drohnenflug nicht zulaessig.',
         fltcatCritLabel: 'Kriterien:',
         fltcatColorLabel: 'Kennzeichnung:',
         metarRaw: 'METAR',
@@ -2611,14 +2611,14 @@
         msHighway: 'Autobahn', msFedRoad: 'Bundesstraße', msWaterway: 'Wasserstraße',
         msNature: 'Naturschutz', msResidential: 'Siedlung', msMilitary: 'Militär',
         msIndustry: 'Industrie/Energie', msHospital: 'Krankenhaus',
-        footerText: 'Nur für Deutschland · Betrieb in VLOS · Keine Haftung',
+        footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
         skyAlarmDesc: 'Echtzeit-Tiefflieger-Alarm und Geozonen-Karte — akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen',
       },
       en: {
         loading: 'Loading…',
-        badge: 'Drone Flight Check · Germany',
+        badge: 'Drone Flight Check · {country}',
         subtitle: 'Geo-zone map, airspace alerts, flight movements and weather with Kp-Index',
         placeholder: 'e.g. Brandenburg Gate, Berlin',
         btnCheck: 'Check', gpsTitle: 'Use current location',
@@ -2670,7 +2670,7 @@
         fltcatLifrDesc: 'Extremely restricted visibility — challenging even for instrument-rated pilots.',
         fltcatLifrCrit: 'Ceiling <&thinsp;500&thinsp;ft AGL &middot; Visibility <&thinsp;1&thinsp;sm (<&thinsp;1.6&thinsp;km)',
         fltcatLifrNote: 'Absolute no-fly for drones.',
-        fltcatDisclaimer: 'Drone flights in Germany require visual line of sight conditions (VLOS). Exercise increased caution at MVFR; IFR and LIFR prohibit drone operations.',
+        fltcatDisclaimer: 'Drone flights require visual line of sight conditions (VLOS). Exercise increased caution at MVFR; IFR and LIFR prohibit drone operations.',
         fltcatCritLabel: 'Criteria:',
         fltcatColorLabel: 'Designation:',
         metarRaw: 'METAR',
@@ -2721,14 +2721,14 @@
         msHighway: 'Motorway', msFedRoad: 'Federal Road', msWaterway: 'Waterway',
         msNature: 'Nature Reserve', msResidential: 'Residential', msMilitary: 'Military',
         msIndustry: 'Industry/Energy', msHospital: 'Hospital',
-        footerText: 'Germany only · VLOS operations · No liability',
+        footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
         skyAlarmDesc: 'Real-time low-altitude aircraft alarm and geozone map — acoustic and visual warning when aircraft approach',
       },
       fr: {
         loading: 'Chargement…',
-        badge: 'Vérification de vol de drone · Allemagne',
+        badge: 'Vérification de vol de drone · {country}',
         subtitle: 'Carte des géozones, alertes d\'espace aérien, trafic aérien et météo avec Kp-Index',
         placeholder: 'ex. Porte de Brandebourg, Berlin',
         btnCheck: 'Vérifier', gpsTitle: 'Utiliser la position actuelle',
@@ -2777,7 +2777,7 @@
         fltcatLifrDesc: 'Visibilité extrêmement réduite — difficile même pour les pilotes qualifiés aux instruments.',
         fltcatLifrCrit: 'Plafond <&thinsp;500&thinsp;ft AGL &middot; Visibilité <&thinsp;1&thinsp;sm (<&thinsp;1,6&thinsp;km)',
         fltcatLifrNote: 'Vol de drone absolument interdit.',
-        fltcatDisclaimer: 'Les vols de drones en Allemagne nécessitent des conditions de vol à vue (VLOS). Prudence accrue en MVFR ; IFR et LIFR interdisent les opérations de drones.',
+        fltcatDisclaimer: 'Les vols de drones nécessitent des conditions de vol à vue (VLOS). Prudence accrue en MVFR ; IFR et LIFR interdisent les opérations de drones.',
         fltcatCritLabel: 'Critères :', fltcatColorLabel: 'Désignation :',
         metarRaw: 'METAR', metarTaf: 'Prévision TAF',
         metarCavok: 'CAVOK — Ceiling & Visibility OK',
@@ -2823,14 +2823,14 @@
         msHighway: 'Autoroute', msFedRoad: 'Route fédérale', msWaterway: 'Voie navigable',
         msNature: 'Réserve naturelle', msResidential: 'Zone résidentielle', msMilitary: 'Militaire',
         msIndustry: 'Industrie/Énergie', msHospital: 'Hôpital',
-        footerText: 'Allemagne uniquement · Opérations VLOS · Sans responsabilité',
+        footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
         skyAlarmDesc: 'Alarme en temps réel pour aéronefs à basse altitude et carte des géozones — avertissement acoustique et visuel lors de l\'approche d\'aéronefs',
       },
       es: {
         loading: 'Cargando…',
-        badge: 'Verificación de vuelo de dron · Alemania',
+        badge: 'Verificación de vuelo de dron · {country}',
         subtitle: 'Mapa de geozonas, alertas de espacio aéreo, tráfico aéreo y meteorología con Kp-Index',
         placeholder: 'p.ej. Puerta de Brandeburgo, Berlín',
         btnCheck: 'Verificar', gpsTitle: 'Usar ubicación actual',
@@ -2879,7 +2879,7 @@
         fltcatLifrDesc: 'Visibilidad extremadamente reducida — difícil incluso para pilotos con habilitación instrumental.',
         fltcatLifrCrit: 'Techo <&thinsp;500&thinsp;ft AGL &middot; Visibilidad <&thinsp;1&thinsp;sm (<&thinsp;1,6&thinsp;km)',
         fltcatLifrNote: 'Prohibición absoluta de vuelo para drones.',
-        fltcatDisclaimer: 'Los vuelos de drones en Alemania requieren condiciones de visibilidad directa (VLOS). Se requiere precaución adicional en MVFR; IFR y LIFR prohíben las operaciones con drones.',
+        fltcatDisclaimer: 'Los vuelos de drones requieren condiciones de visibilidad directa (VLOS). Se requiere precaución adicional en MVFR; IFR y LIFR prohíben las operaciones con drones.',
         fltcatCritLabel: 'Criterios:', fltcatColorLabel: 'Designación:',
         metarRaw: 'METAR', metarTaf: 'Pronóstico TAF',
         metarCavok: 'CAVOK — Ceiling & Visibility OK',
@@ -2925,14 +2925,14 @@
         msHighway: 'Autopista', msFedRoad: 'Carretera federal', msWaterway: 'Vía fluvial',
         msNature: 'Reserva natural', msResidential: 'Zona residencial', msMilitary: 'Militar',
         msIndustry: 'Industria/Energía', msHospital: 'Hospital',
-        footerText: 'Solo Alemania · Operaciones VLOS · Sin responsabilidad',
+        footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
         skyAlarmDesc: 'Alarma en tiempo real para aeronaves a baja altitud y mapa de geozonas — aviso acústico y visual ante la aproximación de aeronaves',
       },
       pl: {
         loading: 'Ładowanie…',
-        badge: 'Kontrola lotu drona · Niemcy',
+        badge: 'Kontrola lotu drona · {country}',
         subtitle: 'Mapa geozon, alerty przestrzeni powietrznej, ruch lotniczy i pogoda z Kp-Index',
         placeholder: 'np. Brama Brandenburska, Berlin',
         btnCheck: 'Sprawdź', gpsTitle: 'Użyj bieżącej lokalizacji',
@@ -2981,7 +2981,7 @@
         fltcatLifrDesc: 'Ekstremalnie ograniczona widzialność — trudna nawet dla pilotów z uprawnieniami instrumentalnymi.',
         fltcatLifrCrit: 'Pułap <&thinsp;500&thinsp;ft AGL &middot; Widzialność <&thinsp;1&thinsp;sm (<&thinsp;1,6&thinsp;km)',
         fltcatLifrNote: 'Absolutny zakaz lotów dla dronów.',
-        fltcatDisclaimer: 'Loty dronami w Niemczech wymagają warunków lotu w zasięgu wzroku (VLOS). W warunkach MVFR wymagana zwiększona ostrożność; IFR i LIFR zabraniają operacji dronów.',
+        fltcatDisclaimer: 'Loty dronami wymagają warunków lotu w zasięgu wzroku (VLOS). W warunkach MVFR wymagana zwiększona ostrożność; IFR i LIFR zabraniają operacji dronów.',
         fltcatCritLabel: 'Kryteria:', fltcatColorLabel: 'Oznaczenie:',
         metarRaw: 'METAR', metarTaf: 'Prognoza TAF',
         metarCavok: 'CAVOK — Ceiling & Visibility OK',
@@ -3027,14 +3027,27 @@
         msHighway: 'Autostrada', msFedRoad: 'Droga federalna', msWaterway: 'Droga wodna',
         msNature: 'Rezerwat przyrody', msResidential: 'Strefa mieszkalna', msMilitary: 'Wojskowy',
         msIndustry: 'Przemysł/Energetyka', msHospital: 'Szpital',
-        footerText: 'Tylko Niemcy · Operacje VLOS · Bez odpowiedzialności',
+        footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
         skyAlarmDesc: 'Alarm w czasie rzeczywistym dla statków powietrznych na małej wysokości i mapa geozon — ostrzeżenie dźwiękowe i wizualne przy zbliżaniu się statku powietrznego',
       }
     };
     let LANG = localStorage.getItem('skycheck-lang') || 'de';
-    function _t(k) { return (I18N[LANG] || I18N.de)[k] ?? I18N.de[k] ?? k; }
+    // Landesnamen pro UI-Sprache × Country (nominativ). Wird in i18n-Strings via {country} eingesetzt.
+    // Erweiterbar: pro neuem Land eine neue Zeile, pro neuer UI-Sprache eine neue Spalte.
+    const COUNTRY_NAMES = {
+      de: { de: 'Deutschland', en: 'Germany',  fr: 'Allemagne', es: 'Alemania', pl: 'Niemcy'  },
+      fr: { de: 'Frankreich',  en: 'France',   fr: 'France',    es: 'Francia',  pl: 'Francja' },
+    };
+    function _country() {
+      const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
+      return t[LANG] || t.en || COUNTRY.toUpperCase();
+    }
+    function _t(k) {
+      const v = (I18N[LANG] || I18N.de)[k] ?? I18N.de[k] ?? k;
+      return typeof v === 'string' ? v.replace(/\{country\}/g, _country()) : v;
+    }
     function applyLang() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const v = _t(el.getAttribute('data-i18n'));
