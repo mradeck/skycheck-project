@@ -2383,9 +2383,15 @@
         <p>Der geomagnetische Aktivitaetsindex als Ampel &mdash; relevant fuer FPV-Piloten,
           da hohe Kp-Werte GPS-Genauigkeit und Kompass-Stabilitaet beeinflussen koennen.</p>
         <h3>Fuer wen?</h3>
-        <p>SkyCheck richtet sich an Hobbydrohnenpiloten, kommerzielle UAV-Operatoren
-          und FPV-Enthusiasten, die ihren Flug gemaess EU-Drohnenverordnung
-          (Kategorien A1 / A2 / A3) rechtssicher vorbereiten moechten.</p>
+        <p>SkyCheck richtet sich an Hobby-, kommerzielle und FPV-Drohnenpiloten,
+          die ihren Flug gemaess EU-Drohnenverordnung (offene Kategorien A1 / A2 / A3
+          und Spezifik-Kategorie) rechtssicher vorbereiten moechten.</p>
+        <h3>Datenschutz</h3>
+        <p>Diese SPA &mdash; Single Page App &mdash; trackt oder speichert keine Daten des
+          Nutzers und gibt entsprechend auch keine weiter, da es sich um eine Webanwendung
+          handelt. Auch die &bdquo;Installation&ldquo; legt nur ein App-Icon ab und installiert
+          nicht wirklich etwas. Die Daten werden nur temporaer geladen und sind wieder weg,
+          sobald man die App verlaesst.</p>
         <p class="info-modal-note">&#9888; SkyCheck ist eine Orientierungshilfe. Die gesetzlich
           vorgeschriebene Genehmigung und finale Luftraumfreigabe erfolgen ueber die
           DFS Aviation Services App und weitere zugelassene Portale.</p>
@@ -2479,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.71';
+    const APP_VER = '0.72';
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
     /* [J-I18N] ==========================================================

@@ -22,14 +22,14 @@
    ```bash
    git fetch origin && git reset --hard origin/master
    ```
-5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.71`).
+5. **Antwort-Titel:** Jede Antwort beginnt mit Datum, Uhrzeit und aktueller Versionsnummer (z. B. `## 2026-05-15 10:00 — SkyCheck v0.72`).
 
 ---
 
-**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5185 Zeilen)
+**Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5191 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.71 — 5 Sprachen (DE/EN/FR/ES/PL), Sprachbutton auf Landing-Page, Flugkategorien-Info-Modal, METAR-Wind-Farbcodes
+**Aktuell:** v0.72 — Info-Modal-Text korrigiert (Zielgruppe, Spezifik-Kategorie, Datenschutz-Abschnitt); README in 5 Sprachen (EN default + DE/FR/ES/PL) inhaltlich auf v0.72 aktualisiert
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktion:** `netlify/functions/awc.js` — Proxy für `aviationweather.gov/api/data/{metar,taf}` (CORS-Header, 10 s Timeout, 90 s Cache)
@@ -89,14 +89,14 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
 **Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2482) wird um 0.01 hochgezählt (z. B. 0.71 → 0.72).
+`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.72 → 0.73).
 Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
 
 ---
 
 ## Patch-Checkliste
 
-1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2482)
+1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2488)
 2. Anker-Eindeutigkeit vorab mit `grep` prüfen (genau 1 Treffer)
 3. Änderungen vornehmen (Claude Code: direkte Edits / Cowork: nur Analyse)
 4. **JS-Syntaxcheck:** `node --check` auf extrahiertem Script-Block
@@ -110,8 +110,9 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.71';` | ~2482 | **Versionsvariable** – hier ändern für neue Version |
-| `document.querySelectorAll('.l-ver, .f-ver')` | ~2483 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
+| `const APP_VER = '0.72';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `document.querySelectorAll('.l-ver, .f-ver')` | ~2489 | DOM-Updater für h1-sup (`.l-ver`) und Footer-span (`.f-ver`) |
+| `<div id="info-modal"` | ~2361 | Landing-Page Info-Modal (deutscher Text, kein i18n im Body) |
 | `const cfg = {` | nach `<script>` | Go/Warn/NoGo-Konfigurationsobjekt |
 | `const DIPUL_ALL_LAYERS` | js_start+256 | Erster const im Script |
 | `const NOAA_AWC = '/.netlify/functions/awc'` | `[J-FETCH-METAR]` | CORS-Proxy-Endpoint (seit v0.64) |
@@ -187,6 +188,7 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.72 | Info-Modal-Text korrigiert (Zielgruppe Hobby/kommerziell/FPV, Spezifik-Kategorie, neuer Datenschutz-Abschnitt); README inhaltlich auf v0.72 gebracht und in 5 Sprachen aufgesetzt (EN default + DE/FR/ES/PL mit Sprach-Switcher) |
 | v0.71 | 5 Sprachen (DE/EN/FR/ES/PL), Sprachbutton auf Landing-Page |
 | v0.70 | Flugkategorien-Info-Modal (VFR/MVFR/IFR/LIFR), zweisprachig DE/EN |
 | v0.69 | Bewölkung-Link auf Windy, METAR-Wind °-Zeichen + Farbcodes |
