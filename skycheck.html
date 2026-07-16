@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.80';
+    const APP_VER = '0.81';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -3534,6 +3534,11 @@
       AV.lat = S.lat || 48.137; AV.lon = S.lon || 11.575;
       $('alarm-view').classList.add('av-open');
       document.body.style.overflow = 'hidden';
+      // Doppel-Audio vermeiden: der Hauptansicht-Glockenalarm wird pausiert, solange die
+      // Live-Alarm-View mit eigenem Beep offen ist (beide Systeme sonst gleichzeitig hörbar).
+      if (S.alarm && S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+      if (S.alarm) S.alarm.active = false;
+      const _ab = document.getElementById('alarm-banner'); if (_ab) _ab.classList.remove('active');
       $('av-loc').textContent = S.name || (AV.lat.toFixed(4) + ', ' + AV.lon.toFixed(4));
       if (!AV.map) avInitMap();
       else { AV.map.setView([AV.lat, AV.lon], 13); setTimeout(() => AV.map.invalidateSize(), 80); }
@@ -3611,7 +3616,7 @@
       AV.trailLayer.clearLayers();
       const now = Date.now();
       const cutoff = now - AV.TRAIL_SEC * 1000;
-      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
+      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? null : +a.alt_baro;
       const seen = {};
       planes.forEach(a => {
         if (!a.lat || !a.lon) return;
@@ -3619,7 +3624,7 @@
         seen[hex] = true;
         const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
         const alt = altFt(a);
-        const isLow = alt < AV.ALT_LIMIT_FT;
+        const isLow = alt != null && alt < AV.ALT_LIMIT_FT;   // Boden/unbekannte Höhe (null) ist kein Tiefflieger
         const clr = (isLow && dist < AV.RADIUS_KM) ? '#ff4444' : isLow ? '#ffaa00' : dist < 5 ? '#88bb88' : '#557755';
         const sz = isLow ? 28 : 22;
         const rot = a.track || 0;
@@ -3631,7 +3636,7 @@
         });
         const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
         const cs = escapeHtml(a.flight ? a.flight.trim() : (a.hex || '?'));
-        const altM = Math.round(alt * 0.3048);
+        const altM = alt != null ? Math.round(alt * 0.3048) : '?';
         const info = '<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + altM + ' m (' + escapeHtml(a.alt_baro || '?') + ' ft) \u00b7 ' + escapeHtml(a.gs || '?') + ' kts';
         m.bindPopup(info);
         if (isLow) m.bindTooltip(cs + ' ' + altM + 'm', { permanent: true, direction: 'right', className: 'av-tt-low', offset: [12, 0] });
@@ -3668,8 +3673,8 @@
     }
 
     function avCheckProx(planes) {
-      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
-      const low = planes.filter(a => a.lat && a.lon && altFt(a) < AV.ALT_LIMIT_FT);
+      const altFt = a => (a.alt_baro == null || a.alt_baro === 'ground') ? null : +a.alt_baro;
+      const low = planes.filter(a => { const g = altFt(a); return a.lat && a.lon && g != null && g < AV.ALT_LIMIT_FT; });
       avUpdateLowAlt(low);
       const near = low.filter(a => avDist(AV.lat, AV.lon, a.lat, a.lon) < AV.RADIUS_KM);
       if (near.length) {
@@ -4165,7 +4170,7 @@
               callsign: (a.flight || '').trim(),
               lon: a.lon,
               lat: a.lat,
-              altBaro: (rb == null || rb === 'ground') ? 0 : +rb * ftM,  // metres
+              altBaro: (rb == null || rb === 'ground') ? null : +rb * ftM,  // metres; null = Boden/unbekannt (kein Fehlalarm)
               altGeo: rg == null ? null : +rg * ftM,                     // metres or null
               vel: a.gs != null ? +(a.gs * 1.852).toFixed(1) : null, // km/h
               hdg: a.track ?? 0,
