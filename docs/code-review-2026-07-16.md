@@ -5,6 +5,28 @@ Sicherheit, Fachlogik Meteo/Aviation, PWA/Robustheit/I18N), tragende Befunde am
 Code gegenverifiziert. Anlass: Abgleich mit den SkyAlarm-Fixes v0.32–v0.38, da
 die Alarm-/ADS-B-Ansicht von SkyAlarm aus SkyCheck abgespalten wurde.
 
+Status-Legende: 🔴 offen · 🟢 behoben · ⚪ bewusst nicht umgesetzt
+
+## Umsetzungsstand (v0.78–v0.82)
+
+Umfang laut Nutzervorgabe: kein SkyAlarm-Feature-Port; nur notwendige Optimierungen,
+plus Eis/Nebel/Sichtweite im Live-View.
+
+**🟢 Behoben:**
+- **v0.78** X1/X2/X3 — `escapeHtml` auf alle Fremddaten-Sinks + CSP-Header + Geocode-Stale-Guard (A4)
+- **v0.79** M-vis — METAR/TAF-Sichtweite statute miles → km
+- **v0.80** I1/I3 — hartkodierter dt. Alarmtext + binäre DE/EN-Zonen-/METAR-Texte → 5-sprachig (18 Keys). I2 war bereits konsistent (keine fehlenden Keys)
+- **v0.81** A2/H1 — Doppel-Audio verhindert; Bodenverkehr/unbekannte Höhe vom Alarm ausgenommen
+- **v0.82** Eis/Nebel/Sichtweite in der Live-View (`renderMapStatus`)
+
+**⚪ Bewusst nicht umgesetzt** (SkyAlarm-Feature-Set, laut Nutzer nicht gewünscht):
+K1a Wake Lock, K1b Audio-Unlock, K2 AGL-Geländekorrektur, H4 Poll-Backoff/Guard, H2 Hysterese, M2 Trail-Rendering-Umbau.
+
+**🔴 Offen / dokumentiert** (nicht im gewünschten Umfang):
+A1 (S.alarm ist Snapshot statt Live-Alarm — Architekturentscheidung), A3 (Silence-Reset bei transienter Leerantwort), D1 (toter rekursiver `fetchAircraftCached`), L1/L2/L4/L5/L6 (Poll-Timer-Leak, zones-fr cos(lat), rel=noopener, switchLang-Re-Render, sw CACHE_NAME).
+
+---
+
 Status-Legende: 🔴 offen · 🟢 behoben
 
 ---

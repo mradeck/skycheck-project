@@ -29,7 +29,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5290 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v0.76 — **Fix:** FR-Zonen-Overlay erscheint jetzt sofort beim Erstaufruf. Vorher race condition: `drawZoneOverlay` lief, bevor `S.layers.dipul` von der Map-Erstellung belegt war → leeres Overlay bis zum nächsten Trigger. Nach Karten-Init wird einmal mit `lastZones` nachgezeichnet
+**Aktuell:** v0.82 — Umsetzung des Code-Reviews (`docs/code-review-2026-07-16.md`, Abgleich mit SkyAlarm-Fixes): v0.78 XSS-Escaping aller Fremddaten-Sinks (Callsigns, OSM-Ortsnamen inkl. Verlaufs-Persistenz, METAR/TAF, Zonen) + CSP-Header + Geocode-Stale-Guard; v0.79 METAR/TAF-Sichtweite-Einheit (statute miles → km); v0.80 Mehrsprachigkeit (hartkodierter dt. Alarmtext + binäre DE/EN-Zonen-/METAR-Texte → volle 5-Sprachigkeit, 18 neue i18n-Keys); v0.81 Alarm-Defekte (Doppel-Audio AV-View/Hauptalarm, Bodenverkehr-Fehlalarm); v0.82 Eis/Nebel/Sichtweite im Live-View. Bewusst NICHT portiert (kein SkyAlarm-Feature-Set): Wake Lock, AGL-Geländekorrektur, Poll-Backoff/Hysterese, Trail-Rendering-Umbau
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -117,7 +117,7 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.76';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `const APP_VER = '0.82';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
 | `const COUNTRY_NAMES = {` | nach `_t()` | Lookup-Tabelle pro UI-Sprache × Country (nominativ); neuen Country: neue Zeile, neue UI-Sprache: neue Spalte |
 | `function _country()` | nach `COUNTRY_NAMES` | Liefert lokalisierten Country-Namen für aktuellen `COUNTRY`/`LANG` |
 | `function drawZoneOverlay(zones, layerGroup)` | nach `renderZones` | Zeichnet FR-Geozonen (Polygon/Circle) auf Leaflet-Map; DE-Zonen ohne `geometry`-Feld werden übersprungen |
@@ -202,6 +202,12 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v0.82 | **Eis/Nebel/Sichtweite im Live-View:** `renderMapStatus` zeigt zusätzlich zur Zonen-/Wind-Anzeige eine kompakte Vereisungs- (50 m AGL, Magnus-Taupunkt + Lapse-Rate, Band −20…0 °C), Nebel- und Sichtweiten-Angabe aus dem BrightSky-`now`-Record — analog SkyAlarm. Nutzt vorhandene 5-sprachige Keys (`dpCrit`/`dpFog`/`dpClear`/`metarVis`/`fogWarn`), keine neuen i18n-Strings |
+| v0.81 | **Alarm-Defekte:** (a) Doppel-Audio verhindert — `avOpen` pausiert den Hauptansicht-Glockenalarm (`S.alarm.intervalId`), solange die Live-Alarm-View mit eigenem Beep offen ist. (b) Bodenverkehr-Fehlalarm behoben — `alt_baro==='ground'`/fehlend ergibt jetzt `null` statt `0` (AV-View `altFt` + `fetchAircraft`-Normalisierung), sodass parkende/rollende Maschinen und höhenlose Targets nicht mehr als Tiefflieger alarmieren |
+| v0.80 | **Mehrsprachigkeit (Review I1/I3):** hartkodierter deutscher Alarm-Banner-/Live-View-Text und binäre `LANG==='de' ? DE : EN`-Zonen-/METAR-Sicherheitstexte auf volle 5-Sprachigkeit umgestellt; 18 neue i18n-Keys (`alarmMsg`/`alarmCraftCount`/`avWatch`/`avLowAltHdr`, 13× `zone…`, `metarCeilingMsg`) in DE/EN/FR/ES/PL. Kein German-/English-Fallback mehr für FR/ES/PL-Nutzer bei sicherheitsrelevanten Texten |
+| v0.79 | **Fix METAR/TAF-Sichtweite-Einheit:** Das AWC-JSON-Feld `visib` liefert statute miles (`'6+'`/`'P6SM'` sind sm-Idiome), wurde in `metarVisKm`/TAF-Kompaktanzeige aber direkt als km angezeigt und gegen km-Schwellen (1,5/3) geprüft → Faktor-1,61-Fehler (z. B. 4 sm = 6,4 km als „4 km"). Fix: `× 1,60934`, Meter-Fallback für durchgereichte Rohwerte (`> 15`). Verifiziert an EDDM/EDDF/KJFK |
+| v0.78 | **Sicherheit (Review X1–X3):** zentraler `escapeHtml`-Helfer auf alle Fremddaten-HTML-Sinks — ADS-B/OGN-Callsigns (Popup/permanenter Tooltip/Liste), **Photon/OSM-Ortsnamen** in Autocomplete + `data-name` + Pin-Popup + localStorage-Verlauf (öffentlich editierbar → persistentes Stored-XSS), METAR/TAF-Rohtext, DiPUL-Zonennamen/-felder + FR-Zonen-Tooltip; Legal-Link `encodeURI`+`rel=noopener`. CSP-Header in `netlify.toml` (restriktives `connect-src`/`img-src` gegen Exfiltration) + `X-Content-Type-Options`/`Referrer-Policy`. Zusätzlich Geocode-Stale-Response-Guard (`acSeq`) |
+| v0.77 | DiPUL-WMS-Härtung gegen defekten-Layer-ServiceException (Per-Layer-Recovery + Session-Blockliste) |
 | v0.76 | **Fix Race Condition FR-Overlay:** Im FR-Modus erschienen die Geozonen-Polygone/Kreise beim ersten Aufruf nicht — `drawZoneOverlay` lief schon, bevor die Karte und damit `S.layers.dipul` existierte. Fix: nach Map-Erstellung einmaliger Nachzeichen-Aufruf mit dem bereits gefüllten `lastZones`-Cache |
 | v0.75 | **Country-Name-i18n:** Badge (Landing-Page-Titel) und Footer zeigen den aktiven Country-Namen in der jeweiligen UI-Sprache. `COUNTRY_NAMES`-Tabelle (DE/EN/FR/ES/PL × DE/FR), `_country()`-Helper, `{country}`-Placeholder wird von `_t()` interpoliert. 10 i18n-Strings angepasst (5×badge + 5×footerText); `fltcatDisclaimer` entcountrifiziert (EU-weite Regelung). Hostname-Wechsel zu `skycheck-fr.netlify.app` reicht für komplettes FR-Branding |
 | v0.74 | **FR-Map-Overlay:** Geozonen werden im FR-Modus jetzt direkt auf der Karte gezeichnet (Polygone und Kreise via `L.polygon` / `L.circle`). `zones-fr.js` liefert Geometrie mit, `drawZoneOverlay(zones, layerGroup)` rendert. `S.layers.dipul` + `AV.dipulL` sind im FR-Modus `L.layerGroup()` (Zone-Toggle bleibt kompatibel). `setParams`-Aufruf null-safe via typeof-Check |
