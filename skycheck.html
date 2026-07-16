@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.79';
+    const APP_VER = '0.80';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -2615,6 +2615,24 @@
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
         skyAlarmDesc: 'Echtzeit-Tiefflieger-Alarm und Geozonen-Karte — akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen',
+        alarmCraftCount: n => `${n} Fluggeräte`,
+        alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
+        avWatch: '● Beobachte',
+        avLowAltHdr: '⚠ Tiefflieger (&lt;300 m)',
+        zoneNoFly: 'Flugverbot/-beschränkung',
+        zoneCtr: 'Kontrollzone — genehmigungspflichtig',
+        zoneAirfield: 'Flugplatz — genehmigungspflichtig',
+        zoneHeliport: 'Heliport — genehmigungspflichtig',
+        zoneMil: 'Militärgebiet — Flugverbot',
+        zoneHospital: 'Krankenhaus — 100m Flugverbot',
+        zoneResidential: 'Siedlung — Überflugverbot Wohngrundstuecke',
+        zoneNature: 'Naturschutzgebiet — Überflugverbot',
+        zoneIndustrial: 'Industrieanlage — Überflugverbot',
+        zoneRoad: 'Verkehrsweg — Seitenabstand einhalten',
+        zoneRail: 'Bahnanlage — Seitenabstand einhalten',
+        zoneWaterway: 'Bundeswasserstraße — Seitenabstand',
+        zoneRestrict: 'Einschränkung vorhanden',
+        metarCeilingMsg: (icao, ceil) => `METAR ${icao}: Wolkenbasis ${ceil}`,
       },
       en: {
         loading: 'Loading…',
@@ -2725,6 +2743,24 @@
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
         skyAlarmDesc: 'Real-time low-altitude aircraft alarm and geozone map — acoustic and visual warning when aircraft approach',
+        alarmCraftCount: n => `${n} aircraft`,
+        alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
+        avWatch: '● Watching',
+        avLowAltHdr: '⚠ Low-altitude aircraft (&lt;300 m)',
+        zoneNoFly: 'No-fly/restricted zone',
+        zoneCtr: 'Control zone — permit required',
+        zoneAirfield: 'Airfield — permit required',
+        zoneHeliport: 'Heliport — permit required',
+        zoneMil: 'Military zone — no-fly',
+        zoneHospital: 'Hospital — 100m no-fly zone',
+        zoneResidential: 'Residential — no overflight of private property',
+        zoneNature: 'Nature reserve — no overflight',
+        zoneIndustrial: 'Industrial site — no overflight',
+        zoneRoad: 'Road — maintain lateral distance',
+        zoneRail: 'Railway — maintain lateral distance',
+        zoneWaterway: 'Waterway — maintain lateral distance',
+        zoneRestrict: 'Restriction applies',
+        metarCeilingMsg: (icao, ceil) => `METAR ${icao}: Ceiling ${ceil}`,
       },
       fr: {
         loading: 'Chargement…',
@@ -2827,6 +2863,24 @@
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
         skyAlarmDesc: 'Alarme en temps réel pour aéronefs à basse altitude et carte des géozones — avertissement acoustique et visuel lors de l\'approche d\'aéronefs',
+        alarmCraftCount: n => `${n} aéronefs`,
+        alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
+        avWatch: '● Surveillance',
+        avLowAltHdr: '⚠ Aéronefs à basse altitude (&lt;300 m)',
+        zoneNoFly: 'Zone interdite/à restrictions',
+        zoneCtr: 'Zone de contrôle — autorisation requise',
+        zoneAirfield: 'Aérodrome — autorisation requise',
+        zoneHeliport: 'Héliport — autorisation requise',
+        zoneMil: 'Zone militaire — vol interdit',
+        zoneHospital: 'Hôpital — zone interdite de 100 m',
+        zoneResidential: 'Zone résidentielle — survol interdit des propriétés privées',
+        zoneNature: 'Réserve naturelle — survol interdit',
+        zoneIndustrial: 'Site industriel — survol interdit',
+        zoneRoad: 'Voie de circulation — respecter la distance latérale',
+        zoneRail: 'Voie ferrée — respecter la distance latérale',
+        zoneWaterway: 'Voie navigable — distance latérale',
+        zoneRestrict: 'Restriction applicable',
+        metarCeilingMsg: (icao, ceil) => `METAR ${icao} : Plafond ${ceil}`,
       },
       es: {
         loading: 'Cargando…',
@@ -2929,6 +2983,24 @@
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
         skyAlarmDesc: 'Alarma en tiempo real para aeronaves a baja altitud y mapa de geozonas — aviso acústico y visual ante la aproximación de aeronaves',
+        alarmCraftCount: n => `${n} aeronaves`,
+        alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
+        avWatch: '● Observando',
+        avLowAltHdr: '⚠ Aeronaves a baja altitud (&lt;300 m)',
+        zoneNoFly: 'Zona prohibida/restringida',
+        zoneCtr: 'Zona de control — autorización requerida',
+        zoneAirfield: 'Aeródromo — autorización requerida',
+        zoneHeliport: 'Helipuerto — autorización requerida',
+        zoneMil: 'Zona militar — vuelo prohibido',
+        zoneHospital: 'Hospital — zona prohibida de 100 m',
+        zoneResidential: 'Zona residencial — sobrevuelo prohibido de propiedades privadas',
+        zoneNature: 'Reserva natural — sobrevuelo prohibido',
+        zoneIndustrial: 'Instalación industrial — sobrevuelo prohibido',
+        zoneRoad: 'Vía de tráfico — mantener distancia lateral',
+        zoneRail: 'Vía férrea — mantener distancia lateral',
+        zoneWaterway: 'Vía navegable — mantener distancia lateral',
+        zoneRestrict: 'Restricción aplicable',
+        metarCeilingMsg: (icao, ceil) => `METAR ${icao}: Techo ${ceil}`,
       },
       pl: {
         loading: 'Ładowanie…',
@@ -3031,6 +3103,24 @@
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
         skyAlarmDesc: 'Alarm w czasie rzeczywistym dla statków powietrznych na małej wysokości i mapa geozon — ostrzeżenie dźwiękowe i wizualne przy zbliżaniu się statku powietrznego',
+        alarmCraftCount: n => `${n} statków powietrznych`,
+        alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
+        avWatch: '● Obserwacja',
+        avLowAltHdr: '⚠ Statki powietrzne na małej wysokości (&lt;300 m)',
+        zoneNoFly: 'Strefa zakazu/ograniczeń lotów',
+        zoneCtr: 'Strefa kontrolowana — wymagane zezwolenie',
+        zoneAirfield: 'Lotnisko — wymagane zezwolenie',
+        zoneHeliport: 'Lądowisko dla śmigłowców — wymagane zezwolenie',
+        zoneMil: 'Strefa wojskowa — zakaz lotów',
+        zoneHospital: 'Szpital — strefa zakazu lotów 100 m',
+        zoneResidential: 'Strefa mieszkalna — zakaz przelotu nad posesjami prywatnymi',
+        zoneNature: 'Rezerwat przyrody — zakaz przelotu',
+        zoneIndustrial: 'Obiekt przemysłowy — zakaz przelotu',
+        zoneRoad: 'Droga — zachować odstęp boczny',
+        zoneRail: 'Linia kolejowa — zachować odstęp boczny',
+        zoneWaterway: 'Droga wodna — zachować odstęp boczny',
+        zoneRestrict: 'Obowiązuje ograniczenie',
+        metarCeilingMsg: (icao, ceil) => `METAR ${icao}: Pułap ${ceil}`,
       }
     };
     let LANG = localStorage.getItem('skycheck-lang') || 'de';
@@ -3604,7 +3694,7 @@
         if (AV.alarmOn && AV.beepInterval) { clearInterval(AV.beepInterval); AV.beepInterval = null; }
         AV.alarmOn = false;
         $('av-stat').className = 'av-stat watch';
-        $('av-stat').textContent = '\u25cf Beobachte';
+        $('av-stat').textContent = _t('avWatch');
         $('av-banner').className = 'av-banner';
       }
     }
@@ -3623,7 +3713,7 @@
           return '<div class="av-lowalt-row"><span>\u2708 ' + cs + '</span><span>' + altM + ' m</span><span>' + dist.toFixed(1) + ' km</span><span>' + spd + ' km/h</span></div>';
         })
         .join('');
-      el.innerHTML = '<div class="av-lowalt-hdr">\u26a0 Tiefflieger (&lt;300 m)</div>' + rows;
+      el.innerHTML = '<div class="av-lowalt-hdr">' + _t('avLowAltHdr') + '</div>' + rows;
     }
 
     let _avAudioCtx = null;
@@ -3801,7 +3891,7 @@
             if (ceil && ceil.m < 300 && ceil.m !== Infinity) {
               const ms = evalStatus(now, kpVal);
               if (ceil.m < 150) ms.lvl = 'nogo'; else if (ms.lvl !== 'nogo') ms.lvl = 'warn';
-              const msg = LANG === 'de' ? `METAR ${sorted[0].icaoId}: Wolkenbasis ${ceil.text}` : `METAR ${sorted[0].icaoId}: Ceiling ${ceil.text}`;
+              const msg = _t('metarCeilingMsg')(sorted[0].icaoId, ceil.text);
               if (!ms.reasons.some(r => r.includes('METAR'))) ms.reasons.push(msg);
               renderStatus(ms, lastZoneStatus);
             }
@@ -4385,31 +4475,31 @@
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
         if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Flugverbot/-beschränkung' : 'No-fly/restricted zone';
+          zLvl = 'nogo'; msg = _t('zoneNoFly');
         } else if (t.includes('ctr') || t.includes('control_zone') || t.includes('kontrollzone')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Kontrollzone — genehmigungspflichtig' : 'Control zone — permit required';
+          zLvl = 'nogo'; msg = _t('zoneCtr');
         } else if (t.includes('airport') || t.includes('flughafen') || t.includes('flugplatz') || t.includes('aerodrome')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Flugplatz — genehmigungspflichtig' : 'Airfield — permit required';
+          zLvl = 'nogo'; msg = _t('zoneAirfield');
         } else if (t.includes('heliport')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Heliport — genehmigungspflichtig' : 'Heliport — permit required';
+          zLvl = 'nogo'; msg = _t('zoneHeliport');
         } else if (t.includes('military') || t.includes('milit')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Militärgebiet — Flugverbot' : 'Military zone — no-fly';
+          zLvl = 'nogo'; msg = _t('zoneMil');
         } else if (t.includes('hospital') || t.includes('krankenhaus')) {
-          zLvl = 'nogo'; msg = LANG === 'de' ? 'Krankenhaus — 100m Flugverbot' : 'Hospital — 100m no-fly zone';
+          zLvl = 'nogo'; msg = _t('zoneHospital');
         } else if (t.includes('populated') || t.includes('siedlung') || t.includes('wohngebiet')) {
-          msg = LANG === 'de' ? 'Siedlung — Überflugverbot Wohngrundstuecke' : 'Residential — no overflight of private property';
+          msg = _t('zoneResidential');
         } else if (t.includes('nature') || t.includes('naturschutz') || t.includes('national_park')) {
-          msg = LANG === 'de' ? 'Naturschutzgebiet — Überflugverbot' : 'Nature reserve — no overflight';
+          msg = _t('zoneNature');
         } else if (t.includes('industry') || t.includes('industrie') || t.includes('energie')) {
-          msg = LANG === 'de' ? 'Industrieanlage — Überflugverbot' : 'Industrial site — no overflight';
+          msg = _t('zoneIndustrial');
         } else if (t.includes('highway') || t.includes('autobahn') || t.includes('bundesstra') || t.includes('road')) {
-          msg = LANG === 'de' ? 'Verkehrsweg — Seitenabstand einhalten' : 'Road — maintain lateral distance';
+          msg = _t('zoneRoad');
         } else if (t.includes('railway') || t.includes('bahn')) {
-          msg = LANG === 'de' ? 'Bahnanlage — Seitenabstand einhalten' : 'Railway — maintain lateral distance';
+          msg = _t('zoneRail');
         } else if (t.includes('waterway') || t.includes('wasserstra')) {
-          msg = LANG === 'de' ? 'Bundeswasserstraße — Seitenabstand' : 'Waterway — maintain lateral distance';
+          msg = _t('zoneWaterway');
         } else {
-          msg = z.name || (LANG === 'de' ? 'Einschränkung vorhanden' : 'Restriction applies');
+          msg = z.name || _t('zoneRestrict');
         }
         if (zLvl === 'nogo') lvl = 'nogo';
         else if (lvl !== 'nogo') lvl = 'warn';
@@ -5251,9 +5341,9 @@
         const alt = Math.round(t.altGeo ?? t.altBaro ?? 0);
         const dist = Math.round(_distM(S.lat, S.lon, t.lat, t.lon));
         const id = t.callsign || t.icao || '?';
-        const lbl = threats.length > 1 ? `${threats.length} Fluggeräte` : id;
+        const lbl = threats.length > 1 ? _t('alarmCraftCount')(threats.length) : id;
         document.getElementById('alarm-text').textContent =
-          `⚠️  ${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`;
+          `⚠️  ${_t('alarmMsg')(lbl, dist, alt)}`;
         banner.classList.add('active');
         if (!S.alarm.active) {
           S.alarm.active = true;
