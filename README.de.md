@@ -131,6 +131,10 @@ Zonen-Anzahlen direkt aus der jeweiligen Live-Quelle des Landes gezogen (DE via 
 
 **Deutschland sticht drastisch hervor** — rund **5,6×** die absolute Menge des nächsten Landes (Spanien) und etwa **8×** die Zonendichte von Spanien/Schweiz, **37×** die von Frankreich und **73×** die von Österreich. Der Grund ist Deutschlands einzigartig feingranulare Verzonung: Es weist Zonen für Kategorien aus, die die anderen weitgehend nicht verzonen — z. B. **Industrieanlagen (24 482), Wohngrundstücke (10 793), Bahnanlagen (9 819), Naturschutzgebiete (9 012), sogar Freibäder (6 600)**. (Die Zählgranularität unterscheidet sich zwischen den nationalen Datensätzen, was selbst der Punkt ist: Deutschland verzont weit mehr Kategorien in weit feinerer Auflösung.)
 
+### Rechtsgrundlage — die Zonen sind per EU-Recht öffentlich
+
+Nach **Artikel 15 Absatz 3 der Durchführungsverordnung (EU) 2019/947** muss jeder Mitgliedstaat, der UAS-Geozonen festlegt, **diese Informationen in einem gemeinsamen einheitlichen digitalen Format öffentlich zugänglich machen** — dem EUROCAE-Standard **ED-269 / ED-318** — ausdrücklich *zu Zwecken der Geo-Sensibilisierung*, also damit Apps und Systeme wie SkyCheck Piloten informieren können. Die **Open-Data-Richtlinie (EU) 2019/1024** rahmt solche Behörden-Geodaten zusätzlich als weiterverwendbar ein (Georaum ist eine „hochwertige Datensatz"-Kategorie). Kurz: Die Daten müssen von Gesetzes wegen offen zugänglich sein; SkyCheck zeigt lediglich die jeweils offizielle Quelle des Landes an — mit Quellenangabe. Die genauen Nutzungsbedingungen werden national festgelegt, daher sind die einzelnen Datenquellen oben genannt.
+
 ### Netlify Functions (CORS-Proxies)
 
 Die Aviation-Weather- und GFZ-APIs senden keine CORS-Header, daher laufen sie über Netlify Functions:

@@ -131,6 +131,10 @@ Nombres de zones extraits directement de la source en direct de chaque pays (DE 
 
 **L'Allemagne se démarque massivement** — environ **5,6×** le nombre absolu du pays suivant (l'Espagne) et environ **8×** la densité de zones de l'Espagne/la Suisse, **37×** celle de la France et **73×** celle de l'Autriche. La raison tient au zonage particulièrement fin de l'Allemagne : elle désigne des zones pour des catégories que les autres ignorent largement — p. ex. **sites industriels (24 482), propriétés résidentielles (10 793), installations ferroviaires (9 819), réserves naturelles (9 012), et même piscines de plein air (6 600)**. (La granularité du décompte diffère entre les jeux de données nationaux, ce qui constitue précisément le point : l'Allemagne zone bien plus de catégories à une résolution bien plus fine.)
 
+### Base légale — les zones sont publiques en vertu du droit de l'UE
+
+En vertu de l'**article 15, paragraphe 3, du règlement d'exécution (UE) 2019/947**, chaque État membre qui définit des géozones UAS **doit rendre ces informations publiquement accessibles dans un format numérique commun unique** — la norme EUROCAE **ED-269 / ED-318** — explicitement *à des fins de sensibilisation géographique*, c'est-à-dire pour que des applications et systèmes comme SkyCheck puissent informer les pilotes. La **directive sur les données ouvertes (UE) 2019/1024** encadre en outre ces données géospatiales du secteur public comme réutilisables (le géospatial étant une catégorie de « jeux de données de forte valeur »). Autrement dit : la loi impose que les données soient librement accessibles ; SkyCheck ne fait qu'afficher la source officielle de chaque pays, avec attribution. Les conditions exactes de réutilisation restent fixées au niveau national ; les fournisseurs de données sont donc crédités ci-dessus.
+
 ### Netlify Functions (proxys CORS)
 
 Les API Aviation Weather et GFZ n'envoient pas d'en-têtes CORS, elles passent donc par les Netlify Functions :

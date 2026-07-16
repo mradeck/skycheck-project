@@ -131,6 +131,10 @@ Liczby stref pobrane bezpośrednio ze źródła live każdego kraju (DE via DiPU
 
 **Niemcy zdecydowanie się wyróżniają** — około **5,6×** bezwzględna liczba następnego kraju (Hiszpania) i mniej więcej **8×** gęstość stref Hiszpanii/Szwajcarii, **37×** Francji i **73×** Austrii. Powodem jest wyjątkowo drobnoziarniste strefowanie w Niemczech: wyznaczają one strefy dla kategorii, których inne kraje w większości nie obejmują — np. **obiekty przemysłowe (24 482), nieruchomości mieszkalne (10 793), obiekty kolejowe (9 819), rezerwaty przyrody (9 012), a nawet baseny odkryte (6 600)**. (Granularność zliczania różni się między krajowymi zbiorami danych, co samo w sobie jest istotą sprawy: Niemcy obejmują strefami znacznie więcej kategorii przy znacznie drobniejszej rozdzielczości.)
 
+### Podstawa prawna — strefy są publiczne z mocy prawa UE
+
+Zgodnie z **art. 15 ust. 3 rozporządzenia wykonawczego (UE) 2019/947** każde państwo członkowskie, które wyznacza geostrefy UAS, **musi udostępnić te informacje publicznie we wspólnym, jednolitym formacie cyfrowym** — normie EUROCAE **ED-269 / ED-318** — wyraźnie *do celów świadomości geoprzestrzennej*, czyli po to, aby aplikacje i systemy takie jak SkyCheck mogły informować pilotów. **Dyrektywa w sprawie otwartych danych (UE) 2019/1024** dodatkowo traktuje takie dane geoprzestrzenne sektora publicznego jako nadające się do ponownego wykorzystania (dane geoprzestrzenne to kategoria „zbiorów danych o wysokiej wartości"). Krótko mówiąc: prawo wymaga, aby dane były otwarcie dostępne; SkyCheck jedynie wyświetla oficjalne źródło każdego kraju, z podaniem źródła. Dokładne warunki ponownego wykorzystania są ustalane na poziomie krajowym, dlatego poszczególni dostawcy danych są wskazani powyżej.
+
 ### Netlify Functions (proxy CORS)
 
 API Aviation Weather i GFZ nie wysyłają nagłówków CORS, dlatego przechodzą przez funkcje Netlify:

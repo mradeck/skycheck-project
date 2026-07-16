@@ -131,6 +131,10 @@ Zone counts pulled directly from each country's live source (DE via DiPUL WFS ac
 
 **Germany stands out drastically** — roughly **5.6×** the absolute count of the next country (Spain) and about **8×** the zone density of Spain/Switzerland, **37×** France and **73×** Austria. The reason is Germany's uniquely fine-grained zoning: it designates zones for categories the others largely don't — e.g. **industrial sites (24 482), residential properties (10 793), railway installations (9 819), nature reserves (9 012), even public outdoor pools (6 600)**. (Counting granularity differs between national datasets, which is itself the point: Germany zones far more categories at far finer resolution.)
 
+### Legal basis — the zones are public by EU law
+
+Under **Article 15(3) of Commission Implementing Regulation (EU) 2019/947**, every member state that defines UAS geographical zones **must make that information publicly available in a common unique digital format** — the EUROCAE **ED-269 / ED-318** standard — explicitly *for geo-awareness purposes*, i.e. so that apps and systems like SkyCheck can inform pilots. The **Open Data Directive (EU) 2019/1024** additionally frames such public-sector geospatial data as re-usable (geospatial being a "high-value dataset" category). In other words, the data is legally required to be openly accessible; SkyCheck merely displays each country's official source, with attribution. Exact re-use terms are still set nationally, so the individual data providers are credited above.
+
 ### Netlify Functions (CORS proxies)
 
 The Aviation Weather and GFZ APIs don't send CORS headers, so they go through Netlify Functions:
