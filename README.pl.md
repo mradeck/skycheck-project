@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Sprawdzenie lotu dronem (DE · FR · AT · CH)
+# SkyCheck — Sprawdzenie lotu dronem (DE · FR · AT · CH · ES)
 
 **SkyCheck** to bezpłatna aplikacja webowa typu single-page do szybkiego wstępnego sprawdzenia warunków lotu dronem. Agreguje dane w czasie rzeczywistym z kilku oficjalnych źródeł i wydaje natychmiastową rekomendację lotu. Nasze zastosowania: pomiary, inspekcje, filmy wizerunkowe, produkcje TV i filmowe oraz szkolenia na świadectwo kompetencji A2/STS w [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -19,10 +19,11 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | 🇫🇷 **Francja** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | zbiór danych ED-269 (francuskie strefy UAS) |
 | 🇦🇹 **Austria** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — auto-aktualizacja co miesiąc |
 | 🇨🇭 **Szwajcaria** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
+| 🇪🇸 **Hiszpania** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | ENAIRE servAIS — WMS + ArcGIS Identify |
 
-> Wszystkie cztery to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch`. Domyślnie: `de`.
+> Wszystkie pięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v0.85
+📦 **Aktualna wersja:** v0.89
 
 ---
 
@@ -37,7 +38,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Indeks Kp** | Aktualny Kp z NOAA + wykres słupkowy Hp30 z GFZ Potsdam (ostatnie 4 × 30 min + prognoza) |
 | **Ruch lotniczy** | Ruch ADS-B w czasie rzeczywistym w okolicy z kolorami wysokości i ikonami radaru (Airplanes.live) |
 | **Widok alarmu samolotów** | Pełnoekranowa mapa z dźwiękowym alarmem: sygnalizuje zbliżające się statki powietrzne w ustawianym promieniu |
-| **Mapa przestrzeni powietrznej** | Specyficzne dla kraju geostrefy dla dronów (DE: DiPUL · FR/AT: ED-269 · CH: BAZL/geo.admin.ch) — strefy zakazu lotów, strefy kontrolowane, rezerwaty przyrody; promień wyszukiwania przełączalny między 5 m a 100 m |
+| **Mapa przestrzeni powietrznej** | Specyficzne dla kraju geostrefy dla dronów (DE: DiPUL · FR/AT: ED-269 · CH: geo.admin.ch · ES: ENAIRE) — strefy zakazu lotów, strefy kontrolowane, rezerwaty przyrody; promień wyszukiwania przełączalny między 5 m a 100 m |
 | **Prognoza 48 h** | Prognoza godzinowa na 2 dni (przewijalna, sygnalizator lotu dla każdej godziny) |
 | **Przegląd 5-dniowy** | Widok dzienny z temp. min/maks., wiatrem i oceną w kolorach |
 | **Wskazówki i ostrzeżenia** | Ostrzeżenia kontekstowe (zakłócenie GPS przy wysokim Kp, wzmożony ruch lotniczy, uzasadnienie no-fly) |
@@ -70,6 +71,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Geostrefy 🇫🇷** zbiór danych ED-269 | francuskie strefy UAS (`data/uas-zones-fr.json`) | via `zones-fr.js` |
 | **Geostrefy 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | austriackie strefy UAS, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
 | **Geostrefy 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | szwajcarskie strefy UAS `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
+| **Geostrefy 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) | hiszpańskie strefy UAS `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) | ✅ |
 
 ---
 
@@ -78,32 +80,32 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 ```
 skycheck.html               ← cała aplikacja (HTML + CSS + JS, ~5,2k linii)
 manifest.json               ← manifest Web App PWA
-sw.js                       ← Service Worker (cache)
-icon-192x192.png            ← ikona aplikacji (mała)
-icon-512x512.png            ← ikona aplikacji (duża)
-skycheck-icon.svg           ← ikona źródłowa (wektorowa)
-netlify.toml                ← konfiguracja Netlify (włączane pliki bundle'a funkcji + przepisywanie URL roota)
+sw.js                       ← service worker (caching)
+icon-192x192.png            ← app icon (small)
+icon-512x512.png            ← app icon (large)
+skycheck-icon.svg           ← source icon (vector)
+netlify.toml                ← Netlify config (function bundle includes + root URL rewrite)
 netlify/
   functions/
-    awc.js                  ← proxy NOAA AWC dla METAR/TAF (obejście CORS)
-    gfz.js                  ← proxy GFZ Potsdam dla Kp/Hp30
-    zones-fr.js             ← strefy UAS Francji (czyta data/uas-zones-fr.json, filtrowane bbox)
-    zones-at.js             ← strefy UAS Austrii (czyta data/uas-zones-at.json; ?all=1 = pełna nakładka)
+    awc.js                  ← NOAA AWC proxy for METAR/TAF (CORS workaround)
+    gfz.js                  ← GFZ Potsdam proxy for Kp-index/Hp30
+    zones-fr.js             ← France UAS zones (reads data/uas-zones-fr.json, bbox-filtered)
+    zones-at.js             ← Austria UAS zones (reads data/uas-zones-at.json; ?all=1 = full overlay)
 data/
-  uas-zones-fr.json         ← strefy UAS Francji ED-269 (miesięczny snapshot, wymienialny)
-  uas-zones-at.json         ← strefy UAS Austrii ED-269 (286 stref, auto-aktualizowane)
-  uas-zones-at.version      ← znacznik ostatnio zaimportowanej wersji Austro Control (idempotencja)
+  uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
+  uas-zones-at.json         ← ED-269 Austria UAS zones (286 zones, auto-updated)
+  uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
 .github/
   workflows/
-    update-at-zones.yml     ← miesięczne zadanie: pobierz najnowszy Austro Control ED-269 → commituj plik danych
-redirect.html               ← opcjonalna strona przekierowania
+    update-at-zones.yml     ← monthly job: fetch newest Austro Control ED-269 → commit data file
+redirect.html               ← optional redirect page
 ```
 
 > 🇨🇭 **CH nie potrzebuje żadnego z powyższych** — nakładka mapowa to warstwa WMS geo.admin.ch, a szczegóły stref pochodzą z REST API Identify geo.admin.ch; obie wywoływane bezpośrednio z przeglądarki (CORS-open). Żadnej funkcji Netlify, żadnego hostowanego pliku danych, żadnego workflow aktualizacji.
 
 ### Wsparcie wielokrajowe (od v0.73)
 
-SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF, indeks Kp i geokodowanie są globalne i używane bez zmian w każdym wariancie.
+SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch|es`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF i indeks Kp są globalne; **język interfejsu, punkt orientacyjny wskazówki wyszukiwania oraz bounding box geokodowania** są ustawiane per kraj.
 
 | Kraj | Źródło geostref | Nakładka | Lista szczegółów / status | Dane i aktualizacje |
 |---|---|---|---|---|
@@ -111,8 +113,23 @@ SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kra
 | 🇫🇷 **FR** | zbiór danych ED-269 | poligony/okręgi po stronie klienta | `zones-fr.js` (filtr bbox) | `data/uas-zones-fr.json` (~3,6k stref, wymienialny) |
 | 🇦🇹 **AT** | Austro Control ED-269 | wszystkie strefy rysowane po stronie klienta (286) | `zones-at.js` (filtr bbox) | `data/uas-zones-at.json` — **auto-aktualizowane co miesiąc** przez GitHub Actions (`update-at-zones.yml`) |
 | 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | kafelki WMS | REST API **Identify** geo.admin.ch | serwis live (CORS-open) — **bez funkcji, bez pliku, bez workflow** |
+| 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | kafelki WMS | REST API **Identify** ArcGIS | serwis live (CORS-open) — **bez funkcji, bez pliku, bez workflow** |
 
-Dwa style integracji: **WMS + zapytanie punktowe** (DE, CH — oficjalne serwisy live renderują cały kraj i odpowiadają na zapytania punktowe bezpośrednio) oraz **hostowany plik ED-269 + funkcja Netlify** (FR, AT — zbiór danych JSON w repozytorium, filtrowany bbox po stronie serwera; AT odświeża się samo co miesiąc).
+Dwa style integracji: **WMS + zapytanie punktowe** (DE, CH, ES — oficjalne serwisy live renderują cały kraj i odpowiadają na zapytania punktowe bezpośrednio) oraz **hostowany plik ED-269 + funkcja Netlify** (FR, AT — zbiór danych JSON w repozytorium, filtrowany bbox po stronie serwera; AT odświeża się samo co miesiąc).
+
+### Ile geostref na kraj?
+
+Liczby stref pobrane bezpośrednio ze źródła live każdego kraju (DE via DiPUL WFS ze wszystkich 31 kategorii; ES via ENAIRE ArcGIS; FR/AT ze zbiorów danych ED-269; CH z GeoJSON geo.admin.ch), znormalizowane względem powierzchni lądowej:
+
+| Kraj | Geostrefy | Powierzchnia (km²) | Strefy na 1 000 km² |
+|---|--:|--:|--:|
+| 🇩🇪 **Niemcy** | **88 635** | 357 592 | **≈ 248** |
+| 🇪🇸 Hiszpania | 15 787 | 505 990 | ≈ 31 |
+| 🇨🇭 Szwajcaria | 1 232 | 41 285 | ≈ 30 |
+| 🇫🇷 Francja | 3 642 | 551 695 | ≈ 6,6 |
+| 🇦🇹 Austria | 286 | 83 879 | ≈ 3,4 |
+
+**Niemcy zdecydowanie się wyróżniają** — około **5,6×** bezwzględna liczba następnego kraju (Hiszpania) i mniej więcej **8×** gęstość stref Hiszpanii/Szwajcarii, **37×** Francji i **73×** Austrii. Powodem jest wyjątkowo drobnoziarniste strefowanie w Niemczech: wyznaczają one strefy dla kategorii, których inne kraje w większości nie obejmują — np. **obiekty przemysłowe (24 482), nieruchomości mieszkalne (10 793), obiekty kolejowe (9 819), rezerwaty przyrody (9 012), a nawet baseny odkryte (6 600)**. (Granularność zliczania różni się między krajowymi zbiorami danych, co samo w sobie jest istotą sprawy: Niemcy obejmują strefami znacznie więcej kategorii przy znacznie drobniejszej rozdzielczości.)
 
 ### Netlify Functions (proxy CORS)
 
@@ -140,11 +157,11 @@ Pozwala to precyzyjnie skalować promień wyszukiwania między 5 m a 100 m (skal
 ## Rozwój lokalny
 
 ```bash
-# Prosty serwer HTTP (Python)
+# Simple HTTP server (Python)
 python3 -m http.server 8091
 # → http://localhost:8091/skycheck.html
 
-# Z Netlify Functions (zalecane — w przeciwnym razie brak METAR/TAF/Kp)
+# With Netlify Functions (recommended — otherwise no METAR/TAF/Kp)
 npm install -g netlify-cli
 netlify dev
 # → http://localhost:8888/skycheck.html
@@ -169,6 +186,10 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.89 | Wyszukiwanie adresów ograniczone do aktywnego kraju za pomocą filtra `countrycode` w Photon (usuwa transgranicznych sąsiadów, których przepuszczał bounding box) |
+| v0.88 | **Wyszukiwanie adresów ograniczone do kraju**: `geocode()` był na sztywno przypisany do Niemiec (`lang=de` + niemiecki bounding box) — każdy wariant krajowy zwracał wyłącznie niemieckie podpowiedzi. Teraz używane są bounding box per kraj + język interfejsu |
+| v0.87 | **Domyślne ustawienia per kraj**: placeholder wyszukiwania z punktem orientacyjnym stolicy (DE Brama Brandenburska, FR wieża Eiffla, AT katedra św. Szczepana, CH Pałac Federalny, ES Puerta del Sol) oraz domyślny język interfejsu zależny od kraju przy pierwszej wizycie |
+| v0.86 | 🇪🇸 **Hiszpania** (`skycheck-es`): nowy adapter kraju wzorowany na schemacie DE/CH — warstwa **WMS** ENAIRE servAIS dla nakładki + **ArcGIS Identify** ENAIRE dla listy szczegółów/statusu (ustrukturyzowane limity wysokości, linki prawne). CORS-open, bez funkcji/pliku/workflow |
 | v0.85 | 🇨🇭 **Szwajcaria** (`skycheck-ch`): nowy adapter kraju wzorowany na schemacie DE — warstwa **WMS** geo.admin.ch dla nakładki mapowej + REST API **Identify** geo.admin.ch dla listy szczegółów/statusu. Obie CORS-open, więc nie są potrzebne żadna funkcja Netlify, żaden hostowany plik ani workflow aktualizacji |
 | v0.84 | 🇦🇹 Nakładka mapowa AT rysuje teraz **wszystkie** austriackie strefy (nakładka na cały kraj przez `?all=1`, jak WMS DE) zamiast tylko stref przefiltrowanych punktowo w zaznaczonej lokalizacji |
 | v0.83 | 🇦🇹 **Austria** (`skycheck-at`): nowy adapter kraju. `zones-at.js` parsuje zbiór danych Austro Control ED-269; `data/uas-zones-at.json` jest **auto-aktualizowany co miesiąc** przez workflow GitHub Actions (`update-at-zones.yml`) |
@@ -207,6 +228,6 @@ SkyCheck nie śledzi ani nie zapisuje żadnych danych użytkownika. Aplikacja to
 
 ## Licencja i odpowiedzialność
 
-Niemcy, Francja, Austria i Szwajcaria · Operacje w VLOS · Brak odpowiedzialności za kompletność lub poprawność wyświetlanych danych. Korzystanie z aplikacji nie zastępuje żadnego wymaganego oficjalnego zezwolenia. SkyCheck jest **pomocą orientacyjną** — prawnie wymagane zezwolenie i ostateczne zwolnienie przestrzeni powietrznej są wydawane przez właściwe krajowe portale (np. **DFS Aviation Services** dla DE, **Austro Control Dronespace** dla AT, **skyguide** dla CH).
+Niemcy, Francja, Austria, Szwajcaria i Hiszpania · Operacje w VLOS · Brak odpowiedzialności za kompletność lub poprawność wyświetlanych danych. Korzystanie z aplikacji nie zastępuje żadnego wymaganego oficjalnego zezwolenia. SkyCheck jest **pomocą orientacyjną** — prawnie wymagane zezwolenie i ostateczne zwolnienie przestrzeni powietrznej są wydawane przez właściwe krajowe portale (np. **DFS Aviation Services** dla DE, **Austro Control Dronespace** dla AT, **skyguide** dla CH).
 
-Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch).
+Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE).
