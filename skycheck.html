@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.85';
+    const APP_VER = '0.86';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2499,6 +2499,7 @@
         if (host.includes('skycheck-fr') || host.endsWith('skycheck.fr')) return 'fr';
         if (host.includes('skycheck-at') || host.endsWith('skycheck.at')) return 'at';
         if (host.includes('skycheck-ch') || host.endsWith('skycheck.ch')) return 'ch';
+        if (host.includes('skycheck-es') || host.endsWith('skycheck.es')) return 'es';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -3134,6 +3135,7 @@
       fr: { de: 'Frankreich',  en: 'France',   fr: 'France',    es: 'Francia',  pl: 'Francja' },
       at: { de: 'Österreich',  en: 'Austria',  fr: 'Autriche',  es: 'Austria',  pl: 'Austria' },
       ch: { de: 'Schweiz',     en: 'Switzerland', fr: 'Suisse', es: 'Suiza',    pl: 'Szwajcaria' },
+      es: { de: 'Spanien',     en: 'Spain',       fr: 'Espagne', es: 'España',  pl: 'Hiszpania' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -3239,6 +3241,11 @@
     const GEOADMIN_WMS_URL = 'https://wms.geo.admin.ch/';
     const GEOADMIN_IDENTIFY_URL = 'https://api3.geo.admin.ch/rest/services/all/MapServer/identify';
     const CH_ZONE_LAYER = 'ch.bazl.einschraenkungen-drohnen';
+    // Spanien: ENAIRE servAIS (ArcGIS MapServer). WMS-Kachel-Layer fürs Overlay + ArcGIS-
+    // Identify für die Punkt-Detailliste — beide CORS-offen (reflektiert), kein Proxy nötig.
+    const ENAIRE_WMS_URL = 'https://servais.enaire.es/insignia/services/NSF_SRV/SRV_UAS_ZG_V0/MapServer/WMSServer';
+    const ENAIRE_IDENTIFY_URL = 'https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V0/MapServer/identify';
+    const ES_WMS_LAYERS = '0,1,2';   // Infra / Urbano / Aero
 
     /* [J-STATE] =========================================================
        STATE
@@ -4256,9 +4263,68 @@
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
       if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
+      if (COUNTRY === 'es') return fetchZonesES(lat, lon, radiusM);
       if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
       if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
       return fetchZonesDE(lat, lon, radiusM);
+    }
+
+    /* [J-API-ENAIRE] ====================================================
+       Spanien: ENAIRE servAIS ArcGIS-Identify (Punktabfrage für Detailliste/Status).
+       Karten-Overlay liefert der WMS-Layer (wie DE/CH), daher keine Geometrie hier.
+       ED-318-Schema; Höhen strukturiert (lower/upper + Reference + uom).
+    ================================================================ */
+    function _esZoneColor(t) {
+      const b = (t || '').toUpperCase();
+      if (b.startsWith('PROHIBITED')) return '#ef4444';
+      if (b.startsWith('REQ_AUTHORI')) return '#f59e0b';   // AUTHORISATION / AUTHORIZATION
+      if (b.startsWith('CONDITIONAL')) return '#f97316';
+      if (b.startsWith('NO_RESTRICTION')) return '#22c55e';
+      return '#64748b';
+    }
+    function _esAlt(v, ref, uom) {
+      if (v == null || v === '' || v === 'Nulo') return '—';
+      const n = parseFloat(v);
+      if (!isFinite(n)) return '—';
+      if (n === 0 && (ref === 'AGL' || ref === 'SFC')) return 'GND';
+      const unit = (uom === 'FT') ? 'ft' : 'm';
+      return `${Math.round(n)} ${unit} ${ref || ''}`.trim();
+    }
+    const _stripHtml = s => String(s == null ? '' : s).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const _esVal = v => (v == null || v === 'Nulo') ? '' : String(v);
+    async function fetchZonesES(lat, lon, radiusM = 100) {
+      try {
+        const δ = Math.max(0.0015, radiusM / 111320);
+        const env = `${(lon - δ).toFixed(6)},${(lat - δ).toFixed(6)},${(lon + δ).toFixed(6)},${(lat + δ).toFixed(6)}`;
+        const url = `${ENAIRE_IDENTIFY_URL}?geometry=${env}&geometryType=esriGeometryEnvelope&sr=4326`
+          + `&layers=all&tolerance=0&mapExtent=${env}&imageDisplay=100,100,96&returnGeometry=false&f=json`;
+        const r = await fetch(url);
+        if (!r.ok) return [];
+        const d = await r.json();
+        const seen = new Set(), out = [];
+        for (const res of (d.results || [])) {
+          const a = res.attributes || {};
+          const ident = _esVal(a.identifier);
+          const name = _esVal(a.name) || ident || '—';
+          const key = name + '|' + _esVal(a.type) + '|' + ident;
+          if (seen.has(key)) continue; seen.add(key);
+          out.push({
+            name,
+            type: _esVal(a.type) || 'UAS_ZONE',
+            lower: _esAlt(a.lower, a.lowerReference, a.uom),
+            upper: _esAlt(a.upper, a.upperReference, a.uom),
+            legal: _esVal(a.name_authority) || _esVal(a.provider) || _esVal(a.originator) || '—',
+            legalUrl: _esVal(a.siteURL),
+            desc: _stripHtml(_esVal(a.message) || _esVal(a.description)),
+            color: _esZoneColor(a.type),
+            geometry: [],   // WMS rendert die Karte; keine Client-Geometrie nötig
+          });
+        }
+        return out;
+      } catch (e) {
+        console.warn('Zones ES fetch error', e);
+        return [];
+      }
     }
 
     /* [J-API-GEOADMIN] ===================================================
@@ -4364,7 +4430,7 @@
     // Karten-Overlay aktualisieren: AT zeigt alle Zonen flächig (einmal gezeichnet, bleibt),
     // DE nutzt WMS (kein LayerGroup), FR/übrige zeichnen die punktbasierten Zonen.
     function updateZoneOverlay(pointZones) {
-      if (COUNTRY === 'de' || COUNTRY === 'ch') return; // WMS-Kachel-Layer rendert selbst
+      if (COUNTRY === 'de' || COUNTRY === 'ch' || COUNTRY === 'es') return; // WMS-Kachel-Layer rendert selbst
       if (COUNTRY === 'at') {
         if (S.layers.dipul && S.layers.dipul.getLayers && S.layers.dipul.getLayers().length === 0)
           drawAllZonesAT(S.layers.dipul);
@@ -5308,6 +5374,15 @@
             opacity: 0.6,
             attribution: '© BAZL / geo.admin.ch',
           });
+        } else if (COUNTRY === 'es') {
+          S.layers.dipul = L.tileLayer.wms(ENAIRE_WMS_URL, {
+            layers: ES_WMS_LAYERS,
+            format: 'image/png',
+            transparent: true,
+            version: '1.3.0',
+            opacity: 0.55,
+            attribution: '© ENAIRE',
+          });
         } else {
           // FR & AT: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
           S.layers.dipul = L.layerGroup();
@@ -5317,7 +5392,7 @@
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
         if (COUNTRY === 'at') {
           drawAllZonesAT(S.layers.dipul);   // AT: alle Zonen flächig zeichnen
-        } else if (COUNTRY !== 'de' && COUNTRY !== 'ch' && Array.isArray(lastZones) && lastZones.length > 0) {
+        } else if (COUNTRY !== 'de' && COUNTRY !== 'ch' && COUNTRY !== 'es' && Array.isArray(lastZones) && lastZones.length > 0) {
           drawZoneOverlay(lastZones, S.layers.dipul);
         }
 
