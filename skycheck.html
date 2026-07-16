@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.84';
+    const APP_VER = '0.85';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2498,6 +2498,7 @@
         const host = (location.hostname || '').toLowerCase();
         if (host.includes('skycheck-fr') || host.endsWith('skycheck.fr')) return 'fr';
         if (host.includes('skycheck-at') || host.endsWith('skycheck.at')) return 'at';
+        if (host.includes('skycheck-ch') || host.endsWith('skycheck.ch')) return 'ch';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -3132,6 +3133,7 @@
       de: { de: 'Deutschland', en: 'Germany',  fr: 'Allemagne', es: 'Alemania', pl: 'Niemcy'  },
       fr: { de: 'Frankreich',  en: 'France',   fr: 'France',    es: 'Francia',  pl: 'Francja' },
       at: { de: 'Österreich',  en: 'Austria',  fr: 'Autriche',  es: 'Austria',  pl: 'Austria' },
+      ch: { de: 'Schweiz',     en: 'Switzerland', fr: 'Suisse', es: 'Suiza',    pl: 'Szwajcaria' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -3232,6 +3234,11 @@
     const KP_URL = 'https://kp.gfz.de/app/json/';
     const ADSB_URL = 'https://api.airplanes.live/v2/point';
     const PHOTON_URL = 'https://photon.komoot.io';
+    // Schweiz: geo.admin.ch (BGDI). WMS-Kachel-Layer fürs Overlay + Identify-REST-API
+    // für die Punkt-Detailliste — beide CORS-offen, kein Proxy/Datei/Workflow nötig.
+    const GEOADMIN_WMS_URL = 'https://wms.geo.admin.ch/';
+    const GEOADMIN_IDENTIFY_URL = 'https://api3.geo.admin.ch/rest/services/all/MapServer/identify';
+    const CH_ZONE_LAYER = 'ch.bazl.einschraenkungen-drohnen';
 
     /* [J-STATE] =========================================================
        STATE
@@ -3364,7 +3371,7 @@
 
       if (layerChanged) {
         CFG.layerMode = selectedMode;
-        if (S.layers.dipul && typeof S.layers.dipul.setParams === 'function') S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+        if (COUNTRY === 'de' && S.layers.dipul && typeof S.layers.dipul.setParams === 'function') S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
         document.querySelectorAll('.zone-btn').forEach(b =>
           b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
         );
@@ -4248,9 +4255,67 @@
             monatliches Auto-Update via .github/workflows/update-at-zones.yml)
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
+      if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
       if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
       if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
       return fetchZonesDE(lat, lon, radiusM);
+    }
+
+    /* [J-API-GEOADMIN] ===================================================
+       Schweiz: geo.admin.ch Identify-REST-API (Punktabfrage für Detailliste/Status).
+       Das flächige Karten-Overlay liefert der WMS-Layer (wie DE), daher keine Geometrie hier.
+    ================================================================ */
+    function _chZoneColor(rid) {
+      switch ((rid || '').split('.')[0]) {
+        case 'PROHIBITED':        return '#ef4444';
+        case 'REQ_AUTHORISATION': return '#f59e0b';
+        case 'CONDITIONAL':       return '#f97316';
+        case 'NO_RESTRICTION':    return '#22c55e';
+        default:                  return '#64748b';
+      }
+    }
+    function _chAlt(v, ref) {
+      if (v == null || v === '' || v === 'None') return '—';
+      const n = parseFloat(v);
+      if (!isFinite(n)) return '—';
+      if (n === 0 && (ref === 'AGL' || ref === 'SFC')) return 'GND';
+      return `${Math.round(n)} m ${ref || ''}`.trim();
+    }
+    async function fetchZonesCH(lat, lon, radiusM = 100) {
+      try {
+        const δ = Math.max(0.0015, radiusM / 111320);
+        const env = `${(lon - δ).toFixed(6)},${(lat - δ).toFixed(6)},${(lon + δ).toFixed(6)},${(lat + δ).toFixed(6)}`;
+        const L = ({ de: 'de', fr: 'fr', en: 'en' })[LANG] || 'en';   // CH-Daten: de/fr/it/en
+        const first = v => Array.isArray(v) ? (v[0] || '') : (v || '');
+        const url = `${GEOADMIN_IDENTIFY_URL}?geometry=${env}&geometryType=esriGeometryEnvelope&sr=4326`
+          + `&layers=all:${CH_ZONE_LAYER}&tolerance=0&mapExtent=${env}&imageDisplay=100,100,96&returnGeometry=false&lang=${L}`;
+        const r = await fetch(url);
+        if (!r.ok) return [];
+        const d = await r.json();
+        const seen = new Set(), out = [];
+        for (const res of (d.results || [])) {
+          const a = res.attributes || {};
+          const rid = a.zone_restriction_id || '';
+          const name = a['zone_name_' + L] || a.zone_name_de || a.zone_name_en || '—';
+          const key = name + '|' + rid;
+          if (seen.has(key)) continue; seen.add(key);
+          out.push({
+            name,
+            type: rid || 'UAS_ZONE',
+            lower: _chAlt(a.air_vol_lower_limit, a.air_vol_lower_vref),
+            upper: _chAlt(a.air_vol_upper_limit, a.air_vol_upper_vref),
+            legal: first(a['auth_name_' + L]) || first(a.auth_name_de) || '—',
+            legalUrl: first(a['auth_url_' + L]) || first(a.auth_url_de) || '',
+            desc: a['zone_restriction_' + L] || a['zone_message_' + L] || '',
+            color: _chZoneColor(rid),
+            geometry: [],   // WMS rendert die Karte; keine Client-Geometrie nötig
+          });
+        }
+        return out;
+      } catch (e) {
+        console.warn('Zones CH fetch error', e);
+        return [];
+      }
     }
 
     async function fetchZonesFR(lat, lon, radiusM = 100) {
@@ -4299,7 +4364,7 @@
     // Karten-Overlay aktualisieren: AT zeigt alle Zonen flächig (einmal gezeichnet, bleibt),
     // DE nutzt WMS (kein LayerGroup), FR/übrige zeichnen die punktbasierten Zonen.
     function updateZoneOverlay(pointZones) {
-      if (COUNTRY === 'de') return; // WMS-Kachel-Layer rendert selbst
+      if (COUNTRY === 'de' || COUNTRY === 'ch') return; // WMS-Kachel-Layer rendert selbst
       if (COUNTRY === 'at') {
         if (S.layers.dipul && S.layers.dipul.getLayers && S.layers.dipul.getLayers().length === 0)
           drawAllZonesAT(S.layers.dipul);
@@ -5223,7 +5288,8 @@
           subdomains: _ms0.s || 'abc', maxZoom: 19,
         }).addTo(S.map);
 
-        // Zonen-Overlay: DE = WMS-Tiles (DiPUL), FR = Client-Side Polygone/Kreise aus JSON
+        // Zonen-Overlay: DE = WMS-Tiles (DiPUL), CH = WMS-Tiles (geo.admin.ch),
+        // FR/AT = Client-Side Polygone/Kreise aus JSON
         if (COUNTRY === 'de') {
           S.layers.dipul = L.tileLayer.wms(DIPUL_WMS_URL, {
             layers: getActiveDipulLayers(),
@@ -5233,8 +5299,17 @@
             opacity: 0.55,
             attribution: 'DiPUL / DFS',
           });
+        } else if (COUNTRY === 'ch') {
+          S.layers.dipul = L.tileLayer.wms(GEOADMIN_WMS_URL, {
+            layers: CH_ZONE_LAYER,
+            format: 'image/png',
+            transparent: true,
+            version: '1.3.0',
+            opacity: 0.6,
+            attribution: '© BAZL / geo.admin.ch',
+          });
         } else {
-          // FR & andere: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
+          // FR & AT: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
           S.layers.dipul = L.layerGroup();
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
@@ -5242,7 +5317,7 @@
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
         if (COUNTRY === 'at') {
           drawAllZonesAT(S.layers.dipul);   // AT: alle Zonen flächig zeichnen
-        } else if (COUNTRY !== 'de' && Array.isArray(lastZones) && lastZones.length > 0) {
+        } else if (COUNTRY !== 'de' && COUNTRY !== 'ch' && Array.isArray(lastZones) && lastZones.length > 0) {
           drawZoneOverlay(lastZones, S.layers.dipul);
         }
 
