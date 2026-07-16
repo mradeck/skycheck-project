@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.86';
+    const APP_VER = '0.87';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3127,7 +3127,22 @@
         metarCeilingMsg: (icao, ceil) => `METAR ${icao}: Pułap ${ceil}`,
       }
     };
-    let LANG = localStorage.getItem('skycheck-lang') || 'de';
+    // Standard-UI-Sprache pro Land (nur beim Erstbesuch; eine gespeicherte Wahl hat Vorrang).
+    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es' };
+    // Adressvorschlag: bekanntes Wahrzeichen der jeweiligen Hauptstadt (sprachneutrale Eigennamen).
+    const COUNTRY_LANDMARK = {
+      de: 'Brandenburger Tor, Berlin',
+      fr: 'Tour Eiffel, Paris',
+      at: 'Stephansdom, Wien',
+      ch: 'Bundeshaus, Bern',
+      es: 'Puerta del Sol, Madrid',
+    };
+    // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
+    const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
+    function searchPlaceholder() {
+      return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
+    }
+    let LANG = localStorage.getItem('skycheck-lang') || COUNTRY_DEFAULT_LANG[COUNTRY] || 'de';
     // Landesnamen pro UI-Sprache × Country (nominativ). Wird in i18n-Strings via {country} eingesetzt.
     // Erweiterbar: pro neuem Land eine neue Zeile, pro neuer UI-Sprache eine neue Spalte.
     const COUNTRY_NAMES = {
@@ -3162,6 +3177,9 @@
         const v = _t(el.getAttribute('data-i18n-placeholder'));
         if (typeof v === 'string') el.placeholder = v;
       });
+      // Suchfeld-Platzhalter länderabhängig: Hauptstadt-Wahrzeichen + sprachliches „z. B."-Präfix
+      const _li = document.getElementById('loc-input');
+      if (_li) _li.placeholder = searchPlaceholder();
       document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const v = _t(el.getAttribute('data-i18n-title'));
         if (typeof v === 'string') el.title = v;
