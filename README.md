@@ -2,13 +2,24 @@
 
 ---
 
-# SkyCheck — Drone Flight Check for Germany
+# SkyCheck — Drone Flight Check (DE · FR · AT · CH)
 
-**SkyCheck** is a free single-page web app for quickly pre-checking drone flights in Germany. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
+**SkyCheck** is a free single-page web app for quickly pre-checking drone flights. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
 
-🌐 **Live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
+Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere; only the **geo-zone source** is country-specific and selected automatically from the hostname.
 
-📦 **Current version:** v0.76
+## 🌐 Live sites
+
+| Country | Live app | Geo-zone source |
+|---|---|---|
+| 🇩🇪 **Germany** | [skycheck-de.netlify.app](https://skycheck-de.netlify.app/) | DiPUL WMS — `uas-betrieb.de` |
+| 🇫🇷 **France** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | ED-269 dataset (French UAS zones) |
+| 🇦🇹 **Austria** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — auto-updated monthly |
+| 🇨🇭 **Switzerland** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
+
+> All four are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch`. Default: `de`.
+
+📦 **Current version:** v0.85
 
 ---
 
@@ -23,7 +34,7 @@
 | **Kp-index** | Current Kp from NOAA + GFZ Potsdam Hp30 bar chart (last 4 × 30 min + forecast) |
 | **Air traffic** | ADS-B real-time flight movements in the surroundings with altitude colours and radar icons (Airplanes.live) |
 | **Aircraft alarm view** | Full-screen map with audible aircraft alarm: announces approaching aircraft within an adjustable radius |
-| **Airspace map** | DiPUL WMS zones (uas-betrieb.de) including no-fly zones, control zones, nature reserves; search radius switchable between 5 m and 100 m |
+| **Airspace map** | Country-specific drone geo-zones (DE: DiPUL · FR/AT: ED-269 · CH: BAZL/geo.admin.ch) — no-fly zones, control zones, nature reserves; search radius switchable between 5 m and 100 m |
 | **48 h forecast** | Hourly weather forecast over 2 days (scrollable, drone-flight light per hour) |
 | **5-day overview** | Daily overview with min/max temperature, wind and traffic-light rating |
 | **Hints & warnings** | Contextual warnings (GPS interference at high Kp, increased air traffic, no-fly reasoning) |
@@ -50,9 +61,12 @@
 | [GFZ Potsdam](https://kp.gfz.de/) | Kp-index, Hp30 (30-min resolution) | ❌ → Netlify Function `gfz.js` |
 | [NOAA SWPC](https://www.swpc.noaa.gov/) | Kp-index fallback | ✅ |
 | [Airplanes.live](https://airplanes.live/) | ADS-B flight movements | ✅ |
-| [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Drone airspace zones WMS | ✅ |
 | [Photon (Komoot)](https://photon.komoot.io/) | Geocoding / location search | ✅ |
 | [Windy.com](https://www.windy.com/) | External link for detailed cloud view | — |
+| **Geo-zones 🇩🇪** [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Drone airspace zones (WMS + GetFeatureInfo) | ✅ |
+| **Geo-zones 🇫🇷** ED-269 dataset | French UAS zones (`data/uas-zones-fr.json`) | via `zones-fr.js` |
+| **Geo-zones 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | Austrian UAS zones, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
+| **Geo-zones 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | Swiss UAS zones `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
 
 ---
 
@@ -71,22 +85,31 @@ netlify/
     awc.js                  ← NOAA AWC proxy for METAR/TAF (CORS workaround)
     gfz.js                  ← GFZ Potsdam proxy for Kp-index/Hp30
     zones-fr.js             ← France UAS zones (reads data/uas-zones-fr.json, bbox-filtered)
+    zones-at.js             ← Austria UAS zones (reads data/uas-zones-at.json; ?all=1 = full overlay)
 data/
   uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
+  uas-zones-at.json         ← ED-269 Austria UAS zones (286 zones, auto-updated)
+  uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
+.github/
+  workflows/
+    update-at-zones.yml     ← monthly job: fetch newest Austro Control ED-269 → commit data file
 redirect.html               ← optional redirect page
 ```
 
+> 🇨🇭 **CH needs none of the above** — the map overlay is the geo.admin.ch WMS layer and the zone detail comes from the geo.admin.ch Identify REST API, both called directly from the browser (CORS-open). No Netlify function, no hosted data file, no update workflow.
+
 ### Multi-country support (since v0.73)
 
-SkyCheck uses an **adapter pattern** for country-specific data sources. Country is detected from the URL parameter `?country=fr` or the hostname (e.g. `skycheck-fr.netlify.app`). Default: `de`.
+SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch`. Default: `de`. Weather, ADS-B, METAR/TAF, Kp-index and geocoding are global and used as-is in every variant.
 
-| Country | Geo-zones source | Status |
-|---|---|---|
-| **DE** (default) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | live |
-| **FR** | Netlify function `zones-fr.js` + monthly ED-269 JSON file | live |
-| (others) | placeholder — adapter ready for further providers | — |
+| Country | Geo-zone source | Overlay | Detail list / status | Data & updates |
+|---|---|---|---|---|
+| 🇩🇪 **DE** (default) | DiPUL WMS (`uas-betrieb.de`) | WMS tiles | WMS GetFeatureInfo | live service (official, always current) |
+| 🇫🇷 **FR** | ED-269 dataset | client-side polygons/circles | `zones-fr.js` (bbox filter) | `data/uas-zones-fr.json` (~3.6k zones, replaceable) |
+| 🇦🇹 **AT** | Austro Control ED-269 | all zones drawn client-side (286) | `zones-at.js` (bbox filter) | `data/uas-zones-at.json` — **auto-updated monthly** via GitHub Actions (`update-at-zones.yml`) |
+| 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | WMS tiles | geo.admin.ch **Identify** REST API | live service (CORS-open) — **no function, no file, no workflow** |
 
-Weather, ADS-B, METAR/TAF, Kp-index and geocoding are global and used as-is in every country variant.
+Two integration styles: **WMS + point query** (DE, CH — official live services render the whole country and answer point queries directly) and **hosted ED-269 file + Netlify function** (FR, AT — a JSON dataset in the repo, bbox-filtered server-side; AT refreshes itself monthly).
 
 ### Netlify Functions (CORS proxies)
 
@@ -143,6 +166,10 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.85 | 🇨🇭 **Switzerland** (`skycheck-ch`): new country adapter using the DE pattern — geo.admin.ch **WMS** layer for the map overlay + geo.admin.ch **Identify** REST API for the detail list/status. Both CORS-open, so no Netlify function, no hosted file and no update workflow are needed |
+| v0.84 | 🇦🇹 AT map overlay now draws **all** Austrian zones (full-country overlay via `?all=1`, like the DE WMS) instead of only the point-filtered zones at the marked location |
+| v0.83 | 🇦🇹 **Austria** (`skycheck-at`): new country adapter. `zones-at.js` parses the Austro Control ED-269 dataset; `data/uas-zones-at.json` is **auto-updated monthly** by a GitHub Actions workflow (`update-at-zones.yml`) |
+| v0.78–v0.82 | Security & quality pass (XSS escaping + CSP, METAR visibility unit fix, 5-language completeness, alarm-defect fixes, ice/fog/visibility in the live view) — see `docs/code-review-2026-07-16.md` |
 | v0.76 | Fix race condition: FR zone overlay polygons / circles now appear on first map render (previously they only showed up after a double-click that re-fetched). The `drawZoneOverlay` call ran before the map was created; now a re-draw triggers after map init using the cached `lastZones` |
 | v0.75 | Country-name i18n: landing-page badge and footer show the active country name in the chosen UI language (e.g. FR domain + ES UI → "Verificación de vuelo de dron · Francia"). New `COUNTRY_NAMES` lookup table, `_country()` helper, `{country}` placeholder interpolated by `_t()`. `fltcatDisclaimer` decountryfied (EU-wide rule, no country mention needed) |
 | v0.74 | FR map overlay: geo-zones in FR mode are now drawn as Leaflet polygons / circles on the map (in addition to the list). `zones-fr.js` returns geometry; `drawZoneOverlay()` renders client-side. Zone toggle remains compatible |
@@ -177,6 +204,6 @@ SkyCheck does not track or store any user data. The app is purely a web applicat
 
 ## Licence & liability
 
-For Germany only · Operation in VLOS · No liability for completeness or accuracy of the displayed data. Using the app does not replace any required official authorisation. SkyCheck is an **orientation aid** — the legally required authorisation and final airspace clearance are issued via the **DFS Aviation Services app** and other approved portals.
+Germany, France, Austria & Switzerland · Operation in VLOS · No liability for completeness or accuracy of the displayed data. Using the app does not replace any required official authorisation. SkyCheck is an **orientation aid** — the legally required authorisation and final airspace clearance are issued via the competent national portals (e.g. **DFS Aviation Services** for DE, **Austro Control Dronespace** for AT, **skyguide** for CH).
 
-Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL).
+Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch).
