@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.87';
+    const APP_VER = '0.88';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3139,6 +3139,17 @@
     };
     // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
     const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
+    // Geocoding-Bounding-Box pro Land (Photon), damit Adressvorschläge zum Land passen
+    // (minLon,minLat,maxLon,maxLat). ES großzügig inkl. Balearen + Kanaren.
+    const COUNTRY_BBOX = {
+      de: '5.5,47.2,15.5,55.1',
+      fr: '-5.5,41.0,10.0,51.5',
+      at: '9.4,46.3,17.2,49.1',
+      ch: '5.8,45.7,10.6,47.9',
+      es: '-18.3,27.5,4.5,44.0',
+    };
+    // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
+    const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -3416,8 +3427,9 @@
        GEOCODING / AUTOCOMPLETE
     ================================================================ */
     async function geocode(q) {
-      const url = `${PHOTON_URL}/api/?q=${encodeURIComponent(q)}&lang=de&limit=5`
-        + `&bbox=5.5,47.2,15.5,55.1`;
+      const bbox = COUNTRY_BBOX[COUNTRY] || COUNTRY_BBOX.de;
+      const url = `${PHOTON_URL}/api/?q=${encodeURIComponent(q)}&lang=${_photonLang()}&limit=5`
+        + `&bbox=${bbox}`;
       const d = await (await fetch(url)).json();
       return (d.features || []).map(f => ({
         lat: f.geometry.coordinates[1],
@@ -3428,7 +3440,7 @@
     }
 
     async function reverseGeocode(lat, lon) {
-      const url = `${PHOTON_URL}/reverse?lat=${lat}&lon=${lon}&lang=de`;
+      const url = `${PHOTON_URL}/reverse?lat=${lat}&lon=${lon}&lang=${_photonLang()}`;
       const d = await (await fetch(url)).json();
       const p = d.features?.[0]?.properties || {};
       return [p.street || p.name, p.city || p.town || p.village, p.state]
