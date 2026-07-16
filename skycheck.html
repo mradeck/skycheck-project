@@ -2485,17 +2485,19 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.82';
+    const APP_VER = '0.83';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
-    // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
-    // Default: 'de'. Nur Geozonen-Provider unterscheidet sich aktuell; Wetter/ADS-B/Kp/METAR global.
+    // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
+    // (bzw. "skycheck.fr"/"skycheck.at"). Default: 'de'. Nur der Geozonen-Provider
+    // unterscheidet sich; Wetter/ADS-B/Kp/METAR sind global.
     const COUNTRY = (() => {
       try {
         const p = new URLSearchParams(location.search).get('country');
         if (p && /^[a-z]{2}$/i.test(p)) return p.toLowerCase();
         const host = (location.hostname || '').toLowerCase();
         if (host.includes('skycheck-fr') || host.endsWith('skycheck.fr')) return 'fr';
+        if (host.includes('skycheck-at') || host.endsWith('skycheck.at')) return 'at';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -3129,6 +3131,7 @@
     const COUNTRY_NAMES = {
       de: { de: 'Deutschland', en: 'Germany',  fr: 'Allemagne', es: 'Alemania', pl: 'Niemcy'  },
       fr: { de: 'Frankreich',  en: 'France',   fr: 'France',    es: 'Francia',  pl: 'Francja' },
+      at: { de: 'Österreich',  en: 'Austria',  fr: 'Autriche',  es: 'Austria',  pl: 'Austria' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -4241,9 +4244,13 @@
        Geozonen-Dispatcher (Country-Adapter, seit v0.73)
        DE → DiPUL WMS GetFeatureInfo (uas-betrieb.de)
        FR → Netlify-Function zones-fr (data/uas-zones-fr.json, ED-269)
+       AT → Netlify-Function zones-at (data/uas-zones-at.json, Austro Control ED-269;
+            monatliches Auto-Update via .github/workflows/update-at-zones.yml)
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
-      return COUNTRY === 'fr' ? fetchZonesFR(lat, lon, radiusM) : fetchZonesDE(lat, lon, radiusM);
+      if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
+      if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
+      return fetchZonesDE(lat, lon, radiusM);
     }
 
     async function fetchZonesFR(lat, lon, radiusM = 100) {
@@ -4254,6 +4261,20 @@
         return Array.isArray(data.zones) ? data.zones : [];
       } catch (e) {
         console.warn('Zones FR fetch error', e);
+        return [];
+      }
+    }
+
+    // Österreich: Austro Control ED-269 via Netlify-Function zones-at (data/uas-zones-at.json).
+    // lang wird mitgegeben, damit die Detailbeschreibung (localizedMessages) in der UI-Sprache kommt.
+    async function fetchZonesAT(lat, lon, radiusM = 100) {
+      try {
+        const r = await fetch(`/.netlify/functions/zones-at?lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
+        if (!r.ok) return [];
+        const data = await r.json();
+        return Array.isArray(data.zones) ? data.zones : [];
+      } catch (e) {
+        console.warn('Zones AT fetch error', e);
         return [];
       }
     }
@@ -4995,10 +5016,11 @@
           <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${escapeHtml(z.lower)}</span></div>
           <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${escapeHtml(z.upper)}</span></div>
           <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">
-            <a href="${encodeURI(getLegalLink(z.legal))}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">
+            <a href="${encodeURI(z.legalUrl || getLegalLink(z.legal))}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">
               ${escapeHtml(z.legal)}${z.type !== '—' && z.legal !== '—' ? ' – ' + escapeHtml(z.type) : ''}
             </a>
           </span></div>
+          ${z.desc ? `<div class="z-row"><span class="z-lbl">Info</span><span class="z-val">${escapeHtml(z.desc)}</span></div>` : ''}
         </div>
       </div>`).join('');
     }

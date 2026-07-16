@@ -1,0 +1,95 @@
+name: Update Austria UAS zones
+
+# Holt monatlich den neuesten Austro-Control-ED-269-Datensatz von austrocontrol.at,
+# entpackt die JSON und committet sie nach data/uas-zones-at.json — nur wenn sich der
+# Release geändert hat (idempotent). Netlify deployt anschließend automatisch.
+# Manuell auslösbar über den "Run workflow"-Button (workflow_dispatch).
+
+on:
+  schedule:
+    - cron: '0 4 1 * *'   # jeden 1. des Monats, 04:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-at-zones
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch newest Austro Control ED-269 dataset
+        id: fetch
+        run: |
+          set -euo pipefail
+          PAGE="https://www.austrocontrol.at/luftfahrtbehoerde/lizenzen__bewilligungen/drohnen/geografische_zonen"
+          BASE="https://www.austrocontrol.at"
+          UA="Mozilla/5.0 (compatible; SkyCheck-Zones-Updater/1.0; +https://github.com/${GITHUB_REPOSITORY})"
+
+          # 1) Neuesten Produktions-Release-Pfad ermitteln (Test-Varianten ausschließen)
+          html=$(curl -sSL -A "$UA" "$PAGE")
+          newest_path=$(printf '%s' "$html" \
+            | grep -oE "/jart/[^\"' ]*UASZones-ACG-[0-9]{8}-[0-9]{6}-full-production[^\"' ]*\.(zip|json)" \
+            | grep -vi 'test' \
+            | sort \
+            | tail -1 || true)
+          if [ -z "$newest_path" ]; then echo "::error::Kein Release-Link auf der Seite gefunden"; exit 1; fi
+          newest_id=$(printf '%s' "$newest_path" | grep -oE "UASZones-ACG-[0-9]{8}-[0-9]{6}[^/]*" | sed 's/\.[^.]*$//')
+          echo "Neuester Release: $newest_id"
+          echo "Pfad: $newest_path"
+
+          # 2) Mit aktuellem Stand vergleichen (idempotent)
+          current=""
+          [ -f data/uas-zones-at.version ] && current=$(cat data/uas-zones-at.version || true)
+          if [ "$newest_id" = "$current" ]; then
+            echo "Bereits aktuell ($current) — nichts zu tun."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 3) Herunterladen und JSON extrahieren (zip → entpacken, sonst direkt)
+          tmp=$(mktemp -d)
+          curl -sSL -A "$UA" -o "$tmp/dl" "$BASE$newest_path"
+          case "$newest_path" in
+            *.zip)  unzip -o -q "$tmp/dl" -d "$tmp/x"; json=$(find "$tmp/x" -name '*.json' | head -1) ;;
+            *.json) json="$tmp/dl" ;;
+            *)      echo "::error::Unbekanntes Dateiformat"; exit 1 ;;
+          esac
+          if [ -z "${json:-}" ] || [ ! -f "$json" ]; then echo "::error::Keine JSON extrahiert"; exit 1; fi
+
+          # 4) BOM entfernen, validieren, kompakt nach data/ schreiben
+          mkdir -p data
+          python3 - "$json" <<'PY'
+          import json, sys
+          raw = open(sys.argv[1], encoding='utf-8-sig').read()
+          data = json.loads(raw)
+          n = len(data) if isinstance(data, list) else len(data.get('features', data.get('UASZoneVersion', [])))
+          if n <= 0:
+              raise SystemExit("Leerer Datensatz — Abbruch")
+          json.dump(data, open('data/uas-zones-at.json', 'w', encoding='utf-8'),
+                    ensure_ascii=False, separators=(',', ':'))
+          print("Zonen geschrieben:", n)
+          PY
+
+          printf '%s\n' "$newest_id" > data/uas-zones-at.version
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "release=$newest_id" >> "$GITHUB_OUTPUT"
+
+      - name: Commit updated dataset
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/uas-zones-at.json data/uas-zones-at.version
+          if git diff --cached --quiet; then
+            echo "Keine inhaltliche Änderung — kein Commit."
+            exit 0
+          fi
+          git commit -m "data: Austria UAS zones auto-update (${{ steps.fetch.outputs.release }})"
+          git push
