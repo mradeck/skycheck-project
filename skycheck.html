@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.81';
+    const APP_VER = '0.82';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -5122,6 +5122,32 @@
       <span class="ms-arrow" style="transform:rotate(${rot}deg);display:inline-block">↑</span>
       <span class="${wc}">${spd.toFixed(1)}&nbsp;m/s</span><span>&nbsp;${_t('msGusts')}&nbsp;</span><span class="${gc}">${gust.toFixed(0)}&nbsp;m/s</span>
     </div>`;
+      }
+
+      // Vereisung (50 m AGL), Nebel und Sichtweite — kompakt für die Live-View.
+      // Magnus-Taupunkt-Fallback + Standard-Lapse-Rate wie im Schwesterprojekt SkyAlarm.
+      if (now && now.temperature != null) {
+        let td = now.dew_point;
+        if (td == null && now.relative_humidity != null) td = calcDewPoint(now.temperature, now.relative_humidity);
+        if (td != null) {
+          const ALT = 50, T_LAPSE = 0.0065, TD_LAPSE = 0.002;
+          const t50 = +(now.temperature - T_LAPSE * ALT).toFixed(1);
+          const td50 = +(td - TD_LAPSE * ALT).toFixed(1);
+          const spread = +(t50 - td50).toFixed(1);
+          let lbl, cls;
+          if (t50 >= -20 && t50 <= 0 && spread < 1) { lbl = _t('dpCrit'); cls = 'c-nogo'; }
+          else if (t50 < 3 && spread < 2) { lbl = _t('dpFog'); cls = 'c-warn'; }
+          else { lbl = _t('dpClear'); cls = 'c-go'; }
+          html += `<div class="ms-wind"><span class="${cls}">${lbl}</span><span style="opacity:0.65">&nbsp;·&nbsp;T&nbsp;${t50.toFixed(1)}°&nbsp;·&nbsp;Δ&nbsp;${spread.toFixed(1)}°</span></div>`;
+        }
+        const vis = now.visibility;
+        if (vis != null) {
+          const visKm = vis / 1000;
+          const isFog = vis < 1000 || (now.condition || '').toLowerCase() === 'fog';
+          const vc = isFog ? 'c-nogo' : visKm < 4 ? 'c-warn' : '';
+          const visTxt = visKm < 1 ? Math.round(vis) + ' m' : visKm.toFixed(1) + ' km';
+          html += `<div class="ms-wind"><span style="opacity:0.65">${_t('metarVis')}&nbsp;</span><span class="${vc}">${visTxt}</span>${isFog ? '<span class="c-nogo">&nbsp;·&nbsp;' + _t('fogWarn') + '</span>' : ''}</div>`;
+        }
       }
 
       el.innerHTML = html;
