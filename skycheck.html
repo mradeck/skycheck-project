@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.88';
+    const APP_VER = '0.89';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3150,6 +3150,9 @@
     };
     // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
     const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
+    // ISO-Ländercode pro Land — für exakten Photon-`countrycode`-Filter (die Bbox überlappt
+    // an Grenzen leicht mit Nachbarländern; der Code entfernt diese Fremdtreffer).
+    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES' };
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -3428,10 +3431,17 @@
     ================================================================ */
     async function geocode(q) {
       const bbox = COUNTRY_BBOX[COUNTRY] || COUNTRY_BBOX.de;
-      const url = `${PHOTON_URL}/api/?q=${encodeURIComponent(q)}&lang=${_photonLang()}&limit=5`
+      const cc = COUNTRY_CC[COUNTRY];
+      const url = `${PHOTON_URL}/api/?q=${encodeURIComponent(q)}&lang=${_photonLang()}&limit=8`
         + `&bbox=${bbox}`;
       const d = await (await fetch(url)).json();
-      return (d.features || []).map(f => ({
+      let feats = d.features || [];
+      if (cc) {
+        // Exakt aufs Zielland filtern; nur wenn dadurch nichts übrig bliebe, ungefiltert lassen.
+        const inCountry = feats.filter(f => (f.properties.countrycode || '').toUpperCase() === cc);
+        if (inCountry.length) feats = inCountry;
+      }
+      return feats.slice(0, 5).map(f => ({
         lat: f.geometry.coordinates[1],
         lon: f.geometry.coordinates[0],
         display_name: [f.properties.name, f.properties.city || f.properties.town,
