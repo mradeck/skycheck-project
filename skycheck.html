@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.77';
+    const APP_VER = '0.78';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -3048,6 +3048,14 @@
       const v = (I18N[LANG] || I18N.de)[k] ?? I18N.de[k] ?? k;
       return typeof v === 'string' ? v.replace(/\{country\}/g, _country()) : v;
     }
+
+    /* HTML-Escaping für Fremddaten (ADS-B-Callsigns, Photon/OSM-Ortsnamen, METAR-Rohtext,
+       DiPUL-Zonennamen), die per innerHTML / Leaflet bindPopup / bindTooltip ins DOM gelangen.
+       OSM-Ortsnamen und Callsigns sind extern beeinflussbar → ohne Escaping ein XSS-Vektor. */
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
     function applyLang() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const v = _t(el.getAttribute('data-i18n'));
@@ -3182,8 +3190,8 @@
       const h = getHistory();
       if (!h.length) { $sugs.classList.remove('open'); return; }
       const lbl = (typeof LANG !== 'undefined') ? (HIST_LBL[LANG] || HIST_LBL.de) : HIST_LBL.de;
-      $sugs.innerHTML = `<div class="sug-hist-label">${lbl}</div>` +
-        h.map(e => `<div class="sug-item sug-hist-item" data-lat="${e.lat}" data-lon="${e.lon}" data-name="${e.name}"><span>${e.name}</span><button class="sug-hist-del" data-name="${e.name}" title="Entfernen">×</button></div>`).join('');
+      $sugs.innerHTML = `<div class="sug-hist-label">${escapeHtml(lbl)}</div>` +
+        h.map(e => { const n = escapeHtml(e.name); return `<div class="sug-item sug-hist-item" data-lat="${escapeHtml(e.lat)}" data-lon="${escapeHtml(e.lon)}" data-name="${n}"><span>${n}</span><button class="sug-hist-del" data-name="${n}" title="Entfernen">×</button></div>`; }).join('');
       $sugs.classList.add('open');
     }
 
@@ -3302,22 +3310,25 @@
         .filter(Boolean).join(', ') || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
     }
 
-    let acTimer = null;
+    let acTimer = null, acSeq = 0;
     $input.addEventListener('input', () => {
       S.lat = S.lon = null;
       clearTimeout(acTimer);
       const q = $input.value.trim();
       if (q.length < 3) { showHistory(); return; }
+      const seq = ++acSeq;                       // Sequenz-Guard gegen verspätete Antworten
       acTimer = setTimeout(async () => {
         try {
           const results = await geocode(q);
+          if (seq !== acSeq) return;             // eine neuere Eingabe hat überholt → verwerfen
           if (!results.length) { $sugs.classList.remove('open'); return; }
+          // Escaping: Photon liefert öffentlich editierbare OSM-Ortsnamen → nie roh ins DOM/Attribut.
           $sugs.innerHTML = results.slice(0, 5).map(r => {
             const parts = r.display_name.split(',');
-            const main = parts[0].trim();
-            const rest = parts.slice(1, 3).join(',').trim();
-            return `<div class="sug-item" data-lat="${r.lat}" data-lon="${r.lon}"
-                     data-name="${main}, ${rest}">
+            const main = escapeHtml(parts[0].trim());
+            const rest = escapeHtml(parts.slice(1, 3).join(',').trim());
+            return `<div class="sug-item" data-lat="${escapeHtml(r.lat)}" data-lon="${escapeHtml(r.lon)}"
+                     data-name="${main}${rest ? ', ' + rest : ''}">
                   <strong>${main}</strong>${rest ? ', ' + rest : ''}
                 </div>`;
           }).join('');
@@ -3529,9 +3540,9 @@
           className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
         });
         const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
-        const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+        const cs = escapeHtml(a.flight ? a.flight.trim() : (a.hex || '?'));
         const altM = Math.round(alt * 0.3048);
-        const info = '<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + altM + ' m (' + (a.alt_baro || '?') + ' ft) \u00b7 ' + (a.gs || '?') + ' kts';
+        const info = '<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + altM + ' m (' + escapeHtml(a.alt_baro || '?') + ' ft) \u00b7 ' + escapeHtml(a.gs || '?') + ' kts';
         m.bindPopup(info);
         if (isLow) m.bindTooltip(cs + ' ' + altM + 'm', { permanent: true, direction: 'right', className: 'av-tt-low', offset: [12, 0] });
         if (!AV.trails[hex]) AV.trails[hex] = [];
@@ -3604,7 +3615,7 @@
       el.className = 'av-lowalt show';
       const rows = lowPlanes
         .map(a => {
-          const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+          const cs = escapeHtml(a.flight ? a.flight.trim() : (a.hex || '?'));
           const alt = (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
           const altM = Math.round(alt * 0.3048);
           const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
@@ -4646,8 +4657,8 @@
       const wc = parseFloat(windMs) > 10 ? 'c-nogo' : parseFloat(windMs) > 7 ? 'c-warn' : '';
       const wgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
       let tafHtml = '';
-      if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${compact}</pre></div>`; }
-      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${nearest.name} (${nearest.icaoId}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="Flugkategorien erklaert">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${nearest.rawOb || ''}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+      if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${escapeHtml(compact)}</pre></div>`; }
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${escapeHtml(nearest.name)} (${escapeHtml(nearest.icaoId)}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="Flugkategorien erklaert">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${escapeHtml(nearest.rawOb || '')}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
     }
 
     function renderFreezingRain(w) {
@@ -4874,16 +4885,16 @@
         : zones.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
           <div style="background:${z.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
-          <div class="z-name">${z.name}</div>
+          <div class="z-name">${escapeHtml(z.name)}</div>
         </div>
-        
+
         <div class="z-details">
-          <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${z.type}</span></div>
-          <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${z.lower}</span></div>
-          <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${z.upper}</span></div>
+          <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${escapeHtml(z.type)}</span></div>
+          <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${escapeHtml(z.lower)}</span></div>
+          <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${escapeHtml(z.upper)}</span></div>
           <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">
-            <a href="${getLegalLink(z.legal)}" target="_blank" style="color:var(--accent); text-decoration:none;">
-              ${z.legal}${z.type !== '—' && z.legal !== '—' ? ' – ' + z.type : ''}
+            <a href="${encodeURI(getLegalLink(z.legal))}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">
+              ${escapeHtml(z.legal)}${z.type !== '—' && z.legal !== '—' ? ' – ' + escapeHtml(z.type) : ''}
             </a>
           </span></div>
         </div>
@@ -4906,14 +4917,14 @@
               L.polygon(rings, {
                 color: z.color, weight: 1, opacity: 0.9,
                 fillColor: z.color, fillOpacity: 0.18,
-              }).bindTooltip(`${z.name} · ${z.type}`, { sticky: true }).addTo(layerGroup);
+              }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             } else if (g.type === 'Circle' && Array.isArray(g.center)) {
               const [lon, lat] = g.center;
               L.circle([lat, lon], {
                 radius: g.radius || 0,
                 color: z.color, weight: 1, opacity: 0.9,
                 fillColor: z.color, fillOpacity: 0.18,
-              }).bindTooltip(`${z.name} · ${z.type}`, { sticky: true }).addTo(layerGroup);
+              }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             }
           } catch (_) { /* ignore single bad geometry */ }
         });
@@ -5020,7 +5031,7 @@
        MAP
     ================================================================ */
     function initMap(lat, lon, aircraft, zones) {
-      const popStr = `<b>${S.name}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      const popStr = `<b>${escapeHtml(S.name)}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
       if (!S.map) {
         // Verhindert den Zoom bei Doppelklick
@@ -5275,8 +5286,8 @@
         let visText = vis !== null ? (vis >= 10 ? '>10 km' : vis + ' km') : '\u2014';
         const taf = tafCache ? tafCache[m.icaoId] : null;
         let tafBlock = '';
-        if (taf) { const compact = formatTafCompact(taf); tafBlock = `<div style="margin-top:6px;padding-top:4px;border-top:1px solid #555"><div style="font-size:10px;opacity:0.7">TAF</div><pre style="font-size:10px;margin:2px 0 0;white-space:pre-wrap;font-family:monospace">${compact}</pre></div>`; }
-        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${m.name || m.icaoId} <span style="color:${fc}">${m.fltCat || '?'}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${m.rawOb || ''}</div>${tafBlock}</div>`;
+        if (taf) { const compact = formatTafCompact(taf); tafBlock = `<div style="margin-top:6px;padding-top:4px;border-top:1px solid #555"><div style="font-size:10px;opacity:0.7">TAF</div><pre style="font-size:10px;margin:2px 0 0;white-space:pre-wrap;font-family:monospace">${escapeHtml(compact)}</pre></div>`; }
+        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${escapeHtml(m.name || m.icaoId)} <span style="color:${fc}">${escapeHtml(m.fltCat || '?')}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${escapeHtml(m.rawOb || '')}</div>${tafBlock}</div>`;
         L.marker([m.lat, m.lon], { icon }).bindPopup(pop).addTo(S.layers.metarGroup);
       });
     }
@@ -5287,7 +5298,7 @@
       const markers = validAc.map(a => {
         const alt = a.altGeo ?? a.altBaro ?? 0;
         const pop = `<div class="ac-popup">
-                             <b>${a.callsign || a.icao}</b><br>
+                             <b>${escapeHtml(a.callsign || a.icao)}</b><br>
                              ${alt > 0 ? 'Höhe: ' + Math.round(alt) + ' m<br>' : 'Boden<br>'}
                              ${a.vel ? 'Speed: ' + Math.round(a.vel) + ' km/h' : ''}
                            </div>`;
