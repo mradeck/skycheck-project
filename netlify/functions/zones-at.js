@@ -100,6 +100,24 @@ function localizedMessage(f, lang) {
   return pick(want) || pick('en') || pick('de-AT') || (msgs[0] && msgs[0].message) || f.message || '';
 }
 
+// Schlanke Variante für das flächige Karten-Overlay (alle Zonen): nur Geometrie + Label.
+function normalizeLight(f) {
+  const restriction = f.restriction || '';
+  const geometry = (f.geometry || []).map(g => {
+    const hp = g.horizontalProjection;
+    if (!hp) return null;
+    if (hp.type === 'Polygon') return { type: 'Polygon', coordinates: hp.coordinates };
+    if (hp.type === 'Circle' && Array.isArray(hp.center)) return { type: 'Circle', center: hp.center, radius: hp.radius || 0 };
+    return null;
+  }).filter(Boolean);
+  return {
+    name: f.message || f.name || f.identifier || '—',
+    type: restriction || 'UAS_ZONE',
+    color: zoneColor(restriction),
+    geometry,
+  };
+}
+
 function normalize(f, lang) {
   const restriction = f.restriction || '';
   const ext = f.extendedProperties || {};
@@ -136,19 +154,35 @@ function normalize(f, lang) {
 
 exports.handler = async (event) => {
   const qs = event.queryStringParameters || {};
+  const wantAll = qs.all === '1' || qs.all === 'true';
   const lat = parseFloat(qs.lat);
   const lon = parseFloat(qs.lon);
   const radiusM = parseFloat(qs.radius) || 100;
   const lang = /^[a-z]{2}$/i.test(qs.lang || '') ? qs.lang.toLowerCase() : 'en';
-  if (!isFinite(lat) || !isFinite(lon)) {
-    return { statusCode: 400, body: 'Missing lat/lon' };
-  }
 
   let zones;
   try {
     zones = loadZones();
   } catch (e) {
     return { statusCode: 500, body: 'Data file unavailable' };
+  }
+
+  // Flächiges Overlay: alle Zonen (ohne Bbox-Filter, ohne Cap) für die Kartendarstellung.
+  // 286 Polygone, einmal pro Session geladen und stark gecacht.
+  if (wantAll) {
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      },
+      body: JSON.stringify({ country: 'AT', all: true, zones: zones.map(z => normalizeLight(z.f)) }),
+    };
+  }
+
+  if (!isFinite(lat) || !isFinite(lon)) {
+    return { statusCode: 400, body: 'Missing lat/lon' };
   }
 
   const δ = Math.max(0.001, radiusM / 111320);

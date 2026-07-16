@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.83';
+    const APP_VER = '0.84';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3871,7 +3871,7 @@
         let zones = [];
         try { zones = await fetchZones(S.lat, S.lon, S.searchRadius); } catch { }
         renderZones(zones);
-        drawZoneOverlay(zones, S.layers.dipul);
+        updateZoneOverlay(zones);
         renderMapStatus(now, zones);
         const zoneStatus = evalZoneStatus(zones);
         renderStatus(status, zoneStatus);
@@ -4277,6 +4277,35 @@
         console.warn('Zones AT fetch error', e);
         return [];
       }
+    }
+
+    // Flächiges AT-Karten-Overlay: ALLE Zonen (286) einmalig laden und zeichnen — analog
+    // zum DE-WMS, das ganz Deutschland zeigt. Die punktbasierten Zonen (fetchZonesAT) speisen
+    // weiterhin nur Detailliste + Flugstatus. Promise wird gecacht (kein Doppel-Fetch).
+    let _atOverlayPromise = null;
+    function ensureAllZonesAT() {
+      if (!_atOverlayPromise) {
+        _atOverlayPromise = fetch('/.netlify/functions/zones-at?all=1')
+          .then(r => r.ok ? r.json() : { zones: [] })
+          .then(d => Array.isArray(d.zones) ? d.zones : [])
+          .catch(e => { console.warn('Zones AT overlay error', e); return []; });
+      }
+      return _atOverlayPromise;
+    }
+    async function drawAllZonesAT(layerGroup) {
+      if (!layerGroup) return;
+      drawZoneOverlay(await ensureAllZonesAT(), layerGroup);
+    }
+    // Karten-Overlay aktualisieren: AT zeigt alle Zonen flächig (einmal gezeichnet, bleibt),
+    // DE nutzt WMS (kein LayerGroup), FR/übrige zeichnen die punktbasierten Zonen.
+    function updateZoneOverlay(pointZones) {
+      if (COUNTRY === 'de') return; // WMS-Kachel-Layer rendert selbst
+      if (COUNTRY === 'at') {
+        if (S.layers.dipul && S.layers.dipul.getLayers && S.layers.dipul.getLayers().length === 0)
+          drawAllZonesAT(S.layers.dipul);
+        return;
+      }
+      drawZoneOverlay(pointZones, S.layers.dipul);
     }
 
     /* [J-API-DIPUL] =====================================================
@@ -5211,7 +5240,9 @@
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
-        if (COUNTRY !== 'de' && Array.isArray(lastZones) && lastZones.length > 0) {
+        if (COUNTRY === 'at') {
+          drawAllZonesAT(S.layers.dipul);   // AT: alle Zonen flächig zeichnen
+        } else if (COUNTRY !== 'de' && Array.isArray(lastZones) && lastZones.length > 0) {
           drawZoneOverlay(lastZones, S.layers.dipul);
         }
 
@@ -5320,7 +5351,7 @@
         if (S.lat && S.lon) {
           fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
             renderZones(zones);
-            drawZoneOverlay(zones, S.layers.dipul);
+            updateZoneOverlay(zones);
             const zoneStatus = evalZoneStatus(zones);
             renderStatus(lastStatus || { lvl: 'go', reasons: [] }, zoneStatus);
             renderMapStatus(lastWeather, zones);
