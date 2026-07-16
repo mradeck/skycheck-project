@@ -2,13 +2,27 @@
 
 ---
 
-# SkyCheck — Drohnenflugprüfung für Deutschland
+# SkyCheck — Drohnenflugprüfung (DE · FR · AT · CH)
 
-**SkyCheck** ist eine kostenlose Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen in Deutschland. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung. Unser Verwendungszweck: Vermessung, Inspektion, Imagefilm, TV- & Filmproduktionen sowie Schulungen für den Drohnenführerschein A2/STS bei [www.multikopterschule.de](https://www.multikopterschule.de).
+**SkyCheck** ist eine kostenlose Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung. Unser Verwendungszweck: Vermessung, Inspektion, Imagefilm, TV- & Filmproduktionen sowie Schulungen für den Drohnenführerschein A2/STS bei [www.multikopterschule.de](https://www.multikopterschule.de).
 
-🌐 **Live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
+> 🔒 **Datenschutz zuerst · läuft im Browser · nichts zu installieren.**
+> SkyCheck sammelt keine Daten, setzt kein Tracking und braucht weder Konto noch Anmeldung — die App kann Sie gar nicht ausspähen, weil es kein Backend gibt, das irgendetwas speichert. Alles läuft direkt in Ihrem Browser; die angezeigten Daten werden live geladen und sind in dem Moment weg, in dem Sie den Tab schließen. Zu installieren gibt es ebenfalls nichts: Das „Hinzufügen zum Startbildschirm" (als PWA) erzeugt lediglich eine Verknüpfung, die diese Webseite öffnet — im Grunde ein Lesezeichen mit Icon. Es wird kein App-Paket heruntergeladen, keine Berechtigungen werden erteilt, kein Hintergrundprozess läuft.
 
-📦 **Aktuelle Version:** v0.76
+Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; nur die **Geozonen-Quelle** ist länderspezifisch und wird automatisch anhand des Hostnamens gewählt.
+
+## 🌐 Live-Seiten
+
+| Land | Live-App | Geozonen-Quelle |
+|---|---|---|
+| 🇩🇪 **Deutschland** | [skycheck-de.netlify.app](https://skycheck-de.netlify.app/) | DiPUL WMS — `uas-betrieb.de` |
+| 🇫🇷 **Frankreich** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | ED-269-Datensatz (französische UAS-Zonen) |
+| 🇦🇹 **Österreich** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — monatlich automatisch aktualisiert |
+| 🇨🇭 **Schweiz** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify-API |
+
+> Alle vier sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch`. Default: `de`.
+
+📦 **Aktuelle Version:** v0.85
 
 ---
 
@@ -22,8 +36,8 @@
 | **Windprofil** | Hochrechnung der Windgeschwindigkeit nach Höhe (10 / 60 / 120 / 150 m AGL) via Potenzgesetz |
 | **Kp-Index** | Aktueller Kp-Wert von NOAA + GFZ Potsdam Hp30-Balkengrafik (letzten 4 × 30 min + Forecast) |
 | **Luftverkehr** | ADS-B Echtzeit-Flugbewegungen im Umkreis mit Höhenfarben und Radar-Icons (Airplanes.live) |
-| **Flugzeug-Alarm-View** | Vollbild-Karte mit Fluggeräusch-Alarm: meldet anfliegende Maschinen im einstellbaren Radius akustisch |
-| **Luftraumkarte** | DiPUL-WMS-Zonen (uas-betrieb.de) inkl. Flugverbotszonen, Kontrollzonen, Naturschutzgebiete; Suchradius 5 m oder 100 m umschaltbar |
+| **Flugzeug-Alarm-View** | Vollbild-Karte mit akustischem Fluggeräusch-Alarm: meldet anfliegende Maschinen im einstellbaren Radius akustisch |
+| **Luftraumkarte** | Länderspezifische Drohnen-Geozonen (DE: DiPUL · FR/AT: ED-269 · CH: BAZL/geo.admin.ch) — Flugverbotszonen, Kontrollzonen, Naturschutzgebiete; Suchradius zwischen 5 m und 100 m umschaltbar |
 | **48 h Vorschau** | Stündliche Wettervorschau über 2 Tage (scrollbar, Drohnenflug-Ampel je Stunde) |
 | **5-Tage-Überblick** | Tagesübersicht mit Min/Max-Temperatur, Wind und Ampelbewertung |
 | **Hinweise & Warnungen** | Kontextuelle Warnungen (GPS-Störung bei hohem Kp, erhöhter Luftverkehr, No-Fly-Begründung) |
@@ -50,9 +64,12 @@
 | [GFZ Potsdam](https://kp.gfz.de/) | Kp-Index, Hp30 (30-min-Auflösung) | ❌ → Netlify Function `gfz.js` |
 | [NOAA SWPC](https://www.swpc.noaa.gov/) | Kp-Index Fallback | ✅ |
 | [Airplanes.live](https://airplanes.live/) | ADS-B Flugbewegungen | ✅ |
-| [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Drohnen-Luftraumzonen WMS | ✅ |
 | [Photon (Komoot)](https://photon.komoot.io/) | Geocoding / Ortssuche | ✅ |
 | [Windy.com](https://www.windy.com/) | Externer Link für detaillierte Bewölkungsansicht | — |
+| **Geozonen 🇩🇪** [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Drohnen-Luftraumzonen (WMS + GetFeatureInfo) | ✅ |
+| **Geozonen 🇫🇷** ED-269-Datensatz | Französische UAS-Zonen (`data/uas-zones-fr.json`) | via `zones-fr.js` |
+| **Geozonen 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | Österreichische UAS-Zonen, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
+| **Geozonen 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | Schweizer UAS-Zonen `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
 
 ---
 
@@ -71,22 +88,31 @@ netlify/
     awc.js                  ← NOAA AWC Proxy für METAR/TAF (CORS-Umgehung)
     gfz.js                  ← GFZ Potsdam Proxy für Kp-Index/Hp30
     zones-fr.js             ← Frankreich UAS-Zonen (liest data/uas-zones-fr.json, bbox-gefiltert)
+    zones-at.js             ← Österreich UAS-Zonen (liest data/uas-zones-at.json; ?all=1 = vollständiges Overlay)
 data/
   uas-zones-fr.json         ← ED-269 Frankreich UAS-Zonen (monatlicher Snapshot, austauschbar)
+  uas-zones-at.json         ← ED-269 Österreich UAS-Zonen (286 Zonen, automatisch aktualisiert)
+  uas-zones-at.version      ← Marker des zuletzt importierten Austro-Control-Release (Idempotenz)
+.github/
+  workflows/
+    update-at-zones.yml     ← monatlicher Job: neuestes Austro-Control-ED-269 abrufen → Datendatei committen
 redirect.html               ← optionale Weiterleitungsseite
 ```
 
+> 🇨🇭 **CH braucht nichts davon** — das Karten-Overlay ist der geo.admin.ch-WMS-Layer und das Zonen-Detail kommt aus der geo.admin.ch-Identify-REST-API, beide direkt aus dem Browser aufgerufen (CORS-offen). Keine Netlify-Function, keine gehostete Datendatei, kein Update-Workflow.
+
 ### Multi-Country-Support (seit v0.73)
 
-SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Datenquellen. Country wird aus URL-Param `?country=fr` oder Hostname (z. B. `skycheck-fr.netlify.app`) erkannt. Default: `de`.
+SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen. Das Land wird aus dem Hostname (z. B. `skycheck-ch.netlify.app`) oder dem URL-Parameter `?country=de|fr|at|ch` erkannt. Default: `de`. Wetter, ADS-B, METAR/TAF, Kp-Index und Geocoding sind global und werden in jeder Variante unverändert verwendet.
 
-| Country | Geozonen-Quelle | Status |
-|---|---|---|
-| **DE** (Default) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | live |
-| **FR** | Netlify-Function `zones-fr.js` + monatliches ED-269-JSON | live |
-| (weitere) | Platzhalter — Adapter bereit für zusätzliche Provider | — |
+| Land | Geozonen-Quelle | Overlay | Detailliste / Status | Daten & Updates |
+|---|---|---|---|---|
+| 🇩🇪 **DE** (Default) | DiPUL WMS (`uas-betrieb.de`) | WMS-Kacheln | WMS GetFeatureInfo | Live-Dienst (offiziell, stets aktuell) |
+| 🇫🇷 **FR** | ED-269-Datensatz | client-seitige Polygone/Kreise | `zones-fr.js` (bbox-Filter) | `data/uas-zones-fr.json` (~3,6k Zonen, austauschbar) |
+| 🇦🇹 **AT** | Austro Control ED-269 | alle Zonen client-seitig gezeichnet (286) | `zones-at.js` (bbox-Filter) | `data/uas-zones-at.json` — **monatlich automatisch aktualisiert** via GitHub Actions (`update-at-zones.yml`) |
+| 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | WMS-Kacheln | geo.admin.ch **Identify** REST-API | Live-Dienst (CORS-offen) — **keine Function, keine Datei, kein Workflow** |
 
-Wetter, ADS-B, METAR/TAF, Kp-Index und Geocoding sind global und werden in jeder Country-Variante unverändert verwendet.
+Zwei Integrationsstile: **WMS + Punktabfrage** (DE, CH — offizielle Live-Dienste rendern das ganze Land und beantworten Punktabfragen direkt) und **gehostete ED-269-Datei + Netlify-Function** (FR, AT — ein JSON-Datensatz im Repo, server-seitig bbox-gefiltert; AT aktualisiert sich monatlich selbst).
 
 ### Netlify Functions (CORS-Proxies)
 
@@ -143,11 +169,15 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
-| v0.76 | Fix Race Condition: FR-Zonen-Overlay (Polygone / Kreise) erscheint jetzt direkt beim Erstaufruf (vorher nur nach Doppelklick mit Re-Fetch). `drawZoneOverlay` lief vor der Map-Erstellung; nach Map-Init wird einmal mit dem `lastZones`-Cache nachgezeichnet |
+| v0.85 | 🇨🇭 **Schweiz** (`skycheck-ch`): neuer Länder-Adapter nach dem DE-Muster — geo.admin.ch-**WMS**-Layer für das Karten-Overlay + geo.admin.ch-**Identify**-REST-API für Detailliste/Status. Beide CORS-offen, daher werden keine Netlify-Function, keine gehostete Datei und kein Update-Workflow benötigt |
+| v0.84 | 🇦🇹 AT-Karten-Overlay zeichnet jetzt **alle** österreichischen Zonen (vollständiges Landes-Overlay via `?all=1`, wie das DE-WMS) statt nur der punktgefilterten Zonen am markierten Standort |
+| v0.83 | 🇦🇹 **Österreich** (`skycheck-at`): neuer Länder-Adapter. `zones-at.js` parst den Austro-Control-ED-269-Datensatz; `data/uas-zones-at.json` wird durch einen GitHub-Actions-Workflow (`update-at-zones.yml`) **monatlich automatisch aktualisiert** |
+| v0.78–v0.82 | Security- & Qualitäts-Durchgang (XSS-Escaping + CSP, METAR-Sichtweiten-Einheitenfix, Vollständigkeit der 5 Sprachen, Alarm-Defekt-Fixes, Eis/Nebel/Sicht in der Live-Ansicht) — siehe `docs/code-review-2026-07-16.md` |
+| v0.76 | Fix Race Condition: FR-Zonen-Overlay (Polygone / Kreise) erscheint jetzt direkt beim Erstaufruf (vorher nur nach Doppelklick mit Re-Fetch). Der `drawZoneOverlay`-Aufruf lief vor der Map-Erstellung; nach Map-Init wird jetzt einmal mit dem `lastZones`-Cache nachgezeichnet |
 | v0.75 | Country-Name-i18n: Landing-Page-Badge und Footer zeigen den aktiven Country-Namen in der gewählten UI-Sprache (z. B. FR-Domain + ES-UI → „Verificación de vuelo de dron · Francia"). Neue `COUNTRY_NAMES`-Lookup-Tabelle, `_country()`-Helper, `{country}`-Placeholder durch `_t()` interpoliert. `fltcatDisclaimer` entcountrifiziert (EU-weite Regelung, kein Country-Bezug nötig) |
 | v0.74 | FR-Map-Overlay: Geozonen im FR-Modus werden jetzt zusätzlich zur Liste als Leaflet-Polygone / -Kreise auf der Karte gezeichnet. `zones-fr.js` liefert Geometrie mit; `drawZoneOverlay()` rendert client-seitig. Zone-Toggle bleibt kompatibel |
 | v0.73 | Country-Adapter-Architektur (Stufe 1): Multi-Country-Support für Geozonen. Country-Detection via URL-Param (`?country=fr`) oder Hostname; neue Netlify-Function `zones-fr.js` liest ED-269-JSON für Frankreich (`data/uas-zones-fr.json`, ~3,6k Zonen), DE behält DiPUL-WMS |
-| v0.72 | Info-Modal-Text korrigiert (Zielgruppe, Spezifik-Kategorie, neuer Datenschutz-Abschnitt); README zweisprachig umgestellt → später auf 5 Sprachen erweitert |
+| v0.72 | Info-Modal-Text korrigiert (Zielgruppe, Spezifische Kategorie, neuer Datenschutz-Abschnitt); README von nur Deutsch → 5 Sprachen umgestellt |
 | v0.71 | 5 Sprachen unterstützt (DE / EN / FR / ES / PL); Sprachbutton auf Landing-Page |
 | v0.70 | Flugkategorien-Info-Modal (VFR / MVFR / IFR / LIFR) |
 | v0.69 | Bewölkung-Link auf Windy, METAR-Wind mit °-Zeichen und Farbcodes |
@@ -162,7 +192,7 @@ netlify dev
 | v0.54 | METAR/TAF-Integration, Flugplatz-Marker auf Karte, METAR-Card |
 | v0.35 | Flugzeug-Alarm-View (Fullscreen, ADS-B, Haversine, Web Audio, Leaflet-Map) |
 | v0.27 | Sprachumschalter DE/EN, vollständige I18N |
-| v0.20 | `APP_VER`-Variable, KP-Messung Zeitstempel |
+| v0.20 | `APP_VER`-Variable, Kp-Messung Zeitstempel |
 | v0.15 | GFZ async geladen, Netlify Function als primärer Proxy, Ladezeit ~1 s |
 | v0.14 | Netlify Serverless Function `gfz.js` als zuverlässiger CORS-Proxy |
 | v0.10 | GFZ Hp30 Balkengrafik (4 × Messung + Forecast) |
@@ -177,6 +207,6 @@ SkyCheck trackt oder speichert keine Nutzerdaten. Die App ist eine reine Web-Anw
 
 ## Lizenz & Haftung
 
-Nur für Deutschland · Betrieb in VLOS · Keine Haftung für Vollständigkeit oder Richtigkeit der angezeigten Daten. Die Nutzung der App ersetzt keine behördliche Genehmigung. SkyCheck ist eine **Orientierungshilfe** — die gesetzlich vorgeschriebene Genehmigung und finale Luftraumfreigabe erfolgen über die **DFS Aviation Services App** und weitere zugelassene Portale.
+Deutschland, Frankreich, Österreich & Schweiz · Betrieb in VLOS · Keine Haftung für Vollständigkeit oder Richtigkeit der angezeigten Daten. Die Nutzung der App ersetzt keine erforderliche behördliche Genehmigung. SkyCheck ist eine **Orientierungshilfe** — die gesetzlich vorgeschriebene Genehmigung und finale Luftraumfreigabe erfolgen über die zuständigen nationalen Portale (z. B. **DFS Aviation Services** für DE, **Austro Control Dronespace** für AT, **skyguide** für CH).
 
-Datenquellen unterliegen ihren jeweiligen Lizenzen (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL).
+Datenquellen unterliegen ihren jeweiligen Lizenzen (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch).

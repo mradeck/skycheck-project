@@ -6,6 +6,9 @@
 
 **SkyCheck** is a free single-page web app for quickly pre-checking drone flights. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
 
+> 🔒 **Privacy-first · runs in the browser · nothing to install.**
+> SkyCheck collects no data, sets no tracking, and needs no account or sign-up — it can't spy on you because there is no backend that stores anything. Everything runs directly in your browser; the data you see is fetched live and gone the moment you close the tab. There's nothing to install either: "adding it to your home screen" (as a PWA) simply creates a shortcut that opens this web page — essentially a bookmark with an icon. No app package is downloaded, no permissions are granted, no background process runs.
+
 Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere; only the **geo-zone source** is country-specific and selected automatically from the hostname.
 
 ## 🌐 Live sites

@@ -2,13 +2,27 @@
 
 ---
 
-# SkyCheck — Sprawdzenie lotu dronem dla Niemiec
+# SkyCheck — Sprawdzenie lotu dronem (DE · FR · AT · CH)
 
-**SkyCheck** to bezpłatna aplikacja webowa typu single-page do szybkiego sprawdzenia warunków lotu dronem w Niemczech przed startem. Aplikacja agreguje dane w czasie rzeczywistym z kilku oficjalnych źródeł i wydaje natychmiastową rekomendację lotu. Nasze zastosowania: pomiary, inspekcje, filmy wizerunkowe, produkcje TV i filmowe oraz szkolenia na świadectwo kompetencji A2/STS w [www.multikopterschule.de](https://www.multikopterschule.de).
+**SkyCheck** to bezpłatna aplikacja webowa typu single-page do szybkiego wstępnego sprawdzenia warunków lotu dronem. Agreguje dane w czasie rzeczywistym z kilku oficjalnych źródeł i wydaje natychmiastową rekomendację lotu. Nasze zastosowania: pomiary, inspekcje, filmy wizerunkowe, produkcje TV i filmowe oraz szkolenia na świadectwo kompetencji A2/STS w [www.multikopterschule.de](https://www.multikopterschule.de).
 
-🌐 **Wersja live:** [enchanting-stardust-f713da.netlify.app/skycheck.html](https://enchanting-stardust-f713da.netlify.app/skycheck.html)
+> 🔒 **Prywatność na pierwszym miejscu · działa w przeglądarce · nic do instalowania.**
+> SkyCheck nie zbiera żadnych danych, nie stosuje żadnego śledzenia i nie wymaga konta ani rejestracji — nie może Cię szpiegować, bo nie istnieje żaden backend, który cokolwiek przechowuje. Wszystko działa bezpośrednio w Twojej przeglądarce; dane, które widzisz, są ładowane na żywo i znikają w chwili, gdy zamkniesz kartę. Nie ma też nic do instalowania: „dodanie do ekranu głównego" (jako PWA) tworzy jedynie skrót otwierający tę stronę internetową — w istocie zakładkę z ikoną. Nie jest pobierany żaden pakiet aplikacji, nie są przyznawane żadne uprawnienia, nie działa żaden proces w tle.
 
-📦 **Aktualna wersja:** v0.76
+Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszędzie; tylko **źródło geostref** jest specyficzne dla kraju i wybierane automatycznie na podstawie nazwy hosta.
+
+## 🌐 Wersje live
+
+| Kraj | Aplikacja live | Źródło geostref |
+|---|---|---|
+| 🇩🇪 **Niemcy** | [skycheck-de.netlify.app](https://skycheck-de.netlify.app/) | DiPUL WMS — `uas-betrieb.de` |
+| 🇫🇷 **Francja** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | zbiór danych ED-269 (francuskie strefy UAS) |
+| 🇦🇹 **Austria** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — auto-aktualizacja co miesiąc |
+| 🇨🇭 **Szwajcaria** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
+
+> Wszystkie cztery to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch`. Domyślnie: `de`.
+
+📦 **Aktualna wersja:** v0.85
 
 ---
 
@@ -20,13 +34,13 @@
 | **Pogoda** | Porywy wiatru, prędkość i kierunek wiatru, temperatura, punkt rosy, widzialność, zachmurzenie, opady — dane DWD via BrightSky |
 | **METAR / TAF** | Dane meteorologiczne lotnicze w czasie rzeczywistym z pobliskich lotnisk (NOAA Aviation Weather Center), z kategorią lotu VFR / MVFR / IFR / LIFR |
 | **Profil wiatru** | Ekstrapolacja prędkości wiatru wg wysokości (10 / 60 / 120 / 150 m AGL) prawem potęgowym |
-| **Indeks Kp** | Aktualny Kp z NOAA + wykres Hp30 z GFZ Potsdam (ostatnie 4 × 30 min + prognoza) |
+| **Indeks Kp** | Aktualny Kp z NOAA + wykres słupkowy Hp30 z GFZ Potsdam (ostatnie 4 × 30 min + prognoza) |
 | **Ruch lotniczy** | Ruch ADS-B w czasie rzeczywistym w okolicy z kolorami wysokości i ikonami radaru (Airplanes.live) |
 | **Widok alarmu samolotów** | Pełnoekranowa mapa z dźwiękowym alarmem: sygnalizuje zbliżające się statki powietrzne w ustawianym promieniu |
-| **Mapa przestrzeni powietrznej** | Strefy DiPUL WMS (uas-betrieb.de): strefy zakazu, strefy kontrolowane, rezerwaty przyrody; promień wyszukiwania przełączalny 5 m / 100 m |
-| **Prognoza 48 h** | Prognoza godzinowa na 2 dni (przewijalna, sygnalizator dla każdej godziny) |
+| **Mapa przestrzeni powietrznej** | Specyficzne dla kraju geostrefy dla dronów (DE: DiPUL · FR/AT: ED-269 · CH: BAZL/geo.admin.ch) — strefy zakazu lotów, strefy kontrolowane, rezerwaty przyrody; promień wyszukiwania przełączalny między 5 m a 100 m |
+| **Prognoza 48 h** | Prognoza godzinowa na 2 dni (przewijalna, sygnalizator lotu dla każdej godziny) |
 | **Przegląd 5-dniowy** | Widok dzienny z temp. min/maks., wiatrem i oceną w kolorach |
-| **Wskazówki i ostrzeżenia** | Ostrzeżenia kontekstowe (zakłócenie GPS przy wysokim Kp, wzmożony ruch lotniczy, powód no-fly) |
+| **Wskazówki i ostrzeżenia** | Ostrzeżenia kontekstowe (zakłócenie GPS przy wysokim Kp, wzmożony ruch lotniczy, uzasadnienie no-fly) |
 | **5 języków** | Niemiecki, angielski, francuski, hiszpański, polski — przełączane na stronie startowej |
 | **PWA** | Instalowalne jako aplikacja webowa (baner instalacji z 30-dniowym cooldownem), działa offline dla treści statycznych |
 
@@ -50,9 +64,12 @@
 | [GFZ Potsdam](https://kp.gfz.de/) | Indeks Kp, Hp30 (rozdzielczość 30 min) | ❌ → Netlify Function `gfz.js` |
 | [NOAA SWPC](https://www.swpc.noaa.gov/) | Zapasowy indeks Kp | ✅ |
 | [Airplanes.live](https://airplanes.live/) | Ruch ADS-B | ✅ |
-| [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Strefy WMS przestrzeni powietrznej dla dronów | ✅ |
 | [Photon (Komoot)](https://photon.komoot.io/) | Geokodowanie / wyszukiwanie miejsc | ✅ |
 | [Windy.com](https://www.windy.com/) | Link zewnętrzny do szczegółowego widoku zachmurzenia | — |
+| **Geostrefy 🇩🇪** [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Strefy przestrzeni powietrznej dla dronów (WMS + GetFeatureInfo) | ✅ |
+| **Geostrefy 🇫🇷** zbiór danych ED-269 | francuskie strefy UAS (`data/uas-zones-fr.json`) | via `zones-fr.js` |
+| **Geostrefy 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | austriackie strefy UAS, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
+| **Geostrefy 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | szwajcarskie strefy UAS `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
 
 ---
 
@@ -65,28 +82,37 @@ sw.js                       ← Service Worker (cache)
 icon-192x192.png            ← ikona aplikacji (mała)
 icon-512x512.png            ← ikona aplikacji (duża)
 skycheck-icon.svg           ← ikona źródłowa (wektorowa)
-netlify.toml                ← konfiguracja Netlify (włączane pliki bundle'a + przepisywanie URL roota)
+netlify.toml                ← konfiguracja Netlify (włączane pliki bundle'a funkcji + przepisywanie URL roota)
 netlify/
   functions/
     awc.js                  ← proxy NOAA AWC dla METAR/TAF (obejście CORS)
     gfz.js                  ← proxy GFZ Potsdam dla Kp/Hp30
     zones-fr.js             ← strefy UAS Francji (czyta data/uas-zones-fr.json, filtrowane bbox)
+    zones-at.js             ← strefy UAS Austrii (czyta data/uas-zones-at.json; ?all=1 = pełna nakładka)
 data/
   uas-zones-fr.json         ← strefy UAS Francji ED-269 (miesięczny snapshot, wymienialny)
+  uas-zones-at.json         ← strefy UAS Austrii ED-269 (286 stref, auto-aktualizowane)
+  uas-zones-at.version      ← znacznik ostatnio zaimportowanej wersji Austro Control (idempotencja)
+.github/
+  workflows/
+    update-at-zones.yml     ← miesięczne zadanie: pobierz najnowszy Austro Control ED-269 → commituj plik danych
 redirect.html               ← opcjonalna strona przekierowania
 ```
 
+> 🇨🇭 **CH nie potrzebuje żadnego z powyższych** — nakładka mapowa to warstwa WMS geo.admin.ch, a szczegóły stref pochodzą z REST API Identify geo.admin.ch; obie wywoływane bezpośrednio z przeglądarki (CORS-open). Żadnej funkcji Netlify, żadnego hostowanego pliku danych, żadnego workflow aktualizacji.
+
 ### Wsparcie wielokrajowe (od v0.73)
 
-SkyCheck używa **wzorca adaptera** dla źródeł danych specyficznych dla kraju. Kraj jest wykrywany z parametru URL `?country=fr` lub nazwy hosta (np. `skycheck-fr.netlify.app`). Domyślnie: `de`.
+SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF, indeks Kp i geokodowanie są globalne i używane bez zmian w każdym wariancie.
 
-| Kraj | Źródło geostref | Status |
-|---|---|---|
-| **DE** (domyślnie) | DiPUL WMS GetFeatureInfo (uas-betrieb.de) | online |
-| **FR** | Funkcja Netlify `zones-fr.js` + miesięczny JSON ED-269 | online |
-| (inne) | placeholder — adapter gotowy na kolejnych dostawców | — |
+| Kraj | Źródło geostref | Nakładka | Lista szczegółów / status | Dane i aktualizacje |
+|---|---|---|---|---|
+| 🇩🇪 **DE** (domyślnie) | DiPUL WMS (`uas-betrieb.de`) | kafelki WMS | WMS GetFeatureInfo | serwis live (oficjalny, zawsze aktualny) |
+| 🇫🇷 **FR** | zbiór danych ED-269 | poligony/okręgi po stronie klienta | `zones-fr.js` (filtr bbox) | `data/uas-zones-fr.json` (~3,6k stref, wymienialny) |
+| 🇦🇹 **AT** | Austro Control ED-269 | wszystkie strefy rysowane po stronie klienta (286) | `zones-at.js` (filtr bbox) | `data/uas-zones-at.json` — **auto-aktualizowane co miesiąc** przez GitHub Actions (`update-at-zones.yml`) |
+| 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | kafelki WMS | REST API **Identify** geo.admin.ch | serwis live (CORS-open) — **bez funkcji, bez pliku, bez workflow** |
 
-Pogoda, ADS-B, METAR/TAF, indeks Kp i geokodowanie są globalne i używane bez zmian w każdym wariancie krajowym.
+Dwa style integracji: **WMS + zapytanie punktowe** (DE, CH — oficjalne serwisy live renderują cały kraj i odpowiadają na zapytania punktowe bezpośrednio) oraz **hostowany plik ED-269 + funkcja Netlify** (FR, AT — zbiór danych JSON w repozytorium, filtrowany bbox po stronie serwera; AT odświeża się samo co miesiąc).
 
 ### Netlify Functions (proxy CORS)
 
@@ -143,6 +169,10 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.85 | 🇨🇭 **Szwajcaria** (`skycheck-ch`): nowy adapter kraju wzorowany na schemacie DE — warstwa **WMS** geo.admin.ch dla nakładki mapowej + REST API **Identify** geo.admin.ch dla listy szczegółów/statusu. Obie CORS-open, więc nie są potrzebne żadna funkcja Netlify, żaden hostowany plik ani workflow aktualizacji |
+| v0.84 | 🇦🇹 Nakładka mapowa AT rysuje teraz **wszystkie** austriackie strefy (nakładka na cały kraj przez `?all=1`, jak WMS DE) zamiast tylko stref przefiltrowanych punktowo w zaznaczonej lokalizacji |
+| v0.83 | 🇦🇹 **Austria** (`skycheck-at`): nowy adapter kraju. `zones-at.js` parsuje zbiór danych Austro Control ED-269; `data/uas-zones-at.json` jest **auto-aktualizowany co miesiąc** przez workflow GitHub Actions (`update-at-zones.yml`) |
+| v0.78–v0.82 | Przegląd bezpieczeństwa i jakości (escaping XSS + CSP, poprawka jednostki widzialności METAR, kompletność 5 języków, naprawy defektów alarmu, lód/mgła/widzialność w widoku live) — patrz `docs/code-review-2026-07-16.md` |
 | v0.76 | Naprawa race condition: poligony / okręgi geostref FR pokazują się teraz przy pierwszym renderowaniu mapy (wcześniej dopiero po podwójnym kliknięciu z re-fetch). `drawZoneOverlay` wykonywał się przed utworzeniem mapy; teraz po inicjalizacji następuje ponowne narysowanie z cache'a `lastZones` |
 | v0.75 | i18n nazwy kraju: baner strony startowej i stopka pokazują aktywną nazwę kraju w wybranym języku UI (np. domena FR + UI ES → „Verificación de vuelo de dron · Francia"). Nowa tabela `COUNTRY_NAMES`, helper `_country()`, placeholder `{country}` interpolowany przez `_t()`. `fltcatDisclaimer` odkrajowiony (zasada UE obowiązuje bez wymieniania kraju) |
 | v0.74 | Nakładka mapowa FR: geostrefy w trybie FR są teraz rysowane jako poligony / okręgi Leaflet na mapie (oprócz listy). `zones-fr.js` zwraca geometrię; `drawZoneOverlay()` renderuje po stronie klienta. Przełącznik stref pozostaje kompatybilny |
@@ -152,24 +182,31 @@ netlify dev
 | v0.70 | Modal info kategorii lotu (VFR / MVFR / IFR / LIFR) |
 | v0.69 | Link zachmurzenia do Windy; wiatr METAR z symbolem ° i kodami kolorów |
 | v0.68 | Link SkyAlarm na stronie startowej |
+| v0.67 | Przycisk stylu mapy podniesiony nad atrybucję Leaflet (poprawka z-index) |
+| v0.66 | Zwężona nakładka niskiej wysokości, przełącznik stylu mapy w głównej mapie |
+| v0.65 | Naprawa: dosłowne znaki `\n` w HTML sekcji METAR |
 | v0.64 | Nowa Netlify Function `awc.js` jako proxy CORS dla NOAA AWC (METAR/TAF) |
 | v0.63 | Wzór δ w `fetchZones` skalibrowany empirycznie, domyślny promień 100 m |
 | v0.58 | Sprzężenie promienia geostrefy 5 m / 100 m |
-| v0.57 | Banner instalacji PWA (`beforeinstallprompt`) |
-| v0.54 | Integracja METAR/TAF, znaczniki lotnisk na mapie |
-| v0.35 | Widok alarmu samolotu (pełny ekran, ADS-B, Haversine, Web Audio, Leaflet) |
+| v0.57 | Baner instalacji PWA (`beforeinstallprompt`) |
+| v0.54 | Integracja METAR/TAF, znaczniki lotnisk na mapie, karta METAR |
+| v0.35 | Widok alarmu samolotu (pełny ekran, ADS-B, Haversine, Web Audio, mapa Leaflet) |
 | v0.27 | Przełącznik języka DE/EN, pełna I18N |
+| v0.20 | Zmienna `APP_VER`, znacznik czasu pomiaru Kp |
+| v0.15 | GFZ ładowane asynchronicznie, Netlify Function jako główne proxy, czas ładowania ~1 s |
+| v0.14 | Serverless-owa funkcja Netlify `gfz.js` jako niezawodne proxy CORS |
+| v0.10 | Wykres słupkowy GFZ Hp30 (4 × pomiar + prognoza) |
 
 ---
 
 ## Prywatność
 
-SkyCheck nie śledzi ani nie zapisuje żadnych danych użytkownika. Aplikacja to czysta aplikacja webowa — nawet „instalacja" jako PWA tylko umieszcza ikonę i nie instaluje niczego trwale. Dane są ładowane tylko tymczasowo i znikają po opuszczeniu aplikacji.
+SkyCheck nie śledzi ani nie zapisuje żadnych danych użytkownika. Aplikacja to czysta aplikacja webowa — nawet „instalacja" jako PWA tylko umieszcza ikonę aplikacji i nie instaluje niczego trwale. Dane są ładowane tylko tymczasowo i znikają po opuszczeniu aplikacji.
 
 ---
 
 ## Licencja i odpowiedzialność
 
-Tylko dla Niemiec · Operacje w VLOS · Brak odpowiedzialności za kompletność lub poprawność wyświetlanych danych. Korzystanie z aplikacji nie zastępuje żadnego oficjalnego zezwolenia. SkyCheck jest **pomocą orientacyjną** — prawnie wymagane zezwolenie i ostateczne zwolnienie przestrzeni powietrznej wydaje **aplikacja DFS Aviation Services** oraz inne dopuszczone portale.
+Niemcy, Francja, Austria i Szwajcaria · Operacje w VLOS · Brak odpowiedzialności za kompletność lub poprawność wyświetlanych danych. Korzystanie z aplikacji nie zastępuje żadnego wymaganego oficjalnego zezwolenia. SkyCheck jest **pomocą orientacyjną** — prawnie wymagane zezwolenie i ostateczne zwolnienie przestrzeni powietrznej są wydawane przez właściwe krajowe portale (np. **DFS Aviation Services** dla DE, **Austro Control Dronespace** dla AT, **skyguide** dla CH).
 
-Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL).
+Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch).
