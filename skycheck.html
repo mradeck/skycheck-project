@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.78';
+    const APP_VER = '0.79';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr in URL ODER Hostname enthält "skycheck-fr" / "skycheck.fr"
@@ -4115,8 +4115,14 @@
     }
     function metarVisKm(m) {
       if (!m) return null; const v = m.visib;
+      // AWC-JSON liefert visib in statute miles ('6+'/'P6SM' = ≥6 sm). '9999' ist ein
+      // durchgereichter metrischer Rohwert (9999 m). Numerische sm → km (× 1,60934) —
+      // zuvor wurde die sm-Zahl fälschlich direkt als km angezeigt (Faktor-1,61-Fehler).
       if (v === '6+' || v === 'P6SM' || v === '9999') return 10;
-      const n = parseFloat(v); return isNaN(n) ? null : n;
+      const n = parseFloat(v);
+      if (isNaN(n)) return null;
+      if (n > 15) return +(n / 1000).toFixed(1);    // Fallback: durchgereichter Meter-Rohwert
+      return +(n * 1.60934).toFixed(1);             // statute miles → km
     }
     function metarWindKt(m) {
       if (!m) return { spd: 0, gust: 0, dir: 'VRB' };
@@ -4127,7 +4133,8 @@
       return taf.fcsts.map(f => {
         const from = new Date(f.timeFrom * 1000), to = new Date(f.timeTo * 1000);
         const hFr = String(from.getHours()).padStart(2,'0'), hTo = String(to.getHours()).padStart(2,'0');
-        const vis = f.visib === '6+' ? '>10km' : (parseFloat(f.visib) || '?') + 'km';
+        const _vsm = parseFloat(f.visib);   // TAF visib ebenfalls statute miles → km
+        const vis = f.visib === '6+' ? '>10km' : (isNaN(_vsm) ? '?' : Math.round(_vsm * 1.60934)) + 'km';
         const w = f.wspd ? `${f.wdir||'VRB'}${f.wspd}kt` : '', g = f.wgst ? `G${f.wgst}` : '';
         let cl = ''; if (f.clouds && f.clouds.length > 0) cl = f.clouds.map(c => c.cover === 'NSC' ? 'NSC' : `${c.cover}${c.base||''}`).join(' ');
         const ch = f.fcstChange ? ` ${f.fcstChange}` : '';
