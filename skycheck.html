@@ -2608,7 +2608,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.94';
+    const APP_VER = '0.95';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3445,8 +3445,8 @@
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
       return t[LANG] || t.en || COUNTRY.toUpperCase();
     }
-    // BCP-47-Locale aus der UI-Sprache für Datums-/Zeitformatierung (statt hartkodiertem _locale()).
-    const _LOCALES = { de: _locale(), en: 'en-GB', fr: 'fr-FR', es: 'es-ES', pl: 'pl-PL' };
+    // BCP-47-Locale aus der UI-Sprache für Datums-/Zeitformatierung (statt hartkodiertem 'de-DE').
+    const _LOCALES = { de: 'de-DE', en: 'en-GB', fr: 'fr-FR', es: 'es-ES', pl: 'pl-PL' };
     function _locale() { return _LOCALES[LANG] || 'en-GB'; }
     // Länderspezifische GEOZONEN-Quellen (Landing- + Ergebnis-Quellenleiste). Nur die Geozonen-
     // Quelle ist länderabhängig; Wetter/Verkehr/Geocoding (BrightSky, GFZ, Airplanes.live, Photon)
