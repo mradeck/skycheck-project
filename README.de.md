@@ -25,7 +25,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v0.92
+📦 **Aktuelle Version:** v0.93
 
 ---
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v0.93 | **Startbildschirm-Feinschliff & länderspezifische Korrektheit.** (1) Neue Startbildschirm-Kachel „SkyCheck in anderen Ländern" listet alle übrigen Ländervarianten als Direktlink auf, gestaltet wie der Wortmarke (Sky weiß · Check cyan · -xx koralle); das aktuelle Land wird ausgelassen, die Beschriftungen folgen der UI-Sprache. (2) Länderspezifische Geozonen-Quellen: Die Quellenleiste auf Start- und Ergebnisseite (sowie der Kartenlayer-Umschalter, vormals „DiPUL-Zonen") zeigt nun statt überall DiPUL den korrekten Anbieter je Land — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) Einstellungen vollständig in allen fünf Sprachen lokalisiert (zuvor nur Deutsch); die DiPUL-Layer-Modus-Option — die nur Deutschland betrifft — wird außerhalb DE ausgeblendet, sodass nur die länderunabhängige 48-h-Vorhersage-Einstellung bleibt |
 | v0.92 | 🇪🇸 **Spanien-Quellenumschalter**: Auf dem Startbildschirm ist die Geozonen-Datenquelle wählbar — **EASA** Common Repository (clientseitiger ArcGIS-Vektor, nach Zonentyp gefärbt, viewport-basiert; Default) oder **ENAIRE** servAIS (der bisherige amtliche WMS). EASA rendert sauberere, transparente Zonen-Polygone statt des flächigen ENAIRE-WMS-Teppichs; Auswahl in `localStorage` persistiert |
 | v0.91 | 🇮🇪 Bugfix: `getLegalLink` stürzte bei numerischen `legal`-Werten ab (Dänemarks `Paragraf`-Feld ist eine Zahl), was die gesamte Render-Pipeline für DK lahmlegte — vor dem Regex-Match in String umgewandelt |
 | v0.90 | 🇩🇰 **Dänemark** (`skycheck-dk`) & 🇮🇪 **Irland** (`skycheck-ie`): zwei client-seitige **ArcGIS-Vektor**-Adapter — DK vom FeatureServer der Trafikstyrelsen, IE aus dem EASA Common Repository (ED-318, vorläufig); beide holen GeoJSON direkt (CORS-offen), färben Polygone nach Kategorie und unterstützen das Ganzland-Overlay |

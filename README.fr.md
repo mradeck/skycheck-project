@@ -25,7 +25,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 
 > Les sept sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
-📦 **Version actuelle :** v0.92
+📦 **Version actuelle :** v0.93
 
 ---
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v0.93 | Peaufinage de l'écran d'accueil et exactitude par pays. (1) Nouvelle tuile de démarrage « SkyCheck dans d'autres pays » listant chaque variante nationale sous forme de lien direct, mise en forme comme le logotype (Sky en blanc · Check en cyan · -xx en corail) ; le pays en cours est omis et les libellés suivent la langue de l'interface. (2) Sources de géozones propres à chaque pays : la barre de sources sur les pages de démarrage et de résultats (ainsi que le bouton de calque de la carte, autrefois « zones DiPUL ») affiche désormais le fournisseur correct pour chaque pays au lieu de DiPUL partout — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) Réglages entièrement traduits dans les cinq langues (auparavant en allemand uniquement) ; l'option de mode de calque DiPUL — qui ne concerne que l'Allemagne — est désormais masquée en dehors du DE, ne laissant que le réglage de prévision sur 48 h, indépendant du pays |
 | v0.92 | 🇪🇸 **Sélecteur de source pour l'Espagne** : l'écran de démarrage permet de choisir la source des géozones — **EASA** Common Repository (vecteur ArcGIS côté client, coloré par type de zone, basé sur la fenêtre d'affichage ; par défaut) ou **ENAIRE** servAIS (l'ancien WMS officiel). EASA affiche des polygones de zones plus nets et transparents au lieu de la nappe WMS couvrant toute l'Espagne ; le choix est conservé dans `localStorage` |
 | v0.91 | 🇮🇪 Correctif : `getLegalLink` plantait sur des valeurs `legal` numériques (le champ `Paragraf` du Danemark est un nombre), ce qui bloquait tout le pipeline de rendu pour le DK — converti en chaîne avant la correspondance regex |
 | v0.90 | 🇩🇰 **Danemark** (`skycheck-dk`) & 🇮🇪 **Irlande** (`skycheck-ie`) : deux adaptateurs **vecteur ArcGIS** côté client — DK depuis le FeatureServer de Trafikstyrelsen, IE depuis l'EASA Common Repository (ED-318, préliminaire) ; les deux récupèrent le GeoJSON directement (CORS ouvert), colorent les polygones par catégorie et prennent en charge la superposition nationale |

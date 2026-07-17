@@ -25,7 +25,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v0.92
+📦 **Current version:** v0.93
 
 ---
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.93 | **Landing polish & per-country correctness.** (1) New start-screen tile **"SkyCheck in other countries"** listing every other country variant as a direct link, styled like the wordmark (Sky white · Check cyan · `-xx` coral); the current country is omitted and the labels follow the UI language. (2) **Per-country geo-zone sources**: the source strip on the start and results pages (and the map layer toggle, formerly "DiPUL zones") now show the correct provider for each country instead of DiPUL everywhere — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) **Settings fully localised** in all five languages (previously German-only); the DiPUL layer-mode option — which only affects Germany — is now hidden outside DE, leaving just the country-agnostic 48 h forecast setting |
 | v0.92 | 🇪🇸 **Spain source toggle**: the start screen now lets you pick the geo-zone source — **EASA** Common Repository (client-side ArcGIS vector, coloured by zone type, viewport-based; default) or **ENAIRE** servAIS (the previous official WMS). EASA renders cleaner, transparent per-zone polygons instead of the ENAIRE full-country WMS blanket; choice persists in `localStorage` |
 | v0.91 | 🇮🇪 Bugfix: `getLegalLink` crashed on numeric `legal` values (Denmark's `Paragraf` field is a number), which took down the whole render pipeline for DK — coerced to string before the regex match |
 | v0.90 | 🇩🇰 **Denmark** (`skycheck-dk`) & 🇮🇪 **Ireland** (`skycheck-ie`): two client-side **ArcGIS vector** adapters — DK from Trafikstyrelsen's FeatureServer, IE from the EASA Common Repository (ED-318, preliminary). Both fetch GeoJSON directly (CORS-open), colour polygons by category and support the full-country overlay |
