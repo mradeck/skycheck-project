@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.90';
+    const APP_VER = '0.91';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -4701,7 +4701,7 @@
 
     function getLegalLink(text) {
       const base = "https://www.dipul.de/homepage/de/informationen/geografische-gebiete/rechtsgrundlagen/";
-      const match = text.match(/\((\d+)\.\)/); // Extracts e.g. "9" from "(9.)"
+      const match = String(text == null ? '' : text).match(/\((\d+)\.\)/); // Extracts e.g. "9" from "(9.)"
       if (match && match[1]) {
         // DiPUL's accordion uses a zero-based index or slightly offset logic.
         // Based on user feedback: (9.) -> accordion-1-8
