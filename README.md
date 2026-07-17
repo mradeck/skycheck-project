@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES)
+# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES · DK · IE)
 
 **SkyCheck** is a free single-page web app for quickly pre-checking drone flights. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -20,10 +20,12 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | 🇦🇹 **Austria** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — auto-updated monthly |
 | 🇨🇭 **Switzerland** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
 | 🇪🇸 **Spain** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | ENAIRE servAIS — WMS + ArcGIS Identify |
+| 🇩🇰 **Denmark** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (vector) |
+| 🇮🇪 **Ireland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (vector, preliminary) |
 
-> All five are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
+> All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v0.89
+📦 **Current version:** v0.91
 
 ---
 
@@ -38,7 +40,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | **Kp-index** | Current Kp from NOAA + GFZ Potsdam Hp30 bar chart (last 4 × 30 min + forecast) |
 | **Air traffic** | ADS-B real-time flight movements in the surroundings with altitude colours and radar icons (Airplanes.live) |
 | **Aircraft alarm view** | Full-screen map with audible aircraft alarm: announces approaching aircraft within an adjustable radius |
-| **Airspace map** | Country-specific drone geo-zones (DE: DiPUL · FR/AT: ED-269 · CH: geo.admin.ch · ES: ENAIRE) — no-fly zones, control zones, nature reserves; search radius switchable between 5 m and 100 m |
+| **Airspace map** | Country-specific drone geo-zones (DE: DiPUL · FR/AT: ED-269 · CH: geo.admin.ch · ES: ENAIRE · DK/IE: ArcGIS) — no-fly zones, control zones, nature reserves; search radius switchable between 5 m and 100 m |
 | **48 h forecast** | Hourly weather forecast over 2 days (scrollable, drone-flight light per hour) |
 | **5-day overview** | Daily overview with min/max temperature, wind and traffic-light rating |
 | **Hints & warnings** | Contextual warnings (GPS interference at high Kp, increased air traffic, no-fly reasoning) |
@@ -72,6 +74,8 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | **Geo-zones 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | Austrian UAS zones, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
 | **Geo-zones 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | Swiss UAS zones `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
 | **Geo-zones 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) | Spanish UAS zones `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) | ✅ |
+| **Geo-zones 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Danish UAS zones (ArcGIS FeatureServer, GeoJSON) | ✅ |
+| **Geo-zones 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irish UAS zones `ie_geozones` (ArcGIS, ED-318, preliminary) | ✅ |
 
 ---
 
@@ -105,7 +109,7 @@ redirect.html               ← optional redirect page
 
 ### Multi-country support (since v0.73)
 
-SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
+SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
 
 | Country | Geo-zone source | Overlay | Detail list / status | Data & updates |
 |---|---|---|---|---|
@@ -114,20 +118,26 @@ SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Coun
 | 🇦🇹 **AT** | Austro Control ED-269 | all zones drawn client-side (286) | `zones-at.js` (bbox filter) | `data/uas-zones-at.json` — **auto-updated monthly** via GitHub Actions (`update-at-zones.yml`) |
 | 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | WMS tiles | geo.admin.ch **Identify** REST API | live service (CORS-open) — **no function, no file, no workflow** |
 | 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | WMS tiles | ArcGIS **Identify** REST API | live service (CORS-open) — **no function, no file, no workflow** |
+| 🇩🇰 **DK** | Trafikstyrelsen ArcGIS FeatureServer | client-side vector polygons (~870, colour-coded) | ArcGIS query (bbox) | live service (CORS-open) — **no function, no file, no workflow** |
+| 🇮🇪 **IE** | EASA Common Repository `ie_geozones` | client-side vector polygons (76) | ArcGIS query (bbox) | live service (CORS-open, **preliminary** EASA data) |
 
-Two integration styles: **WMS + point query** (DE, CH, ES — official live services render the whole country and answer point queries directly) and **hosted ED-269 file + Netlify function** (FR, AT — a JSON dataset in the repo, bbox-filtered server-side; AT refreshes itself monthly).
+Three integration styles: **WMS + point query** (DE, CH, ES — official live services render the whole country and answer point queries directly), **client-side ArcGIS vector** (DK, IE — GeoJSON pulled live from an ArcGIS FeatureServer, drawn as colour-coded polygons), and **hosted ED-269 file + Netlify function** (FR, AT — a JSON dataset in the repo, bbox-filtered server-side; AT refreshes itself monthly).
 
 ### How many geo-zones per country?
 
-Zone counts pulled directly from each country's live source (DE via DiPUL WFS across all 31 categories; ES via ENAIRE ArcGIS; FR/AT from the ED-269 datasets; CH from the geo.admin.ch GeoJSON), normalised by land area:
+Zone counts pulled directly from each country's live source (DE via DiPUL WFS across all 31 categories; ES via ENAIRE ArcGIS; FR/AT from the ED-269 datasets; CH from the geo.admin.ch GeoJSON; DK/IE via ArcGIS FeatureServer), normalised by land area:
 
 | Country | Geo-zones | Area (km²) | Zones per 1 000 km² |
 |---|--:|--:|--:|
 | 🇩🇪 **Germany** | **88 635** | 357 592 | **≈ 248** |
 | 🇪🇸 Spain | 15 787 | 505 990 | ≈ 31 |
 | 🇨🇭 Switzerland | 1 232 | 41 285 | ≈ 30 |
+| 🇩🇰 Denmark | 870 | 42 952 | ≈ 20 |
 | 🇫🇷 France | 3 642 | 551 695 | ≈ 6.6 |
 | 🇦🇹 Austria | 286 | 83 879 | ≈ 3.4 |
+| 🇮🇪 Ireland\* | 76 | 70 273 | ≈ 1.1 |
+
+\* Ireland's figure is from the EASA Common Repository, which is still **preliminary** (the national IAA dataset lists ~87) — so its count is indicative, not complete.
 
 **Germany stands out drastically** — roughly **5.6×** the absolute count of the next country (Spain) and about **8×** the zone density of Spain/Switzerland, **37×** France and **73×** Austria. The reason is Germany's uniquely fine-grained zoning: it designates zones for categories the others largely don't — e.g. **industrial sites (24 482), residential properties (10 793), railway installations (9 819), nature reserves (9 012), even public outdoor pools (6 600)**. (Counting granularity differs between national datasets, which is itself the point: Germany zones far more categories at far finer resolution.)
 
@@ -190,6 +200,8 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.91 | 🇮🇪 Bugfix: `getLegalLink` crashed on numeric `legal` values (Denmark's `Paragraf` field is a number), which took down the whole render pipeline for DK — coerced to string before the regex match |
+| v0.90 | 🇩🇰 **Denmark** (`skycheck-dk`) & 🇮🇪 **Ireland** (`skycheck-ie`): two client-side **ArcGIS vector** adapters — DK from Trafikstyrelsen's FeatureServer, IE from the EASA Common Repository (ED-318, preliminary). Both fetch GeoJSON directly (CORS-open), colour polygons by category and support the full-country overlay |
 | v0.89 | Address search restricted to the active country via Photon `countrycode` filter (removes cross-border neighbours the bounding box let through) |
 | v0.88 | **Country-scoped address search**: `geocode()` was hard-wired to Germany (`lang=de` + a German bounding box) — every country variant only returned German suggestions. Now a per-country bounding box + UI-language are used |
 | v0.87 | **Per-country defaults**: capital-landmark search placeholder (DE Brandenburg Gate, FR Eiffel Tower, AT St. Stephen's, CH Federal Palace, ES Puerta del Sol) and country-based default UI language on first visit |
@@ -232,6 +244,6 @@ SkyCheck does not track or store any user data. The app is purely a web applicat
 
 ## Licence & liability
 
-Germany, France, Austria, Switzerland & Spain · Operation in VLOS · No liability for completeness or accuracy of the displayed data. Using the app does not replace any required official authorisation. SkyCheck is an **orientation aid** — the legally required authorisation and final airspace clearance are issued via the competent national portals (e.g. **DFS Aviation Services** for DE, **Austro Control Dronespace** for AT, **skyguide** for CH).
+Germany, France, Austria, Switzerland, Spain, Denmark & Ireland · Operation in VLOS · No liability for completeness or accuracy of the displayed data. Using the app does not replace any required official authorisation. SkyCheck is an **orientation aid** — the legally required authorisation and final airspace clearance are issued via the competent national portals (e.g. **DFS Aviation Services** for DE, **Austro Control Dronespace** for AT, **skyguide** for CH).
 
-Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE).
+Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE, Trafikstyrelsen, EASA).
