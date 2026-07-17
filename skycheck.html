@@ -2036,6 +2036,68 @@
       flex-shrink: 0;
     }
 
+    /* ── Länder-Varianten-Kachel ─────────────────────────────────────────── */
+    .l-country-box {
+      margin-top: 0.6rem;
+      background: rgba(0, 180, 216, 0.04);
+      border: 1px solid rgba(0, 180, 216, 0.14);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+    }
+
+    .l-country-hdr {
+      font-size: 0.78rem;
+      color: var(--text2);
+      margin-bottom: 0.7rem;
+    }
+
+    .l-country-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.9rem;
+    }
+
+    .l-country-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      padding: 0.15rem 0;
+      transition: opacity 0.15s;
+    }
+
+    .l-country-link:hover {
+      opacity: 0.75;
+    }
+
+    .cl-flag {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .cl-logo {
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .cl-logo span {
+      color: var(--accent);
+    }
+
+    .cl-logo b {
+      color: #ff7043;
+      font-weight: 800;
+    }
+
+    .cl-name {
+      font-size: 0.75rem;
+      color: var(--text3);
+      white-space: nowrap;
+    }
+
     /* ── Info-Button & Info-Modal ────────────────────────────────────────── */
     .l-info-btn {
       display: inline-flex;
@@ -2178,10 +2240,14 @@
           </div>
           <div class="l-app-arrow">&#8594;</div>
         </a>
+        <div class="l-country-box">
+          <div class="l-country-hdr" data-i18n="otherCountries">SkyCheck in anderen Ländern</div>
+          <div class="l-country-links" id="l-country-links"></div>
+        </div>
       </div>
 
       <div class="l-sources">
-        <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
+        <span id="l-src-zones-landing" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
@@ -2296,7 +2362,7 @@
     <div class="section" style="padding-top:0">
       <div class="sec-label" data-i18n="secMap">Karte &amp; Luftraum</div>
       <div class="map-controls" id="map-controls">
-        <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">DiPUL Zonen</button>
+        <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">Geozonen</button>
         <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
         <div class="zone-group" id="zone-group">
           <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
@@ -2394,8 +2460,7 @@
           &nbsp;·&nbsp; Betrieb in VLOS &nbsp;·&nbsp; Keine Haftung</span>
       </div>
       <div class="l-sources" style="margin-top: 0;">
-        <a href="https://www.dipul.de/" target="_blank" class="l-src">DiPUL WMS</a>
-        <a href="https://utm.dfs.de/" target="_blank" class="l-src">DFS UTM</a>
+        <span id="l-src-zones-results" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
@@ -2474,58 +2539,63 @@
         <button id="btn-close-settings" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="font-size:0.85rem; color:var(--text2); margin-bottom:1rem;">
-          Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden
-          sollen.
-        </p>
-
-        <label class="s-radio">
-          <input type="radio" name="layerMode" value="reduced">
-          <div class="s-radio-content">
-            <strong>Kritische / Reduzierte Ansicht</strong>
-            <span>Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten (Flughäfen,
-              Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.</span>
-          </div>
-        </label>
-
-        <label class="s-radio">
-          <input type="radio" name="layerMode" value="all">
-          <div class="s-radio-content">
-            <strong>Vollständige Ansicht (Alle verfügbaren Zonen)</strong>
-            <span>Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke,
-              Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.</span>
-          </div>
-        </label>
-
-        <div style="margin-top: 1.5rem;">
+        <!-- 48h-Vorschau-Modus: länderübergreifend (Wetterdaten sind überall gleich) -->
+        <div>
           <strong
-            style="font-size:0.8rem; text-transform:uppercase; color:var(--text3); display:block; margin-bottom:0.5rem;">48h-Vorschau
-            Modus</strong>
-          <p style="font-size:0.85rem; color:var(--text2); margin-bottom:0.75rem;">
+            style="font-size:0.8rem; text-transform:uppercase; color:var(--text3); display:block; margin-bottom:0.5rem;"
+            data-i18n="setForecastHdr">48h-Vorschau Modus</strong>
+          <p style="font-size:0.85rem; color:var(--text2); margin-bottom:0.75rem;" data-i18n="setForecastIntro">
             Wähle, ob die 48h-Wettervorschau nur Taglichtstunden (Drohnenflug-Standard) oder alle Stunden inkl. Nacht
             anzeigt.
           </p>
           <label class="s-radio">
             <input type="radio" name="forecastMode" value="daylight">
             <div class="s-radio-content">
-              <strong>Nur Tageslicht</strong>
-              <span>Zeigt ausschließlich Stunden zwischen Sonnenaufgang und Sonnenuntergang (inkl. 1 h Puffer). Standard
-                für Drohnenflug.</span>
+              <strong data-i18n="setDaylightTitle">Nur Tageslicht</strong>
+              <span data-i18n="setDaylightDesc">Zeigt ausschließlich Stunden zwischen Sonnenaufgang und Sonnenuntergang
+                (inkl. 1 h Puffer). Standard für Drohnenflug.</span>
             </div>
           </label>
           <label class="s-radio">
             <input type="radio" name="forecastMode" value="allday">
             <div class="s-radio-content">
-              <strong>Ganzer Tag inkl. Nacht</strong>
-              <span>Alle 3-Stunden-Slots über 48 Stunden, auch in der Nacht.</span>
+              <strong data-i18n="setAllDayTitle">Ganzer Tag inkl. Nacht</strong>
+              <span data-i18n="setAllDayDesc">Alle 3-Stunden-Slots über 48 Stunden, auch in der Nacht.</span>
             </div>
           </label>
         </div>
 
-        <div style="margin-top: 1.5rem;">
-          <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);">Aktive Layer in der
-            Übersicht:</strong>
-          <div id="settings-active-layers" class="s-layers-list"></div>
+        <!-- Nur Deutschland: DiPUL-Layer-Modus wirkt ausschließlich auf die deutschen DiPUL-Ebenen.
+             Für andere Länder ohne Funktion → per JS ausgeblendet (settings-de-only). -->
+        <div id="settings-de-only" style="margin-top: 1.5rem;">
+          <p style="font-size:0.85rem; color:var(--text2); margin-bottom:1rem;" data-i18n="setLayerIntro">
+            Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden
+            sollen.
+          </p>
+
+          <label class="s-radio">
+            <input type="radio" name="layerMode" value="reduced">
+            <div class="s-radio-content">
+              <strong data-i18n="setReducedTitle">Kritische / Reduzierte Ansicht</strong>
+              <span data-i18n="setReducedDesc">Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten
+                (Flughäfen, Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.</span>
+            </div>
+          </label>
+
+          <label class="s-radio">
+            <input type="radio" name="layerMode" value="all">
+            <div class="s-radio-content">
+              <strong data-i18n="setAllTitle">Vollständige Ansicht (Alle verfügbaren Zonen)</strong>
+              <span data-i18n="setAllDesc">Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl.
+                Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.</span>
+            </div>
+          </label>
+
+          <div style="margin-top: 1.5rem;">
+            <strong style="font-size:0.8rem; text-transform:uppercase; color:var(--text3);"
+              data-i18n="setActiveLayers">Aktive Layer in der Übersicht:</strong>
+            <div id="settings-active-layers" class="s-layers-list"></div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2538,7 +2608,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.92';
+    const APP_VER = '0.93';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2644,7 +2714,7 @@
         secConditions: 'Aktuelle Bedingungen', secWind: 'Windprofil nach Höhe',
         secForecast48: '48-Stunden-Vorschau', sec5day: '5-Tage-Überblick',
         secMap: 'Karte & Luftraum', secWarnings: 'Hinweise & Warnungen',
-        mapDipul: 'DiPUL Zonen', mapAircraft: 'Flugbewegungen',
+        mapDipul: 'Geozonen', mapAircraft: 'Flugbewegungen',
         mapAllZones: 'Alle Geozonen', mapRiskyZones: 'Nur Risikozonen',
         zonesNearby: 'Luftraumzonen in der Nähe',
         zonesCount: n => `Es liegen Einschränkungen durch ${n} geografische Gebiet${n > 1 ? 'e' : ''} vor:`,
@@ -2675,6 +2745,19 @@
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
+        otherCountries: 'SkyCheck in anderen Ländern',
+        setForecastHdr: '48h-Vorschau Modus',
+        setForecastIntro: 'Wähle, ob die 48h-Wettervorschau nur Taglichtstunden (Drohnenflug-Standard) oder alle Stunden inkl. Nacht anzeigt.',
+        setDaylightTitle: 'Nur Tageslicht',
+        setDaylightDesc: 'Zeigt ausschließlich Stunden zwischen Sonnenaufgang und Sonnenuntergang (inkl. 1 h Puffer). Standard für Drohnenflug.',
+        setAllDayTitle: 'Ganzer Tag inkl. Nacht',
+        setAllDayDesc: 'Alle 3-Stunden-Slots über 48 Stunden, auch in der Nacht.',
+        setLayerIntro: 'Wähle aus, wie viele geografische Gebietstypen auf der Karte und in den Warnmeldungen berücksichtigt werden sollen.',
+        setReducedTitle: 'Kritische / Reduzierte Ansicht',
+        setReducedDesc: 'Beschränkt auf die wichtigsten Luftraumbeschränkungen für Drohnenpiloten (Flughäfen, Naturschutzgebiete, Gefahrenzonen, etc.). Empfohlen für bessere Übersicht.',
+        setAllTitle: 'Vollständige Ansicht (Alle verfügbaren Zonen)',
+        setAllDesc: 'Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.',
+        setActiveLayers: 'Aktive Layer in der Übersicht:',
         skyAlarmDesc: 'Echtzeit-Tiefflieger-Alarm und Geozonen-Karte — akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen',
         alarmCraftCount: n => `${n} Fluggeräte`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
@@ -2774,7 +2857,7 @@
         secConditions: 'Current Conditions', secWind: 'Wind Profile by Altitude',
         secForecast48: '48-Hour Forecast', sec5day: '5-Day Overview',
         secMap: 'Map & Airspace', secWarnings: 'Notes & Warnings',
-        mapDipul: 'DiPUL Zones', mapAircraft: 'Flight Movements',
+        mapDipul: 'Drone zones', mapAircraft: 'Flight Movements',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         zonesNearby: 'Airspace zones nearby',
         zonesCount: n => `${n} geographic area${n > 1 ? 's' : ''} with restrictions:`,
@@ -2805,6 +2888,19 @@
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
+        otherCountries: 'SkyCheck in other countries',
+        setForecastHdr: '48 h forecast mode',
+        setForecastIntro: 'Choose whether the 48 h weather forecast shows only daylight hours (drone-flight standard) or all hours including night.',
+        setDaylightTitle: 'Daylight only',
+        setDaylightDesc: 'Shows only the hours between sunrise and sunset (incl. a 1 h buffer). Standard for drone flights.',
+        setAllDayTitle: 'Full day incl. night',
+        setAllDayDesc: 'All 3-hour slots across 48 hours, night included.',
+        setLayerIntro: 'Choose how many geographic zone types are considered on the map and in the warnings.',
+        setReducedTitle: 'Critical / reduced view',
+        setReducedDesc: 'Limited to the most important airspace restrictions for drone pilots (airports, nature reserves, danger zones, etc.). Recommended for a clearer overview.',
+        setAllTitle: 'Full view (all available zones)',
+        setAllDesc: 'Strictly queries all ~35 data layers available from DiPUL (incl. railway facilities, residential plots, security authorities, etc.). The map can get cluttered.',
+        setActiveLayers: 'Active layers in the overview:',
         skyAlarmDesc: 'Real-time low-altitude aircraft alarm and geozone map — acoustic and visual warning when aircraft approach',
         alarmCraftCount: n => `${n} aircraft`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
@@ -2896,7 +2992,7 @@
         secConditions: 'Conditions actuelles', secWind: 'Profil de vent par altitude',
         secForecast48: 'Prévisions sur 48 heures', sec5day: 'Vue sur 5 jours',
         secMap: 'Carte & Espace aérien', secWarnings: 'Notes & Avertissements',
-        mapDipul: 'Zones DiPUL', mapAircraft: 'Trafic aérien',
+        mapDipul: 'Géozones', mapAircraft: 'Trafic aérien',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         zonesNearby: 'Zones d\'espace aérien à proximité',
         zonesCount: n => `${n} zone${n > 1 ? 's' : ''} géographique${n > 1 ? 's' : ''} avec restrictions :`,
@@ -2927,6 +3023,19 @@
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
+        otherCountries: 'SkyCheck dans d\'autres pays',
+        setForecastHdr: 'Mode prévisions 48 h',
+        setForecastIntro: 'Choisissez si les prévisions météo sur 48 h affichent uniquement les heures de jour (standard pour le vol de drone) ou toutes les heures, nuit comprise.',
+        setDaylightTitle: 'Heures de jour uniquement',
+        setDaylightDesc: 'Affiche uniquement les heures entre le lever et le coucher du soleil (avec une marge de 1 h). Standard pour les vols de drone.',
+        setAllDayTitle: 'Journée complète, nuit comprise',
+        setAllDayDesc: 'Tous les créneaux de 3 heures sur 48 heures, nuit incluse.',
+        setLayerIntro: 'Choisissez combien de types de géozones sont pris en compte sur la carte et dans les avertissements.',
+        setReducedTitle: 'Vue critique / réduite',
+        setReducedDesc: 'Limitée aux restrictions de l\'espace aérien les plus importantes pour les pilotes de drone (aéroports, réserves naturelles, zones dangereuses, etc.). Recommandée pour un aperçu plus clair.',
+        setAllTitle: 'Vue complète (toutes les géozones disponibles)',
+        setAllDesc: 'Interroge strictement les ~35 couches de données disponibles via DiPUL (installations ferroviaires, terrains résidentiels, autorités de sécurité, etc.). La carte peut devenir surchargée.',
+        setActiveLayers: 'Couches actives dans la vue d\'ensemble :',
         skyAlarmDesc: 'Alarme en temps réel pour aéronefs à basse altitude et carte des géozones — avertissement acoustique et visuel lors de l\'approche d\'aéronefs',
         alarmCraftCount: n => `${n} aéronefs`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
@@ -3018,7 +3127,7 @@
         secConditions: 'Condiciones actuales', secWind: 'Perfil de viento por altitud',
         secForecast48: 'Pronóstico 48 horas', sec5day: 'Resumen 5 días',
         secMap: 'Mapa & Espacio aéreo', secWarnings: 'Notas & Advertencias',
-        mapDipul: 'Zonas DiPUL', mapAircraft: 'Tráfico aéreo',
+        mapDipul: 'Geozonas', mapAircraft: 'Tráfico aéreo',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         zonesNearby: 'Zonas de espacio aéreo cercanas',
         zonesCount: n => `${n} área${n > 1 ? 's' : ''} geográfica${n > 1 ? 's' : ''} con restricciones:`,
@@ -3049,6 +3158,19 @@
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
+        otherCountries: 'SkyCheck en otros países',
+        setForecastHdr: 'Modo de pronóstico de 48 h',
+        setForecastIntro: 'Elige si el pronóstico meteorológico de 48 h muestra solo las horas de luz diurna (estándar para vuelos de dron) o todas las horas, incluida la noche.',
+        setDaylightTitle: 'Solo horas de luz',
+        setDaylightDesc: 'Muestra solo las horas entre el amanecer y el atardecer (incluye un margen de 1 h). Estándar para vuelos de dron.',
+        setAllDayTitle: 'Día completo, incl. noche',
+        setAllDayDesc: 'Todos los intervalos de 3 horas durante 48 horas, noche incluida.',
+        setLayerIntro: 'Elige cuántos tipos de geozonas se tienen en cuenta en el mapa y en los avisos.',
+        setReducedTitle: 'Vista crítica / reducida',
+        setReducedDesc: 'Limitada a las restricciones de espacio aéreo más importantes para pilotos de dron (aeropuertos, reservas naturales, zonas de peligro, etc.). Recomendada para una visión más clara.',
+        setAllTitle: 'Vista completa (todas las geozonas disponibles)',
+        setAllDesc: 'Consulta estrictamente las ~35 capas de datos disponibles de DiPUL (incl. instalaciones ferroviarias, parcelas residenciales, autoridades de seguridad, etc.). El mapa puede saturarse.',
+        setActiveLayers: 'Capas activas en la vista general:',
         skyAlarmDesc: 'Alarma en tiempo real para aeronaves a baja altitud y mapa de geozonas — aviso acústico y visual ante la aproximación de aeronaves',
         alarmCraftCount: n => `${n} aeronaves`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
@@ -3140,7 +3262,7 @@
         secConditions: 'Aktualne warunki', secWind: 'Profil wiatru według wysokości',
         secForecast48: 'Prognoza 48-godzinna', sec5day: 'Przegląd 5-dniowy',
         secMap: 'Mapa & Przestrzeń powietrzna', secWarnings: 'Uwagi & Ostrzeżenia',
-        mapDipul: 'Strefy DiPUL', mapAircraft: 'Ruch lotniczy',
+        mapDipul: 'Geostrefy', mapAircraft: 'Ruch lotniczy',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         zonesNearby: 'Strefy przestrzeni powietrznej w pobliżu',
         zonesCount: n => `${n} obszar${n === 1 ? '' : n < 5 ? 'y' : 'ów'} geograficzn${n === 1 ? 'y' : n < 5 ? 'e' : 'ych'} z ograniczeniami:`,
@@ -3171,6 +3293,19 @@
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
+        otherCountries: 'SkyCheck w innych krajach',
+        setForecastHdr: 'Tryb prognozy 48 h',
+        setForecastIntro: 'Wybierz, czy 48-godzinna prognoza pogody ma pokazywać tylko godziny dzienne (standard dla lotów dronem), czy wszystkie godziny wraz z nocą.',
+        setDaylightTitle: 'Tylko godziny dzienne',
+        setDaylightDesc: 'Pokazuje tylko godziny między wschodem a zachodem słońca (z 1 h buforem). Standard dla lotów dronem.',
+        setAllDayTitle: 'Cała doba z nocą',
+        setAllDayDesc: 'Wszystkie 3-godzinne przedziały w ciągu 48 godzin, wraz z nocą.',
+        setLayerIntro: 'Wybierz, ile rodzajów geostref jest uwzględnianych na mapie i w ostrzeżeniach.',
+        setReducedTitle: 'Widok krytyczny / ograniczony',
+        setReducedDesc: 'Ograniczony do najważniejszych ograniczeń przestrzeni powietrznej dla pilotów dronów (lotniska, rezerwaty przyrody, strefy niebezpieczne itp.). Zalecany dla przejrzystego przeglądu.',
+        setAllTitle: 'Pełny widok (wszystkie dostępne strefy)',
+        setAllDesc: 'Ściśle odpytuje wszystkie ~35 warstw danych dostępnych z DiPUL (w tym obiekty kolejowe, działki mieszkalne, organy bezpieczeństwa itp.). Mapa może stać się nieczytelna.',
+        setActiveLayers: 'Aktywne warstwy w przeglądzie:',
         skyAlarmDesc: 'Alarm w czasie rzeczywistym dla statków powietrznych na małej wysokości i mapa geozon — ostrzeżenie dźwiękowe i wizualne przy zbliżaniu się statku powietrznego',
         alarmCraftCount: n => `${n} statków powietrznych`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
@@ -3246,6 +3381,39 @@
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
       return t[LANG] || t.en || COUNTRY.toUpperCase();
     }
+    // Länderspezifische GEOZONEN-Quellen (Landing- + Ergebnis-Quellenleiste). Nur die Geozonen-
+    // Quelle ist länderabhängig; Wetter/Verkehr/Geocoding (BrightSky, GFZ, Airplanes.live, Photon)
+    // sind überall identisch und bleiben statisch im Markup.
+    const COUNTRY_ZONE_SOURCES = {
+      de: [{ label: 'DiPUL WMS', url: 'https://www.dipul.de/' }, { label: 'DFS UTM', url: 'https://utm.dfs.de/' }],
+      fr: [{ label: 'Géoportail Drones', url: 'https://www.geoportail.gouv.fr/donnees/restrictions-pour-drones-de-loisir' }],
+      at: [{ label: 'Austro Control Dronespace', url: 'https://www.dronespace.at/' }],
+      ch: [{ label: 'BAZL / geo.admin.ch', url: 'https://www.geo.admin.ch/' }],
+      es: [{ label: 'ENAIRE', url: 'https://drones.enaire.es/' }, { label: 'EASA', url: 'https://www.easa.europa.eu/' }],
+      dk: [{ label: 'Trafikstyrelsen', url: 'https://www.droneregler.dk/' }],
+      ie: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }],
+    };
+    // Reihenfolge der Länder-Varianten in der Landing-Kachel „SkyCheck in anderen Ländern".
+    const COUNTRY_VARIANTS = [
+      { c: 'de', flag: '🇩🇪' }, { c: 'fr', flag: '🇫🇷' }, { c: 'at', flag: '🇦🇹' },
+      { c: 'ch', flag: '🇨🇭' }, { c: 'es', flag: '🇪🇸' }, { c: 'dk', flag: '🇩🇰' }, { c: 'ie', flag: '🇮🇪' },
+    ];
+    function renderZoneSources() {
+      const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
+        .map(s => `<a href="${s.url}" target="_blank" rel="noopener" class="l-src">${escapeHtml(s.label)}</a>`).join('');
+      ['l-src-zones-landing', 'l-src-zones-results'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = links; });
+    }
+    function renderCountryVariants() {
+      const box = document.getElementById('l-country-links');
+      if (!box) return;
+      box.innerHTML = COUNTRY_VARIANTS.filter(v => v.c !== COUNTRY).map(v => {
+        const nm = COUNTRY_NAMES[v.c][LANG] || COUNTRY_NAMES[v.c].en;
+        return `<a class="l-country-link" href="https://skycheck-${v.c}.netlify.app/" target="_blank" rel="noopener">`
+          + `<span class="cl-flag">${v.flag}</span>`
+          + `<span class="cl-logo">Sky<span>Check</span><b>-${v.c}</b></span>`
+          + `<span class="cl-name">${escapeHtml(nm)}</span></a>`;
+      }).join('');
+    }
     function _t(k) {
       const v = (I18N[LANG] || I18N.de)[k] ?? I18N.de[k] ?? k;
       return typeof v === 'string' ? v.replace(/\{country\}/g, _country()) : v;
@@ -3283,6 +3451,7 @@
       localStorage.setItem('skycheck-lang', LANG);
       document.querySelectorAll('.lang-menu').forEach(m => m.classList.add('hidden'));
       applyLang();
+      renderCountryVariants();   // Ländernamen in der Kachel folgen der UI-Sprache
       if (S.lat != null) {
         renderStatus(lastStatus);
         renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
@@ -3302,6 +3471,16 @@
         opt.addEventListener('click', () => switchLang(opt.dataset.lang));
       });
       document.addEventListener('click', () => document.querySelectorAll('.lang-menu').forEach(m => m.classList.add('hidden')));
+
+      // Länderspezifische Geozonen-Quellen + Länder-Varianten-Kachel füllen
+      renderZoneSources();
+      renderCountryVariants();
+      // Settings: DiPUL-Layer-Modus wirkt nur für Deutschland → außerhalb DE ausblenden,
+      // nur die (universelle) 48h-Vorschau-Einstellung bleibt sichtbar.
+      if (COUNTRY !== 'de') {
+        const deOnly = document.getElementById('settings-de-only');
+        if (deOnly) deOnly.style.display = 'none';
+      }
 
       // Spanien: Geozonen-Quellenumschalter auf dem Startbildschirm einblenden + verdrahten
       if (COUNTRY === 'es') {
