@@ -2326,7 +2326,7 @@
       <span>📲 <span data-i18n="pwaText">SkyCheck als App installieren — Schnellzugriff vom Startbildschirm</span></span>
       <div class="pwa-actions">
         <button id="pwa-install" data-i18n="pwaInstall">Installieren</button>
-        <button id="pwa-dismiss" aria-label="Schließen">✕</button>
+        <button id="pwa-dismiss" aria-label="Schließen" data-i18n-aria="closeAria">✕</button>
       </div>
     </div>
 
@@ -2413,7 +2413,7 @@
     <!-- [H-ALARM] === ALARM VIEW === -->
     <div id="alarm-view">
       <div class="av-topbar">
-        <button class="av-back" id="av-back">← Zurück</button>
+        <button class="av-back" id="av-back" data-i18n="avBack">← Zurück</button>
         <span class="av-loc" id="av-loc">—</span>
         <span class="av-stat watch" id="av-stat">● Beobachte</span>
       </div>
@@ -2608,7 +2608,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.93';
+    const APP_VER = '0.94';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2758,6 +2758,14 @@
         setAllTitle: 'Vollständige Ansicht (Alle verfügbaren Zonen)',
         setAllDesc: 'Fragt strikt alle bei DiPUL verfügbaren ~35 Datenebenen ab (inkl. Bahnanlagen, Wohngrundstücke, Sicherheitsbehörden, etc.). Karte kann unübersichtlich werden.',
         setActiveLayers: 'Aktive Layer in der Übersicht:',
+        secUpdated: 'Aktualisiert', cbBasis: 'Basis', tsNow: 'Jetzt',
+        loadingWeather: 'Wetterdaten werden geladen…', loadingMap: 'Karte wird geladen…', errLoad: 'Fehler beim Laden',
+        dpNoData: 'Keine Feuchtigkeitsdaten',
+        fzTitle: 'Gefrierender Regen — Absolutes Flugverbot',
+        fzDesc: (rain, temp) => `${rain} mm Niederschlag bei ${temp} °C Bodentemperatur. Eisbildung auf Oberflächen und Drohne.`,
+        fltcatExplainTitle: 'Flugkategorien erklärt', avBack: '← Zurück',
+        geoUnavailable: 'Geolokalisierung nicht verfügbar.',
+        acAlt: 'Höhe', acGround: 'Boden', closeAria: 'Schließen', alarmIdle: '⚠️ Fluggerät in Alarmzone!',
         skyAlarmDesc: 'Echtzeit-Tiefflieger-Alarm und Geozonen-Karte — akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen',
         alarmCraftCount: n => `${n} Fluggeräte`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
@@ -2901,6 +2909,14 @@
         setAllTitle: 'Full view (all available zones)',
         setAllDesc: 'Strictly queries all ~35 data layers available from DiPUL (incl. railway facilities, residential plots, security authorities, etc.). The map can get cluttered.',
         setActiveLayers: 'Active layers in the overview:',
+        secUpdated: 'Updated', cbBasis: 'Base', tsNow: 'Now',
+        loadingWeather: 'Loading weather data…', loadingMap: 'Loading map…', errLoad: 'Error loading',
+        dpNoData: 'No humidity data',
+        fzTitle: 'Freezing Rain — Absolute NoGo',
+        fzDesc: (rain, temp) => `${rain} mm precipitation at ${temp} °C surface temperature. Ice formation on surfaces and drone.`,
+        fltcatExplainTitle: 'Flight categories explained', avBack: '← Back',
+        geoUnavailable: 'Geolocation not available.',
+        acAlt: 'Altitude', acGround: 'Ground', closeAria: 'Close', alarmIdle: '⚠️ Aircraft in alarm zone!',
         skyAlarmDesc: 'Real-time low-altitude aircraft alarm and geozone map — acoustic and visual warning when aircraft approach',
         alarmCraftCount: n => `${n} aircraft`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
@@ -3036,6 +3052,22 @@
         setAllTitle: 'Vue complète (toutes les géozones disponibles)',
         setAllDesc: 'Interroge strictement les ~35 couches de données disponibles via DiPUL (installations ferroviaires, terrains résidentiels, autorités de sécurité, etc.). La carte peut devenir surchargée.',
         setActiveLayers: 'Couches actives dans la vue d\'ensemble :',
+        secUpdated: 'Actualisé',
+        cbBasis: 'Base',
+        tsNow: 'Maintenant',
+        loadingWeather: 'Chargement des données météo…',
+        loadingMap: 'Chargement de la carte…',
+        errLoad: 'Erreur de chargement',
+        dpNoData: 'Aucune donnée d\'humidité',
+        fzTitle: 'Pluie verglaçante — Interdiction absolue de vol',
+        fltcatExplainTitle: 'Catégories de vol expliquées',
+        avBack: '← Retour',
+        geoUnavailable: 'Géolocalisation indisponible.',
+        acAlt: 'Altitude',
+        acGround: 'Sol',
+        closeAria: 'Fermer',
+        alarmIdle: '⚠️ Aéronef dans la zone d\'alarme !',
+        fzDesc: (rain, temp) => `${rain} mm de précipitations à ${temp} °C de température de surface. Formation de glace sur les surfaces et le drone.`,
         skyAlarmDesc: 'Alarme en temps réel pour aéronefs à basse altitude et carte des géozones — avertissement acoustique et visuel lors de l\'approche d\'aéronefs',
         alarmCraftCount: n => `${n} aéronefs`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
@@ -3171,6 +3203,22 @@
         setAllTitle: 'Vista completa (todas las geozonas disponibles)',
         setAllDesc: 'Consulta estrictamente las ~35 capas de datos disponibles de DiPUL (incl. instalaciones ferroviarias, parcelas residenciales, autoridades de seguridad, etc.). El mapa puede saturarse.',
         setActiveLayers: 'Capas activas en la vista general:',
+        secUpdated: 'Actualizado',
+        cbBasis: 'Base',
+        tsNow: 'Ahora',
+        loadingWeather: 'Cargando datos meteorológicos…',
+        loadingMap: 'Cargando mapa…',
+        errLoad: 'Error al cargar',
+        dpNoData: 'Sin datos de humedad',
+        fzTitle: 'Lluvia engelante — Prohibición absoluta de vuelo',
+        fltcatExplainTitle: 'Categorías de vuelo explicadas',
+        avBack: '← Atrás',
+        geoUnavailable: 'Geolocalización no disponible.',
+        acAlt: 'Altitud',
+        acGround: 'Suelo',
+        closeAria: 'Cerrar',
+        alarmIdle: '⚠️ ¡Aeronave en zona de alarma!',
+        fzDesc: (rain, temp) => `${rain} mm de precipitación a ${temp} °C de temperatura de superficie. Formación de hielo en las superficies y el dron.`,
         skyAlarmDesc: 'Alarma en tiempo real para aeronaves a baja altitud y mapa de geozonas — aviso acústico y visual ante la aproximación de aeronaves',
         alarmCraftCount: n => `${n} aeronaves`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
@@ -3306,6 +3354,22 @@
         setAllTitle: 'Pełny widok (wszystkie dostępne strefy)',
         setAllDesc: 'Ściśle odpytuje wszystkie ~35 warstw danych dostępnych z DiPUL (w tym obiekty kolejowe, działki mieszkalne, organy bezpieczeństwa itp.). Mapa może stać się nieczytelna.',
         setActiveLayers: 'Aktywne warstwy w przeglądzie:',
+        secUpdated: 'Zaktualizowano',
+        cbBasis: 'Podstawa',
+        tsNow: 'Teraz',
+        loadingWeather: 'Ładowanie danych pogodowych…',
+        loadingMap: 'Ładowanie mapy…',
+        errLoad: 'Błąd ładowania',
+        dpNoData: 'Brak danych o wilgotności',
+        fzTitle: 'Marznący deszcz — Absolutny zakaz lotów',
+        fltcatExplainTitle: 'Kategorie lotów wyjaśnione',
+        avBack: '← Wstecz',
+        geoUnavailable: 'Geolokalizacja niedostępna.',
+        acAlt: 'Wysokość',
+        acGround: 'Ziemia',
+        closeAria: 'Zamknij',
+        alarmIdle: '⚠️ Statek powietrzny w strefie alarmowej!',
+        fzDesc: (rain, temp) => `${rain} mm opadów przy ${temp} °C temperatury powierzchni. Tworzenie się lodu na powierzchniach i dronie.`,
         skyAlarmDesc: 'Alarm w czasie rzeczywistym dla statków powietrznych na małej wysokości i mapa geozon — ostrzeżenie dźwiękowe i wizualne przy zbliżaniu się statku powietrznego',
         alarmCraftCount: n => `${n} statków powietrznych`,
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
@@ -3381,6 +3445,9 @@
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
       return t[LANG] || t.en || COUNTRY.toUpperCase();
     }
+    // BCP-47-Locale aus der UI-Sprache für Datums-/Zeitformatierung (statt hartkodiertem _locale()).
+    const _LOCALES = { de: _locale(), en: 'en-GB', fr: 'fr-FR', es: 'es-ES', pl: 'pl-PL' };
+    function _locale() { return _LOCALES[LANG] || 'en-GB'; }
     // Länderspezifische GEOZONEN-Quellen (Landing- + Ergebnis-Quellenleiste). Nur die Geozonen-
     // Quelle ist länderabhängig; Wetter/Verkehr/Geocoding (BrightSky, GFZ, Airplanes.live, Photon)
     // sind überall identisch und bleiben statisch im Markup.
@@ -3442,6 +3509,10 @@
         const v = _t(el.getAttribute('data-i18n-title'));
         if (typeof v === 'string') el.title = v;
       });
+      document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        const v = _t(el.getAttribute('data-i18n-aria'));
+        if (typeof v === 'string') el.setAttribute('aria-label', v);
+      });
       const LANG_FLAGS = { de: '🇩🇪', en: '🇬🇧', fr: '🇫🇷', es: '🇪🇸', pl: '🇵🇱' };
       document.querySelectorAll('.lang-flag-btn').forEach(lb => lb.textContent = LANG_FLAGS[LANG] || '🇩🇪');
     }
@@ -3453,11 +3524,20 @@
       applyLang();
       renderCountryVariants();   // Ländernamen in der Kachel folgen der UI-Sprache
       if (S.lat != null) {
-        renderStatus(lastStatus);
+        // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
+        // auch die per innerHTML/_t erzeugten Inhalte (Taupunkt, Wolkenbasis, METAR, Vorhersage,
+        // Vereisung, Zeitstempel) erfasst — nicht nur die statischen [data-i18n]-Labels.
+        renderStatus(lastStatus, lastZoneStatus);
         renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
+        renderWindProfile(lastWeather);
+        renderFreezingRain(lastWeather);
+        if (S._dfs !== undefined) { renderTempProfile(S._dfs); renderDewpointCard(S._dfs); renderCloudBase(lastWeather, S._dfs); }
+        if (S._weatherArr) { renderForecast(S._weatherArr, S._kpVal || 0); renderForecastDays(S._weatherArr, S._kpVal || 0); }
+        if (S._metars !== undefined) renderMetarCard(S._metars, S._taf);
         renderWarnings(lastStatus, lastKp, lastAircraft);
         renderZones(lastZones);
         if (S.map) renderMapStatus(lastWeather, lastZones);
+        renderUpdated();
       }
     }
     document.addEventListener('DOMContentLoaded', () => {
@@ -3629,7 +3709,8 @@
     /* [J-LOADING] =======================================================
        LOADING
     ================================================================ */
-    function showLoad(msg = 'Wird geladen…') {
+    function showLoad(msg) {
+      if (msg == null) msg = _t('loading');
       $loadMsg.textContent = msg;
       $load.classList.add('active');
     }
@@ -3805,7 +3886,7 @@
        GPS
     ================================================================ */
     $('btn-gps').addEventListener('click', () => {
-      if (!navigator.geolocation) { alert('Geolokalisierung nicht verfügbar.'); return; }
+      if (!navigator.geolocation) { alert(_t('geoUnavailable')); return; }
       showLoad('Standort wird ermittelt…');
       navigator.geolocation.getCurrentPosition(async pos => {
         S.lat = pos.coords.latitude;
@@ -4163,7 +4244,7 @@
        MAIN CHECK
     ================================================================ */
     async function runCheck() {
-      showLoad('Wetterdaten werden geladen…');
+      showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
       $res.style.display = 'block';
 
@@ -4203,6 +4284,7 @@
 
         // DFS UTM altitude weather data (non-blocking, best-effort)
         fetchDfsWeather(S.lat, S.lon).then(dfs => {
+          S._dfs = dfs;   // Cache für Re-Render bei Sprachwechsel
           renderTempProfile(dfs);
           renderDewpointCard(dfs);
           renderCloudBase(now, dfs);
@@ -4237,6 +4319,7 @@
             const tr = await Promise.allSettled(others.map(m => fetchTaf(m.icaoId)));
             tr.forEach((r, i) => { if (r.status === 'fulfilled' && r.value) tafCache[others[i].icaoId] = r.value; });
           }
+          S._metars = metars; S._taf = tafData;   // Cache für Re-Render bei Sprachwechsel
           renderMetarCard(metars, tafData);
           if (S.map) renderMetarMarkers(metars, tafCache);
           if (metars.length > 0) {
@@ -4253,17 +4336,17 @@
         }).catch(e => console.warn('METAR flow error:', e));
 
         // Map
-        $loadMsg.textContent = 'Karte wird geladen…';
+        $loadMsg.textContent = _t('loadingMap');
         initMap(S.lat, S.lon, aircraft, zones);
 
-        $('nav-loc-time').textContent =
-          'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        S._updatedAt = new Date();
+        renderUpdated();
 
         hideLoad();
       } catch (e) {
         hideLoad();
         console.error(e);
-        setStatus('warn', '⚠️', 'Fehler beim Laden', e.message);
+        setStatus('warn', '⚠️', _t('errLoad'), e.message);
       }
     }
 
@@ -4414,7 +4497,7 @@
           if (last3.length === 0) return null;
           const bars = last3.map((x, i) => ({
             v: x.v,
-            label: new Date(x.dt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }),
+            label: new Date(x.dt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }),
             ref: i === last3.length - 1,
             forecast: false
           }));
@@ -4425,7 +4508,7 @@
           // 4. Balken: letzter Kp-Vorhersagewert (gestrichelt, End-Zeitstempel des 3h-Fensters)
           const kpFV = d3 && d3.Kp && d3.Kp.length > 0 ? parseFloat(d3.Kp[d3.Kp.length - 1]) : NaN;
           const kpFDt = d3 && d3.datetime && d3.datetime.length > 0 ? d3.datetime[d3.datetime.length - 1] : null;
-          const kpFL = kpFDt ? new Date(kpFDt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '';
+          const kpFL = kpFDt ? new Date(kpFDt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '';
           if (!isNaN(kpFV) && kpFL) bars.push({ v: kpFV, label: kpFL, ref: false, forecast: true });
           if (!isNaN(val)) return { val, dt, stat, bars, kpForecastDt: kpFDt };
         }
@@ -5256,7 +5339,7 @@
       const rc = rain > 0.3 ? 'c-nogo' : rain > 0 ? 'c-warn' : '';
       const kc = kp > 5 ? 'c-nogo' : kp > 3.3 ? 'c-warn' : 'c-go';
       const kpTs = kpGfz && kpGfz.kpForecastDt
-        ? new Date(kpGfz.kpForecastDt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'
+        ? new Date(kpGfz.kpForecastDt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'
         : '';
 
       let acHtml = `<div class="fc-val">${_t('noAircraft')}</div>`;
@@ -5285,7 +5368,7 @@
           const bars = kpGfz.bars || [];
           const lastRef = bars.slice().reverse().find(b => b.ref);
           const ts = lastRef ? lastRef.label
-            : (kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-');
+            : (kpGfz.dt ? new Date(kpGfz.dt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-');
           const bc = v => v > 5 ? '#ef476f' : v > 3.3 ? '#ffb703' : '#06d6a0';
           const maxK = 9, W = 130, H = 38, n = Math.max(bars.length, 1);
           const bw = Math.floor((W - n * 2) / n);
@@ -5372,7 +5455,7 @@
     function renderDewpointCard(dfs) {
       const el = document.getElementById('dewpoint-card'); if (!el) return;
       if (!dfs || !dfs.temperatures || !dfs.humidity || !dfs.humidity.length) {
-        el.innerHTML = '<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">Keine Feuchtigkeitsdaten</span></div></div>'; return; }
+        el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">${_t('dpNoData')}</span></div></div>`; return; }
       const rows = [];
       for (const t of dfs.temperatures) {
         const h = dfs.humidity.find(x => x.height === t.height); if (!h) continue;
@@ -5387,6 +5470,11 @@
       rows.sort((a, b) => b.height - a.height);
       el.innerHTML = `<div class="wind-profile">${rows.map(r => `<div class="wp-row" style="flex-wrap:wrap;gap:0.4rem;"><span class="wp-alt">${r.height} m</span><span class="mono" style="font-size:0.78rem;flex:1;min-width:120px">T ${r.temp.toFixed(1)}° / Td ${r.td}°</span><span class="mono ${r.cls}" style="font-size:0.78rem;font-weight:600">Δ ${r.spread}°C</span><div style="width:100%;padding-left:64px;font-size:0.68rem;color:var(--text3);margin-top:-2px">${r.warn}${r.rh != null ? ' · RH ' + r.rh.toFixed(0) + '%' : ''}</div></div>`).join('')}</div>`;
     }
+    // „Aktualisiert: HH:MM" im Kopf — Label + Zeitformat folgen der UI-Sprache (re-render bei Sprachwechsel).
+    function renderUpdated() {
+      const el = $('nav-loc-time'); if (!el || !S._updatedAt) return;
+      el.textContent = _t('secUpdated') + ': ' + S._updatedAt.toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit' });
+    }
     function renderCloudBase(w, dfs) {
       const el = document.getElementById('cloudbase-card'); if (!el) return;
       let temp = w?.temperature; let td = w?.dew_point;
@@ -5398,7 +5486,7 @@
         el.innerHTML = '<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">—</span></div></div>'; return; }
       const spread = temp - td; const base = Math.round(spread * 125);
       const cls = base < 150 ? 'c-nogo' : base < 300 ? 'c-warn' : 'c-go';
-      el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">Basis</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${spread.toFixed(1)} °C &nbsp;(T ${temp.toFixed(1)}° − Td ${td.toFixed(1)}°)</span></div></div>`;
+      el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">${_t('cbBasis')}</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${spread.toFixed(1)} °C &nbsp;(T ${temp.toFixed(1)}° − Td ${td.toFixed(1)}°)</span></div></div>`;
     }
     /* [J-RENDER-METAR] */
     function renderMetarCard(metars, taf) {
@@ -5419,7 +5507,7 @@
       const wgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
       let tafHtml = '';
       if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${escapeHtml(compact)}</pre></div>`; }
-      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${escapeHtml(nearest.name)} (${escapeHtml(nearest.icaoId)}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="Flugkategorien erklaert">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${escapeHtml(nearest.rawOb || '')}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${escapeHtml(nearest.name)} (${escapeHtml(nearest.icaoId)}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="${_t('fltcatExplainTitle')}">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${escapeHtml(nearest.rawOb || '')}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
     }
 
     function renderFreezingRain(w) {
@@ -5427,8 +5515,8 @@
       const rain = w?.precipitation ?? 0; const temp = w?.temperature ?? 99;
       if (rain > 0 && temp <= 0) { el.style.display = '';
         const t = document.getElementById('fz-rain-title'); const d = document.getElementById('fz-rain-desc');
-        if (t) t.textContent = LANG === 'en' ? 'Freezing Rain — Absolute NoGo' : 'Gefrierender Regen — Absolutes Flugverbot';
-        if (d) d.textContent = LANG === 'en' ? `${rain.toFixed(2)} mm precipitation at ${temp.toFixed(1)} °C surface temperature. Ice formation on surfaces and drone.` : `${rain.toFixed(2)} mm Niederschlag bei ${temp.toFixed(1)} °C Bodentemperatur. Eisbildung auf Oberflächen und Drohne.`;
+        if (t) t.textContent = _t('fzTitle');
+        if (d) d.textContent = _t('fzDesc')(rain.toFixed(2), temp.toFixed(1));
       } else { el.style.display = 'none'; }
     }
 
@@ -5492,7 +5580,7 @@
         const isNow = i === 0;
         if (!isNow && (CFG.forecastMode || 'daylight') !== 'allday' && (timeUtc < startUtc || timeUtc > endUtc)) return;
 
-        const day = dt.toLocaleDateString('de-DE', { weekday: 'short' });
+        const day = dt.toLocaleDateString(_locale(), { weekday: 'short' });
 
         if (day !== lastDay && i > 0 && html !== '') {
           html += `<div class="fc-day-sep">
@@ -5509,7 +5597,7 @@
         if (gusts > 10 || rain > 0.3 || kp > 5) dot = 'nogo';
         else if (gusts > 7 || rain > 0 || kp > 3.3) dot = 'warn';
 
-        const timeStr = isNow ? 'Jetzt' : dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        const timeStr = isNow ? _t('tsNow') : dt.toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit' });
 
         html += `<div class="fc-slot${isNow ? ' now' : ''}">
       <div class="fc-time">${timeStr}</div>
@@ -5551,8 +5639,8 @@
       const html = dayKeys.map(key => {
         const entries = byDay[key];
         const dt = new Date(key);
-        const dayName = dt.toLocaleDateString('de-DE', { weekday: 'short' });
-        const dateStr = dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+        const dayName = dt.toLocaleDateString(_locale(), { weekday: 'short' });
+        const dateStr = dt.toLocaleDateString(_locale(), { day: '2-digit', month: '2-digit' });
 
         const temps = entries.map(w => w.temperature).filter(t => t != null);
         const minT = temps.length ? Math.min(...temps).toFixed(0) : '–';
@@ -6120,7 +6208,7 @@
         const alt = a.altGeo ?? a.altBaro ?? 0;
         const pop = `<div class="ac-popup">
                              <b>${escapeHtml(a.callsign || a.icao)}</b><br>
-                             ${alt > 0 ? 'Höhe: ' + Math.round(alt) + ' m<br>' : 'Boden<br>'}
+                             ${alt > 0 ? _t('acAlt') + ': ' + Math.round(alt) + ' m<br>' : _t('acGround') + '<br>'}
                              ${a.vel ? 'Speed: ' + Math.round(a.vel) + ' km/h' : ''}
                            </div>`;
         const icon = getAircraftIcon(a);
@@ -6132,7 +6220,7 @@
 
   </script>
   <div id="alarm-banner">
-    <span id="alarm-text">⚠️ Fluggerät in Alarmzone!</span>
+    <span id="alarm-text" data-i18n="alarmIdle">⚠️ Fluggerät in Alarmzone!</span>
     <button class="alarm-dismiss" onclick="silenceAlarm()">Stumm schalten ✕</button>
   </div>
 <script>
