@@ -25,7 +25,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie siedem to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v0.93
+📦 **Aktualna wersja:** v0.95
 
 ---
 
@@ -200,6 +200,8 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.95 | Poprawka do v0.94: globalne zastąpienie de-DE→_locale() trafiło również w samą definicję mapy _LOCALES (de: _locale()), która odczytywała _LOCALES, gdy ta jeszcze się inicjalizowała — błąd martwej strefy czasowej (temporal dead zone), który uniemożliwiał uruchomienie całej aplikacji. Przywrócono literał „de-DE”. (node --check przechodzi pod względem składni; była to regresja wyłącznie w czasie wykonania, wychwycona w testach dymnych na żywo.) |
+| v0.94 | Pełny audyt i18n — koniec z niemieckim przeciekającym do innych języków. Kilka dynamicznie renderowanych sekcji (analiza punktu rosy/oblodzenia, etykiety METAR/TAF, szacowana podstawa chmur, komunikaty ładowania/błędów, dymki znaczników statków powietrznych, alerty, znacznik czasu „Zaktualizowano”) było albo zaszytych na sztywno po niemiecku, albo przy przełączeniu języka renderowało ponownie jedynie swoje statyczne etykiety — przez co użytkownicy angielsko- i francuskojęzyczni wciąż widzieli niemiecki. Teraz każdy ciąg widoczny dla użytkownika przechodzi przez tabelę i18n (16 nowych kluczy × 5 języków), pomocnik _locale() steruje całym formatowaniem daty/godziny (dotąd zaszytym na sztywno jako de-DE), a przełączenie języka renderuje ponownie wszystkie dynamiczne sekcje wyników, nie tylko statyczne etykiety data-i18n |
 | v0.93 | Dopracowanie ekranu startowego i poprawność dla poszczególnych krajów. (1) Nowy kafelek startowy „SkyCheck w innych krajach” zawierający każdy wariant krajowy jako bezpośredni odnośnik, stylizowany jak logotyp (Sky biały · Check cyjanowy · -xx koralowy); bieżący kraj jest pomijany, a etykiety podążają za językiem interfejsu. (2) Źródła geostref zależne od kraju: pasek źródeł na ekranie startowym i na stronie wyników (oraz przełącznik warstwy mapy, dawniej „strefy DiPUL”) pokazują teraz właściwego dostawcę dla każdego kraju zamiast wszędzie DiPUL — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) Ustawienia w pełni zlokalizowane we wszystkich pięciu językach (wcześniej tylko po niemiecku); opcja trybu warstwy DiPUL — dotycząca wyłącznie Niemiec — jest teraz ukrywana poza DE, pozostawiając jedynie niezależne od kraju ustawienie prognozy 48-godzinnej |
 | v0.92 | 🇪🇸 **Przełącznik źródła dla Hiszpanii**: ekran startowy pozwala wybrać źródło geostref — **EASA** Common Repository (wektor ArcGIS po stronie klienta, kolorowany według typu strefy, oparty na widocznym obszarze; domyślnie) lub **ENAIRE** servAIS (dotychczasowy oficjalny WMS). EASA renderuje czytelniejsze, przezroczyste wielokąty stref zamiast rozciągniętej na całą Hiszpanię warstwy WMS; wybór jest zapamiętywany w `localStorage` |
 | v0.91 | 🇮🇪 Poprawka: `getLegalLink` zawieszał się przy liczbowych wartościach `legal` (pole `Paragraf` Danii jest liczbą), co wyłączało cały potok renderowania dla DK — przekonwertowano na łańcuch przed dopasowaniem regexem |

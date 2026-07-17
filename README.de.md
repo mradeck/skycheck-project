@@ -25,7 +25,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v0.93
+📦 **Aktuelle Version:** v0.95
 
 ---
 
@@ -200,6 +200,8 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v0.95 | **Hotfix zu v0.94:** Die pauschale Ersetzung `de-DE` → `_locale()` hatte auch die Definition der `_LOCALES`-Map selbst getroffen (`de: _locale()`), die `_LOCALES` las, während diese noch initialisiert wurde — ein Temporal-Dead-Zone-Fehler, der den Start der gesamten App verhinderte. Das Literal `'de-DE'` wurde wiederhergestellt. (`node --check` bestätigt die Syntax; es handelte sich um eine reine Laufzeit-Regression, entdeckt im Live-Smoke-Test.) |
+| v0.94 | **Vollständiges i18n-Audit — kein Deutsch sickert mehr in andere Sprachen.** Mehrere dynamisch gerenderte Bereiche (Taupunkt-/Vereisungsanalyse, METAR/TAF-Beschriftungen, geschätzte Wolkenbasis, Lade-/Fehlermeldungen, Fluggerät-Marker-Popups, Warnungen, der „Aktualisiert"-Zeitstempel) waren entweder in Deutsch hartkodiert oder rendern beim Sprachwechsel nur ihre statischen Beschriftungen neu — sodass englisch- und französischsprachige Nutzer weiterhin Deutsch sahen. Nun läuft jede nutzersichtbare Zeichenkette über die i18n-Tabelle (16 neue Schlüssel × 5 Sprachen), ein `_locale()`-Helfer steuert die gesamte Datums-/Zeitformatierung (zuvor hartkodiert `de-DE`), und ein Sprachwechsel rendert alle dynamischen Ergebnisbereiche neu, nicht nur die statischen `data-i18n`-Beschriftungen |
 | v0.93 | **Startbildschirm-Feinschliff & länderspezifische Korrektheit.** (1) Neue Startbildschirm-Kachel „SkyCheck in anderen Ländern" listet alle übrigen Ländervarianten als Direktlink auf, gestaltet wie der Wortmarke (Sky weiß · Check cyan · -xx koralle); das aktuelle Land wird ausgelassen, die Beschriftungen folgen der UI-Sprache. (2) Länderspezifische Geozonen-Quellen: Die Quellenleiste auf Start- und Ergebnisseite (sowie der Kartenlayer-Umschalter, vormals „DiPUL-Zonen") zeigt nun statt überall DiPUL den korrekten Anbieter je Land — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) Einstellungen vollständig in allen fünf Sprachen lokalisiert (zuvor nur Deutsch); die DiPUL-Layer-Modus-Option — die nur Deutschland betrifft — wird außerhalb DE ausgeblendet, sodass nur die länderunabhängige 48-h-Vorhersage-Einstellung bleibt |
 | v0.92 | 🇪🇸 **Spanien-Quellenumschalter**: Auf dem Startbildschirm ist die Geozonen-Datenquelle wählbar — **EASA** Common Repository (clientseitiger ArcGIS-Vektor, nach Zonentyp gefärbt, viewport-basiert; Default) oder **ENAIRE** servAIS (der bisherige amtliche WMS). EASA rendert sauberere, transparente Zonen-Polygone statt des flächigen ENAIRE-WMS-Teppichs; Auswahl in `localStorage` persistiert |
 | v0.91 | 🇮🇪 Bugfix: `getLegalLink` stürzte bei numerischen `legal`-Werten ab (Dänemarks `Paragraf`-Feld ist eine Zahl), was die gesamte Render-Pipeline für DK lahmlegte — vor dem Regex-Match in String umgewandelt |

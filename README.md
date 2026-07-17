@@ -25,7 +25,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v0.93
+📦 **Current version:** v0.95
 
 ---
 
@@ -200,6 +200,8 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.95 | Hotfix for v0.94: the global `de-DE`→`_locale()` replacement had also hit the `_LOCALES` map's own definition (`de: _locale()`), which read `_LOCALES` while it was still initialising — a temporal-dead-zone error that stopped the whole app from starting. Restored the `'de-DE'` literal. (`node --check` passes on syntax; this was a runtime-only regression, caught in the live smoke test.) |
+| v0.94 | **Full i18n audit — no more German leaking into other languages.** Several dynamically-rendered sections (dew-point/icing analysis, METAR/TAF labels, estimated cloud base, loader/error messages, aircraft-marker popups, alerts, the "Updated" timestamp) were either hardcoded in German or only re-rendered their static labels on a language switch — so English/French users still saw German. Now every user-facing string routes through the i18n table (16 new keys × 5 languages), a `_locale()` helper drives all date/time formatting (was hardcoded `de-DE`), and switching language re-renders **all** dynamic result sections, not just the static `data-i18n` labels |
 | v0.93 | **Landing polish & per-country correctness.** (1) New start-screen tile **"SkyCheck in other countries"** listing every other country variant as a direct link, styled like the wordmark (Sky white · Check cyan · `-xx` coral); the current country is omitted and the labels follow the UI language. (2) **Per-country geo-zone sources**: the source strip on the start and results pages (and the map layer toggle, formerly "DiPUL zones") now show the correct provider for each country instead of DiPUL everywhere — DE DiPUL/DFS, FR Géoportail, AT Austro Control, CH BAZL, ES ENAIRE/EASA, DK Trafikstyrelsen, IE EASA. (3) **Settings fully localised** in all five languages (previously German-only); the DiPUL layer-mode option — which only affects Germany — is now hidden outside DE, leaving just the country-agnostic 48 h forecast setting |
 | v0.92 | 🇪🇸 **Spain source toggle**: the start screen now lets you pick the geo-zone source — **EASA** Common Repository (client-side ArcGIS vector, coloured by zone type, viewport-based; default) or **ENAIRE** servAIS (the previous official WMS). EASA renders cleaner, transparent per-zone polygons instead of the ENAIRE full-country WMS blanket; choice persists in `localStorage` |
 | v0.91 | 🇮🇪 Bugfix: `getLegalLink` crashed on numeric `legal` values (Denmark's `Paragraf` field is a number), which took down the whole render pipeline for DK — coerced to string before the regex match |
