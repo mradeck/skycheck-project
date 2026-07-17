@@ -19,13 +19,13 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | 🇫🇷 **Francja** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | zbiór danych ED-269 (francuskie strefy UAS) |
 | 🇦🇹 **Austria** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — auto-aktualizacja co miesiąc |
 | 🇨🇭 **Szwajcaria** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
-| 🇪🇸 **Hiszpania** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | ENAIRE servAIS — WMS + ArcGIS Identify |
+| 🇪🇸 **Hiszpania** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (wektor) **lub** ENAIRE servAIS (WMS) — przełączane na ekranie startowym, domyślnie EASA |
 | 🇩🇰 **Dania** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (wektor) |
 | 🇮🇪 **Irlandia** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (wektor, wstępne) |
 
 > Wszystkie siedem to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v0.91
+📦 **Aktualna wersja:** v0.92
 
 ---
 
@@ -73,7 +73,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Geostrefy 🇫🇷** zbiór danych ED-269 | francuskie strefy UAS (`data/uas-zones-fr.json`) | via `zones-fr.js` |
 | **Geostrefy 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | austriackie strefy UAS, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
 | **Geostrefy 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | szwajcarskie strefy UAS `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
-| **Geostrefy 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) | hiszpańskie strefy UAS `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) | ✅ |
+| **Geostrefy 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | hiszpańskie strefy UAS — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **lub** EASA `geozone_EASA` (wektor ArcGIS, oparty na widocznym obszarze); przełączane, domyślnie EASA | ✅ |
 | **Geostrefy 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | duńskie strefy UAS (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geostrefy 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | irlandzkie strefy UAS `ie_geozones` (ArcGIS, ED-318, wstępne) | ✅ |
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v0.92 | 🇪🇸 **Przełącznik źródła dla Hiszpanii**: ekran startowy pozwala wybrać źródło geostref — **EASA** Common Repository (wektor ArcGIS po stronie klienta, kolorowany według typu strefy, oparty na widocznym obszarze; domyślnie) lub **ENAIRE** servAIS (dotychczasowy oficjalny WMS). EASA renderuje czytelniejsze, przezroczyste wielokąty stref zamiast rozciągniętej na całą Hiszpanię warstwy WMS; wybór jest zapamiętywany w `localStorage` |
 | v0.91 | 🇮🇪 Poprawka: `getLegalLink` zawieszał się przy liczbowych wartościach `legal` (pole `Paragraf` Danii jest liczbą), co wyłączało cały potok renderowania dla DK — przekonwertowano na łańcuch przed dopasowaniem regexem |
 | v0.90 | 🇩🇰 **Dania** (`skycheck-dk`) i 🇮🇪 **Irlandia** (`skycheck-ie`): dwa klienckie adaptery **wektorowe ArcGIS** — DK z FeatureServera Trafikstyrelsen, IE z EASA Common Repository (ED-318, wstępne); oba pobierają GeoJSON bezpośrednio (otwarty CORS), kolorują wielokąty według kategorii i obsługują nakładkę całego kraju |
 | v0.89 | Wyszukiwanie adresów ograniczone do aktywnego kraju za pomocą filtra `countrycode` w Photon (usuwa transgranicznych sąsiadów, których przepuszczał bounding box) |

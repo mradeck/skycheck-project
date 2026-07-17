@@ -19,13 +19,13 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 | 🇫🇷 **France** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | Jeu de données ED-269 (zones UAS françaises) |
 | 🇦🇹 **Autriche** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — mise à jour mensuelle automatique |
 | 🇨🇭 **Suisse** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify API |
-| 🇪🇸 **Espagne** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | ENAIRE servAIS — WMS + ArcGIS Identify |
+| 🇪🇸 **Espagne** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (vecteur) **ou** ENAIRE servAIS (WMS) — commutable sur l'écran de démarrage, EASA par défaut |
 | 🇩🇰 **Danemark** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (vecteur) |
 | 🇮🇪 **Irlande** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (vecteur, préliminaire) |
 
 > Les sept sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
-📦 **Version actuelle :** v0.91
+📦 **Version actuelle :** v0.92
 
 ---
 
@@ -73,7 +73,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 | **Géozones 🇫🇷** Jeu de données ED-269 | Zones UAS françaises (`data/uas-zones-fr.json`) | via `zones-fr.js` |
 | **Géozones 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | Zones UAS autrichiennes, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
 | **Géozones 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | Zones UAS suisses `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
-| **Géozones 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) | Zones UAS espagnoles `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) | ✅ |
+| **Géozones 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Zones UAS espagnoles — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **ou** EASA `geozone_EASA` (vecteur ArcGIS, basé sur la fenêtre d'affichage) ; commutable, EASA par défaut | ✅ |
 | **Géozones 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Zones UAS danoises (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Géozones 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Zones UAS irlandaises `ie_geozones` (ArcGIS, ED-318, préliminaire) | ✅ |
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v0.92 | 🇪🇸 **Sélecteur de source pour l'Espagne** : l'écran de démarrage permet de choisir la source des géozones — **EASA** Common Repository (vecteur ArcGIS côté client, coloré par type de zone, basé sur la fenêtre d'affichage ; par défaut) ou **ENAIRE** servAIS (l'ancien WMS officiel). EASA affiche des polygones de zones plus nets et transparents au lieu de la nappe WMS couvrant toute l'Espagne ; le choix est conservé dans `localStorage` |
 | v0.91 | 🇮🇪 Correctif : `getLegalLink` plantait sur des valeurs `legal` numériques (le champ `Paragraf` du Danemark est un nombre), ce qui bloquait tout le pipeline de rendu pour le DK — converti en chaîne avant la correspondance regex |
 | v0.90 | 🇩🇰 **Danemark** (`skycheck-dk`) & 🇮🇪 **Irlande** (`skycheck-ie`) : deux adaptateurs **vecteur ArcGIS** côté client — DK depuis le FeatureServer de Trafikstyrelsen, IE depuis l'EASA Common Repository (ED-318, préliminaire) ; les deux récupèrent le GeoJSON directement (CORS ouvert), colorent les polygones par catégorie et prennent en charge la superposition nationale |
 | v0.89 | Recherche d'adresse restreinte au pays actif via le filtre `countrycode` de Photon (supprime les voisins transfrontaliers que la bounding box laissait passer) |

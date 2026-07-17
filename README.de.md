@@ -19,13 +19,13 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | 🇫🇷 **Frankreich** | [skycheck-fr.netlify.app](https://skycheck-fr.netlify.app/) | ED-269-Datensatz (französische UAS-Zonen) |
 | 🇦🇹 **Österreich** | [skycheck-at.netlify.app](https://skycheck-at.netlify.app/) | Austro Control ED-269 — monatlich automatisch aktualisiert |
 | 🇨🇭 **Schweiz** | [skycheck-ch.netlify.app](https://skycheck-ch.netlify.app/) | BAZL / geo.admin.ch — WMS + Identify-API |
-| 🇪🇸 **Spanien** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | ENAIRE servAIS — WMS + ArcGIS Identify |
+| 🇪🇸 **Spanien** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (Vektor) **oder** ENAIRE servAIS (WMS) — auf dem Startbildschirm umschaltbar, Default EASA |
 | 🇩🇰 **Dänemark** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (Vektor) |
 | 🇮🇪 **Irland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, vorläufig) |
 
 > Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v0.91
+📦 **Aktuelle Version:** v0.92
 
 ---
 
@@ -73,7 +73,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | **Geozonen 🇫🇷** ED-269-Datensatz | Französische UAS-Zonen (`data/uas-zones-fr.json`) | via `zones-fr.js` |
 | **Geozonen 🇦🇹** [Austro Control / dronespace.at](https://www.dronespace.at/) | Österreichische UAS-Zonen, ED-269 (`data/uas-zones-at.json`) | via `zones-at.js` |
 | **Geozonen 🇨🇭** [BAZL / geo.admin.ch](https://www.geo.admin.ch/) | Schweizer UAS-Zonen `ch.bazl.einschraenkungen-drohnen` (WMS + Identify) | ✅ |
-| **Geozonen 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) | Spanische UAS-Zonen `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) | ✅ |
+| **Geozonen 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Spanische UAS-Zonen — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **oder** EASA `geozone_EASA` (ArcGIS-Vektor, viewport-basiert); umschaltbar, Default EASA | ✅ |
 | **Geozonen 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Dänische UAS-Zonen (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geozonen 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irische UAS-Zonen `ie_geozones` (ArcGIS, ED-318, vorläufig) | ✅ |
 
@@ -200,6 +200,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v0.92 | 🇪🇸 **Spanien-Quellenumschalter**: Auf dem Startbildschirm ist die Geozonen-Datenquelle wählbar — **EASA** Common Repository (clientseitiger ArcGIS-Vektor, nach Zonentyp gefärbt, viewport-basiert; Default) oder **ENAIRE** servAIS (der bisherige amtliche WMS). EASA rendert sauberere, transparente Zonen-Polygone statt des flächigen ENAIRE-WMS-Teppichs; Auswahl in `localStorage` persistiert |
 | v0.91 | 🇮🇪 Bugfix: `getLegalLink` stürzte bei numerischen `legal`-Werten ab (Dänemarks `Paragraf`-Feld ist eine Zahl), was die gesamte Render-Pipeline für DK lahmlegte — vor dem Regex-Match in String umgewandelt |
 | v0.90 | 🇩🇰 **Dänemark** (`skycheck-dk`) & 🇮🇪 **Irland** (`skycheck-ie`): zwei client-seitige **ArcGIS-Vektor**-Adapter — DK vom FeatureServer der Trafikstyrelsen, IE aus dem EASA Common Repository (ED-318, vorläufig); beide holen GeoJSON direkt (CORS-offen), färben Polygone nach Kategorie und unterstützen das Ganzland-Overlay |
 | v0.89 | Adresssuche auf das aktive Land beschränkt via Photon-`countrycode`-Filter (entfernt grenznahe Nachbarn, die die Bounding-Box durchgelassen hatte) |
