@@ -248,6 +248,49 @@
       margin-bottom: 1.5rem;
     }
 
+    /* Spanien-Quellenumschalter (Startbildschirm) */
+    .es-src-wrap {
+      margin: 0.9rem auto 0;
+      max-width: 24rem;
+      text-align: center;
+    }
+    .es-src-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--muted, #8aa);
+      margin-bottom: 0.4rem;
+    }
+    .es-src-seg {
+      display: inline-flex;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .es-src-opt {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted, #9ab);
+      border: none;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .es-src-opt + .es-src-opt {
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .es-src-opt.active {
+      background: var(--accent);
+      color: #04212b;
+    }
+    .es-src-hint {
+      font-size: 0.68rem;
+      color: var(--muted, #789);
+      margin-top: 0.4rem;
+    }
+
     .l-logo {
       font-size: 3rem;
       font-weight: 900;
@@ -2106,6 +2149,16 @@
         <div class="suggestions" id="suggestions"></div>
       </div>
 
+      <!-- Spanien: Geozonen-Datenquelle wählen (nur bei COUNTRY==='es' sichtbar) -->
+      <div class="es-src-wrap" id="es-src-wrap" style="display:none">
+        <div class="es-src-label" data-i18n="esSrcHdr">Geozonen-Datenquelle</div>
+        <div class="es-src-seg" role="group">
+          <button class="es-src-opt" id="es-src-easa" data-src="easa" data-i18n="esSrcEasa">EASA (vorläufig)</button>
+          <button class="es-src-opt" id="es-src-local" data-src="local" data-i18n="esSrcLocal">ENAIRE (lokal)</button>
+        </div>
+        <div class="es-src-hint" data-i18n="esSrcHint">EASA: übersichtliche Vektor-Zonen · ENAIRE: amtlicher Live-WMS</div>
+      </div>
+
       <div class="l-other-apps">
         <div class="l-other-label" data-i18n="otherApps">Weitere Apps</div>
         <a href="https://skyalarm.netlify.app/skyalarm.html" target="_blank" rel="noopener" class="l-app-card">
@@ -2485,7 +2538,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.91';
+    const APP_VER = '0.92';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2515,6 +2568,8 @@
       de: {
         loading: 'Wird geladen…',
         badge: 'Drohnenflugprüfung · {country}',
+        esSrcHdr: 'Geozonen-Datenquelle', esSrcEasa: 'EASA (vorläufig)', esSrcLocal: 'ENAIRE (lokal)',
+        esSrcHint: 'EASA: übersichtliche Vektor-Zonen · ENAIRE: amtlicher Live-WMS',
         subtitle: 'Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index',
         placeholder: 'z. B. Brandenburger Tor, Berlin',
         btnCheck: 'Prüfen', gpsTitle: 'Aktuellen Standort verwenden',
@@ -2643,6 +2698,8 @@
       en: {
         loading: 'Loading…',
         badge: 'Drone Flight Check · {country}',
+        esSrcHdr: 'Geo-zone data source', esSrcEasa: 'EASA (preliminary)', esSrcLocal: 'ENAIRE (local)',
+        esSrcHint: 'EASA: clean vector zones · ENAIRE: official live WMS',
         subtitle: 'Geo-zone map, airspace alerts, flight movements and weather with Kp-Index',
         placeholder: 'e.g. Brandenburg Gate, Berlin',
         btnCheck: 'Check', gpsTitle: 'Use current location',
@@ -2771,6 +2828,8 @@
       fr: {
         loading: 'Chargement…',
         badge: 'Vérification de vol de drone · {country}',
+        esSrcHdr: 'Source des géo-zones', esSrcEasa: 'EASA (préliminaire)', esSrcLocal: 'ENAIRE (local)',
+        esSrcHint: 'EASA : zones vectorielles claires · ENAIRE : WMS officiel en direct',
         subtitle: 'Carte des géozones, alertes d\'espace aérien, trafic aérien et météo avec Kp-Index',
         placeholder: 'ex. Porte de Brandebourg, Berlin',
         btnCheck: 'Vérifier', gpsTitle: 'Utiliser la position actuelle',
@@ -2891,6 +2950,8 @@
       es: {
         loading: 'Cargando…',
         badge: 'Verificación de vuelo de dron · {country}',
+        esSrcHdr: 'Fuente de datos de geozonas', esSrcEasa: 'EASA (preliminar)', esSrcLocal: 'ENAIRE (local)',
+        esSrcHint: 'EASA: zonas vectoriales claras · ENAIRE: WMS oficial en vivo',
         subtitle: 'Mapa de geozonas, alertas de espacio aéreo, tráfico aéreo y meteorología con Kp-Index',
         placeholder: 'p.ej. Puerta de Brandeburgo, Berlín',
         btnCheck: 'Verificar', gpsTitle: 'Usar ubicación actual',
@@ -3011,6 +3072,8 @@
       pl: {
         loading: 'Ładowanie…',
         badge: 'Kontrola lotu drona · {country}',
+        esSrcHdr: 'Źródło danych geostref', esSrcEasa: 'EASA (wstępne)', esSrcLocal: 'ENAIRE (lokalne)',
+        esSrcHint: 'EASA: przejrzyste strefy wektorowe · ENAIRE: oficjalny WMS na żywo',
         subtitle: 'Mapa geozon, alerty przestrzeni powietrznej, ruch lotniczy i pogoda z Kp-Index',
         placeholder: 'np. Brama Brandenburska, Berlin',
         btnCheck: 'Sprawdź', gpsTitle: 'Użyj bieżącej lokalizacji',
@@ -3163,6 +3226,11 @@
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
     let LANG = localStorage.getItem('skycheck-lang') || COUNTRY_DEFAULT_LANG[COUNTRY] || 'de';
+    // Spanien-Geozonenquelle: 'easa' (EASA Common Repository, Default) oder 'local' (ENAIRE
+    // servAIS WMS+Identify). Nur für COUNTRY==='es' wirksam, auf dem Startbildschirm wählbar,
+    // in localStorage persistiert.
+    let ES_SOURCE = (localStorage.getItem('skycheck-es-source') === 'local') ? 'local' : 'easa';
+    const esEasa = () => COUNTRY === 'es' && ES_SOURCE === 'easa';
     // Landesnamen pro UI-Sprache × Country (nominativ). Wird in i18n-Strings via {country} eingesetzt.
     // Erweiterbar: pro neuem Land eine neue Zeile, pro neuer UI-Sprache eine neue Spalte.
     const COUNTRY_NAMES = {
@@ -3234,6 +3302,26 @@
         opt.addEventListener('click', () => switchLang(opt.dataset.lang));
       });
       document.addEventListener('click', () => document.querySelectorAll('.lang-menu').forEach(m => m.classList.add('hidden')));
+
+      // Spanien: Geozonen-Quellenumschalter auf dem Startbildschirm einblenden + verdrahten
+      if (COUNTRY === 'es') {
+        const w = document.getElementById('es-src-wrap');
+        if (w) {
+          w.style.display = '';
+          const mark = () => w.querySelectorAll('.es-src-opt').forEach(b => b.classList.toggle('active', b.dataset.src === ES_SOURCE));
+          mark();
+          w.querySelectorAll('.es-src-opt').forEach(b => b.addEventListener('click', () => {
+            const next = (b.dataset.src === 'local') ? 'local' : 'easa';
+            if (next === ES_SOURCE) return;
+            ES_SOURCE = next;
+            localStorage.setItem('skycheck-es-source', ES_SOURCE);
+            mark();
+            // Bereits gebaute Karte verwerfen, damit der nächste Check das Overlay
+            // gemäß neuer Quelle (WMS vs. EASA-Vektor) frisch aufbaut.
+            if (S.map) { S.map.remove(); S.map = null; S.layers.dipul = null; }
+          }));
+        }
+      }
     });
     // State cache for lang re-render
     let lastStatus = { lvl: 'go', reasons: [] }, lastWeather = null, lastKp = null, lastZoneStatus = null,
@@ -3296,6 +3384,13 @@
     ];
     // Irland: EASA Common Repository ArcGIS-FeatureServer (ED-318, CORS-offen). „preliminary".
     const IE_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/ie_geozones/FeatureServer/0';
+    // Spanien EASA-Alternativquelle: EASA Common Repository (Layer geozone_EASA, ~15.800 Zonen,
+    // ED-318, CORS-offen). Clientseitige Vektor-Darstellung nach type gefärbt — übersichtlicher
+    // als der flächige ENAIRE-WMS-Blob. Auf dem Startbildschirm umschaltbar (Default: EASA).
+    // Wegen der Zonenzahl NICHT flächig für ganz Spanien, sondern nur der aktuelle Kartenausschnitt
+    // (Envelope-Abfrage, gedeckelt auf maxRecordCount 2000) ab ES_EASA_MINZOOM.
+    const ES_EASA_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/geozone_spain_FIR_Merge/FeatureServer/18';
+    const ES_EASA_MINZOOM = 9;
 
     /* [J-STATE] =========================================================
        STATE
@@ -4321,7 +4416,7 @@
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
       if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
-      if (COUNTRY === 'es') return fetchZonesES(lat, lon, radiusM);
+      if (COUNTRY === 'es') return esEasa() ? fetchZonesESEasa(lat, lon, radiusM) : fetchZonesES(lat, lon, radiusM);
       if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
       if (COUNTRY === 'dk') return fetchZonesDK(lat, lon, radiusM);
       if (COUNTRY === 'ie') return fetchZonesIE(lat, lon, radiusM);
@@ -4415,6 +4510,44 @@
     async function fetchAllZonesIE() {
       const fs = await _arcgisQuery(IE_LAYER, { outFields: 'name,identifier,type' });
       return fs.map(f => _mapIE(f, true));
+    }
+
+    // --- Spanien (EASA Common Repository) ---
+    // reason enthält teils mehrere kommagetrennte Gründe (z. B. „POPULATION, PRIVACY, NOISE");
+    // Farbe primär nach type (REQ_AUTHORIZATION/PROHIBITED/…), Beschreibung ergänzt reason.
+    // Höhen liegen in EASA-ES nur verschachtelt (verticalLayer/message) vor → nicht flach (—).
+    function _mapESEasa(f, withGeom) {
+      const p = f.properties || {};
+      const auth = _ieAuthority(p.zoneAuthority);
+      return {
+        name: p.name || p.identifier || '—',
+        type: p.type || 'UAS_ZONE',
+        lower: '—', upper: '—',
+        legal: auth || _esVal(p.provider) || _esVal(p.reason) || '—',
+        legalUrl: _esVal(p.siteURL),
+        desc: _stripHtml([p.reason, p.message, p.restrictionConditions].filter(Boolean).join(' · ')),
+        color: _esZoneColor(p.type),
+        geometry: withGeom ? _geoToOverlay(f.geometry) : [],
+      };
+    }
+    async function fetchZonesESEasa(lat, lon, radiusM = 100) {
+      try {
+        const fs = await _arcgisQuery(ES_EASA_LAYER, Object.assign(
+          { returnGeometry: 'false', outFields: 'name,identifier,type,reason,message,restrictionConditions,zoneAuthority,provider,siteURL' },
+          _envParams(lat, lon, radiusM)));
+        return fs.map(f => _mapESEasa(f, false));
+      } catch (e) { console.warn('Zones ES-EASA fetch error', e); return []; }
+    }
+    // Flächiges EASA-Overlay: nur der aktuelle Kartenausschnitt (nicht ganz Spanien — 15.800
+    // Zonen). Envelope-Abfrage liefert Sichtbares mit Geometrie, gedeckelt auf maxRecordCount 2000.
+    async function fetchViewportZonesESEasa(bounds) {
+      const geometry = `${bounds.getWest().toFixed(5)},${bounds.getSouth().toFixed(5)},${bounds.getEast().toFixed(5)},${bounds.getNorth().toFixed(5)}`;
+      const fs = await _arcgisQuery(ES_EASA_LAYER, {
+        geometry, geometryType: 'esriGeometryEnvelope', inSR: '4326',
+        spatialRel: 'esriSpatialRelIntersects',
+        outFields: 'name,identifier,type,reason',
+      });
+      return fs.map(f => _mapESEasa(f, true));
     }
 
     /* [J-API-ENAIRE] ====================================================
@@ -4578,10 +4711,25 @@
       if (!layerGroup) return;
       drawZoneOverlay(await ensureAllZones(), layerGroup);
     }
+    // ES-EASA: Zonen im aktuellen Kartenausschnitt abfragen und zeichnen. Unterhalb
+    // ES_EASA_MINZOOM (zu weit heraus) nur leeren, um bis zu 2000 Polygone zu vermeiden.
+    // Sequenznummer verwirft veraltete Antworten bei schnellem Pannen/Zoomen.
+    let _esEasaSeq = 0;
+    async function drawEsEasaViewport() {
+      if (!esEasa() || !S.map || !S.layers.dipul) return;
+      if (S.map.getZoom() < ES_EASA_MINZOOM) { S.layers.dipul.clearLayers(); return; }
+      const seq = ++_esEasaSeq;
+      try {
+        const zones = await fetchViewportZonesESEasa(S.map.getBounds());
+        if (seq !== _esEasaSeq) return;
+        drawZoneOverlay(zones, S.layers.dipul);
+      } catch (e) { console.warn('ES-EASA viewport error', e); }
+    }
     // Karten-Overlay aktualisieren: WMS-Länder rendern selbst; AT/DK/IE zeichnen alle Zonen
-    // flächig (einmal, bleibt); FR/übrige zeichnen die punktbasierten Zonen.
+    // flächig (einmal, bleibt); ES-EASA zeichnet den Kartenausschnitt; FR/übrige die Punktzonen.
     function updateZoneOverlay(pointZones) {
-      if (COUNTRY === 'de' || COUNTRY === 'ch' || COUNTRY === 'es') return; // WMS-Kachel-Layer rendert selbst
+      if (COUNTRY === 'de' || COUNTRY === 'ch' || (COUNTRY === 'es' && !esEasa())) return; // WMS-Kachel-Layer rendert selbst
+      if (esEasa()) { drawEsEasaViewport(); return; }
       if (OVERLAY_ALL[COUNTRY]) {
         if (S.layers.dipul && S.layers.dipul.getLayers && S.layers.dipul.getLayers().length === 0)
           drawAllOverlay(S.layers.dipul);
@@ -5525,7 +5673,7 @@
             opacity: 0.6,
             attribution: '© BAZL / geo.admin.ch',
           });
-        } else if (COUNTRY === 'es') {
+        } else if (COUNTRY === 'es' && !esEasa()) {
           S.layers.dipul = L.tileLayer.wms(ENAIRE_WMS_URL, {
             layers: ES_WMS_LAYERS,
             format: 'image/png',
@@ -5535,14 +5683,17 @@
             attribution: '© ENAIRE',
           });
         } else {
-          // FR & AT: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
+          // FR & AT & ES-EASA: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
           S.layers.dipul = L.layerGroup();
+          if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
         if (OVERLAY_ALL[COUNTRY]) {
           drawAllOverlay(S.layers.dipul);   // AT/DK/IE: alle Zonen flächig zeichnen
+        } else if (esEasa()) {
+          drawEsEasaViewport();   // ES-EASA: aktuellen Kartenausschnitt zeichnen
         } else if (COUNTRY !== 'de' && COUNTRY !== 'ch' && COUNTRY !== 'es' && Array.isArray(lastZones) && lastZones.length > 0) {
           drawZoneOverlay(lastZones, S.layers.dipul);
         }
@@ -5573,6 +5724,15 @@
           weight: 2, dashArray: '10 7', interactive: false,
         });
         if (S.layerVisible.radius1500) S.layers.radius1500.addTo(S.map);
+
+        // ES-EASA: Zonen im Kartenausschnitt bei Pan/Zoom nachladen (debounced)
+        if (esEasa()) {
+          let _esMoveT = null;
+          S.map.on('moveend', () => {
+            clearTimeout(_esMoveT);
+            _esMoveT = setTimeout(drawEsEasaViewport, 350);
+          });
+        }
 
         // Doppelklick Event (Neupositionierung)
         S.map.on('dblclick', async (e) => {
