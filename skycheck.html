@@ -2485,7 +2485,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.89';
+    const APP_VER = '0.90';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2500,6 +2500,8 @@
         if (host.includes('skycheck-at') || host.endsWith('skycheck.at')) return 'at';
         if (host.includes('skycheck-ch') || host.endsWith('skycheck.ch')) return 'ch';
         if (host.includes('skycheck-es') || host.endsWith('skycheck.es')) return 'es';
+        if (host.includes('skycheck-dk') || host.endsWith('skycheck.dk')) return 'dk';
+        if (host.includes('skycheck-ie') || host.endsWith('skycheck.ie')) return 'ie';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -3128,7 +3130,7 @@
       }
     };
     // Standard-UI-Sprache pro Land (nur beim Erstbesuch; eine gespeicherte Wahl hat Vorrang).
-    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es' };
+    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en' };
     // Adressvorschlag: bekanntes Wahrzeichen der jeweiligen Hauptstadt (sprachneutrale Eigennamen).
     const COUNTRY_LANDMARK = {
       de: 'Brandenburger Tor, Berlin',
@@ -3136,6 +3138,8 @@
       at: 'Stephansdom, Wien',
       ch: 'Bundeshaus, Bern',
       es: 'Puerta del Sol, Madrid',
+      dk: 'Nyhavn, København',
+      ie: "O'Connell Street, Dublin",
     };
     // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
     const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
@@ -3147,12 +3151,14 @@
       at: '9.4,46.3,17.2,49.1',
       ch: '5.8,45.7,10.6,47.9',
       es: '-18.3,27.5,4.5,44.0',
+      dk: '7.7,54.5,15.5,58.0',
+      ie: '-10.8,51.2,-5.3,55.5',
     };
     // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
     const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
     // ISO-Ländercode pro Land — für exakten Photon-`countrycode`-Filter (die Bbox überlappt
     // an Grenzen leicht mit Nachbarländern; der Code entfernt diese Fremdtreffer).
-    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES' };
+    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE' };
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -3165,6 +3171,8 @@
       at: { de: 'Österreich',  en: 'Austria',  fr: 'Autriche',  es: 'Austria',  pl: 'Austria' },
       ch: { de: 'Schweiz',     en: 'Switzerland', fr: 'Suisse', es: 'Suiza',    pl: 'Szwajcaria' },
       es: { de: 'Spanien',     en: 'Spain',       fr: 'Espagne', es: 'España',  pl: 'Hiszpania' },
+      dk: { de: 'Dänemark',    en: 'Denmark',     fr: 'Danemark', es: 'Dinamarca', pl: 'Dania' },
+      ie: { de: 'Irland',      en: 'Ireland',     fr: 'Irlande', es: 'Irlanda', pl: 'Irlandia' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -3278,6 +3286,16 @@
     const ENAIRE_WMS_URL = 'https://servais.enaire.es/insignia/services/NSF_SRV/SRV_UAS_ZG_V0/MapServer/WMSServer';
     const ENAIRE_IDENTIFY_URL = 'https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V0/MapServer/identify';
     const ES_WMS_LAYERS = '0,1,2';   // Infra / Urbano / Aero
+    // Dänemark: Trafikstyrelsen ArcGIS-FeatureServer (GeoJSON, CORS-offen). 3 Polygon-Layer
+    // rot/orange/blau. Clientseitige Vektor-Darstellung (wie AT/FR), kein WMS/Proxy.
+    const DK_BASE = 'https://services-eu1.arcgis.com/Zvx25KS6sGRl9LIx/arcgis/rest/services/DroneZoner_2025_ny_bekndg/FeatureServer';
+    const DK_LAYERS = [
+      { url: DK_BASE + '/1', color: '#ef4444' },  // RØD — flyvesikringskritisk
+      { url: DK_BASE + '/2', color: '#f59e0b' },  // ORANGE — opmærksomhed
+      { url: DK_BASE + '/4', color: '#3b82f6' },  // BLÅ — sikringskritisk
+    ];
+    // Irland: EASA Common Repository ArcGIS-FeatureServer (ED-318, CORS-offen). „preliminary".
+    const IE_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/ie_geozones/FeatureServer/0';
 
     /* [J-STATE] =========================================================
        STATE
@@ -4305,8 +4323,98 @@
       if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
       if (COUNTRY === 'es') return fetchZonesES(lat, lon, radiusM);
       if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
+      if (COUNTRY === 'dk') return fetchZonesDK(lat, lon, radiusM);
+      if (COUNTRY === 'ie') return fetchZonesIE(lat, lon, radiusM);
       if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
       return fetchZonesDE(lat, lon, radiusM);
+    }
+
+    /* [J-API-ARCGIS] ====================================================
+       Dänemark (Trafikstyrelsen) & Irland (EASA) — ArcGIS-FeatureServer, GeoJSON, CORS-offen.
+       Clientseitige Vektor-Darstellung (drawZoneOverlay), farbcodiert. Punktabfrage per Bbox
+       für Detailliste/Status, „alle Zonen" für das flächige Overlay.
+    ================================================================ */
+    async function _arcgisQuery(layerUrl, extra) {
+      const qs = new URLSearchParams(Object.assign(
+        { where: '1=1', outFields: '*', outSR: '4326', f: 'geojson' }, extra || {}));
+      const r = await fetch(`${layerUrl}/query?${qs}`);
+      if (!r.ok) return [];
+      const d = await r.json();
+      return Array.isArray(d.features) ? d.features : [];
+    }
+    // GeoJSON-Geometrie → drawZoneOverlay-Form ([{type:'Polygon',coordinates}]); MultiPolygon aufteilen.
+    function _geoToOverlay(g) {
+      if (!g) return [];
+      if (g.type === 'Polygon') return [{ type: 'Polygon', coordinates: g.coordinates }];
+      if (g.type === 'MultiPolygon') return g.coordinates.map(poly => ({ type: 'Polygon', coordinates: poly }));
+      return [];
+    }
+    function _envParams(lat, lon, radiusM) {
+      const δ = Math.max(0.0015, radiusM / 111320);
+      return {
+        geometry: `${(lon - δ).toFixed(6)},${(lat - δ).toFixed(6)},${(lon + δ).toFixed(6)},${(lat + δ).toFixed(6)}`,
+        geometryType: 'esriGeometryEnvelope', inSR: '4326', spatialRel: 'esriSpatialRelIntersects',
+      };
+    }
+
+    // --- Dänemark ---
+    function _mapDK(f, color, withGeom) {
+      const p = f.properties || {};
+      const el = p.Elevation_meter;
+      const name = [p.title, p.ICAO ? `(${p.ICAO})` : ''].filter(Boolean).join(' ') || p.typeId || '—';
+      return {
+        name,
+        type: p.typeId || 'UAS_ZONE',
+        lower: 'GND',
+        upper: (el != null && el !== '' && !isNaN(+el)) ? `${Math.round(+el)} m` : '—',
+        legal: p.Paragraf || p.Type || '—',
+        legalUrl: p.NOTAMS_url || '',
+        desc: [p.Type, (p.Lovkrav ? `${p.Lovkrav} ${p.Enhed || ''}`.trim() : '')].filter(Boolean).join(' · '),
+        color,
+        geometry: withGeom ? _geoToOverlay(f.geometry) : [],
+      };
+    }
+    async function fetchZonesDK(lat, lon, radiusM = 100) {
+      try {
+        const env = _envParams(lat, lon, radiusM);
+        const res = await Promise.all(DK_LAYERS.map(l =>
+          _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env)).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
+        return res.flat();
+      } catch (e) { console.warn('Zones DK fetch error', e); return []; }
+    }
+    async function fetchAllZonesDK() {
+      const res = await Promise.all(DK_LAYERS.map(l =>
+        _arcgisQuery(l.url, { outFields: 'title,typeId,ICAO' }).then(fs => fs.map(f => _mapDK(f, l.color, true)))));
+      return res.flat();
+    }
+
+    // --- Irland (EASA) ---
+    function _ieAuthority(za) {
+      try { const a = typeof za === 'string' ? JSON.parse(za) : za; if (Array.isArray(a) && a[0]) return a[0].name || ''; } catch (e) {}
+      return '';
+    }
+    function _mapIE(f, withGeom) {
+      const p = f.properties || {};
+      return {
+        name: p.name || p.identifier || '—',
+        type: p.type || 'UAS_ZONE',
+        lower: '—', upper: '—',   // Höhen in IE nicht strukturiert (nur im message-Freitext)
+        legal: _ieAuthority(p.zoneAuthority) || (p.reason || '—'),
+        legalUrl: '',
+        desc: _stripHtml([p.message, p.restrictionConditions].filter(Boolean).join(' · ')),
+        color: _esZoneColor(p.type),   // REQ_AUTHORISATION/PROHIBITED/CONDITIONAL/NO_RESTRICTION → Ampel
+        geometry: withGeom ? _geoToOverlay(f.geometry) : [],
+      };
+    }
+    async function fetchZonesIE(lat, lon, radiusM = 100) {
+      try {
+        const fs = await _arcgisQuery(IE_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        return fs.map(f => _mapIE(f, false));
+      } catch (e) { console.warn('Zones IE fetch error', e); return []; }
+    }
+    async function fetchAllZonesIE() {
+      const fs = await _arcgisQuery(IE_LAYER, { outFields: 'name,identifier,type' });
+      return fs.map(f => _mapIE(f, true));
     }
 
     /* [J-API-ENAIRE] ====================================================
@@ -4453,27 +4561,30 @@
     // Flächiges AT-Karten-Overlay: ALLE Zonen (286) einmalig laden und zeichnen — analog
     // zum DE-WMS, das ganz Deutschland zeigt. Die punktbasierten Zonen (fetchZonesAT) speisen
     // weiterhin nur Detailliste + Flugstatus. Promise wird gecacht (kein Doppel-Fetch).
-    let _atOverlayPromise = null;
-    function ensureAllZonesAT() {
-      if (!_atOverlayPromise) {
-        _atOverlayPromise = fetch('/.netlify/functions/zones-at?all=1')
-          .then(r => r.ok ? r.json() : { zones: [] })
-          .then(d => Array.isArray(d.zones) ? d.zones : [])
-          .catch(e => { console.warn('Zones AT overlay error', e); return []; });
-      }
-      return _atOverlayPromise;
+    // Flächiges „alle Zonen"-Overlay (AT-Datei, DK/IE-ArcGIS) — einmal geladen, Promise gecacht.
+    const _overlayPromise = {};
+    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1 };   // Länder mit flächigem Client-Vektor-Overlay
+    function ensureAllZones() {
+      if (_overlayPromise[COUNTRY]) return _overlayPromise[COUNTRY];
+      let p;
+      if (COUNTRY === 'at') p = fetch('/.netlify/functions/zones-at?all=1').then(r => r.ok ? r.json() : { zones: [] }).then(d => Array.isArray(d.zones) ? d.zones : []);
+      else if (COUNTRY === 'dk') p = fetchAllZonesDK();
+      else if (COUNTRY === 'ie') p = fetchAllZonesIE();
+      else p = Promise.resolve([]);
+      _overlayPromise[COUNTRY] = p.catch(e => { console.warn('Overlay-Zonen Fehler', e); return []; });
+      return _overlayPromise[COUNTRY];
     }
-    async function drawAllZonesAT(layerGroup) {
+    async function drawAllOverlay(layerGroup) {
       if (!layerGroup) return;
-      drawZoneOverlay(await ensureAllZonesAT(), layerGroup);
+      drawZoneOverlay(await ensureAllZones(), layerGroup);
     }
-    // Karten-Overlay aktualisieren: AT zeigt alle Zonen flächig (einmal gezeichnet, bleibt),
-    // DE nutzt WMS (kein LayerGroup), FR/übrige zeichnen die punktbasierten Zonen.
+    // Karten-Overlay aktualisieren: WMS-Länder rendern selbst; AT/DK/IE zeichnen alle Zonen
+    // flächig (einmal, bleibt); FR/übrige zeichnen die punktbasierten Zonen.
     function updateZoneOverlay(pointZones) {
       if (COUNTRY === 'de' || COUNTRY === 'ch' || COUNTRY === 'es') return; // WMS-Kachel-Layer rendert selbst
-      if (COUNTRY === 'at') {
+      if (OVERLAY_ALL[COUNTRY]) {
         if (S.layers.dipul && S.layers.dipul.getLayers && S.layers.dipul.getLayers().length === 0)
-          drawAllZonesAT(S.layers.dipul);
+          drawAllOverlay(S.layers.dipul);
         return;
       }
       drawZoneOverlay(pointZones, S.layers.dipul);
@@ -5420,7 +5531,7 @@
             format: 'image/png',
             transparent: true,
             version: '1.3.0',
-            opacity: 0.55,
+            opacity: 0.4,   // niedriger, damit die flächigen Luftraum-Zonen die kleineren nicht überdecken
             attribution: '© ENAIRE',
           });
         } else {
@@ -5430,8 +5541,8 @@
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
-        if (COUNTRY === 'at') {
-          drawAllZonesAT(S.layers.dipul);   // AT: alle Zonen flächig zeichnen
+        if (OVERLAY_ALL[COUNTRY]) {
+          drawAllOverlay(S.layers.dipul);   // AT/DK/IE: alle Zonen flächig zeichnen
         } else if (COUNTRY !== 'de' && COUNTRY !== 'ch' && COUNTRY !== 'es' && Array.isArray(lastZones) && lastZones.length > 0) {
           drawZoneOverlay(lastZones, S.layers.dipul);
         }
