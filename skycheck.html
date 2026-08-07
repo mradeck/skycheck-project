@@ -1401,6 +1401,33 @@
       background: var(--accent-dim);
     }
 
+    /* AT-Zusatzebenen: eigene Toggle-Gruppe mit farbigem Punkt je Ebene */
+    .ctx-group {
+      display: inline-flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .ctx-toggle::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+      background: var(--ctx-color, #888);
+    }
+    .ctx-toggle[data-ctx="protected"]  { --ctx-color: #16a34a; }
+    .ctx-toggle[data-ctx="motorways"]  { --ctx-color: #f59e0b; }
+    .ctx-toggle[data-ctx="powerlines"] { --ctx-color: #ef4444; }
+    .ctx-toggle[data-ctx="rail"]       { --ctx-color: #a855f7; }
+    .ctx-toggle.loading { opacity: 0.55; }
+    .ctx-toggle.active {
+      border-color: var(--ctx-color);
+      color: var(--ctx-color);
+      background: color-mix(in srgb, var(--ctx-color) 14%, transparent);
+    }
+
     /* --- ZONES PANEL --- */
     .zones-panel {
       background: var(--card);
@@ -2373,6 +2400,12 @@
           <button class="radius-btn map-toggle active" data-radius="100">100m</button>
         </div>
         <button class="map-toggle active" data-layer="radius1500">1,5km</button>
+        <div class="ctx-group" id="at-ctx-group" style="display:none">
+          <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
+          <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
+          <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
+          <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
+        </div>
         <button class="btn-av-open" id="btn-av-open">✈ Alarm</button>
       </div>
       <div class="map-wrap">
@@ -2608,7 +2641,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.95';
+    const APP_VER = '0.96';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2715,6 +2748,7 @@
         secForecast48: '48-Stunden-Vorschau', sec5day: '5-Tage-Überblick',
         secMap: 'Karte & Luftraum', secWarnings: 'Hinweise & Warnungen',
         mapDipul: 'Geozonen', mapAircraft: 'Flugbewegungen',
+        ctxProtected: 'Schutzgebiete', ctxMotorways: 'Autobahnen', ctxPowerlines: 'Stromleitungen', ctxRail: 'Bahn',
         mapAllZones: 'Alle Geozonen', mapRiskyZones: 'Nur Risikozonen',
         zonesNearby: 'Luftraumzonen in der Nähe',
         zonesCount: n => `Es liegen Einschränkungen durch ${n} geografische Gebiet${n > 1 ? 'e' : ''} vor:`,
@@ -2866,6 +2900,7 @@
         secForecast48: '48-Hour Forecast', sec5day: '5-Day Overview',
         secMap: 'Map & Airspace', secWarnings: 'Notes & Warnings',
         mapDipul: 'Drone zones', mapAircraft: 'Flight Movements',
+        ctxProtected: 'Protected areas', ctxMotorways: 'Motorways', ctxPowerlines: 'Power lines', ctxRail: 'Railways',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         zonesNearby: 'Airspace zones nearby',
         zonesCount: n => `${n} geographic area${n > 1 ? 's' : ''} with restrictions:`,
@@ -3009,6 +3044,7 @@
         secForecast48: 'Prévisions sur 48 heures', sec5day: 'Vue sur 5 jours',
         secMap: 'Carte & Espace aérien', secWarnings: 'Notes & Avertissements',
         mapDipul: 'Géozones', mapAircraft: 'Trafic aérien',
+        ctxProtected: 'Zones protégées', ctxMotorways: 'Autoroutes', ctxPowerlines: 'Lignes électriques', ctxRail: 'Voies ferrées',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         zonesNearby: 'Zones d\'espace aérien à proximité',
         zonesCount: n => `${n} zone${n > 1 ? 's' : ''} géographique${n > 1 ? 's' : ''} avec restrictions :`,
@@ -3160,6 +3196,7 @@
         secForecast48: 'Pronóstico 48 horas', sec5day: 'Resumen 5 días',
         secMap: 'Mapa & Espacio aéreo', secWarnings: 'Notas & Advertencias',
         mapDipul: 'Geozonas', mapAircraft: 'Tráfico aéreo',
+        ctxProtected: 'Áreas protegidas', ctxMotorways: 'Autopistas', ctxPowerlines: 'Líneas eléctricas', ctxRail: 'Ferrocarriles',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         zonesNearby: 'Zonas de espacio aéreo cercanas',
         zonesCount: n => `${n} área${n > 1 ? 's' : ''} geográfica${n > 1 ? 's' : ''} con restricciones:`,
@@ -3311,6 +3348,7 @@
         secForecast48: 'Prognoza 48-godzinna', sec5day: 'Przegląd 5-dniowy',
         secMap: 'Mapa & Przestrzeń powietrzna', secWarnings: 'Uwagi & Ostrzeżenia',
         mapDipul: 'Geostrefy', mapAircraft: 'Ruch lotniczy',
+        ctxProtected: 'Obszary chronione', ctxMotorways: 'Autostrady', ctxPowerlines: 'Linie energetyczne', ctxRail: 'Koleje',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         zonesNearby: 'Strefy przestrzeni powietrznej w pobliżu',
         zonesCount: n => `${n} obszar${n === 1 ? '' : n < 5 ? 'y' : 'ów'} geograficzn${n === 1 ? 'y' : n < 5 ? 'e' : 'ych'} z ograniczeniami:`,
@@ -3561,6 +3599,11 @@
         const deOnly = document.getElementById('settings-de-only');
         if (deOnly) deOnly.style.display = 'none';
       }
+      // Österreich: Zusatzebenen-Toggle-Gruppe einblenden
+      if (COUNTRY === 'at') {
+        const g = document.getElementById('at-ctx-group');
+        if (g) g.style.display = '';
+      }
 
       // Spanien: Geozonen-Quellenumschalter auf dem Startbildschirm einblenden + verdrahten
       if (COUNTRY === 'es') {
@@ -3650,6 +3693,16 @@
     // (Envelope-Abfrage, gedeckelt auf maxRecordCount 2000) ab ES_EASA_MINZOOM.
     const ES_EASA_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/geozone_spain_FIR_Merge/FeatureServer/18';
     const ES_EASA_MINZOOM = 9;
+    // Österreich-Zusatzebenen (rein informativer Kontext, NICHT Teil der Flugstatus-Bewertung):
+    // Autobahnen/Stromleitungen/Bahn aus OpenStreetMap (ODbL), Schutzgebiete aus OSM-Naturschutz-
+    // Tags. Statische, vorab erzeugte GeoJSON-Snapshots in data/ (Generator: scripts/), lazy geladen
+    // und clientseitig als Vektor-Overlay gezeichnet. Nur bei COUNTRY==='at' sichtbar.
+    const AT_CONTEXT = {
+      protected:  { file: 'data/at-protected.json',  type: 'poly', color: '#16a34a' },
+      motorways:  { file: 'data/at-motorways.json',  type: 'line', color: '#f59e0b' },
+      powerlines: { file: 'data/at-powerlines.json', type: 'line', color: '#ef4444' },
+      rail:       { file: 'data/at-rail.json',       type: 'line', color: '#a855f7' },
+    };
 
     /* [J-STATE] =========================================================
        STATE
@@ -3662,6 +3715,7 @@
       searchRadius: 100,
       layers: { dipul: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
+      ctxLayers: {}, ctxCache: {},   // AT-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       alarm: { active: false, silenced: false, intervalId: null },
     };
     const MAP_STYLES = [
@@ -6058,13 +6112,54 @@
       btn.addEventListener('click', () => {
         if (!S.map) return;
         const key = btn.dataset.layer;
-        if (!key) return;                          // radius-btn: eigener Handler
+        if (!key) return;                          // radius-btn/ctx-toggle: eigener Handler
         S.layerVisible[key] = !S.layerVisible[key];
         btn.classList.toggle('active', S.layerVisible[key]);
         const layer = S.layers[key];
         if (!layer) return;
         S.layerVisible[key] ? layer.addTo(S.map) : S.map.removeLayer(layer);
       });
+    });
+
+    // AT-Zusatzebenen: lazy laden (erst bei Aktivierung), als Vektor-Overlay zeichnen.
+    // Rein informativ — fließen NICHT in die Flugstatus-Bewertung ein.
+    async function toggleCtxLayer(key, on, btn) {
+      const cfg = AT_CONTEXT[key];
+      if (!cfg || !S.map) return;
+      if (!on) {
+        btn.classList.remove('active');
+        if (S.ctxLayers[key]) S.map.removeLayer(S.ctxLayers[key]);
+        return;
+      }
+      btn.classList.add('active');
+      if (!S.ctxLayers[key]) {
+        btn.classList.add('loading');
+        try {
+          if (!S.ctxCache[key]) S.ctxCache[key] = fetch(cfg.file).then(r => r.ok ? r.json() : null);
+          const gj = await S.ctxCache[key];
+          if (!gj) { btn.classList.remove('active', 'loading'); S.ctxCache[key] = null; return; }
+          const style = cfg.type === 'poly'
+            ? { color: cfg.color, weight: 1, opacity: 0.85, fillColor: cfg.color, fillOpacity: 0.18 }
+            : { color: cfg.color, weight: 2, opacity: 0.85 };
+          S.ctxLayers[key] = L.geoJSON(gj, {
+            style,
+            onEachFeature: (f, l) => {
+              const p = f.properties || {};
+              const t = p.label || (p.ref ? 'A' + String(p.ref).replace(/^A/i, '') : '') || '';
+              if (t) l.bindTooltip(escapeHtml(String(t)), { sticky: true });
+            },
+          });
+          // Datenquellen-Attribution einmalig ergänzen (OSM/ODbL)
+          if (!S._ctxAttrib) { S.map.attributionControl.addAttribution('Zusatzebenen: © OpenStreetMap-Mitwirkende (ODbL)'); S._ctxAttrib = true; }
+        } catch (e) {
+          console.warn('AT-ctx layer', key, e); btn.classList.remove('active', 'loading'); return;
+        }
+        btn.classList.remove('loading');
+      }
+      if (S.ctxLayers[key] && !S.map.hasLayer(S.ctxLayers[key])) S.ctxLayers[key].addTo(S.map);
+    }
+    document.querySelectorAll('.ctx-toggle').forEach(btn => {
+      btn.addEventListener('click', () => toggleCtxLayer(btn.dataset.ctx, !btn.classList.contains('active'), btn));
     });
     // ── Radius Radio-Buttons (5m / 100m) ─────────────────────────────────────
     document.querySelectorAll('.radius-btn').forEach(btn => {
