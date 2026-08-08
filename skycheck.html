@@ -2641,7 +2641,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.97';
+    const APP_VER = '0.98';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2671,6 +2671,7 @@
       de: {
         loading: 'Wird geladen…',
         badge: 'Drohnenflugprüfung · {country}',
+        docTitle: 'SkyCheck — Drohnenflugprüfung',
         esSrcHdr: 'Geozonen-Datenquelle', esSrcEasa: 'EASA (vorläufig)', esSrcLocal: 'ENAIRE (lokal)',
         esSrcHint: 'EASA: übersichtliche Vektor-Zonen · ENAIRE: amtlicher Live-WMS',
         subtitle: 'Geozonenkarte, Luftraumalarm, Flugbewegungen und Wetter mit KP-Index',
@@ -2823,6 +2824,7 @@
       en: {
         loading: 'Loading…',
         badge: 'Drone Flight Check · {country}',
+        docTitle: 'SkyCheck — Drone Flight Check',
         esSrcHdr: 'Geo-zone data source', esSrcEasa: 'EASA (preliminary)', esSrcLocal: 'ENAIRE (local)',
         esSrcHint: 'EASA: clean vector zones · ENAIRE: official live WMS',
         subtitle: 'Geo-zone map, airspace alerts, flight movements and weather with Kp-Index',
@@ -2975,6 +2977,7 @@
       fr: {
         loading: 'Chargement…',
         badge: 'Vérification de vol de drone · {country}',
+        docTitle: 'SkyCheck — Vérification de vol de drone',
         esSrcHdr: 'Source des géo-zones', esSrcEasa: 'EASA (préliminaire)', esSrcLocal: 'ENAIRE (local)',
         esSrcHint: 'EASA : zones vectorielles claires · ENAIRE : WMS officiel en direct',
         subtitle: 'Carte des géozones, alertes d\'espace aérien, trafic aérien et météo avec Kp-Index',
@@ -3127,6 +3130,7 @@
       es: {
         loading: 'Cargando…',
         badge: 'Verificación de vuelo de dron · {country}',
+        docTitle: 'SkyCheck — Verificación de vuelo de dron',
         esSrcHdr: 'Fuente de datos de geozonas', esSrcEasa: 'EASA (preliminar)', esSrcLocal: 'ENAIRE (local)',
         esSrcHint: 'EASA: zonas vectoriales claras · ENAIRE: WMS oficial en vivo',
         subtitle: 'Mapa de geozonas, alertas de espacio aéreo, tráfico aéreo y meteorología con Kp-Index',
@@ -3279,6 +3283,7 @@
       pl: {
         loading: 'Ładowanie…',
         badge: 'Kontrola lotu drona · {country}',
+        docTitle: 'SkyCheck — Kontrola lotu drona',
         esSrcHdr: 'Źródło danych geostref', esSrcEasa: 'EASA (wstępne)', esSrcLocal: 'ENAIRE (lokalne)',
         esSrcHint: 'EASA: przejrzyste strefy wektorowe · ENAIRE: oficjalny WMS na żywo',
         subtitle: 'Mapa geozon, alerty przestrzeni powietrznej, ruch lotniczy i pogoda z Kp-Index',
@@ -3553,6 +3558,8 @@
       });
       const LANG_FLAGS = { de: '🇩🇪', en: '🇬🇧', fr: '🇫🇷', es: '🇪🇸', pl: '🇵🇱' };
       document.querySelectorAll('.lang-flag-btn').forEach(lb => lb.textContent = LANG_FLAGS[LANG] || '🇩🇪');
+      // Browser-Tab-Titel folgt der UI-Sprache (statt statischem <title> in Deutsch)
+      document.title = _t('docTitle');
     }
     // Lang-switcher wiring – runs after DOM ready
     function switchLang(lang) {
