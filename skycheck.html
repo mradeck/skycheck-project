@@ -2400,7 +2400,7 @@
           <button class="radius-btn map-toggle active" data-radius="100">100m</button>
         </div>
         <button class="map-toggle active" data-layer="radius1500">1,5km</button>
-        <div class="ctx-group" id="at-ctx-group" style="display:none">
+        <div class="ctx-group" id="ctx-group" style="display:none">
           <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
           <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
           <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
@@ -2641,7 +2641,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.96';
+    const APP_VER = '0.97';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3599,9 +3599,9 @@
         const deOnly = document.getElementById('settings-de-only');
         if (deOnly) deOnly.style.display = 'none';
       }
-      // Österreich: Zusatzebenen-Toggle-Gruppe einblenden
-      if (COUNTRY === 'at') {
-        const g = document.getElementById('at-ctx-group');
+      // Zusatzebenen-Toggle-Gruppe einblenden (Länder mit erzeugten OSM-Kontextdaten; DE nutzt DiPUL)
+      if (CONTEXT_COUNTRIES[COUNTRY]) {
+        const g = document.getElementById('ctx-group');
         if (g) g.style.display = '';
       }
 
@@ -3693,16 +3693,21 @@
     // (Envelope-Abfrage, gedeckelt auf maxRecordCount 2000) ab ES_EASA_MINZOOM.
     const ES_EASA_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/geozone_spain_FIR_Merge/FeatureServer/18';
     const ES_EASA_MINZOOM = 9;
-    // Österreich-Zusatzebenen (rein informativer Kontext, NICHT Teil der Flugstatus-Bewertung):
-    // Autobahnen/Stromleitungen/Bahn aus OpenStreetMap (ODbL), Schutzgebiete aus OSM-Naturschutz-
-    // Tags. Statische, vorab erzeugte GeoJSON-Snapshots in data/ (Generator: scripts/), lazy geladen
-    // und clientseitig als Vektor-Overlay gezeichnet. Nur bei COUNTRY==='at' sichtbar.
-    const AT_CONTEXT = {
-      protected:  { file: 'data/at-protected.json',  type: 'poly', color: '#16a34a' },
-      motorways:  { file: 'data/at-motorways.json',  type: 'line', color: '#f59e0b' },
-      powerlines: { file: 'data/at-powerlines.json', type: 'line', color: '#ef4444' },
-      rail:       { file: 'data/at-rail.json',       type: 'line', color: '#a855f7' },
+    // Länder-Zusatzebenen (rein informativer Kontext, NICHT Teil der Flugstatus-Bewertung):
+    // Schutzgebiete/Autobahnen/Stromleitungen/Bahn aus OpenStreetMap (ODbL). Statische, vorab
+    // erzeugte + vereinfachte GeoJSON-Snapshots in data/<cc>-<ebene>.json (Generator:
+    // scripts/gen-context.mjs), lazy geladen und clientseitig als Vektor-Overlay gezeichnet.
+    // CONTEXT_META = ebenen-Metadaten (Typ/Farbe); der Dateipfad ergibt sich aus COUNTRY.
+    // CONTEXT_COUNTRIES = Länder mit erzeugten Daten. Deutschland ist ausgenommen — DiPUL liefert
+    // diese Zonen dort bereits als offizielle Geozonen. Neues Land: Daten erzeugen + hier eintragen.
+    const CONTEXT_META = {
+      protected:  { type: 'poly', color: '#16a34a' },
+      motorways:  { type: 'line', color: '#f59e0b' },
+      powerlines: { type: 'line', color: '#ef4444' },
+      rail:       { type: 'line', color: '#a855f7' },
     };
+    const CONTEXT_COUNTRIES = { at: 1, ch: 1, es: 1, dk: 1, ie: 1, fr: 1 };
+    const ctxFile = key => `data/${COUNTRY}-${key}.json`;
 
     /* [J-STATE] =========================================================
        STATE
@@ -6124,7 +6129,7 @@
     // AT-Zusatzebenen: lazy laden (erst bei Aktivierung), als Vektor-Overlay zeichnen.
     // Rein informativ — fließen NICHT in die Flugstatus-Bewertung ein.
     async function toggleCtxLayer(key, on, btn) {
-      const cfg = AT_CONTEXT[key];
+      const cfg = CONTEXT_META[key];
       if (!cfg || !S.map) return;
       if (!on) {
         btn.classList.remove('active');
@@ -6135,7 +6140,7 @@
       if (!S.ctxLayers[key]) {
         btn.classList.add('loading');
         try {
-          if (!S.ctxCache[key]) S.ctxCache[key] = fetch(cfg.file).then(r => r.ok ? r.json() : null);
+          if (!S.ctxCache[key]) S.ctxCache[key] = fetch(ctxFile(key)).then(r => r.ok ? r.json() : null);
           const gj = await S.ctxCache[key];
           if (!gj) { btn.classList.remove('active', 'loading'); S.ctxCache[key] = null; return; }
           const style = cfg.type === 'poly'
