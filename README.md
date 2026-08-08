@@ -25,7 +25,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v0.96
+📦 **Current version:** v0.97
 
 ---
 
@@ -76,7 +76,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | **Geo-zones 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Spanish UAS zones — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **or** EASA `geozone_EASA` (ArcGIS vector, viewport-based); switchable, EASA default | ✅ |
 | **Geo-zones 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Danish UAS zones (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geo-zones 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irish UAS zones `ie_geozones` (ArcGIS, ED-318, preliminary) | ✅ |
-| **Context layers 🇦🇹** [OpenStreetMap](https://www.openstreetmap.org/) (ODbL) | Optional AT overlays — protected areas, motorways, power lines, railways (static GeoJSON snapshots in `data/at-*.json`, generated via `scripts/`); informational only, not part of the flight-status check | ✅ |
+| **Context layers** (🇦🇹🇨🇭🇪🇸🇩🇰🇮🇪🇫🇷) [OpenStreetMap](https://www.openstreetmap.org/) (ODbL) | Optional overlays — protected areas, motorways, power lines, railways (static GeoJSON snapshots in `data/<cc>-*.json`, generated via `scripts/`); informational only, not part of the flight-status check. DE already has these via DiPUL | ✅ |
 
 ---
 
@@ -100,13 +100,14 @@ data/
   uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
   uas-zones-at.json         ← ED-269 Austria UAS zones (286 zones, auto-updated)
   uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
-  at-protected.json         ← AT context: protected areas (OSM, ODbL — one-time snapshot)
-  at-motorways.json         ← AT context: motorways (OSM, ODbL)
-  at-powerlines.json        ← AT context: high-voltage power lines (OSM, ODbL)
-  at-rail.json              ← AT context: main railway lines (OSM, ODbL)
+  <cc>-protected.json       ← context: protected areas (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr
+  <cc>-motorways.json       ← context: motorways (OSM, ODbL)
+  <cc>-powerlines.json      ← context: high-voltage power lines (OSM, ODbL)
+  <cc>-rail.json            ← context: main railway lines (OSM, ODbL)
 scripts/
-  process.mjs               ← generator: Overpass line layers → compact GeoJSON (simplified)
-  protected.mjs             ← generator: OSM protected areas → polygon GeoJSON by category
+  gen-context.mjs           ← reusable generator: Overpass → simplified GeoJSON (lines + polygons)
+  fetch-context.sh          ← robust driver: curl-fetch (retry) + gen-context per layer, idempotent
+  README.md                 ← how to add context layers for a new country
 .github/
   workflows/
     update-at-zones.yml     ← monthly job: fetch newest Austro Control ED-269 → commit data file
@@ -208,6 +209,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v0.97 | **Context layers extended to CH, ES, DK, IE, FR.** The Austria overlays from v0.96 (protected areas, motorways, power lines, railways) now exist for all non-DE countries (DE already has them via DiPUL). The client is generalised — `CONTEXT_META` + `CONTEXT_COUNTRIES`, one data file per country (`data/<cc>-<layer>.json`); the toggle group appears automatically for any listed country. The generator is now a single reusable tool (`scripts/gen-context.mjs` + a robust `fetch-context.sh` driver with curl-retry and resume) that **stitches OSM segments into long polylines before simplifying**, which shrank the large countries a lot (FR motorways 9 → 3.5 MB, ES 6 → 2.9 MB before gzip). France is clipped to a metropolitan bounding box (the ISO area would drag in overseas territories). Adding a future country = generate the data + add the code to `CONTEXT_COUNTRIES` (see `scripts/README.md`) |
 | v0.96 | 🇦🇹 **Austria context layers.** skycheck-at can now overlay four extra, individually toggleable layers — **protected areas** (national parks, Natura 2000, nature reserves, landscape-protection areas, nature parks, biosphere reserves, protected landscape elements, natural monuments), **motorways**, **high-voltage power lines** and **main railways**. Sourced from **OpenStreetMap** (ODbL) as static, pre-simplified GeoJSON snapshots in `data/at-*.json` (generators in `scripts/`), lazy-loaded on toggle and drawn as coloured client-side vector overlays. They are **informational context** (distance-keeping guidance) — the binding zone check stays Austro Control / dronespace.at, so they do not feed the flight-status evaluation. Inspired by drohnenkarte.at, which uses the same open sources |
 | v0.95 | Hotfix for v0.94: the global `de-DE`→`_locale()` replacement had also hit the `_LOCALES` map's own definition (`de: _locale()`), which read `_LOCALES` while it was still initialising — a temporal-dead-zone error that stopped the whole app from starting. Restored the `'de-DE'` literal. (`node --check` passes on syntax; this was a runtime-only regression, caught in the live smoke test.) |
 | v0.94 | **Full i18n audit — no more German leaking into other languages.** Several dynamically-rendered sections (dew-point/icing analysis, METAR/TAF labels, estimated cloud base, loader/error messages, aircraft-marker popups, alerts, the "Updated" timestamp) were either hardcoded in German or only re-rendered their static labels on a language switch — so English/French users still saw German. Now every user-facing string routes through the i18n table (16 new keys × 5 languages), a `_locale()` helper drives all date/time formatting (was hardcoded `de-DE`), and switching language re-renders **all** dynamic result sections, not just the static `data-i18n` labels |
