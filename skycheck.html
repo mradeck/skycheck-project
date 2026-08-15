@@ -1379,10 +1379,23 @@
 
     /* map layer toggle */
     .map-controls {
+      position: absolute;
+      top: 8px;
+      left: 50px;
+      right: 280px;
+      z-index: 1003;
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.7rem;
+      gap: 0.35rem;
+      width: max-content;
+      max-width: calc(100% - 338px);
+      margin: 0;
+      padding: 0.3rem;
       flex-wrap: wrap;
+      border: 1px solid rgba(100, 160, 255, .18);
+      border-radius: 10px;
+      background: rgba(7, 16, 31, .82);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .22);
+      backdrop-filter: blur(6px);
     }
 
     .map-toggle {
@@ -1538,6 +1551,65 @@
       font-size: 0.85rem;
     }
 
+    .ctr-height-box {
+      margin: 0.2rem 0 0.75rem;
+      padding: 0.8rem;
+      border: 1px solid rgba(0, 180, 216, 0.35);
+      border-radius: var(--radius-sm);
+      background: var(--accent-dim);
+    }
+
+    .ctr-height-box.blocked {
+      border-color: rgba(239, 71, 111, 0.4);
+      background: var(--nogo-dim);
+    }
+
+    .ctr-height-value {
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .ctr-height-box.blocked .ctr-height-value {
+      color: var(--nogo);
+      font-size: 1rem;
+    }
+
+    .ctr-height-note {
+      margin-top: 0.45rem;
+      color: var(--text2);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    .ctr-range {
+      margin-top: 0.7rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid rgba(0, 180, 216, 0.22);
+    }
+
+    .ctr-range-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin-top: 0.35rem;
+    }
+
+    .ctr-range-item {
+      padding: 0.5rem;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    .ctr-range-value {
+      display: block;
+      margin-top: 0.1rem;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
     /* --- WARNINGS --- */
     .warn-list {
       display: flex;
@@ -1590,6 +1662,26 @@
       line-height: 1.4;
     }
 
+    .warn-desc p {
+      margin: 0 0 0.55rem;
+    }
+
+    .warn-desc p:last-child {
+      margin-bottom: 0;
+    }
+
+    .warn-desc ul {
+      margin: 0 0 0.55rem;
+      padding-left: 1.25rem;
+    }
+
+    .warn-desc a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
     .warn-close {
       background: none;
       border: none;
@@ -1624,6 +1716,18 @@
 
       .map-wrap {
         height: 300px;
+      }
+
+      .map-controls {
+        left: 46px;
+        right: 8px;
+        max-width: calc(100% - 54px);
+        max-height: 78px;
+        overflow: auto;
+      }
+
+      .map-status {
+        top: 94px;
       }
 
       .section {
@@ -1913,8 +2017,8 @@
       color: var(--text2);
       padding: 0.25rem 0.6rem;
       font-size: 0.75rem;
-      cursor: default;
-      pointer-events: none;
+      cursor: pointer;
+      pointer-events: auto;
       font-family: inherit;
     }
 
@@ -1925,6 +2029,11 @@
     .zone-group .zone-btn.active {
       background: var(--accent);
       color: #fff;
+    }
+
+    .zone-group .zone-btn:not(.active):hover {
+      color: var(--accent);
+      background: var(--accent-dim);
     }
 
     /* ── Map-Status-Overlay ────────────────────────────────── */
@@ -1938,8 +2047,10 @@
       border-radius: 8px;
       padding: 0.45rem 0.65rem;
       font-size: 0.71rem;
-      min-width: 120px;
-      max-width: 185px;
+      box-sizing: border-box;
+      width: max-content;
+      min-width: min(185px, calc(100% - 16px));
+      max-width: min(260px, calc(100% - 16px));
       pointer-events: none;
       backdrop-filter: blur(5px);
       line-height: 1.5;
@@ -1951,7 +2062,7 @@
 
     #av-map-status {
       z-index: 1004;
-      max-width: 220px;
+      max-width: min(280px, calc(100% - 16px));
     }
 
     .ms-zone-item {
@@ -1959,9 +2070,12 @@
       align-items: center;
       gap: 0.3rem;
       color: var(--text2);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+    }
+
+    .ms-zone-item span:last-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .ms-zone-dot {
@@ -1977,14 +2091,56 @@
       border-top: 1px solid rgba(255, 255, 255, .1);
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 0.4rem;
       color: var(--text2);
+    }
+
+    .ms-condition {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 0.65rem;
+    }
+
+    .ms-temp-detail {
+      white-space: nowrap;
+      text-align: right;
+      opacity: 0.65;
     }
 
     .ms-arrow {
       display: inline-block;
       font-size: 1rem;
       line-height: 1;
+    }
+
+    .ms-location {
+      margin-top: 0.35rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255, 255, 255, .1);
+      color: var(--text2);
+    }
+
+    .ms-location a {
+      color: var(--accent);
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    .ms-location a:hover {
+      text-decoration: underline;
+    }
+
+    .dipul-hover-tooltip {
+      padding: 0.45rem 0.65rem;
+      border: 0;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .97);
+      color: #20242b;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, .28);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     /* ── Kachel-Titel als klickbarer Link ─────────────────────────────────────── */
@@ -2276,6 +2432,7 @@
       <div class="l-sources">
         <span id="l-src-zones-landing" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Geländehöhe</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
         <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
@@ -2388,28 +2545,28 @@
     <!-- MAP -->
     <div class="section" style="padding-top:0">
       <div class="sec-label" data-i18n="secMap">Karte &amp; Luftraum</div>
-      <div class="map-controls" id="map-controls">
-        <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">Geozonen</button>
-        <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
-        <div class="zone-group" id="zone-group">
-          <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
-          <button class="zone-btn" data-zone="reduced" data-i18n="mapRiskyZones">Nur Risikozonen</button>
-        </div>
-        <div class="radius-group">
-          <button class="radius-btn map-toggle" data-radius="5">5m</button>
-          <button class="radius-btn map-toggle active" data-radius="100">100m</button>
-        </div>
-        <button class="map-toggle active" data-layer="radius1500">1,5km</button>
-        <div class="ctx-group" id="ctx-group" style="display:none">
-          <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
-          <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
-          <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
-          <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
-        </div>
-        <button class="btn-av-open" id="btn-av-open">✈ Alarm</button>
-      </div>
       <div class="map-wrap">
         <div id="map"></div>
+        <div class="map-controls" id="map-controls">
+          <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">Geozonen</button>
+          <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
+          <div class="zone-group" id="zone-group">
+            <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
+            <button class="zone-btn" data-zone="reduced" data-i18n="mapRiskyZones">Nur Risikozonen</button>
+          </div>
+          <div class="radius-group">
+            <button class="radius-btn map-toggle" data-radius="5">5m</button>
+            <button class="radius-btn map-toggle active" data-radius="100">100m</button>
+          </div>
+          <button class="map-toggle active" data-layer="radius1500">1,5km</button>
+          <div class="ctx-group" id="ctx-group" style="display:none">
+            <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
+            <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
+            <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
+            <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
+          </div>
+          <button class="btn-av-open" id="btn-av-open">✈ Alarm</button>
+        </div>
         <button class="map-fs-btn" id="btn-map-fs" title="Vollbild">⛶</button>
         <button class="map-style-btn" id="btn-map-style" title="Kartenstil"><span class="ms-icon">⧉</span><span id="map-style-label">Dark</span></button>
         <div class="map-status hidden" id="map-status"></div>
@@ -2495,6 +2652,7 @@
       <div class="l-sources" style="margin-top: 0;">
         <span id="l-src-zones-results" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Geländehöhe</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
         <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
@@ -2641,7 +2799,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.98';
+    const APP_VER = '0.99';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2690,7 +2848,7 @@
         rainWarn: v => `Geringer Niederschlag ${v} mm`,
         tempNogo: v => `Temperatur außerhalb Betriebsbereich (${v} °C)`,
         fogWarn: 'Nebelgefahr — Taupunkt nahe Lufttemperatur',
-        visNogo: v => `Sichtweite ${v} km — unter 1,5 km (Flugverbot)`,
+        visNogo: (v, min) => `Sichtweite ${v} km — unter ${min === 800 ? '800 m Bodensicht' : '1,5 km'} (Flugverbot)`,
         visWarn: v => `Sicht ${v} km — eingeschränkt`,
         cloudBaseNogo: v => `Wolkenbasis ~${v} m — Nebel/tiefe Wolken`,
         cloudBaseWarn: v => `Wolkenbasis ~${v} m — Luftraum aufmerksam beobachten`,
@@ -2759,6 +2917,8 @@
         warnAircraftDesc: n => `${n} Flugzeuge im Umkreis von ~15 km detektiert.`,
         warnKpTitle: 'Geomagnetische Aktivität',
         warnKpDesc: v => `Kp-Index ${v} — GPS-Präzision kann eingeschränkt sein.`,
+        warnCtrVlosTitle: '800 m sind keine Flugreichweite',
+        warnCtrVlosDesc: '<p>800 m sind keine zulässige <a href="https://docs.google.com/document/d/1Ppbogkki3fDimItHMyCket5idE4_QV3hopyU2hY2SrE/edit?usp=sharing" target="_blank" rel="noopener">Flugreichweite</a>, sondern nur die Mindest-Bodensicht für die allgemeine DFS-Freigabe in CTR-Zonen 2–4.</p><p><a href="https://docs.google.com/spreadsheets/d/17lNCMIdHNFgOeKAbVuc-ahXOGZLk6yHra5HM9yAEtU8/edit?usp=sharing" target="_blank" rel="noopener">VLOS</a> bleibt jederzeit verpflichtend. FPV ist in der offenen Kategorie nur mit einem unmittelbar neben dem Fernpiloten eingesetzten UA-Beobachter zulässig. <a href="https://www.easa.europa.eu/en/faq/116511" target="_blank" rel="noopener">EASA-Regelung zu FPV/VLOS</a></p><p>140 kt beziehungsweise 259 km/h wird als SERA-Vergleichswert für bemannte VFR-Flüge genannt – ausdrücklich nicht als UAS-Grenze oder zusätzliche Freigabe. <a href="https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A02012R0923-20250501" target="_blank" rel="noopener">SERA-Verordnung</a></p><p>Zone 1 erhält diesen Hinweis nicht, weil dort weiterhin eine individuelle FVK-Freigabe erforderlich ist. Die 800-m-Regel gilt für die allgemeine Freigabe in Zone 2–4. <a href="https://nfl.dfs.de/public/847f0cb5b6e4a54eb71126e5150e0b0b" target="_blank" rel="noopener">NfL 2026-1-3960</a></p><p>Die Dimension ist tatsächlich drastisch:</p><ul><li>300 km/h: 800 m in etwa 9,6 Sekunden</li><li>699 km/h: 800 m in etwa 4,1 Sekunden</li></ul><p>Dabei ist eine kleine <a href="https://www.multikopterschule.de/FPV-Fliegen-in-Deutschland/gewerbliches-FPV-Fliegen-in-Deutschland-ein-tickende-Zeitbombe/" target="_blank" rel="noopener">FPV-Drohne</a> normalerweise schon weit vor 800 m nicht mehr zuverlässig in Lage und Flugrichtung erkennbar. „800 m Bodensicht“ und „Drohne in Sicht“ sind zwei völlig unterschiedliche Dinge.</p>',
         cardKp: 'Kp-Index', cardKpMeas: 'Kp Messung (GFZ)',
         cardVis: 'Sichtweite', cardTemp: 'Temperatur',
         cardGusts: 'Windböen', cardWind: 'Wind',
@@ -2768,7 +2928,8 @@
         airDist: d => `${d} km entfernt`, airAlt: 'Flughöhe', airUnknown: 'Unbekannt',
         kpGps: v => v > 5 ? 'GPS unzuverlässig' : v > 3.3 ? 'GPS beeinträchtigt' : 'GPS normal',
         kpLimit: 'Grenzwert 3.3', gustLimit: 'Grenzwert 10 m/s',
-        visMin: 'min: G≥1,5 km<br>CTR-D≥5 km',
+        visMin: 'Richtwert: ≥1,5 km',
+        visMinCtr: 'DFS-CTR: ≥800 m Bodensicht<br><small>NfL 2026-1-3960 · unabhängig von der UAS-Geschwindigkeit · VLOS zusätzlich einhalten</small>',
         rainActive: 'Aktiver Niederschlag', rainNone: 'Kein Niederschlag',
         cloudHigh: 'Stark bewölkt', cloudMid: 'Teilweise', cloudLow: 'Gering',
         msNoRestr: '✓ Keine Einschränkungen', msGusts: 'Böen',
@@ -2777,6 +2938,7 @@
         msHighway: 'Autobahn', msFedRoad: 'Bundesstraße', msWaterway: 'Wasserstraße',
         msNature: 'Naturschutz', msResidential: 'Siedlung', msMilitary: 'Militär',
         msIndustry: 'Industrie/Energie', msHospital: 'Krankenhaus',
+        msGroundMsl: 'Geländehöhe', msOpenDipul: 'Punkt in DiPUL öffnen',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -2808,6 +2970,24 @@
         avLowAltHdr: '⚠ Tiefflieger (&lt;300 m)',
         zoneNoFly: 'Flugverbot/-beschränkung',
         zoneCtr: 'Kontrollzone — genehmigungspflichtig',
+        ctrZoneLabel: n => `CTR Zone ${n}`,
+        ctrZone1Reason: 'CTR Zone 1: individuelle FVK-Freigabe erforderlich',
+        ctrMaxReason: (n, h) => `CTR Zone ${n}: max. ${h} m über Grund bei allgemeiner FVK-Freigabe`,
+        ctrHeightUnknown: n => `CTR Zone ${n}: Maximalhöhe nicht zuverlässig berechenbar`,
+        ctrMaxAgl: 'Maximale Flughöhe',
+        ctrIndividual: 'Individuelle FVK-Freigabe erforderlich',
+        ctrGeneral: 'Allgemeine FVK-Freigabe',
+        ctrGround: 'Geländehöhe am Standort',
+        ctrAirportRef: 'Flugplatzhöhe (Bezugshöhe)',
+        ctrMaxMsl: 'Maximale UAS-Höhe',
+        ctrCalculation: 'Rechenweg',
+        ctrElevationNote: 'Geländehöhe automatisch ermittelt (Open-Meteo, Näherungswert). Bindend sind DiPUL und die jeweilige NfL.',
+        ctrNoElevation: 'Geländehöhe nicht verfügbar – keine zuverlässige Höhenberechnung möglich.',
+        ctrTerrainRangeTitle: '100-m-Geländekorridor',
+        ctrMinMaxAgl: 'Geringste Maximalflughöhe',
+        ctrMaxMaxAgl: 'Größte Maximalflughöhe',
+        ctrTerrainRange: 'Geländespanne',
+        ctrTerrainRangeNote: n => `Aus ${n} Geländestützpunkten im 100-m-Kreis; gilt für die am Mittelpunkt erkannte CTR-Zone.`,
         zoneAirfield: 'Flugplatz — genehmigungspflichtig',
         zoneHeliport: 'Heliport — genehmigungspflichtig',
         zoneMil: 'Militärgebiet — Flugverbot',
@@ -2843,7 +3023,7 @@
         rainWarn: v => `Light precipitation ${v} mm`,
         tempNogo: v => `Temperature outside operating range (${v} °C)`,
         fogWarn: 'Fog risk — dew point near air temperature',
-        visNogo: v => `Visibility ${v} km — below 1.5 km (no-fly)`,
+        visNogo: (v, min) => `Visibility ${v} km — below ${min === 800 ? '800 m ground visibility' : '1.5 km'} (no-fly)`,
         visWarn: v => `Visibility ${v} km — reduced`,
         cloudBaseNogo: v => `Cloud base ~${v} m — fog/low clouds`,
         cloudBaseWarn: v => `Cloud base ~${v} m — monitor airspace closely`,
@@ -2912,6 +3092,8 @@
         warnAircraftDesc: n => `${n} aircraft detected within ~15 km.`,
         warnKpTitle: 'Geomagnetic Activity',
         warnKpDesc: v => `Kp-Index ${v} — GPS precision may be reduced.`,
+        warnCtrVlosTitle: '800 m is not an operating range',
+        warnCtrVlosDesc: '<p>800 m is not a permitted <a href="https://docs.google.com/document/d/1Ppbogkki3fDimItHMyCket5idE4_QV3hopyU2hY2SrE/edit?usp=sharing" target="_blank" rel="noopener">operating range</a>, but only the minimum ground visibility for the general DFS clearance in CTR zones 2–4.</p><p><a href="https://docs.google.com/spreadsheets/d/17lNCMIdHNFgOeKAbVuc-ahXOGZLk6yHra5HM9yAEtU8/edit?usp=sharing" target="_blank" rel="noopener">VLOS</a> remains mandatory at all times. Open-category FPV is permitted only with a UA observer positioned immediately beside the remote pilot. <a href="https://www.easa.europa.eu/en/faq/116511" target="_blank" rel="noopener">EASA rules on FPV/VLOS</a></p><p>140 kt, or 259 km/h, is a SERA reference value for manned VFR flights – explicitly not a UAS limit or additional clearance. <a href="https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A02012R0923-20250501" target="_blank" rel="noopener">SERA Regulation</a></p><p>Zone 1 does not receive this notice because it still requires individual ATC clearance. The 800 m rule applies to the general clearance in zones 2–4. <a href="https://nfl.dfs.de/public/847f0cb5b6e4a54eb71126e5150e0b0b" target="_blank" rel="noopener">NfL 2026-1-3960</a></p><p>The scale is drastic:</p><ul><li>300 km/h: 800 m in about 9.6 seconds</li><li>699 km/h: 800 m in about 4.1 seconds</li></ul><p>A small <a href="https://www.multikopterschule.de/FPV-Fliegen-in-Deutschland/gewerbliches-FPV-Fliegen-in-Deutschland-ein-tickende-Zeitbombe/" target="_blank" rel="noopener">FPV drone</a> is normally no longer reliably recognisable in attitude and direction well before 800 m. “800 m ground visibility” and “drone in sight” are two entirely different things.</p>',
         cardKp: 'Kp-Index', cardKpMeas: 'Kp Reading (GFZ)',
         cardVis: 'Visibility', cardTemp: 'Temperature',
         cardGusts: 'Wind Gusts', cardWind: 'Wind',
@@ -2921,7 +3103,8 @@
         airDist: d => `${d} km away`, airAlt: 'Altitude', airUnknown: 'Unknown',
         kpGps: v => v > 5 ? 'GPS unreliable' : v > 3.3 ? 'GPS impaired' : 'GPS normal',
         kpLimit: 'Limit 3.3', gustLimit: 'Limit 10 m/s',
-        visMin: 'min: G≥1.5 km<br>CTR-D≥5 km',
+        visMin: 'Guideline: ≥1.5 km',
+        visMinCtr: 'DFS CTR: ≥800 m ground visibility<br><small>NfL 2026-1-3960 · independent of UAS speed · VLOS must also be maintained</small>',
         rainActive: 'Active precipitation', rainNone: 'No precipitation',
         cloudHigh: 'Heavily overcast', cloudMid: 'Partly cloudy', cloudLow: 'Low cloud cover',
         msNoRestr: '✓ No restrictions', msGusts: 'Gusts',
@@ -2930,6 +3113,7 @@
         msHighway: 'Motorway', msFedRoad: 'Federal Road', msWaterway: 'Waterway',
         msNature: 'Nature Reserve', msResidential: 'Residential', msMilitary: 'Military',
         msIndustry: 'Industry/Energy', msHospital: 'Hospital',
+        msGroundMsl: 'Ground elevation', msOpenDipul: 'Open point in DiPUL',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -2961,6 +3145,24 @@
         avLowAltHdr: '⚠ Low-altitude aircraft (&lt;300 m)',
         zoneNoFly: 'No-fly/restricted zone',
         zoneCtr: 'Control zone — permit required',
+        ctrZoneLabel: n => `CTR zone ${n}`,
+        ctrZone1Reason: 'CTR zone 1: individual ATC clearance required',
+        ctrMaxReason: (n, h) => `CTR zone ${n}: max. ${h} m above ground with general ATC clearance`,
+        ctrHeightUnknown: n => `CTR zone ${n}: maximum height cannot be calculated reliably`,
+        ctrMaxAgl: 'Maximum flight height',
+        ctrIndividual: 'Individual ATC clearance required',
+        ctrGeneral: 'General ATC clearance',
+        ctrGround: 'Terrain elevation at location',
+        ctrAirportRef: 'Aerodrome elevation (reference)',
+        ctrMaxMsl: 'Maximum UAS altitude',
+        ctrCalculation: 'Calculation',
+        ctrElevationNote: 'Terrain elevation is determined automatically (Open-Meteo, approximate). DiPUL and the applicable NfL remain authoritative.',
+        ctrNoElevation: 'Terrain elevation unavailable – no reliable height calculation is possible.',
+        ctrTerrainRangeTitle: '100 m terrain corridor',
+        ctrMinMaxAgl: 'Lowest maximum flight height',
+        ctrMaxMaxAgl: 'Highest maximum flight height',
+        ctrTerrainRange: 'Terrain elevation range',
+        ctrTerrainRangeNote: n => `Based on ${n} terrain samples within a 100 m circle; applies to the CTR zone identified at the centre.`,
         zoneAirfield: 'Airfield — permit required',
         zoneHeliport: 'Heliport — permit required',
         zoneMil: 'Military zone — no-fly',
@@ -2996,7 +3198,7 @@
         rainWarn: v => `Faibles précipitations ${v} mm`,
         tempNogo: v => `Température hors plage opérationnelle (${v} °C)`,
         fogWarn: 'Risque de brouillard — point de rosée proche de la température de l\'air',
-        visNogo: v => `Visibilité ${v} km — inférieure à 1,5 km (vol interdit)`,
+        visNogo: (v, min) => `Visibilité ${v} km — inférieure à ${min === 800 ? '800 m de visibilité au sol' : '1,5 km'} (vol interdit)`,
         visWarn: v => `Visibilité ${v} km — réduite`,
         cloudBaseNogo: v => `Base des nuages ~${v} m — brouillard/nuages bas`,
         cloudBaseWarn: v => `Base des nuages ~${v} m — surveiller l\'espace aérien attentivement`,
@@ -3057,6 +3259,8 @@
         warnAircraftDesc: n => `${n} aéronef${n > 1 ? 's' : ''} détecté${n > 1 ? 's' : ''} dans un rayon de ~15 km.`,
         warnKpTitle: 'Activité géomagnétique',
         warnKpDesc: v => `Kp-Index ${v} — la précision GPS peut être réduite.`,
+        warnCtrVlosTitle: '800 m ne constituent pas une portée de vol',
+        warnCtrVlosDesc: '<p>800 m ne constituent pas une <a href="https://docs.google.com/document/d/1Ppbogkki3fDimItHMyCket5idE4_QV3hopyU2hY2SrE/edit?usp=sharing" target="_blank" rel="noopener">portée de vol</a> autorisée, mais uniquement la visibilité au sol minimale requise pour l’autorisation générale DFS dans les zones CTR 2 à 4.</p><p>Le <a href="https://docs.google.com/spreadsheets/d/17lNCMIdHNFgOeKAbVuc-ahXOGZLk6yHra5HM9yAEtU8/edit?usp=sharing" target="_blank" rel="noopener">VLOS</a> reste obligatoire à tout moment. En catégorie ouverte, le FPV n’est autorisé qu’avec un observateur UAS placé immédiatement à côté du télépilote. <a href="https://www.easa.europa.eu/en/faq/116511" target="_blank" rel="noopener">Règles EASA relatives au FPV/VLOS</a></p><p>140 kt, soit 259 km/h, est une valeur de référence SERA pour les vols VFR habités – et non une limite UAS ou une autorisation supplémentaire. <a href="https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A02012R0923-20250501" target="_blank" rel="noopener">Règlement SERA</a></p><p>La zone 1 ne reçoit pas cet avertissement, car elle exige toujours une autorisation individuelle du contrôle aérien. La règle des 800 m s’applique à l’autorisation générale dans les zones 2 à 4. <a href="https://nfl.dfs.de/public/847f0cb5b6e4a54eb71126e5150e0b0b" target="_blank" rel="noopener">NfL 2026-1-3960</a></p><p>L’ordre de grandeur est frappant :</p><ul><li>300 km/h : 800 m en environ 9,6 secondes</li><li>699 km/h : 800 m en environ 4,1 secondes</li></ul><p>Un petit <a href="https://www.multikopterschule.de/FPV-Fliegen-in-Deutschland/gewerbliches-FPV-Fliegen-in-Deutschland-ein-tickende-Zeitbombe/" target="_blank" rel="noopener">drone FPV</a> n’est normalement plus identifiable de manière fiable en attitude et en direction bien avant 800 m. « 800 m de visibilité au sol » et « drone en vue » sont deux choses totalement différentes.</p>',
         cardKp: 'Kp-Index', cardKpMeas: 'Mesure Kp (GFZ)',
         cardVis: 'Visibilité', cardTemp: 'Température',
         cardGusts: 'Rafales de vent', cardWind: 'Vent',
@@ -3066,7 +3270,8 @@
         airDist: d => `à ${d} km`, airAlt: 'Altitude', airUnknown: 'Inconnu',
         kpGps: v => v > 5 ? 'GPS non fiable' : v > 3.3 ? 'GPS dégradé' : 'GPS normal',
         kpLimit: 'Limite 3,3', gustLimit: 'Limite 10 m/s',
-        visMin: 'min : G≥1,5 km<br>CTR-D≥5 km',
+        visMin: 'Valeur indicative : ≥1,5 km',
+        visMinCtr: 'CTR DFS : visibilité au sol ≥800 m<br><small>NfL 2026-1-3960 · indépendamment de la vitesse de l’UAS · maintenir également le VLOS</small>',
         rainActive: 'Précipitations actives', rainNone: 'Aucune précipitation',
         cloudHigh: 'Très nuageux', cloudMid: 'Partiellement nuageux', cloudLow: 'Peu nuageux',
         msNoRestr: '✓ Aucune restriction', msGusts: 'Rafales',
@@ -3075,6 +3280,7 @@
         msHighway: 'Autoroute', msFedRoad: 'Route fédérale', msWaterway: 'Voie navigable',
         msNature: 'Réserve naturelle', msResidential: 'Zone résidentielle', msMilitary: 'Militaire',
         msIndustry: 'Industrie/Énergie', msHospital: 'Hôpital',
+        msGroundMsl: 'Altitude du terrain', msOpenDipul: 'Ouvrir le point dans DiPUL',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -3114,6 +3320,24 @@
         avLowAltHdr: '⚠ Aéronefs à basse altitude (&lt;300 m)',
         zoneNoFly: 'Zone interdite/à restrictions',
         zoneCtr: 'Zone de contrôle — autorisation requise',
+        ctrZoneLabel: n => `Zone CTR ${n}`,
+        ctrZone1Reason: 'Zone CTR 1 : clairance individuelle du contrôle aérien requise',
+        ctrMaxReason: (n, h) => `Zone CTR ${n} : max. ${h} m au-dessus du sol avec clairance générale`,
+        ctrHeightUnknown: n => `Zone CTR ${n} : hauteur maximale non calculable de manière fiable`,
+        ctrMaxAgl: 'Hauteur de vol maximale',
+        ctrIndividual: 'Clairance individuelle du contrôle aérien requise',
+        ctrGeneral: 'Clairance générale du contrôle aérien',
+        ctrGround: 'Altitude du terrain au point',
+        ctrAirportRef: 'Altitude de l’aérodrome (référence)',
+        ctrMaxMsl: 'Altitude UAS maximale',
+        ctrCalculation: 'Calcul',
+        ctrElevationNote: 'Altitude du terrain déterminée automatiquement (Open-Meteo, valeur approximative). DiPUL et la NfL applicable font foi.',
+        ctrNoElevation: 'Altitude du terrain indisponible – calcul fiable impossible.',
+        ctrTerrainRangeTitle: 'Corridor de terrain de 100 m',
+        ctrMinMaxAgl: 'Hauteur maximale la plus faible',
+        ctrMaxMaxAgl: 'Hauteur maximale la plus élevée',
+        ctrTerrainRange: 'Plage d’altitude du terrain',
+        ctrTerrainRangeNote: n => `Calculé à partir de ${n} points de terrain dans un rayon de 100 m ; s’applique à la zone CTR identifiée au centre.`,
         zoneAirfield: 'Aérodrome — autorisation requise',
         zoneHeliport: 'Héliport — autorisation requise',
         zoneMil: 'Zone militaire — vol interdit',
@@ -3149,7 +3373,7 @@
         rainWarn: v => `Precipitación ligera ${v} mm`,
         tempNogo: v => `Temperatura fuera del rango operativo (${v} °C)`,
         fogWarn: 'Riesgo de niebla — punto de rocío cerca de la temperatura del aire',
-        visNogo: v => `Visibilidad ${v} km — por debajo de 1,5 km (vuelo prohibido)`,
+        visNogo: (v, min) => `Visibilidad ${v} km — por debajo de ${min === 800 ? '800 m de visibilidad en tierra' : '1,5 km'} (vuelo prohibido)`,
         visWarn: v => `Visibilidad ${v} km — reducida`,
         cloudBaseNogo: v => `Base de nubes ~${v} m — niebla/nubes bajas`,
         cloudBaseWarn: v => `Base de nubes ~${v} m — vigilar el espacio aéreo de cerca`,
@@ -3210,6 +3434,8 @@
         warnAircraftDesc: n => `${n} aeronave${n > 1 ? 's' : ''} detectada${n > 1 ? 's' : ''} en un radio de ~15 km.`,
         warnKpTitle: 'Actividad geomagnética',
         warnKpDesc: v => `Kp-Index ${v} — la precisión GPS puede estar reducida.`,
+        warnCtrVlosTitle: '800 m no son un alcance de vuelo',
+        warnCtrVlosDesc: '<p>800 m no constituyen un <a href="https://docs.google.com/document/d/1Ppbogkki3fDimItHMyCket5idE4_QV3hopyU2hY2SrE/edit?usp=sharing" target="_blank" rel="noopener">alcance de vuelo</a> permitido, sino únicamente la visibilidad en tierra mínima para la autorización general de DFS en las zonas CTR 2–4.</p><p>El <a href="https://docs.google.com/spreadsheets/d/17lNCMIdHNFgOeKAbVuc-ahXOGZLk6yHra5HM9yAEtU8/edit?usp=sharing" target="_blank" rel="noopener">VLOS</a> sigue siendo obligatorio en todo momento. El FPV en categoría abierta solo está permitido con un observador UAS situado inmediatamente junto al piloto remoto. <a href="https://www.easa.europa.eu/en/faq/116511" target="_blank" rel="noopener">Normas EASA sobre FPV/VLOS</a></p><p>140 kt, es decir, 259 km/h, es un valor de referencia SERA para vuelos VFR tripulados, no un límite UAS ni una autorización adicional. <a href="https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A02012R0923-20250501" target="_blank" rel="noopener">Reglamento SERA</a></p><p>La zona 1 no recibe este aviso porque sigue requiriendo una autorización individual de control aéreo. La regla de 800 m se aplica a la autorización general en las zonas 2–4. <a href="https://nfl.dfs.de/public/847f0cb5b6e4a54eb71126e5150e0b0b" target="_blank" rel="noopener">NfL 2026-1-3960</a></p><p>La magnitud es drástica:</p><ul><li>300 km/h: 800 m en unos 9,6 segundos</li><li>699 km/h: 800 m en unos 4,1 segundos</li></ul><p>Un pequeño <a href="https://www.multikopterschule.de/FPV-Fliegen-in-Deutschland/gewerbliches-FPV-Fliegen-in-Deutschland-ein-tickende-Zeitbombe/" target="_blank" rel="noopener">dron FPV</a> normalmente deja de ser reconocible de forma fiable en actitud y dirección mucho antes de 800 m. «800 m de visibilidad en tierra» y «dron a la vista» son dos cosas completamente distintas.</p>',
         cardKp: 'Kp-Index', cardKpMeas: 'Medición Kp (GFZ)',
         cardVis: 'Visibilidad', cardTemp: 'Temperatura',
         cardGusts: 'Ráfagas de viento', cardWind: 'Viento',
@@ -3219,7 +3445,8 @@
         airDist: d => `a ${d} km`, airAlt: 'Altitud', airUnknown: 'Desconocido',
         kpGps: v => v > 5 ? 'GPS no fiable' : v > 3.3 ? 'GPS degradado' : 'GPS normal',
         kpLimit: 'Límite 3,3', gustLimit: 'Límite 10 m/s',
-        visMin: 'mín: G≥1,5 km<br>CTR-D≥5 km',
+        visMin: 'Valor orientativo: ≥1,5 km',
+        visMinCtr: 'CTR DFS: visibilidad en tierra ≥800 m<br><small>NfL 2026-1-3960 · independiente de la velocidad del UAS · mantener también VLOS</small>',
         rainActive: 'Precipitación activa', rainNone: 'Sin precipitación',
         cloudHigh: 'Muy nublado', cloudMid: 'Parcialmente nublado', cloudLow: 'Poco nublado',
         msNoRestr: '✓ Sin restricciones', msGusts: 'Ráfagas',
@@ -3228,6 +3455,7 @@
         msHighway: 'Autopista', msFedRoad: 'Carretera federal', msWaterway: 'Vía fluvial',
         msNature: 'Reserva natural', msResidential: 'Zona residencial', msMilitary: 'Militar',
         msIndustry: 'Industria/Energía', msHospital: 'Hospital',
+        msGroundMsl: 'Altitud del terreno', msOpenDipul: 'Abrir punto en DiPUL',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -3267,6 +3495,24 @@
         avLowAltHdr: '⚠ Aeronaves a baja altitud (&lt;300 m)',
         zoneNoFly: 'Zona prohibida/restringida',
         zoneCtr: 'Zona de control — autorización requerida',
+        ctrZoneLabel: n => `Zona CTR ${n}`,
+        ctrZone1Reason: 'Zona CTR 1: se requiere autorización ATC individual',
+        ctrMaxReason: (n, h) => `Zona CTR ${n}: máx. ${h} m sobre el suelo con autorización ATC general`,
+        ctrHeightUnknown: n => `Zona CTR ${n}: no se puede calcular de forma fiable la altura máxima`,
+        ctrMaxAgl: 'Altura máxima de vuelo',
+        ctrIndividual: 'Se requiere autorización ATC individual',
+        ctrGeneral: 'Autorización ATC general',
+        ctrGround: 'Elevación del terreno en el punto',
+        ctrAirportRef: 'Elevación del aeródromo (referencia)',
+        ctrMaxMsl: 'Altitud UAS máxima',
+        ctrCalculation: 'Cálculo',
+        ctrElevationNote: 'La elevación del terreno se determina automáticamente (Open-Meteo, valor aproximado). DiPUL y la NfL aplicable son vinculantes.',
+        ctrNoElevation: 'Elevación del terreno no disponible; no es posible un cálculo fiable.',
+        ctrTerrainRangeTitle: 'Corredor de terreno de 100 m',
+        ctrMinMaxAgl: 'Menor altura máxima de vuelo',
+        ctrMaxMaxAgl: 'Mayor altura máxima de vuelo',
+        ctrTerrainRange: 'Rango de elevación del terreno',
+        ctrTerrainRangeNote: n => `Basado en ${n} puntos del terreno dentro de un círculo de 100 m; se aplica a la zona CTR identificada en el centro.`,
         zoneAirfield: 'Aeródromo — autorización requerida',
         zoneHeliport: 'Helipuerto — autorización requerida',
         zoneMil: 'Zona militar — vuelo prohibido',
@@ -3302,7 +3548,7 @@
         rainWarn: v => `Słabe opady ${v} mm`,
         tempNogo: v => `Temperatura poza zakresem operacyjnym (${v} °C)`,
         fogWarn: 'Ryzyko mgły — punkt rosy bliski temperaturze powietrza',
-        visNogo: v => `Widzialność ${v} km — poniżej 1,5 km (zakaz lotu)`,
+        visNogo: (v, min) => `Widzialność ${v} km — poniżej ${min === 800 ? '800 m widzialności przy ziemi' : '1,5 km'} (zakaz lotu)`,
         visWarn: v => `Widzialność ${v} km — ograniczona`,
         cloudBaseNogo: v => `Podstawa chmur ~${v} m — mgła/niskie chmury`,
         cloudBaseWarn: v => `Podstawa chmur ~${v} m — uważnie monitoruj przestrzeń powietrzną`,
@@ -3363,6 +3609,8 @@
         warnAircraftDesc: n => `Wykryto ${n} statek${n === 1 ? '' : n < 5 ? 'i' : 'ów'} powietrzn${n === 1 ? 'y' : n < 5 ? 'e' : 'ych'} w promieniu ~15 km.`,
         warnKpTitle: 'Aktywność geomagnetyczna',
         warnKpDesc: v => `Kp-Index ${v} — dokładność GPS może być obniżona.`,
+        warnCtrVlosTitle: '800 m nie oznacza zasięgu lotu',
+        warnCtrVlosDesc: '<p>800 m nie oznacza dozwolonego <a href="https://docs.google.com/document/d/1Ppbogkki3fDimItHMyCket5idE4_QV3hopyU2hY2SrE/edit?usp=sharing" target="_blank" rel="noopener">zasięgu lotu</a>, lecz wyłącznie minimalną widzialność przy ziemi dla ogólnej zgody DFS w strefach CTR 2–4.</p><p><a href="https://docs.google.com/spreadsheets/d/17lNCMIdHNFgOeKAbVuc-ahXOGZLk6yHra5HM9yAEtU8/edit?usp=sharing" target="_blank" rel="noopener">VLOS</a> pozostaje obowiązkowy przez cały czas. Lot FPV w kategorii otwartej jest dozwolony tylko z obserwatorem UAS stojącym bezpośrednio obok pilota zdalnego. <a href="https://www.easa.europa.eu/en/faq/116511" target="_blank" rel="noopener">Przepisy EASA dotyczące FPV/VLOS</a></p><p>140 kt, czyli 259 km/h, jest wartością odniesienia SERA dla załogowych lotów VFR – nie limitem UAS ani dodatkową zgodą. <a href="https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A02012R0923-20250501" target="_blank" rel="noopener">Rozporządzenie SERA</a></p><p>Strefa 1 nie otrzymuje tego ostrzeżenia, ponieważ nadal wymaga indywidualnej zgody kontroli ruchu lotniczego. Zasada 800 m dotyczy ogólnej zgody w strefach 2–4. <a href="https://nfl.dfs.de/public/847f0cb5b6e4a54eb71126e5150e0b0b" target="_blank" rel="noopener">NfL 2026-1-3960</a></p><p>Skala jest drastyczna:</p><ul><li>300 km/h: 800 m w około 9,6 sekundy</li><li>699 km/h: 800 m w około 4,1 sekundy</li></ul><p>Mały <a href="https://www.multikopterschule.de/FPV-Fliegen-in-Deutschland/gewerbliches-FPV-Fliegen-in-Deutschland-ein-tickende-Zeitbombe/" target="_blank" rel="noopener">dron FPV</a> zwykle przestaje być wiarygodnie rozpoznawalny pod względem położenia i kierunku znacznie przed 800 m. „800 m widzialności przy ziemi” i „dron w zasięgu wzroku” to dwie zupełnie różne rzeczy.</p>',
         cardKp: 'Kp-Index', cardKpMeas: 'Pomiar Kp (GFZ)',
         cardVis: 'Widzialność', cardTemp: 'Temperatura',
         cardGusts: 'Porywy wiatru', cardWind: 'Wiatr',
@@ -3372,7 +3620,8 @@
         airDist: d => `${d} km stąd`, airAlt: 'Wysokość', airUnknown: 'Nieznany',
         kpGps: v => v > 5 ? 'GPS zawodny' : v > 3.3 ? 'GPS osłabiony' : 'GPS normalny',
         kpLimit: 'Limit 3,3', gustLimit: 'Limit 10 m/s',
-        visMin: 'min: G≥1,5 km<br>CTR-D≥5 km',
+        visMin: 'Wartość orientacyjna: ≥1,5 km',
+        visMinCtr: 'CTR DFS: widzialność przy ziemi ≥800 m<br><small>NfL 2026-1-3960 · niezależnie od prędkości UAS · dodatkowo zachować VLOS</small>',
         rainActive: 'Aktywne opady', rainNone: 'Brak opadów',
         cloudHigh: 'Silne zachmurzenie', cloudMid: 'Częściowe zachmurzenie', cloudLow: 'Małe zachmurzenie',
         msNoRestr: '✓ Brak ograniczeń', msGusts: 'Porywy',
@@ -3381,6 +3630,7 @@
         msHighway: 'Autostrada', msFedRoad: 'Droga federalna', msWaterway: 'Droga wodna',
         msNature: 'Rezerwat przyrody', msResidential: 'Strefa mieszkalna', msMilitary: 'Wojskowy',
         msIndustry: 'Przemysł/Energetyka', msHospital: 'Szpital',
+        msGroundMsl: 'Wysokość terenu', msOpenDipul: 'Otwórz punkt w DiPUL',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -3420,6 +3670,24 @@
         avLowAltHdr: '⚠ Statki powietrzne na małej wysokości (&lt;300 m)',
         zoneNoFly: 'Strefa zakazu/ograniczeń lotów',
         zoneCtr: 'Strefa kontrolowana — wymagane zezwolenie',
+        ctrZoneLabel: n => `Strefa CTR ${n}`,
+        ctrZone1Reason: 'Strefa CTR 1: wymagane indywidualne zezwolenie kontroli ruchu lotniczego',
+        ctrMaxReason: (n, h) => `Strefa CTR ${n}: maks. ${h} m nad ziemią przy ogólnym zezwoleniu ATC`,
+        ctrHeightUnknown: n => `Strefa CTR ${n}: nie można wiarygodnie obliczyć maksymalnej wysokości`,
+        ctrMaxAgl: 'Maksymalna wysokość lotu',
+        ctrIndividual: 'Wymagane indywidualne zezwolenie ATC',
+        ctrGeneral: 'Ogólne zezwolenie ATC',
+        ctrGround: 'Wysokość terenu w punkcie',
+        ctrAirportRef: 'Wysokość lotniska (odniesienie)',
+        ctrMaxMsl: 'Maksymalna wysokość UAS',
+        ctrCalculation: 'Obliczenie',
+        ctrElevationNote: 'Wysokość terenu ustalona automatycznie (Open-Meteo, wartość przybliżona). Wiążące są DiPUL i właściwa NfL.',
+        ctrNoElevation: 'Brak wysokości terenu – wiarygodne obliczenie nie jest możliwe.',
+        ctrTerrainRangeTitle: 'Korytarz terenowy 100 m',
+        ctrMinMaxAgl: 'Najniższa maksymalna wysokość lotu',
+        ctrMaxMaxAgl: 'Najwyższa maksymalna wysokość lotu',
+        ctrTerrainRange: 'Zakres wysokości terenu',
+        ctrTerrainRangeNote: n => `Na podstawie ${n} punktów terenu w promieniu 100 m; dotyczy strefy CTR rozpoznanej w punkcie środkowym.`,
         zoneAirfield: 'Lotnisko — wymagane zezwolenie',
         zoneHeliport: 'Lądowisko dla śmigłowców — wymagane zezwolenie',
         zoneMil: 'Strefa wojskowa — zakaz lotów',
@@ -3536,6 +3804,14 @@
       return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
+
+    // Temperaturen werden in der gesamten UI konservativ auf volle Grad
+    // abgerundet. Die Dezimalwerte bleiben für Risiko- und Taupunktrechnungen erhalten.
+    function fmtTemp(value, fallback = '—') {
+      if (value == null || value === '') return fallback;
+      const n = Number(value);
+      return Number.isFinite(n) ? String(Math.floor(n)) : fallback;
+    }
     function applyLang() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const v = _t(el.getAttribute('data-i18n'));
@@ -3581,7 +3857,10 @@
         if (S._metars !== undefined) renderMetarCard(S._metars, S._taf);
         renderWarnings(lastStatus, lastKp, lastAircraft);
         renderZones(lastZones);
-        if (S.map) renderMapStatus(lastWeather, lastZones);
+        if (S.map) {
+          renderMapStatus(lastWeather, lastZones);
+          if (S.layers.dipulHover) loadDipulAiracHover(S.layers.dipulHover);
+        }
         renderUpdated();
       }
     }
@@ -3655,6 +3934,23 @@
     document.querySelectorAll('.zone-btn').forEach(b =>
       b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
     );
+    document.querySelectorAll('.zone-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        if (COUNTRY !== 'de') return;
+        const nextMode = button.dataset.zone === 'reduced' ? 'reduced' : 'all';
+        if (nextMode === CFG.layerMode) return;
+        CFG.layerMode = nextMode;
+        document.querySelectorAll('.zone-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
+        );
+        try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch { }
+        stopDipulWmsHover();
+        if (S.layers.dipul && typeof S.layers.dipul.setParams === 'function') {
+          S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+        }
+        if (S.lat != null) runCheck();
+      });
+    });
 
     // Laufzeit-Blockliste serverseitig defekter DiPUL-Layer (GeoServer-Render-
     // fehler, z. B. fehlende DB-Spalte). Wird in fetchZonesDE per Einzel-Layer-
@@ -3669,6 +3965,8 @@
     }
 
     const DIPUL_WMS_URL = 'https://uas-betrieb.de/geoservices/dipul/wms';
+    const DIPUL_AIRAC_MANIFEST_URL = 'data/dipul-airac/manifest.json';
+    const OPEN_METEO_ELEVATION_URL = 'https://api.open-meteo.com/v1/elevation';
     const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
     const KP_URL = 'https://kp.gfz.de/app/json/';
     const ADSB_URL = 'https://api.airplanes.live/v2/point';
@@ -3725,7 +4023,13 @@
       map: null,
       tileL: null, styleIdx: 0,
       searchRadius: 100,
-      layers: { dipul: null, aircraft: null, radius: null, radius1500: null, pin: null },
+      groundElevationMsl: null,
+      groundElevationProfile: null,
+      inDfsCtr: false,
+      checkSequence: 0,
+      mapLocationSequence: 0,
+      pinPopupWanted: true,
+      layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // AT-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       alarm: { active: false, silenced: false, intervalId: null },
@@ -3790,6 +4094,7 @@
       $land.style.display = 'flex';
       S.lat = S.lon = null;
       if (S.map) { S.map.remove(); S.map = null; }
+      S.pinPopupWanted = true;
     });
 
     $('btn-refresh').addEventListener('click', () => {
@@ -4015,7 +4320,7 @@
 
     const AV = {
       map: null, tileL: null, dipulL: null, acLayer: null, trailLayer: null, trails: {}, radiusCirc: null, scanCirc: null,
-      interval: null, beepInterval: null, lat: null, lon: null,
+      interval: null, beepInterval: null, lat: null, lon: null, locationSeq: 0,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
       RADIUS_KM: 2, POLL_MS: 2000, ALT_LIMIT_FT: 984, SCAN_KM: 18.52, TRAIL_SEC: 60,
       STYLES: [
@@ -4080,7 +4385,8 @@
         fillColor: 'rgba(0,180,216,0.05)', fillOpacity: 0.15,
         weight: 1.5, dashArray: '5 5', interactive: false
       }).addTo(AV.map);
-      AV.map.on('dblclick', async e => {
+      AV.map.on('click', async e => {
+        const locationId = ++AV.locationSeq;
         AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
@@ -4089,6 +4395,7 @@
         if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
+          if (locationId !== AV.locationSeq) return;
           drawZoneOverlay(z, AV.dipulL);
           renderMapStatus(lastWeather, z, $('av-map-status'));
         } catch {}
@@ -4310,6 +4617,10 @@
        MAIN CHECK
     ================================================================ */
     async function runCheck() {
+      const checkId = ++S.checkSequence;
+      const checkLat = S.lat;
+      const checkLon = S.lon;
+      S.inDfsCtr = false;
       showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
       $res.style.display = 'block';
@@ -4322,10 +4633,11 @@
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
         const [weatherArr, kp, aircraft] = await Promise.all([
-          fetchWeather(S.lat, S.lon),
+          fetchWeather(checkLat, checkLon),
           fetchKp(),
-          fetchAircraft(S.lat, S.lon),
+          fetchAircraft(checkLat, checkLon),
         ]);
+        if (checkId !== S.checkSequence) return;
 
         const nowMs = Date.now();
         const now = (weatherArr || []).reduce((best, e) => {
@@ -4337,19 +4649,20 @@
         const kpVal = kp ?? 0;
 
         // Evaluate overall flight status
-        const status = evalStatus(now, kpVal);
+        let status = evalStatus(now, kpVal);
 
         renderStatus(status);
         renderMetrics(now, kpVal, aircraft, null);
         // GFZ async nachladen und Kachel aktualisieren
         fetchKpGfz().then(result => {
-          if (result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
+          if (checkId === S.checkSequence && result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
         });
         renderWindProfile(now);
         renderFreezingRain(now);
 
         // DFS UTM altitude weather data (non-blocking, best-effort)
-        fetchDfsWeather(S.lat, S.lon).then(dfs => {
+        fetchDfsWeather(checkLat, checkLon).then(dfs => {
+          if (checkId !== S.checkSequence) return;
           S._dfs = dfs;   // Cache für Re-Render bei Sprachwechsel
           renderTempProfile(dfs);
           renderDewpointCard(dfs);
@@ -4361,9 +4674,29 @@
         renderForecastDays(weatherArr, kpVal);
         renderWarnings(status, kpVal, aircraft);
 
-        // Zones via Country-Provider (best-effort)
+        // Die Geländehöhe am gewählten Punkt wird immer als MSL-Information
+        // benötigt. Innerhalb einer DFS-CTR 2–4 kommen 24 Geländestichproben im
+        // 100-m-Umkreis für die konservative Min-/Max-Flughöhenanalyse hinzu.
+        // GPS, Suche und Kartenklick laufen sämtlich durch dieselbe Logik.
         let zones = [];
-        try { zones = await fetchZones(S.lat, S.lon, S.searchRadius); } catch { }
+        try { zones = await fetchZones(checkLat, checkLon, S.searchRadius); } catch { }
+        if (checkId !== S.checkSequence) return;
+        const needsCtrElevation = COUNTRY === 'de' && zones.some(z => z.ctrExact && [2, 3, 4].includes(z.zoneNum));
+        S.groundElevationProfile = needsCtrElevation
+          ? await fetchGroundElevationProfile(checkLat, checkLon, 100)
+          : await fetchGroundElevationProfile(checkLat, checkLon, 0);
+        if (checkId !== S.checkSequence) return;
+        S.groundElevationMsl = S.groundElevationProfile?.centerMslM ?? null;
+        zones = applyCtrFlightInfo(zones, S.groundElevationMsl, S.groundElevationProfile);
+        S.inDfsCtr = COUNTRY === 'de' && zones.some(z =>
+          z.ctrExact && [2, 3, 4].includes(Number(z.zoneNum)));
+        // NfL 2026-1-3960 legt für die allgemeine FVK-Freigabe in den
+        // DFS-CTR-Zonen 2–4 eine Mindestbodensicht von 800 m fest. Zone 1
+        // benötigt eine individuelle Freigabe; außerhalb gilt der
+        // konservative App-Richtwert von 1.500 m.
+        status = evalStatus(now, kpVal, S.inDfsCtr ? 800 : 1500);
+        renderMetrics(now, kpVal, aircraft, lastKpGfz);
+        renderWarnings(status, kpVal, aircraft);
         renderZones(zones);
         updateZoneOverlay(zones);
         renderMapStatus(now, zones);
@@ -4374,8 +4707,9 @@
         }
 
         // METAR/TAF (non-blocking)
-        fetchMetar(S.lat, S.lon).then(async metars => {
-          metars.forEach(m => { const dLat = m.lat - S.lat, dLon = m.lon - S.lon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
+        fetchMetar(checkLat, checkLon).then(async metars => {
+          if (checkId !== S.checkSequence) return;
+          metars.forEach(m => { const dLat = m.lat - checkLat, dLon = m.lon - checkLon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
           let tafData = null, tafCache = {};
           if (metars.length > 0) {
             const sorted = [...metars].sort((a, b) => a._dist - b._dist);
@@ -4385,6 +4719,7 @@
             const tr = await Promise.allSettled(others.map(m => fetchTaf(m.icaoId)));
             tr.forEach((r, i) => { if (r.status === 'fulfilled' && r.value) tafCache[others[i].icaoId] = r.value; });
           }
+          if (checkId !== S.checkSequence) return;
           S._metars = metars; S._taf = tafData;   // Cache für Re-Render bei Sprachwechsel
           renderMetarCard(metars, tafData);
           if (S.map) renderMetarMarkers(metars, tafCache);
@@ -4403,13 +4738,14 @@
 
         // Map
         $loadMsg.textContent = _t('loadingMap');
-        initMap(S.lat, S.lon, aircraft, zones);
+        initMap(checkLat, checkLon, aircraft, zones);
 
         S._updatedAt = new Date();
         renderUpdated();
 
         hideLoad();
       } catch (e) {
+        if (checkId !== S.checkSequence) return;
         hideLoad();
         console.error(e);
         setStatus('warn', '⚠️', _t('errLoad'), e.message);
@@ -4733,6 +5069,145 @@
         const ch = f.fcstChange ? ` ${f.fcstChange}` : '';
         return `${hFr}-${hTo}${ch}: ${w}${g} ${vis} ${cl}`.trim();
       }).join('\n');
+    }
+
+    /* [J-CTR-HEIGHT] ====================================================
+       CTR-D-Zonen 1–4: punktgenaue Höhenberechnung nach NfL/DiPUL.
+
+       DiPUL kodiert bei Zone 2–4 die zulässige Bezugshöhe als
+       lower_limit_altitude (MSL). Daraus folgt am Aufstiegsort:
+       Zone 2 = min(25 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL)
+       Zone 3 = min(45 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL)
+       Zone 4 = min(100 m AGL, max(50 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL))
+       Zone 1 benötigt unabhängig von der Höhe eine individuelle Freigabe.
+    ================================================================ */
+    const FT_TO_M = 0.3048;
+
+    function altitudeToMetres(value, unit) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return null;
+      if (String(unit || '').toLowerCase() === 'ft') return n * FT_TO_M;
+      if (String(unit || '').toLowerCase() === 'm') return n;
+      return null;
+    }
+
+    function isCtrZone(z) {
+      const type = `${z?.type || ''} ${z?.typeDetail || ''}`.toUpperCase();
+      return Boolean(z?.isCtr || type.includes('CONTROL_ZONE') || type.includes('KONTROLLZONE') || type.trim() === 'CTR');
+    }
+
+    function computeCtrFlightInfo(zone, groundMslM) {
+      const n = Number(zone?.zoneNum);
+      if (![1, 2, 3, 4].includes(n)) return null;
+      if (n === 1) return { zoneNum: 1, requiresIndividual: true, available: true };
+      if (!zone.ctrExact || !Number.isFinite(groundMslM) || !Number.isFinite(zone.lowerMslM)) {
+        return { zoneNum: n, requiresIndividual: false, available: false };
+      }
+
+      const referenceAglM = n === 2 ? 25 : n === 3 ? 45 : 100;
+      const airportElevationMslM = zone.lowerMslM - referenceAglM;
+      const mslHeadroomM = zone.lowerMslM - groundMslM;
+      const rawAglM = n === 4
+        ? Math.min(100, Math.max(50, mslHeadroomM))
+        : Math.min(referenceAglM, mslHeadroomM);
+      // Konservativ nie aufrunden. Ein negativer Wert bedeutet, dass unterhalb
+      // der DiPUL-MSL-Grenze keine positive Höhe über Grund verbleibt.
+      const maxAglM = Math.max(0, Math.floor(rawAglM + 1e-9));
+      const maxMslM = Math.floor(groundMslM + maxAglM + 1e-9);
+      const lowerLimitRounded = Math.round(zone.lowerMslM);
+      const groundRounded = Math.round(groundMslM);
+      const calculation = n === 4
+        ? `min(100 m, max(50 m, ${lowerLimitRounded} m − ${groundRounded} m)) = ${maxAglM} m AGL`
+        : `min(${referenceAglM} m, ${lowerLimitRounded} m − ${groundRounded} m) = ${maxAglM} m AGL`;
+
+      return {
+        zoneNum: n,
+        requiresIndividual: maxAglM <= 0,
+        available: true,
+        maxAglM,
+        maxMslM,
+        groundMslM: groundRounded,
+        airportElevationMslM: Math.round(airportElevationMslM),
+        referenceLimitMslM: lowerLimitRounded,
+        calculation,
+      };
+    }
+
+    function computeCtrTerrainRange(zone, terrainProfile) {
+      if (![2, 3, 4].includes(Number(zone?.zoneNum)) || !terrainProfile?.samples?.length) return null;
+      const values = terrainProfile.samples
+        .map(sample => ({
+          elevationMslM: Number(sample.elevationMslM),
+          flight: computeCtrFlightInfo(zone, Number(sample.elevationMslM)),
+        }))
+        .filter(sample => Number.isFinite(sample.elevationMslM) && sample.flight?.available);
+      if (!values.length) return null;
+      return {
+        radiusM: terrainProfile.radiusM,
+        sampleCount: values.length,
+        minMaxAglM: Math.min(...values.map(sample => sample.flight.maxAglM)),
+        maxMaxAglM: Math.max(...values.map(sample => sample.flight.maxAglM)),
+        minTerrainMslM: Math.round(Math.min(...values.map(sample => sample.elevationMslM))),
+        maxTerrainMslM: Math.round(Math.max(...values.map(sample => sample.elevationMslM))),
+      };
+    }
+
+    function applyCtrFlightInfo(zones, groundMslM, terrainProfile = null) {
+      return (zones || []).map(z => isCtrZone(z)
+        ? {
+            ...z,
+            ctrFlight: computeCtrFlightInfo(z, groundMslM),
+            ctrTerrainRange: computeCtrTerrainRange(z, terrainProfile),
+          }
+        : z);
+    }
+
+    function terrainSamplePoints(lat, lon, radiusM) {
+      const points = [{ lat, lon }];
+      if (!(radiusM > 0)) return points;
+      const metresPerDegree = 111320;
+      const lonScale = Math.max(0.01, Math.cos(lat * Math.PI / 180));
+      [[radiusM / 2, 8], [radiusM, 16]].forEach(([ringRadius, count]) => {
+        for (let i = 0; i < count; i++) {
+          const bearing = 2 * Math.PI * i / count;
+          points.push({
+            lat: lat + (Math.cos(bearing) * ringRadius) / metresPerDegree,
+            lon: lon + (Math.sin(bearing) * ringRadius) / (metresPerDegree * lonScale),
+          });
+        }
+      });
+      return points;
+    }
+
+    async function fetchGroundElevationProfile(lat, lon, radiusM = 100) {
+      try {
+        const points = terrainSamplePoints(lat, lon, radiusM);
+        const latitudes = points.map(point => point.lat.toFixed(6)).join(',');
+        const longitudes = points.map(point => point.lon.toFixed(6)).join(',');
+        const url = `${OPEN_METEO_ELEVATION_URL}?latitude=${encodeURIComponent(latitudes)}&longitude=${encodeURIComponent(longitudes)}`;
+        const r = await safeFetch(url, 7000);
+        if (!r.ok) return null;
+        const data = await r.json();
+        if (!Array.isArray(data.elevation) || data.elevation.length !== points.length) return null;
+        const samples = points.map((point, index) => {
+          const rawElevation = data.elevation[index];
+          return {
+            ...point,
+            elevationMslM: rawElevation == null ? NaN : Number(rawElevation),
+          };
+        }).filter(sample => Number.isFinite(sample.elevationMslM));
+        if (samples.length !== points.length) return null;
+        return {
+          radiusM,
+          centerMslM: samples[0].elevationMslM,
+          samples,
+          minTerrainMslM: Math.min(...samples.map(sample => sample.elevationMslM)),
+          maxTerrainMslM: Math.max(...samples.map(sample => sample.elevationMslM)),
+        };
+      } catch (e) {
+        console.warn('Geländeprofil nicht verfügbar:', e.message);
+        return null;
+      }
     }
 
     /* [J-API-ZONES] ======================================================
@@ -5070,21 +5545,25 @@
        API: DIPUL WMS GetFeatureInfo (Deutschland)
     ================================================================ */
     async function fetchZonesDE(lat, lon, radiusM = 100) {
-      const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
-      const bbox = `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
+      const bboxForRadius = queryRadiusM => {
+        const δ = Math.max(0.001134, queryRadiusM * 101 / (4 * 111320));
+        return `${lat - δ},${lon - δ},${lat + δ},${lon + δ}`;
+      };
 
-      // GetFeatureInfo-URL für eine (Komma-)Layerliste.
-      const gfiUrl = layers => `${DIPUL_WMS_URL}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo`
+      // GetFeatureInfo-URL für eine (Komma-)Layerliste. Kontrollzonen werden
+      // zusätzlich mit 5-m-Punktauflösung abgefragt; der frei wählbare 100-m-
+      // Suchradius darf die Höhenberechnung an einer Zonengrenze nicht verfälschen.
+      const gfiUrl = (layers, queryRadiusM = radiusM) => `${DIPUL_WMS_URL}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo`
         + `&FORMAT=image/png&TRANSPARENT=true`
         + `&QUERY_LAYERS=${layers}&LAYERS=${layers}`
-        + `&CRS=EPSG:4326&BBOX=${bbox}&WIDTH=101&HEIGHT=101&I=50&J=50`
+        + `&CRS=EPSG:4326&BBOX=${bboxForRadius(queryRadiusM)}&WIDTH=101&HEIGHT=101&I=50&J=50`
         + `&INFO_FORMAT=text/html&FEATURE_COUNT=50`;
 
       // Einzel-Request. ok = HTTP-2xx; failed = GeoServer-ServiceException
       // (defekter Layer). Netzwerk-/HTTP-Fehler → ok:false, NICHT als defekt werten.
-      async function gfi(layers) {
+      async function gfi(layers, queryRadiusM = radiusM) {
         try {
-          const r = await fetch(gfiUrl(layers));
+          const r = await fetch(gfiUrl(layers, queryRadiusM));
           if (!r.ok) return { ok: false, failed: false, text: '' };
           const text = await r.text();
           return { ok: true, failed: /ServiceException/i.test(text), text };
@@ -5094,38 +5573,60 @@
       }
 
       const activeL = getActiveDipulLayers();
+      const exactCtrPromise = gfi('kontrollzonen', 5);
+      let params = [];
 
       // Schnellpfad: kombinierte Abfrage aller aktiven Layer.
       const combined = await gfi(activeL);
-      if (combined.ok && !combined.failed) return parseFeatureInfo(combined.text);
-      if (!combined.ok) return [];   // Netzwerk-/HTTP-Fehler → kein Blocklisting
+      if (combined.ok && !combined.failed) {
+        params = parseFeatureInfo(combined.text);
+      } else if (combined.ok) {
+        // Härtung: Ein einzelner Layer mit serverseitigem Render-Fehler lässt die
+        // gesamte kombinierte Antwort scheitern (GeoServer rendert alles-oder-nichts).
+        // Recovery: jeden Layer einzeln abfragen, nur bei echter ServiceException
+        // für die Session aussortieren, Treffer der intakten Layer zusammenführen.
+        const layers = activeL.split(',');
+        const probes = await Promise.allSettled(layers.map(l => gfi(l)));
+        let newlyBad = false;
+        probes.forEach((p, i) => {
+          if (p.status !== 'fulfilled') return;          // transient → nicht aussortieren
+          const { ok, failed, text } = p.value;
+          if (ok && !failed) params.push(...parseFeatureInfo(text));
+          else if (ok && failed) { dipulBadLayers.add(layers[i]); newlyBad = true; }
+        });
 
-      // Härtung: Ein einzelner Layer mit serverseitigem Render-Fehler lässt die
-      // gesamte kombinierte Antwort scheitern (GeoServer rendert alles-oder-nichts).
-      // Recovery: jeden Layer einzeln abfragen, nur bei echter ServiceException
-      // für die Session aussortieren, Treffer der intakten Layer zusammenführen.
-      const layers = activeL.split(',');
-      const probes = await Promise.allSettled(layers.map(l => gfi(l)));
-      const params = [];
-      let newlyBad = false;
-      probes.forEach((p, i) => {
-        if (p.status !== 'fulfilled') return;          // transient → nicht aussortieren
-        const { ok, failed, text } = p.value;
-        if (ok && !failed) params.push(...parseFeatureInfo(text));
-        else if (ok && failed) { dipulBadLayers.add(layers[i]); newlyBad = true; }
-      });
-
-      // Karten-Overlays (GetMap) auf die bereinigte Layerliste umstellen, damit
-      // auch die Kacheln nicht länger am defekten Layer scheitern.
-      if (newlyBad) {
-        console.warn('DiPUL: defekte Layer für diese Session deaktiviert →', [...dipulBadLayers].join(','));
-        const goodL = getActiveDipulLayers();
-        if (typeof S !== 'undefined' && S.layers && S.layers.dipul && typeof S.layers.dipul.setParams === 'function')
-          S.layers.dipul.setParams({ layers: goodL });
-        if (typeof AV !== 'undefined' && AV.dipulL && typeof AV.dipulL.setParams === 'function')
-          AV.dipulL.setParams({ layers: goodL });
+        // Karten-Overlays (GetMap) auf die bereinigte Layerliste umstellen, damit
+        // auch die Kacheln nicht länger am defekten Layer scheitern.
+        if (newlyBad) {
+          console.warn('DiPUL: defekte Layer für diese Session deaktiviert →', [...dipulBadLayers].join(','));
+          const goodL = getActiveDipulLayers();
+          if (typeof S !== 'undefined' && S.layers && S.layers.dipul && typeof S.layers.dipul.setParams === 'function')
+            S.layers.dipul.setParams({ layers: goodL });
+          if (typeof AV !== 'undefined' && AV.dipulL && typeof AV.dipulL.setParams === 'function')
+            AV.dipulL.setParams({ layers: goodL });
+        }
       }
-      return params;
+
+      // Breite CTR-Treffer aus der Umgebungsabfrage durch die punktgenaue
+      // Antwort ersetzen. Liefert die exakte Abfrage leer, liegt der Marker
+      // außerhalb der CTR – auch wenn eine CTR weniger als 100 m entfernt ist.
+      const exactCtr = await exactCtrPromise;
+      if (exactCtr.ok && !exactCtr.failed) {
+        const atPoint = parseFeatureInfo(exactCtr.text)
+          .filter(isCtrZone)
+          .map(z => ({ ...z, ctrExact: true }));
+        params = params.filter(z => !isCtrZone(z)).concat(atPoint);
+      } else {
+        params = params.map(z => isCtrZone(z) ? { ...z, ctrExact: false } : z);
+      }
+
+      const seen = new Set();
+      return params.filter(z => {
+        const key = z.fid || `${z.name}|${z.type}|${z.lower}|${z.upper}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).sort((a, b) => Number(isCtrZone(b)) - Number(isCtrZone(a)));
     }
 
     // Parst eine GeoServer-GetFeatureInfo-HTML-Antwort in Zonen-Objekte.
@@ -5146,15 +5647,24 @@
           const f = {};
           headers.forEach((h, idx) => f[h] = cells[idx].textContent.trim());
 
-          const rawName = f.name || f.bezeichnung || '';
-          const type = f.type_code || f.geozone_art || 'Spezifische Geozone';
+          const rawName = f.name || f.generated_name_de || f.bezeichnung || '';
+          const rawType = f.type_code || f.geozone_art || 'Spezifische Geozone';
+          const typeDetail = f.type_code_detail || '';
+          const type = typeDetail || rawType;
           const name = rawName || type;
           const extRef = f.external_reference || f.identifikation || '';
+          const zoneMatch = /^U_CONTROL_ZONE_([1-4])$/i.exec(typeDetail);
+          const zoneNum = zoneMatch ? Number(zoneMatch[1]) : null;
+          const ctr = rawType.toUpperCase() === 'KONTROLLZONE' || typeDetail.toUpperCase() === 'CTR' || Boolean(zoneMatch);
 
-          let lower = f.lower_limit_altitude || f.untere_grenze || '0.0';
+          const lowerRaw = f.lower_limit_altitude || f.untere_grenze || '0.0';
           let lowerRef = f.lower_limit_alt_ref || 'AGL';
           let lowerUnit = f.lower_limit_unit || 'm';
-          if (lower === '0.0' && lowerRef === 'AGL') lower = 'GND';
+          const lowerMslM = String(lowerRef).toUpperCase() === 'MSL'
+            ? altitudeToMetres(lowerRaw, lowerUnit)
+            : null;
+          let lower = lowerRaw;
+          if (Number(lower) === 0 && String(lowerRef).toUpperCase() === 'AGL') lower = 'GND';
           else lower = `${lower} ${lowerUnit} ${lowerRef}`.trim();
 
           let upper = f.upper_limit_altitude || f.obere_grenze || '';
@@ -5167,8 +5677,21 @@
           const legal = f.legal_ref || f.rechtliche_grundlage || '—';
 
           params.push({
-            name: name + (rawName && extRef && extRef !== 'null' ? ` (${extRef})` : ''),
-            type: type, lower, upper, legal, color: zoneColor(type)
+            fid: f.fid || '',
+            name: name + (!ctr && rawName && extRef && extRef !== 'null' ? ` (${extRef})` : ''),
+            type,
+            typeDetail,
+            rawType,
+            zoneNum,
+            isCtr: ctr,
+            lower,
+            lowerRaw: Number(lowerRaw),
+            lowerRef,
+            lowerUnit,
+            lowerMslM,
+            upper,
+            legal,
+            color: zoneColor(type),
           });
         }
       });
@@ -5202,7 +5725,7 @@
     /* [J-EVAL] ==========================================================
        STATUS EVALUATION
     ================================================================ */
-    function evalStatus(w, kp) {
+    function evalStatus(w, kp, visibilityMinM = 1500) {
       const reasons = [];
       let lvl = 'go';
 
@@ -5232,7 +5755,7 @@
 
       if (temp < -15 || temp > 45) {
         lvl = 'nogo';
-        reasons.push(_t('tempNogo')(temp.toFixed(0)));
+        reasons.push(_t('tempNogo')(fmtTemp(temp)));
       }
 
       if (dew != null && (temp - dew) < 2.5) {
@@ -5242,9 +5765,9 @@
 
       // Visibility check
       const vis = w.visibility;
-      if (vis != null && vis < 1500) {
+      if (vis != null && vis < visibilityMinM) {
         lvl = 'nogo';
-        reasons.push(_t('visNogo')((vis / 1000).toFixed(1)));
+        reasons.push(_t('visNogo')((vis / 1000).toFixed(1), visibilityMinM));
       } else if (vis != null && vis < 3000) {
         if (lvl !== 'nogo') lvl = 'warn';
         reasons.push(_t('visWarn')((vis / 1000).toFixed(1)));
@@ -5287,10 +5810,19 @@
       for (const z of zones) {
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
-        if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr')) {
+        if (isCtrZone(z)) {
+          const f = z.ctrFlight;
+          if (z.zoneNum === 1) {
+            zLvl = 'nogo'; msg = _t('ctrZone1Reason');
+          } else if (z.zoneNum && f?.available && !f.requiresIndividual) {
+            zLvl = 'warn'; msg = _t('ctrMaxReason')(z.zoneNum, f.maxAglM);
+          } else if (z.zoneNum) {
+            zLvl = 'nogo'; msg = _t('ctrHeightUnknown')(z.zoneNum);
+          } else {
+            zLvl = 'nogo'; msg = _t('zoneCtr');
+          }
+        } else if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr')) {
           zLvl = 'nogo'; msg = _t('zoneNoFly');
-        } else if (t.includes('ctr') || t.includes('control_zone') || t.includes('kontrollzone')) {
-          zLvl = 'nogo'; msg = _t('zoneCtr');
         } else if (t.includes('airport') || t.includes('flughafen') || t.includes('flugplatz') || t.includes('aerodrome')) {
           zLvl = 'nogo'; msg = _t('zoneAirfield');
         } else if (t.includes('heliport')) {
@@ -5450,8 +5982,8 @@
             }).join('') + '</svg>' : '';
           return card(_t('cardKpMeas'), `<span class="${gkc}">${kpGfz.val.toFixed(1)}</span>${ts ? '<span class="m-unit" style="font-size:0.55em;opacity:0.65;margin-left:0.4em">' + ts + ' UTC</span>' : ''}` + svg, `${ts}\u00a0\u00b7\u00a0${kpGfz.stat || 'pre'}`, 'https://kp.gfz.de/hp30-hp60');
         })(),
-        vis ? card(_t('cardVis'), `${(vis / 1000).toFixed(1)}<span class="m-unit"> km</span>`, _t('visMin'), 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
-        card(_t('cardTemp'), `${temp.toFixed(1)}<span class="m-unit"> °C</span>`, dew != null ? `Taupunkt ${dew.toFixed(1)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
+        vis ? card(_t('cardVis'), `${(vis / 1000).toFixed(1)}<span class="m-unit"> km</span>`, _t(S.inDfsCtr ? 'visMinCtr' : 'visMin'), 'https://kachelmannwetter.com/de/messwerte/sichtweite.html') : '',
+        card(_t('cardTemp'), `${fmtTemp(temp)}<span class="m-unit"> °C</span>`, dew != null ? `Taupunkt ${fmtTemp(dew)} °C` : '', 'https://kachelmannwetter.com/de/messwerte/temperatur.html'),
         card(_t('cardGusts'), `<span class="${gc}">${gusts.toFixed(1)}<span class="m-unit"> m/s</span></span>`, _t('gustLimit'), `https://www.windy.com/de/-Windb%C3%B6en-gust?gust,${S.lat.toFixed(3)},${S.lon.toFixed(3)},8`),
         card(_t('cardWind'), `${wind.toFixed(1)}<span class="m-unit"> m/s</span>`, `Bft ${beaufort(wind)} · ${degToDir(w.wind_direction)}`, 'https://windy.com/'),
         card(_t('cardCloud'), `${cloud}<span class="m-unit"> %</span>`, cloud > 80 ? _t('cloudHigh') : cloud > 40 ? _t('cloudMid') : _t('cloudLow'), `https://www.windy.com/${S.lat.toFixed(3)}/${S.lon.toFixed(3)}/meteogram?clouds,${S.lat.toFixed(3)},${S.lon.toFixed(3)},8`),
@@ -5515,7 +6047,7 @@
         const pct = Math.min(100, (Math.abs(t.value) / maxAbs) * 100).toFixed(1);
         const cls = t.value <= 0 ? 'c-nogo' : t.value < 5 ? 'c-warn' : '';
         const color = t.value <= 0 ? 'var(--nogo,#ef476f)' : t.value < 5 ? 'var(--warn,#ffb703)' : 'var(--accent)';
-        return `<div class="wp-row"><span class="wp-alt">${t.height} m AGL</span><div class="wp-bar-wrap"><div class="wp-bar" style="width:${pct}%;background:${color}"></div></div><span class="wp-val mono ${cls}">${t.value.toFixed(1)} °C</span></div>`;
+        return `<div class="wp-row"><span class="wp-alt">${t.height} m AGL</span><div class="wp-bar-wrap"><div class="wp-bar" style="width:${pct}%;background:${color}"></div></div><span class="wp-val mono ${cls}">${fmtTemp(t.value)} °C</span></div>`;
       }).join('');
     }
     function renderDewpointCard(dfs) {
@@ -5534,7 +6066,7 @@
       }
       if (!rows.length) { el.innerHTML = ''; return; }
       rows.sort((a, b) => b.height - a.height);
-      el.innerHTML = `<div class="wind-profile">${rows.map(r => `<div class="wp-row" style="flex-wrap:wrap;gap:0.4rem;"><span class="wp-alt">${r.height} m</span><span class="mono" style="font-size:0.78rem;flex:1;min-width:120px">T ${r.temp.toFixed(1)}° / Td ${r.td}°</span><span class="mono ${r.cls}" style="font-size:0.78rem;font-weight:600">Δ ${r.spread}°C</span><div style="width:100%;padding-left:64px;font-size:0.68rem;color:var(--text3);margin-top:-2px">${r.warn}${r.rh != null ? ' · RH ' + r.rh.toFixed(0) + '%' : ''}</div></div>`).join('')}</div>`;
+      el.innerHTML = `<div class="wind-profile">${rows.map(r => `<div class="wp-row" style="flex-wrap:wrap;gap:0.4rem;"><span class="wp-alt">${r.height} m</span><span class="mono" style="font-size:0.78rem;flex:1;min-width:120px">T ${fmtTemp(r.temp)}° / Td ${fmtTemp(r.td)}°</span><span class="mono ${r.cls}" style="font-size:0.78rem;font-weight:600">Δ ${fmtTemp(r.spread)}°C</span><div style="width:100%;padding-left:64px;font-size:0.68rem;color:var(--text3);margin-top:-2px">${r.warn}${r.rh != null ? ' · RH ' + r.rh.toFixed(0) + '%' : ''}</div></div>`).join('')}</div>`;
     }
     // „Aktualisiert: HH:MM" im Kopf — Label + Zeitformat folgen der UI-Sprache (re-render bei Sprachwechsel).
     function renderUpdated() {
@@ -5552,7 +6084,7 @@
         el.innerHTML = '<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:100%;text-align:center;color:var(--text3)">—</span></div></div>'; return; }
       const spread = temp - td; const base = Math.round(spread * 125);
       const cls = base < 150 ? 'c-nogo' : base < 300 ? 'c-warn' : 'c-go';
-      el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">${_t('cbBasis')}</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${spread.toFixed(1)} °C &nbsp;(T ${temp.toFixed(1)}° − Td ${td.toFixed(1)}°)</span></div></div>`;
+      el.innerHTML = `<div class="wind-profile"><div class="wp-row"><span class="wp-alt" style="width:80px">${_t('cbBasis')}</span><span class="mono ${cls}" style="font-size:1.1rem;font-weight:700;flex:1">${base} m AGL</span></div><div class="wp-row" style="border-bottom:none"><span class="wp-alt" style="width:80px">Spread</span><span class="mono" style="font-size:0.82rem;flex:1">${fmtTemp(spread)} °C &nbsp;(T ${fmtTemp(temp)}° − Td ${fmtTemp(td)}°)</span></div></div>`;
     }
     /* [J-RENDER-METAR] */
     function renderMetarCard(metars, taf) {
@@ -5567,13 +6099,13 @@
       let ceilHtml = '\u2014';
       if (ceil) { const cc = ceil.m < 150 ? 'c-nogo' : ceil.m < 300 ? 'c-warn' : ''; ceilHtml = (ceil.text === 'CAVOK' || ceil.text === 'CLR') ? `<span class="c-go">${ceil.text}</span>` : `<span class="${cc}">${ceil.text}</span>`; }
       let visHtml = '\u2014';
-      if (vis !== null) { const vc = vis < 1.5 ? 'c-nogo' : vis < 3 ? 'c-warn' : ''; visHtml = vis >= 10 ? `<span class="c-go">>10 km</span>` : `<span class="${vc}">${vis} km</span>`; }
+      if (vis !== null) { const minVisKm = S.inDfsCtr ? 0.8 : 1.5; const vc = vis < minVisKm ? 'c-nogo' : vis < 3 ? 'c-warn' : ''; visHtml = vis >= 10 ? `<span class="c-go">>10 km</span>` : `<span class="${vc}">${vis} km</span>`; }
       const windMs = (wind.spd * 0.5144).toFixed(1), gustMs = wind.gust ? (wind.gust * 0.5144).toFixed(1) : null;
       const wc = parseFloat(windMs) > 10 ? 'c-nogo' : parseFloat(windMs) > 7 ? 'c-warn' : '';
       const wgc = gustMs ? (parseFloat(gustMs) > 10 ? 'c-nogo' : parseFloat(gustMs) > 7 ? 'c-warn' : '') : '';
       let tafHtml = '';
       if (taf) { const compact = formatTafCompact(taf); tafHtml = `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1)"><div style="font-size:0.75rem;opacity:0.7;margin-bottom:0.3rem">${_t('metarTaf')}</div><pre style="font-size:0.7rem;opacity:0.85;white-space:pre-wrap;margin:0;font-family:monospace">${escapeHtml(compact)}</pre></div>`; }
-      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${escapeHtml(nearest.name)} (${escapeHtml(nearest.icaoId)}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? nearest.temp + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? nearest.dewp + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="${_t('fltcatExplainTitle')}">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${escapeHtml(nearest.rawOb || '')}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
+      container.innerHTML = card(_t('metarTitle'), `<span style="color:${fltColor};font-weight:700">${nearest.fltCat || '?'}</span>`, `<div style="font-size:0.8rem;opacity:0.85">${escapeHtml(nearest.name)} (${escapeHtml(nearest.icaoId)}) \u00b7 ${_t('metarAge')}: ${age} ${_t('metarMin')}</div><div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.6rem;font-size:0.82rem;margin-top:0.4rem"><span style="opacity:0.7">${_t('metarVis')}</span><span>${visHtml}</span><span style="opacity:0.7">${_t('metarCeiling')}</span><span>${ceilHtml}</span><span style="opacity:0.7">${_t('metarWind')}</span><span>${wind.dir}° <span class="${wc}">${windMs} m/s</span>${gustMs ? ` <span class="${wgc}">(G ${gustMs})</span>` : ''}</span><span style="opacity:0.7">${_t('metarTemp')}</span><span>${nearest.temp != null ? fmtTemp(nearest.temp) + ' \u00b0C' : '\u2014'} / ${nearest.dewp != null ? fmtTemp(nearest.dewp) + ' \u00b0C' : '\u2014'}</span><span style="opacity:0.7">${_t('metarFltCat')}</span><span style="color:${fltColor}">${nearest.fltCat || '\u2014'} <span class="fltcat-info-btn" style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;font-style:italic;font-weight:700;width:1.3rem;height:1.3rem;border-radius:50%;cursor:pointer;vertical-align:middle;margin-left:0.4rem;font-family:serif" title="${_t('fltcatExplainTitle')}">i</span></span></div><div style="margin-top:0.4rem;font-size:0.7rem;opacity:0.6;font-family:monospace;word-break:break-all">${escapeHtml(nearest.rawOb || '')}</div>${tafHtml}`, `https://aviationweather.gov/data/metar/?id=${nearest.icaoId}`);
     }
 
     function renderFreezingRain(w) {
@@ -5582,7 +6114,7 @@
       if (rain > 0 && temp <= 0) { el.style.display = '';
         const t = document.getElementById('fz-rain-title'); const d = document.getElementById('fz-rain-desc');
         if (t) t.textContent = _t('fzTitle');
-        if (d) d.textContent = _t('fzDesc')(rain.toFixed(2), temp.toFixed(1));
+        if (d) d.textContent = _t('fzDesc')(rain.toFixed(2), fmtTemp(temp));
       } else { el.style.display = 'none'; }
     }
 
@@ -5668,7 +6200,7 @@
         html += `<div class="fc-slot${isNow ? ' now' : ''}">
       <div class="fc-time">${timeStr}</div>
       <div class="fc-icon">${condIcon(w.condition)}</div>
-      <div class="fc-temp mono">${(w.temperature ?? 0).toFixed(0)}°</div>
+      <div class="fc-temp mono">${fmtTemp(w.temperature ?? 0)}°</div>
       <div class="fc-wind mono">${(w.wind_gust_speed ?? 0).toFixed(0)} m/s ↑</div>
       <div class="fc-dot ${dot}"></div>
     </div>`;
@@ -5709,8 +6241,8 @@
         const dateStr = dt.toLocaleDateString(_locale(), { day: '2-digit', month: '2-digit' });
 
         const temps = entries.map(w => w.temperature).filter(t => t != null);
-        const minT = temps.length ? Math.min(...temps).toFixed(0) : '–';
-        const maxT = temps.length ? Math.max(...temps).toFixed(0) : '–';
+        const minT = temps.length ? fmtTemp(Math.min(...temps)) : '–';
+        const maxT = temps.length ? fmtTemp(Math.max(...temps)) : '–';
         const maxG = Math.max(...entries.map(w => w.wind_gust_speed ?? 0));
         const sumR = entries.reduce((a, w) => a + (w.precipitation ?? 0), 0);
 
@@ -5765,6 +6297,12 @@
           desc: _t('warnKpDesc')(kp.toFixed(1))
         });
 
+      if (S.inDfsCtr)
+        items.push({
+          cls: 'warn', icon: '👁️', title: _t('warnCtrVlosTitle'),
+          desc: _t('warnCtrVlosDesc')
+        });
+
       ws.style.display = '';
       if (!items.length) {
         wl.innerHTML = '';
@@ -5784,6 +6322,55 @@
     /* [J-RENDER-ZONE] ===================================================
        RENDER: ZONES
     ================================================================ */
+    function ctrHeightHtml(z) {
+      if (!isCtrZone(z) || !z.zoneNum) return '';
+      const f = z.ctrFlight;
+      const range = z.ctrTerrainRange;
+      const rangeHtml = range ? `<div class="ctr-range">
+        <div class="z-lbl">${_t('ctrTerrainRangeTitle')}</div>
+        <div class="ctr-range-grid">
+          <div class="ctr-range-item"><span class="z-lbl">${_t('ctrMinMaxAgl')}</span><span class="ctr-range-value">${range.minMaxAglM} m AGL</span></div>
+          <div class="ctr-range-item"><span class="z-lbl">${_t('ctrMaxMaxAgl')}</span><span class="ctr-range-value">${range.maxMaxAglM} m AGL</span></div>
+        </div>
+        <div class="z-row" style="margin-top:0.45rem"><span class="z-lbl">${_t('ctrTerrainRange')}</span><span class="z-val">${range.minTerrainMslM}–${range.maxTerrainMslM} m MSL</span></div>
+        <div class="ctr-height-note">${_t('ctrTerrainRangeNote')(range.sampleCount)}</div>
+      </div>` : '';
+      if (z.zoneNum === 1) {
+        return `<div class="ctr-height-box blocked">
+          <div class="z-lbl">${_t('ctrZoneLabel')(1)}</div>
+          <div class="ctr-height-value">${_t('ctrIndividual')}</div>
+        </div>`;
+      }
+      if (!f?.available) {
+        return `<div class="ctr-height-box blocked">
+          <div class="z-lbl">${_t('ctrZoneLabel')(z.zoneNum)}</div>
+          <div class="ctr-height-value">${_t('ctrHeightUnknown')(z.zoneNum)}</div>
+          <div class="ctr-height-note">${_t('ctrNoElevation')}</div>
+        </div>`;
+      }
+      if (f.requiresIndividual) {
+        return `<div class="ctr-height-box blocked">
+          <div class="z-lbl">${_t('ctrZoneLabel')(z.zoneNum)}</div>
+          <div class="ctr-height-value">${_t('ctrIndividual')}</div>
+          <div class="ctr-height-note">${escapeHtml(f.calculation)}</div>
+          ${rangeHtml}
+        </div>`;
+      }
+      return `<div class="ctr-height-box">
+        <div class="z-lbl">${_t('ctrGeneral')} · ${_t('ctrZoneLabel')(z.zoneNum)}</div>
+        <div class="ctr-height-value">${f.maxAglM} m AGL</div>
+        <div class="z-details">
+          <div class="z-row"><span class="z-lbl">${_t('ctrMaxAgl')}</span><span class="z-val">${f.maxAglM} m AGL</span></div>
+          <div class="z-row"><span class="z-lbl">${_t('ctrMaxMsl')}</span><span class="z-val">${f.maxMslM} m MSL</span></div>
+          <div class="z-row"><span class="z-lbl">${_t('ctrGround')}</span><span class="z-val">${f.groundMslM} m MSL</span></div>
+          <div class="z-row"><span class="z-lbl">${_t('ctrAirportRef')}</span><span class="z-val">${f.airportElevationMslM} m MSL</span></div>
+          <div class="z-row"><span class="z-lbl">${_t('ctrCalculation')}</span><span class="z-val mono">${escapeHtml(f.calculation)}</span></div>
+        </div>
+        ${rangeHtml}
+        <div class="ctr-height-note">${_t('ctrElevationNote')}</div>
+      </div>`;
+    }
+
     function renderZones(zones) {
       const cnt = zones.length;
       const $zc = $('z-count');
@@ -5803,8 +6390,9 @@
           <div class="z-name">${escapeHtml(z.name)}</div>
         </div>
 
+        ${ctrHeightHtml(z)}
         <div class="z-details">
-          <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${escapeHtml(z.type)}</span></div>
+          <div class="z-row"><span class="z-lbl">Typ</span><span class="z-val">${escapeHtml(z.zoneNum ? _t('ctrZoneLabel')(z.zoneNum) : z.type)}</span></div>
           <div class="z-row"><span class="z-lbl">Untere Grenze</span><span class="z-val">${escapeHtml(z.lower)}</span></div>
           <div class="z-row"><span class="z-lbl">Obere Grenze</span><span class="z-val">${escapeHtml(z.upper)}</span></div>
           <div class="z-row"><span class="z-lbl">Rechtshinweis</span><span class="z-val">
@@ -5847,6 +6435,182 @@
       });
     }
 
+    let dipulAiracLoadPromise = null;
+    let dipulWmsHoverTimer = null;
+    let dipulWmsHoverInFlight = false;
+    let dipulWmsHoverLatest = null;
+    let dipulWmsHoverLastRequest = 0;
+    let dipulWmsHoverGeneration = 0;
+    let dipulCursorTooltip = null;
+
+    function dipulFeatureLabel(properties = {}) {
+      const localized = LANG === 'de' ? properties.generated_name_DE : properties.generated_name_EN;
+      const rawName = Array.isArray(properties.name) ? properties.name[0] : properties.name;
+      return String(localized || rawName || properties.type_code || '').trim();
+    }
+
+    function hideDipulCursorTooltip() {
+      if (S.map && dipulCursorTooltip && S.map.hasLayer(dipulCursorTooltip)) {
+        S.map.removeLayer(dipulCursorTooltip);
+      }
+    }
+
+    function showDipulCursorTooltip(map, latlng, labels) {
+      if (!labels.length) return;
+      if (!dipulCursorTooltip) {
+        dipulCursorTooltip = L.tooltip({
+          sticky: false,
+          direction: 'top',
+          offset: [0, -8],
+          opacity: 1,
+          className: 'dipul-hover-tooltip',
+        });
+      }
+      dipulCursorTooltip
+        .setLatLng(latlng)
+        .setContent(labels.map(escapeHtml).join('<br>'));
+      if (!map.hasLayer(dipulCursorTooltip)) dipulCursorTooltip.addTo(map);
+    }
+
+    function stopDipulWmsHover() {
+      clearTimeout(dipulWmsHoverTimer);
+      dipulWmsHoverTimer = null;
+      dipulWmsHoverLatest = null;
+      dipulWmsHoverGeneration++;
+      hideDipulCursorTooltip();
+    }
+
+    async function fetchDipulHoverAt(map, containerPoint) {
+      const size = map.getSize();
+      const bounds = map.getBounds();
+      const width = Math.max(1, Math.round(size.x));
+      const height = Math.max(1, Math.round(size.y));
+      const i = Math.max(0, Math.min(width - 1, Math.round(containerPoint.x)));
+      const j = Math.max(0, Math.min(height - 1, Math.round(containerPoint.y)));
+      const layers = getActiveDipulLayers();
+      const query = new URLSearchParams({
+        SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
+        FORMAT: 'image/png', TRANSPARENT: 'true',
+        QUERY_LAYERS: layers, LAYERS: layers,
+        CRS: 'EPSG:4326',
+        BBOX: `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`,
+        WIDTH: String(width), HEIGHT: String(height), I: String(i), J: String(j),
+        INFO_FORMAT: 'text/html', FEATURE_COUNT: '20',
+      });
+      const response = await fetch(`${DIPUL_WMS_URL}?${query}`);
+      if (!response.ok) return [];
+      const html = await response.text();
+      if (/ServiceException/i.test(html)) return [];
+      const seen = new Set();
+      return parseFeatureInfo(html).filter(zone => {
+        const key = zone.fid || `${zone.name}|${zone.type}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    async function runDipulWmsHover() {
+      dipulWmsHoverTimer = null;
+      const sample = dipulWmsHoverLatest;
+      const map = S.map;
+      if (!sample || !map || COUNTRY !== 'de' || !S.layerVisible.dipul) return;
+      const generation = dipulWmsHoverGeneration;
+      dipulWmsHoverInFlight = true;
+      dipulWmsHoverLastRequest = Date.now();
+      try {
+        const zones = await fetchDipulHoverAt(map, sample.containerPoint);
+        if (generation !== dipulWmsHoverGeneration || map !== S.map) return;
+        const current = dipulWmsHoverLatest || sample;
+        if (zones.length) {
+          const labels = [...new Set(zones.map(zone => zone.name).filter(Boolean))].slice(0, 4);
+          showDipulCursorTooltip(map, current.latlng, labels);
+        } else if (current === sample) {
+          hideDipulCursorTooltip();
+        }
+      } catch (_) {
+        if (dipulWmsHoverLatest === sample) hideDipulCursorTooltip();
+      } finally {
+        dipulWmsHoverInFlight = false;
+        if (dipulWmsHoverLatest && dipulWmsHoverLatest !== sample) {
+          scheduleDipulWmsHover(dipulWmsHoverLatest);
+        }
+      }
+    }
+
+    function scheduleDipulWmsHover(event) {
+      if (COUNTRY !== 'de' || !S.map || !S.layerVisible.dipul) {
+        hideDipulCursorTooltip();
+        return;
+      }
+      dipulWmsHoverLatest = { latlng: event.latlng, containerPoint: event.containerPoint };
+      if (dipulCursorTooltip && S.map.hasLayer(dipulCursorTooltip)) {
+        dipulCursorTooltip.setLatLng(event.latlng);
+      }
+      if (dipulWmsHoverInFlight) return;
+      clearTimeout(dipulWmsHoverTimer);
+      const wait = Math.max(0, 140 - (Date.now() - dipulWmsHoverLastRequest));
+      dipulWmsHoverTimer = setTimeout(runDipulWmsHover, wait);
+    }
+
+    // Unsichtbare, interaktive Originalpolygone aus dem statischen DiPUL-AIRAC-
+    // Datensatz. Das WMS bleibt sichtbar und vollständig; diese kleine Ebene
+    // ergänzt lediglich den flüssigen Hover ohne GetFeatureInfo-Netzwerkaufruf.
+    async function loadDipulAiracHover(layerGroup) {
+      if (COUNTRY !== 'de' || !layerGroup) return;
+      // Bei direktem file://-Aufruf blockiert der Browser lokale fetch()-Dateien.
+      // Der WMS-Hover übernimmt in diesem Modus vollständig.
+      if (location.protocol === 'file:') return;
+      if (!dipulAiracLoadPromise) {
+        dipulAiracLoadPromise = (async () => {
+          const manifestResponse = await fetch(DIPUL_AIRAC_MANIFEST_URL);
+          if (!manifestResponse.ok) throw new Error(`AIRAC manifest HTTP ${manifestResponse.status}`);
+          const manifest = await manifestResponse.json();
+          const files = Array.isArray(manifest.files) ? manifest.files : [];
+          const collections = await Promise.all(files.map(async file => {
+            if (!/^dipul_luftverkehr_[a-z_]+\.geojson$/.test(file)) throw new Error('Invalid AIRAC file name');
+            const response = await fetch(`data/dipul-airac/${file}`);
+            if (!response.ok) throw new Error(`${file} HTTP ${response.status}`);
+            return response.json();
+          }));
+          return { manifest, collections };
+        })();
+      }
+
+      try {
+        const { manifest, collections } = await dipulAiracLoadPromise;
+        layerGroup.clearLayers();
+        collections.forEach(collection => {
+          L.geoJSON(collection, {
+            style: {
+              stroke: false,
+              fill: true,
+              fillColor: '#000',
+              fillOpacity: 0.001,
+            },
+            onEachFeature: (feature, layer) => {
+              const label = dipulFeatureLabel(feature?.properties);
+              if (label) {
+                layer.on('mouseover mousemove', event => {
+                  if (!S.map || !S.layerVisible.dipul) return;
+                  showDipulCursorTooltip(S.map, event.latlng, [label]);
+                  scheduleDipulWmsHover(event);
+                });
+              }
+            },
+          }).addTo(layerGroup);
+        });
+        if (S.map && manifest.attribution) {
+          S.map.attributionControl.addAttribution(
+            '<a href="https://www.dipul.de/homepage/de/informationen/geografische-gebiete/download/" target="_blank" rel="noopener">dipul</a>, ' +
+            '<a href="https://creativecommons.org/licenses/by-nd/4.0/deed.de" target="_blank" rel="noopener">CC BY-ND 4.0</a>'
+          );
+        }
+      } catch (error) {
+        console.warn('DiPUL AIRAC hover unavailable:', error);
+      }
+    }
+
     // Zones toggle
     $('zones-hdr').addEventListener('click', () => {
       $('zones-body').classList.toggle('open');
@@ -5861,9 +6625,19 @@
       if (!el) return;
 
       // Vereinfachte Zonen-Labels
-      const simplify = (type, name) => {
+      const simplify = z => {
+        const type = z?.type;
+        const name = z?.name || '';
         const t = (type || '').toLowerCase();
         const n = (name || '');
+        if (z?.zoneNum) {
+          const f = z.ctrFlight;
+          const suffix = f?.available && !f.requiresIndividual && z.zoneNum !== 1
+            ? ` · max. ${f.maxAglM} m AGL`
+            : '';
+          return { label: _t('ctrZoneLabel')(z.zoneNum) + suffix, color: z.color || '#e05252' };
+        }
+        if (isCtrZone(z)) return { label: _t('msCTR'), color: '#e05252' };
         if (t.includes('flughafen') || t.includes('airport') || t === 'ctr' || t === 'atz')
           return { label: _t('msAirport'), color: '#e05252' };
         if (t.includes('flugplatz') || t.includes('flugplaetze'))
@@ -5904,7 +6678,7 @@
       const seen = new Set();
       const items = [];
       (zones || []).forEach(z => {
-        const { label, color } = simplify(z.type, z.name);
+        const { label, color } = simplify(z);
         if (!seen.has(label)) {
           seen.add(label);
           items.push({ label, color });
@@ -5952,16 +6726,29 @@
           if (t50 >= -20 && t50 <= 0 && spread < 1) { lbl = _t('dpCrit'); cls = 'c-nogo'; }
           else if (t50 < 3 && spread < 2) { lbl = _t('dpFog'); cls = 'c-warn'; }
           else { lbl = _t('dpClear'); cls = 'c-go'; }
-          html += `<div class="ms-wind"><span class="${cls}">${lbl}</span><span style="opacity:0.65">&nbsp;·&nbsp;T&nbsp;${t50.toFixed(1)}°&nbsp;·&nbsp;Δ&nbsp;${spread.toFixed(1)}°</span></div>`;
+          html += `<div class="ms-wind ms-condition"><span class="${cls}">${lbl}</span><span class="ms-temp-detail">· T ${fmtTemp(t50)}° · Δ ${fmtTemp(spread)}°</span></div>`;
         }
         const vis = now.visibility;
         if (vis != null) {
           const visKm = vis / 1000;
-          const isFog = vis < 1000 || (now.condition || '').toLowerCase() === 'fog';
-          const vc = isFog ? 'c-nogo' : visKm < 4 ? 'c-warn' : '';
+          const visibilityMinM = S.inDfsCtr ? 800 : 1500;
+          const isFog = (now.condition || '').toLowerCase() === 'fog';
+          const belowMinimum = vis < visibilityMinM;
+          const vc = belowMinimum ? 'c-nogo' : visKm < 3 ? 'c-warn' : '';
           const visTxt = visKm < 1 ? Math.round(vis) + ' m' : visKm.toFixed(1) + ' km';
           html += `<div class="ms-wind"><span style="opacity:0.65">${_t('metarVis')}&nbsp;</span><span class="${vc}">${visTxt}</span>${isFog ? '<span class="c-nogo">&nbsp;·&nbsp;' + _t('fogWarn') + '</span>' : ''}</div>`;
         }
+      }
+
+      if (COUNTRY === 'de' && Number.isFinite(S.lat) && Number.isFinite(S.lon)) {
+        const elevation = Number.isFinite(S.groundElevationMsl)
+          ? `<span>≈ ${Math.round(S.groundElevationMsl)}&nbsp;m MSL</span>`
+          : '<span>—</span>';
+        const dipulUrl = dipulPointUrl(S.lat, S.lon, S.searchRadius);
+        html += `<div class="ms-location">
+          <div>${_t('msGroundMsl')}: ${elevation}</div>
+          <a href="${dipulUrl}" target="_blank" rel="noopener">${_t('msOpenDipul')} ↗</a>
+        </div>`;
       }
 
       el.innerHTML = html;
@@ -5972,8 +6759,28 @@
     /* [J-MAP] ===========================================================
        MAP
     ================================================================ */
+    function dipulPointUrl(lat, lon, radiusM = 100) {
+      const language = LANG === 'de' ? 'de' : 'en';
+      const radius = Math.max(1, Math.round(Number(radiusM) || 100));
+      return `https://maptool-dipul.dfs.de/geozones/@${Number(lon).toFixed(6)},${Number(lat).toFixed(6)},${radius}r?language=${language}&zoom=14`;
+    }
+
+    function ctrPopupHtml(zones) {
+      const ctr = (zones || []).filter(z => isCtrZone(z) && z.zoneNum);
+      if (!ctr.length) return '';
+      if (ctr.some(z => z.zoneNum === 1 || z.ctrFlight?.requiresIndividual)) {
+        return `<br><span style="color:var(--nogo);font-weight:800">${_t('ctrIndividual')}</span>`;
+      }
+      const available = ctr.filter(z => z.ctrFlight?.available);
+      if (!available.length) {
+        return `<br><span style="color:var(--nogo);font-weight:800">${_t('ctrHeightUnknown')(ctr[0].zoneNum)}</span>`;
+      }
+      const limiting = available.reduce((a, b) => a.ctrFlight.maxAglM <= b.ctrFlight.maxAglM ? a : b);
+      return `<br><span style="color:var(--accent);font-weight:800">${_t('ctrZoneLabel')(limiting.zoneNum)} · max. ${limiting.ctrFlight.maxAglM} m AGL</span>`;
+    }
+
     function initMap(lat, lon, aircraft, zones) {
-      const popStr = `<b>${escapeHtml(S.name)}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      const popStr = `<b>${escapeHtml(S.name)}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}${ctrPopupHtml(zones)}`;
 
       if (!S.map) {
         // Verhindert den Zoom bei Doppelklick
@@ -6021,6 +6828,13 @@
           if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        if (COUNTRY === 'de') {
+          S.layers.dipulHover = L.layerGroup();
+          if (S.layerVisible.dipul) S.layers.dipulHover.addTo(S.map);
+          loadDipulAiracHover(S.layers.dipulHover);
+          S.map.on('mousemove', scheduleDipulWmsHover);
+          S.map.on('mouseout', stopDipulWmsHover);
+        }
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
         if (OVERLAY_ALL[COUNTRY]) {
@@ -6038,7 +6852,9 @@
           iconSize: [12, 12], iconAnchor: [6, 6], className: '',
         });
         S.layers.pin = L.marker([lat, lon], { icon: pinIcon })
-          .bindPopup(popStr)
+          .bindPopup(popStr, { closeButton: true, closeOnClick: false, autoClose: false })
+          .on('popupopen', () => { S.pinPopupWanted = true; })
+          .on('popupclose', () => { S.pinPopupWanted = false; })
           .addTo(S.map);
 
         // Suchradius-Kreis (5m oder 100m, per Button wählbar)
@@ -6067,17 +6883,32 @@
           });
         }
 
-        // Doppelklick Event (Neupositionierung)
-        S.map.on('dblclick', async (e) => {
-          S.lat = e.latlng.lat;
-          S.lon = e.latlng.lng;
-          try {
-            S.name = await reverseGeocode(S.lat, S.lon);
-          } catch {
-            S.name = `${S.lat.toFixed(4)}, ${S.lon.toFixed(4)}`;
+        // Einfachklick setzt den Prüfpunkt neu. Während Ortsname und Prüfdaten
+        // nachladen, wandern Marker, Radien und Popup bereits unmittelbar mit.
+        S.map.on('click', async (e) => {
+          stopDipulWmsHover();
+          const locationId = ++S.mapLocationSequence;
+          const nextLat = e.latlng.lat;
+          const nextLon = e.latlng.lng;
+          S.lat = nextLat;
+          S.lon = nextLon;
+          S.pinPopupWanted = true;
+          if (S.layers.pin) {
+            S.layers.pin
+              .setLatLng([nextLat, nextLon])
+              .setPopupContent(`<b>${_t('loading')}</b><br>${nextLat.toFixed(5)}, ${nextLon.toFixed(5)}`)
+              .openPopup();
           }
+          if (S.layers.radius) S.layers.radius.setLatLng([nextLat, nextLon]);
+          if (S.layers.radius1500) S.layers.radius1500.setLatLng([nextLat, nextLon]);
+          try {
+            S.name = await reverseGeocode(nextLat, nextLon);
+          } catch {
+            S.name = `${nextLat.toFixed(4)}, ${nextLon.toFixed(4)}`;
+          }
+          if (locationId !== S.mapLocationSequence) return;
           $('nav-loc-name').textContent = S.name;
-          runCheck();
+          await runCheck();
         });
 
         // Initiales Offset: Info-Overlay (rechts) sofort freihalten (nicht im Fullscreen)
@@ -6108,11 +6939,13 @@
           S.map.panTo(_tgt);
         }
         S.layers.pin.setLatLng([lat, lon]);
-        S.layers.pin.bindPopup(popStr);
+        S.layers.pin.setPopupContent(popStr);
         S.layers.radius.setLatLng([lat, lon]);
         S.layers.radius.setRadius(S.searchRadius);
         if (S.layers.radius1500) S.layers.radius1500.setLatLng([lat, lon]);
       }
+
+      if (S.pinPopupWanted && S.layers.pin) S.layers.pin.openPopup();
 
       // Always rendering aircraft markers visually
       renderAircraftMarkers(aircraft);
@@ -6130,6 +6963,12 @@
         const layer = S.layers[key];
         if (!layer) return;
         S.layerVisible[key] ? layer.addTo(S.map) : S.map.removeLayer(layer);
+        if (key === 'dipul' && S.layers.dipulHover) {
+          S.layerVisible.dipul
+            ? S.layers.dipulHover.addTo(S.map)
+            : S.map.removeLayer(S.layers.dipulHover);
+        }
+        if (key === 'dipul' && !S.layerVisible.dipul) stopDipulWmsHover();
       });
     });
 
@@ -6185,6 +7024,7 @@
         // Re-fetch zones with new radius
         if (S.lat && S.lon) {
           fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
+            zones = applyCtrFlightInfo(zones, S.groundElevationMsl, S.groundElevationProfile);
             renderZones(zones);
             updateZoneOverlay(zones);
             const zoneStatus = evalZoneStatus(zones);
@@ -6303,7 +7143,7 @@
         const taf = tafCache ? tafCache[m.icaoId] : null;
         let tafBlock = '';
         if (taf) { const compact = formatTafCompact(taf); tafBlock = `<div style="margin-top:6px;padding-top:4px;border-top:1px solid #555"><div style="font-size:10px;opacity:0.7">TAF</div><pre style="font-size:10px;margin:2px 0 0;white-space:pre-wrap;font-family:monospace">${escapeHtml(compact)}</pre></div>`; }
-        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${escapeHtml(m.name || m.icaoId)} <span style="color:${fc}">${escapeHtml(m.fltCat || '?')}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? m.temp : '?'} / ${m.dewp != null ? m.dewp : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${escapeHtml(m.rawOb || '')}</div>${tafBlock}</div>`;
+        const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${escapeHtml(m.name || m.icaoId)} <span style="color:${fc}">${escapeHtml(m.fltCat || '?')}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? fmtTemp(m.temp) : '?'} / ${m.dewp != null ? fmtTemp(m.dewp) : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${escapeHtml(m.rawOb || '')}</div>${tafBlock}</div>`;
         L.marker([m.lat, m.lon], { icon }).bindPopup(pop).addTo(S.layers.metarGroup);
       });
     }

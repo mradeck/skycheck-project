@@ -1,0 +1,14 @@
+ ()
+Geobasisdaten: © GeoBasis-DE / BKG (2022), DL-DE->BY-2.0, Nutzungsbedingungen: http://sg.geodatenzentrum.de/web_public/nutzungsbedingungen.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/3d-gebaudemodelle-lod2-deutschland-lod2-de.html
+© 50Hertz Transmission GmbH (2026), CC BY 4.0
+© BfN (2026), DL-DE->BY-2.0, Nutzungsbedingungen: https://sg.geodatenzentrum.de/web_public/gdz/lizenz/geonutzv.pdf, Datenquellen: https://geodienste.bfn.de/ogc/wfs/schutzgebiet
+© BKG (2025), CC BY 4.0, Nutzungsbedingungen: https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_vg25.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/verwaltungsgebiete-1-25-000-stand-31-12-vg25.html
+© BKG (2025), Nutzungsbedingungen: https://sg.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_hh-ew-bund.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/haushalte-einwohner-bund-hh-ew-bund.html
+© BKG (2026), CC BY 4.0, Nutzungsbedingungen: https://sg.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_poi-bund.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/points-of-interest-bund-poi-bund.html
+© BNetzA (2026), DL-DE->BY-2.0, Nutzungsbedingungen: https://www.govdata.de/dl-de/by-2-0, Datenquellen: https://www.marktstammdatenregister.de/MaStR/Einheit/Einheiten/OeffentlicheEinheitenuebersicht
+© DFS Deutsche Flugsicherung GmbH (2026), Veröffentlicht nach EU (VO) 373/2017, Nutzungsbedingungen: https://eur-lex.europa.eu/legal-content/de/TXT/?uri=CELEX%3A32017R0373
+© GeoBasis-DE / BKG (2025), DL-DE->BY-2.0, Nutzungsbedingungen: http://sg.geodatenzentrum.de/web_public/nutzungsbedingungen.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/amtliche-hausumringe-deutschland-hu-de.html
+© GeoBasis-DE / BKG (2025), DL-DE->BY-2.0, Nutzungsbedingungen: https://mis.bkg.bund.de/trefferanzeige?docuuid=d6d50b87-b896-4696-9efb-66d1adc62337&q=dlm250&f=, Datenquellen: https://gdz.bkg.bund.de/index.php/default/digitales-landschaftsmodell-1-250-000-ebenen-dlm250-ebenen.html
+© GeoBasis-DE / BKG (2026), CC BY 4.0, Nutzungsbedingungen: http://sg.geodatenzentrum.de/web_public/nutzungsbedingungen.pdf, Datenquellen: https://gdz.bkg.bund.de/index.php/default/digitales-basis-landschaftsmodell-ebenen-basis-dlm-ebenen.html
+© thru.de (2026), Nutzungsbedingungen: https://thru.de/nutzungsbedingungen/?L=0, Datenquellen: https://www.thru.de/thrude/downloads/
+© WasserBLIcK/BfG und Zuständige Behörden der Länder (2020), Nutzungsbedingungen: https://www.gesetze-im-internet.de/geonutzv/GeoNutzV.pdf, Datenquellen: https://geoportal.bafg.de/inspire/download/AM/bathingWaters/datasetfeed.xml
