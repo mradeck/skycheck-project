@@ -1379,10 +1379,23 @@
 
     /* map layer toggle */
     .map-controls {
+      position: absolute;
+      top: 8px;
+      left: 50px;
+      right: 280px;
+      z-index: 1003;
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.7rem;
+      gap: 0.35rem;
+      width: max-content;
+      max-width: calc(100% - 338px);
+      margin: 0;
+      padding: 0.3rem;
       flex-wrap: wrap;
+      border: 1px solid rgba(100, 160, 255, .18);
+      border-radius: 10px;
+      background: rgba(7, 16, 31, .82);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .22);
+      backdrop-filter: blur(6px);
     }
 
     .map-toggle {
@@ -1705,6 +1718,18 @@
         height: 300px;
       }
 
+      .map-controls {
+        left: 46px;
+        right: 8px;
+        max-width: calc(100% - 54px);
+        max-height: 78px;
+        overflow: auto;
+      }
+
+      .map-status {
+        top: 94px;
+      }
+
       .section {
         padding: 1rem;
       }
@@ -1992,8 +2017,8 @@
       color: var(--text2);
       padding: 0.25rem 0.6rem;
       font-size: 0.75rem;
-      cursor: default;
-      pointer-events: none;
+      cursor: pointer;
+      pointer-events: auto;
       font-family: inherit;
     }
 
@@ -2004,6 +2029,11 @@
     .zone-group .zone-btn.active {
       background: var(--accent);
       color: #fff;
+    }
+
+    .zone-group .zone-btn:not(.active):hover {
+      color: var(--accent);
+      background: var(--accent-dim);
     }
 
     /* ── Map-Status-Overlay ────────────────────────────────── */
@@ -2082,6 +2112,35 @@
       display: inline-block;
       font-size: 1rem;
       line-height: 1;
+    }
+
+    .ms-location {
+      margin-top: 0.35rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255, 255, 255, .1);
+      color: var(--text2);
+    }
+
+    .ms-location a {
+      color: var(--accent);
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    .ms-location a:hover {
+      text-decoration: underline;
+    }
+
+    .dipul-hover-tooltip {
+      padding: 0.45rem 0.65rem;
+      border: 0;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .97);
+      color: #20242b;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, .28);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     /* ── Kachel-Titel als klickbarer Link ─────────────────────────────────────── */
@@ -2486,28 +2545,28 @@
     <!-- MAP -->
     <div class="section" style="padding-top:0">
       <div class="sec-label" data-i18n="secMap">Karte &amp; Luftraum</div>
-      <div class="map-controls" id="map-controls">
-        <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">Geozonen</button>
-        <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
-        <div class="zone-group" id="zone-group">
-          <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
-          <button class="zone-btn" data-zone="reduced" data-i18n="mapRiskyZones">Nur Risikozonen</button>
-        </div>
-        <div class="radius-group">
-          <button class="radius-btn map-toggle" data-radius="5">5m</button>
-          <button class="radius-btn map-toggle active" data-radius="100">100m</button>
-        </div>
-        <button class="map-toggle active" data-layer="radius1500">1,5km</button>
-        <div class="ctx-group" id="ctx-group" style="display:none">
-          <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
-          <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
-          <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
-          <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
-        </div>
-        <button class="btn-av-open" id="btn-av-open">✈ Alarm</button>
-      </div>
       <div class="map-wrap">
         <div id="map"></div>
+        <div class="map-controls" id="map-controls">
+          <button class="map-toggle active" data-layer="dipul" data-i18n="mapDipul">Geozonen</button>
+          <button class="map-toggle active" data-layer="aircraft" data-i18n="mapAircraft">Flugbewegungen</button>
+          <div class="zone-group" id="zone-group">
+            <button class="zone-btn active" data-zone="all" data-i18n="mapAllZones">Alle Geozonen</button>
+            <button class="zone-btn" data-zone="reduced" data-i18n="mapRiskyZones">Nur Risikozonen</button>
+          </div>
+          <div class="radius-group">
+            <button class="radius-btn map-toggle" data-radius="5">5m</button>
+            <button class="radius-btn map-toggle active" data-radius="100">100m</button>
+          </div>
+          <button class="map-toggle active" data-layer="radius1500">1,5km</button>
+          <div class="ctx-group" id="ctx-group" style="display:none">
+            <button class="map-toggle ctx-toggle" data-ctx="protected" data-i18n="ctxProtected">Schutzgebiete</button>
+            <button class="map-toggle ctx-toggle" data-ctx="motorways" data-i18n="ctxMotorways">Autobahnen</button>
+            <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
+            <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
+          </div>
+          <button class="btn-av-open" id="btn-av-open">✈ Alarm</button>
+        </div>
         <button class="map-fs-btn" id="btn-map-fs" title="Vollbild">⛶</button>
         <button class="map-style-btn" id="btn-map-style" title="Kartenstil"><span class="ms-icon">⧉</span><span id="map-style-label">Dark</span></button>
         <div class="map-status hidden" id="map-status"></div>
@@ -2879,6 +2938,7 @@
         msHighway: 'Autobahn', msFedRoad: 'Bundesstraße', msWaterway: 'Wasserstraße',
         msNature: 'Naturschutz', msResidential: 'Siedlung', msMilitary: 'Militär',
         msIndustry: 'Industrie/Energie', msHospital: 'Krankenhaus',
+        msGroundMsl: 'Geländehöhe', msOpenDipul: 'Punkt in DiPUL öffnen',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3053,6 +3113,7 @@
         msHighway: 'Motorway', msFedRoad: 'Federal Road', msWaterway: 'Waterway',
         msNature: 'Nature Reserve', msResidential: 'Residential', msMilitary: 'Military',
         msIndustry: 'Industry/Energy', msHospital: 'Hospital',
+        msGroundMsl: 'Ground elevation', msOpenDipul: 'Open point in DiPUL',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3219,6 +3280,7 @@
         msHighway: 'Autoroute', msFedRoad: 'Route fédérale', msWaterway: 'Voie navigable',
         msNature: 'Réserve naturelle', msResidential: 'Zone résidentielle', msMilitary: 'Militaire',
         msIndustry: 'Industrie/Énergie', msHospital: 'Hôpital',
+        msGroundMsl: 'Altitude du terrain', msOpenDipul: 'Ouvrir le point dans DiPUL',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -3393,6 +3455,7 @@
         msHighway: 'Autopista', msFedRoad: 'Carretera federal', msWaterway: 'Vía fluvial',
         msNature: 'Reserva natural', msResidential: 'Zona residencial', msMilitary: 'Militar',
         msIndustry: 'Industria/Energía', msHospital: 'Hospital',
+        msGroundMsl: 'Altitud del terreno', msOpenDipul: 'Abrir punto en DiPUL',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -3567,6 +3630,7 @@
         msHighway: 'Autostrada', msFedRoad: 'Droga federalna', msWaterway: 'Droga wodna',
         msNature: 'Rezerwat przyrody', msResidential: 'Strefa mieszkalna', msMilitary: 'Wojskowy',
         msIndustry: 'Przemysł/Energetyka', msHospital: 'Szpital',
+        msGroundMsl: 'Wysokość terenu', msOpenDipul: 'Otwórz punkt w DiPUL',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -3793,7 +3857,10 @@
         if (S._metars !== undefined) renderMetarCard(S._metars, S._taf);
         renderWarnings(lastStatus, lastKp, lastAircraft);
         renderZones(lastZones);
-        if (S.map) renderMapStatus(lastWeather, lastZones);
+        if (S.map) {
+          renderMapStatus(lastWeather, lastZones);
+          if (S.layers.dipulHover) loadDipulAiracHover(S.layers.dipulHover);
+        }
         renderUpdated();
       }
     }
@@ -3867,6 +3934,23 @@
     document.querySelectorAll('.zone-btn').forEach(b =>
       b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
     );
+    document.querySelectorAll('.zone-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        if (COUNTRY !== 'de') return;
+        const nextMode = button.dataset.zone === 'reduced' ? 'reduced' : 'all';
+        if (nextMode === CFG.layerMode) return;
+        CFG.layerMode = nextMode;
+        document.querySelectorAll('.zone-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
+        );
+        try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch { }
+        stopDipulWmsHover();
+        if (S.layers.dipul && typeof S.layers.dipul.setParams === 'function') {
+          S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
+        }
+        if (S.lat != null) runCheck();
+      });
+    });
 
     // Laufzeit-Blockliste serverseitig defekter DiPUL-Layer (GeoServer-Render-
     // fehler, z. B. fehlende DB-Spalte). Wird in fetchZonesDE per Einzel-Layer-
@@ -3881,6 +3965,7 @@
     }
 
     const DIPUL_WMS_URL = 'https://uas-betrieb.de/geoservices/dipul/wms';
+    const DIPUL_AIRAC_MANIFEST_URL = 'data/dipul-airac/manifest.json';
     const OPEN_METEO_ELEVATION_URL = 'https://api.open-meteo.com/v1/elevation';
     const BRIGHTSKY_URL = 'https://api.brightsky.dev/weather';
     const KP_URL = 'https://kp.gfz.de/app/json/';
@@ -3941,7 +4026,10 @@
       groundElevationMsl: null,
       groundElevationProfile: null,
       inDfsCtr: false,
-      layers: { dipul: null, aircraft: null, radius: null, radius1500: null, pin: null },
+      checkSequence: 0,
+      mapLocationSequence: 0,
+      pinPopupWanted: true,
+      layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // AT-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       alarm: { active: false, silenced: false, intervalId: null },
@@ -4006,6 +4094,7 @@
       $land.style.display = 'flex';
       S.lat = S.lon = null;
       if (S.map) { S.map.remove(); S.map = null; }
+      S.pinPopupWanted = true;
     });
 
     $('btn-refresh').addEventListener('click', () => {
@@ -4231,7 +4320,7 @@
 
     const AV = {
       map: null, tileL: null, dipulL: null, acLayer: null, trailLayer: null, trails: {}, radiusCirc: null, scanCirc: null,
-      interval: null, beepInterval: null, lat: null, lon: null,
+      interval: null, beepInterval: null, lat: null, lon: null, locationSeq: 0,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
       RADIUS_KM: 2, POLL_MS: 2000, ALT_LIMIT_FT: 984, SCAN_KM: 18.52, TRAIL_SEC: 60,
       STYLES: [
@@ -4296,7 +4385,8 @@
         fillColor: 'rgba(0,180,216,0.05)', fillOpacity: 0.15,
         weight: 1.5, dashArray: '5 5', interactive: false
       }).addTo(AV.map);
-      AV.map.on('dblclick', async e => {
+      AV.map.on('click', async e => {
+        const locationId = ++AV.locationSeq;
         AV.lat = e.latlng.lat; AV.lon = e.latlng.lng;
         $('av-loc').textContent = AV.lat.toFixed(5) + ', ' + AV.lon.toFixed(5);
         AV.radiusCirc.setLatLng([AV.lat, AV.lon]);
@@ -4305,6 +4395,7 @@
         if (AV.searchCirc) AV.searchCirc.setLatLng([AV.lat, AV.lon]);
         try {
           const z = await fetchZones(AV.lat, AV.lon, S.searchRadius);
+          if (locationId !== AV.locationSeq) return;
           drawZoneOverlay(z, AV.dipulL);
           renderMapStatus(lastWeather, z, $('av-map-status'));
         } catch {}
@@ -4526,6 +4617,9 @@
        MAIN CHECK
     ================================================================ */
     async function runCheck() {
+      const checkId = ++S.checkSequence;
+      const checkLat = S.lat;
+      const checkLon = S.lon;
       S.inDfsCtr = false;
       showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
@@ -4539,10 +4633,11 @@
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
         const [weatherArr, kp, aircraft] = await Promise.all([
-          fetchWeather(S.lat, S.lon),
+          fetchWeather(checkLat, checkLon),
           fetchKp(),
-          fetchAircraft(S.lat, S.lon),
+          fetchAircraft(checkLat, checkLon),
         ]);
+        if (checkId !== S.checkSequence) return;
 
         const nowMs = Date.now();
         const now = (weatherArr || []).reduce((best, e) => {
@@ -4560,13 +4655,14 @@
         renderMetrics(now, kpVal, aircraft, null);
         // GFZ async nachladen und Kachel aktualisieren
         fetchKpGfz().then(result => {
-          if (result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
+          if (checkId === S.checkSequence && result) { kpGfz = result; renderMetrics(now, kpVal, aircraft, kpGfz); }
         });
         renderWindProfile(now);
         renderFreezingRain(now);
 
         // DFS UTM altitude weather data (non-blocking, best-effort)
-        fetchDfsWeather(S.lat, S.lon).then(dfs => {
+        fetchDfsWeather(checkLat, checkLon).then(dfs => {
+          if (checkId !== S.checkSequence) return;
           S._dfs = dfs;   // Cache für Re-Render bei Sprachwechsel
           renderTempProfile(dfs);
           renderDewpointCard(dfs);
@@ -4578,16 +4674,18 @@
         renderForecastDays(weatherArr, kpVal);
         renderWarnings(status, kpVal, aircraft);
 
-        // Die Geländehöhe erst nach einem punktgenauen Treffer in CTR-Zone 2–4
-        // abrufen. So werden außerhalb dieser Zonen weder unnötige Requests noch
-        // Standortdaten an den Höhendienst gesendet. GPS, Suche und Doppelklick
-        // laufen sämtlich durch runCheck() und verwenden damit dieselbe Logik.
+        // Die Geländehöhe am gewählten Punkt wird immer als MSL-Information
+        // benötigt. Innerhalb einer DFS-CTR 2–4 kommen 24 Geländestichproben im
+        // 100-m-Umkreis für die konservative Min-/Max-Flughöhenanalyse hinzu.
+        // GPS, Suche und Kartenklick laufen sämtlich durch dieselbe Logik.
         let zones = [];
-        try { zones = await fetchZones(S.lat, S.lon, S.searchRadius); } catch { }
+        try { zones = await fetchZones(checkLat, checkLon, S.searchRadius); } catch { }
+        if (checkId !== S.checkSequence) return;
         const needsCtrElevation = COUNTRY === 'de' && zones.some(z => z.ctrExact && [2, 3, 4].includes(z.zoneNum));
         S.groundElevationProfile = needsCtrElevation
-          ? await fetchGroundElevationProfile(S.lat, S.lon, 100)
-          : null;
+          ? await fetchGroundElevationProfile(checkLat, checkLon, 100)
+          : await fetchGroundElevationProfile(checkLat, checkLon, 0);
+        if (checkId !== S.checkSequence) return;
         S.groundElevationMsl = S.groundElevationProfile?.centerMslM ?? null;
         zones = applyCtrFlightInfo(zones, S.groundElevationMsl, S.groundElevationProfile);
         S.inDfsCtr = COUNTRY === 'de' && zones.some(z =>
@@ -4609,8 +4707,9 @@
         }
 
         // METAR/TAF (non-blocking)
-        fetchMetar(S.lat, S.lon).then(async metars => {
-          metars.forEach(m => { const dLat = m.lat - S.lat, dLon = m.lon - S.lon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
+        fetchMetar(checkLat, checkLon).then(async metars => {
+          if (checkId !== S.checkSequence) return;
+          metars.forEach(m => { const dLat = m.lat - checkLat, dLon = m.lon - checkLon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
           let tafData = null, tafCache = {};
           if (metars.length > 0) {
             const sorted = [...metars].sort((a, b) => a._dist - b._dist);
@@ -4620,6 +4719,7 @@
             const tr = await Promise.allSettled(others.map(m => fetchTaf(m.icaoId)));
             tr.forEach((r, i) => { if (r.status === 'fulfilled' && r.value) tafCache[others[i].icaoId] = r.value; });
           }
+          if (checkId !== S.checkSequence) return;
           S._metars = metars; S._taf = tafData;   // Cache für Re-Render bei Sprachwechsel
           renderMetarCard(metars, tafData);
           if (S.map) renderMetarMarkers(metars, tafCache);
@@ -4638,13 +4738,14 @@
 
         // Map
         $loadMsg.textContent = _t('loadingMap');
-        initMap(S.lat, S.lon, aircraft, zones);
+        initMap(checkLat, checkLon, aircraft, zones);
 
         S._updatedAt = new Date();
         renderUpdated();
 
         hideLoad();
       } catch (e) {
+        if (checkId !== S.checkSequence) return;
         hideLoad();
         console.error(e);
         setStatus('warn', '⚠️', _t('errLoad'), e.message);
@@ -5063,6 +5164,7 @@
 
     function terrainSamplePoints(lat, lon, radiusM) {
       const points = [{ lat, lon }];
+      if (!(radiusM > 0)) return points;
       const metresPerDegree = 111320;
       const lonScale = Math.max(0.01, Math.cos(lat * Math.PI / 180));
       [[radiusM / 2, 8], [radiusM, 16]].forEach(([ringRadius, count]) => {
@@ -6333,6 +6435,182 @@
       });
     }
 
+    let dipulAiracLoadPromise = null;
+    let dipulWmsHoverTimer = null;
+    let dipulWmsHoverInFlight = false;
+    let dipulWmsHoverLatest = null;
+    let dipulWmsHoverLastRequest = 0;
+    let dipulWmsHoverGeneration = 0;
+    let dipulCursorTooltip = null;
+
+    function dipulFeatureLabel(properties = {}) {
+      const localized = LANG === 'de' ? properties.generated_name_DE : properties.generated_name_EN;
+      const rawName = Array.isArray(properties.name) ? properties.name[0] : properties.name;
+      return String(localized || rawName || properties.type_code || '').trim();
+    }
+
+    function hideDipulCursorTooltip() {
+      if (S.map && dipulCursorTooltip && S.map.hasLayer(dipulCursorTooltip)) {
+        S.map.removeLayer(dipulCursorTooltip);
+      }
+    }
+
+    function showDipulCursorTooltip(map, latlng, labels) {
+      if (!labels.length) return;
+      if (!dipulCursorTooltip) {
+        dipulCursorTooltip = L.tooltip({
+          sticky: false,
+          direction: 'top',
+          offset: [0, -8],
+          opacity: 1,
+          className: 'dipul-hover-tooltip',
+        });
+      }
+      dipulCursorTooltip
+        .setLatLng(latlng)
+        .setContent(labels.map(escapeHtml).join('<br>'));
+      if (!map.hasLayer(dipulCursorTooltip)) dipulCursorTooltip.addTo(map);
+    }
+
+    function stopDipulWmsHover() {
+      clearTimeout(dipulWmsHoverTimer);
+      dipulWmsHoverTimer = null;
+      dipulWmsHoverLatest = null;
+      dipulWmsHoverGeneration++;
+      hideDipulCursorTooltip();
+    }
+
+    async function fetchDipulHoverAt(map, containerPoint) {
+      const size = map.getSize();
+      const bounds = map.getBounds();
+      const width = Math.max(1, Math.round(size.x));
+      const height = Math.max(1, Math.round(size.y));
+      const i = Math.max(0, Math.min(width - 1, Math.round(containerPoint.x)));
+      const j = Math.max(0, Math.min(height - 1, Math.round(containerPoint.y)));
+      const layers = getActiveDipulLayers();
+      const query = new URLSearchParams({
+        SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
+        FORMAT: 'image/png', TRANSPARENT: 'true',
+        QUERY_LAYERS: layers, LAYERS: layers,
+        CRS: 'EPSG:4326',
+        BBOX: `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`,
+        WIDTH: String(width), HEIGHT: String(height), I: String(i), J: String(j),
+        INFO_FORMAT: 'text/html', FEATURE_COUNT: '20',
+      });
+      const response = await fetch(`${DIPUL_WMS_URL}?${query}`);
+      if (!response.ok) return [];
+      const html = await response.text();
+      if (/ServiceException/i.test(html)) return [];
+      const seen = new Set();
+      return parseFeatureInfo(html).filter(zone => {
+        const key = zone.fid || `${zone.name}|${zone.type}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    async function runDipulWmsHover() {
+      dipulWmsHoverTimer = null;
+      const sample = dipulWmsHoverLatest;
+      const map = S.map;
+      if (!sample || !map || COUNTRY !== 'de' || !S.layerVisible.dipul) return;
+      const generation = dipulWmsHoverGeneration;
+      dipulWmsHoverInFlight = true;
+      dipulWmsHoverLastRequest = Date.now();
+      try {
+        const zones = await fetchDipulHoverAt(map, sample.containerPoint);
+        if (generation !== dipulWmsHoverGeneration || map !== S.map) return;
+        const current = dipulWmsHoverLatest || sample;
+        if (zones.length) {
+          const labels = [...new Set(zones.map(zone => zone.name).filter(Boolean))].slice(0, 4);
+          showDipulCursorTooltip(map, current.latlng, labels);
+        } else if (current === sample) {
+          hideDipulCursorTooltip();
+        }
+      } catch (_) {
+        if (dipulWmsHoverLatest === sample) hideDipulCursorTooltip();
+      } finally {
+        dipulWmsHoverInFlight = false;
+        if (dipulWmsHoverLatest && dipulWmsHoverLatest !== sample) {
+          scheduleDipulWmsHover(dipulWmsHoverLatest);
+        }
+      }
+    }
+
+    function scheduleDipulWmsHover(event) {
+      if (COUNTRY !== 'de' || !S.map || !S.layerVisible.dipul) {
+        hideDipulCursorTooltip();
+        return;
+      }
+      dipulWmsHoverLatest = { latlng: event.latlng, containerPoint: event.containerPoint };
+      if (dipulCursorTooltip && S.map.hasLayer(dipulCursorTooltip)) {
+        dipulCursorTooltip.setLatLng(event.latlng);
+      }
+      if (dipulWmsHoverInFlight) return;
+      clearTimeout(dipulWmsHoverTimer);
+      const wait = Math.max(0, 140 - (Date.now() - dipulWmsHoverLastRequest));
+      dipulWmsHoverTimer = setTimeout(runDipulWmsHover, wait);
+    }
+
+    // Unsichtbare, interaktive Originalpolygone aus dem statischen DiPUL-AIRAC-
+    // Datensatz. Das WMS bleibt sichtbar und vollständig; diese kleine Ebene
+    // ergänzt lediglich den flüssigen Hover ohne GetFeatureInfo-Netzwerkaufruf.
+    async function loadDipulAiracHover(layerGroup) {
+      if (COUNTRY !== 'de' || !layerGroup) return;
+      // Bei direktem file://-Aufruf blockiert der Browser lokale fetch()-Dateien.
+      // Der WMS-Hover übernimmt in diesem Modus vollständig.
+      if (location.protocol === 'file:') return;
+      if (!dipulAiracLoadPromise) {
+        dipulAiracLoadPromise = (async () => {
+          const manifestResponse = await fetch(DIPUL_AIRAC_MANIFEST_URL);
+          if (!manifestResponse.ok) throw new Error(`AIRAC manifest HTTP ${manifestResponse.status}`);
+          const manifest = await manifestResponse.json();
+          const files = Array.isArray(manifest.files) ? manifest.files : [];
+          const collections = await Promise.all(files.map(async file => {
+            if (!/^dipul_luftverkehr_[a-z_]+\.geojson$/.test(file)) throw new Error('Invalid AIRAC file name');
+            const response = await fetch(`data/dipul-airac/${file}`);
+            if (!response.ok) throw new Error(`${file} HTTP ${response.status}`);
+            return response.json();
+          }));
+          return { manifest, collections };
+        })();
+      }
+
+      try {
+        const { manifest, collections } = await dipulAiracLoadPromise;
+        layerGroup.clearLayers();
+        collections.forEach(collection => {
+          L.geoJSON(collection, {
+            style: {
+              stroke: false,
+              fill: true,
+              fillColor: '#000',
+              fillOpacity: 0.001,
+            },
+            onEachFeature: (feature, layer) => {
+              const label = dipulFeatureLabel(feature?.properties);
+              if (label) {
+                layer.on('mouseover mousemove', event => {
+                  if (!S.map || !S.layerVisible.dipul) return;
+                  showDipulCursorTooltip(S.map, event.latlng, [label]);
+                  scheduleDipulWmsHover(event);
+                });
+              }
+            },
+          }).addTo(layerGroup);
+        });
+        if (S.map && manifest.attribution) {
+          S.map.attributionControl.addAttribution(
+            '<a href="https://www.dipul.de/homepage/de/informationen/geografische-gebiete/download/" target="_blank" rel="noopener">dipul</a>, ' +
+            '<a href="https://creativecommons.org/licenses/by-nd/4.0/deed.de" target="_blank" rel="noopener">CC BY-ND 4.0</a>'
+          );
+        }
+      } catch (error) {
+        console.warn('DiPUL AIRAC hover unavailable:', error);
+      }
+    }
+
     // Zones toggle
     $('zones-hdr').addEventListener('click', () => {
       $('zones-body').classList.toggle('open');
@@ -6462,6 +6740,17 @@
         }
       }
 
+      if (COUNTRY === 'de' && Number.isFinite(S.lat) && Number.isFinite(S.lon)) {
+        const elevation = Number.isFinite(S.groundElevationMsl)
+          ? `<span>≈ ${Math.round(S.groundElevationMsl)}&nbsp;m MSL</span>`
+          : '<span>—</span>';
+        const dipulUrl = dipulPointUrl(S.lat, S.lon, S.searchRadius);
+        html += `<div class="ms-location">
+          <div>${_t('msGroundMsl')}: ${elevation}</div>
+          <a href="${dipulUrl}" target="_blank" rel="noopener">${_t('msOpenDipul')} ↗</a>
+        </div>`;
+      }
+
       el.innerHTML = html;
       el.classList.toggle('hidden', !now && items.length === 0);
       el.classList.remove('hidden');
@@ -6470,6 +6759,12 @@
     /* [J-MAP] ===========================================================
        MAP
     ================================================================ */
+    function dipulPointUrl(lat, lon, radiusM = 100) {
+      const language = LANG === 'de' ? 'de' : 'en';
+      const radius = Math.max(1, Math.round(Number(radiusM) || 100));
+      return `https://maptool-dipul.dfs.de/geozones/@${Number(lon).toFixed(6)},${Number(lat).toFixed(6)},${radius}r?language=${language}&zoom=14`;
+    }
+
     function ctrPopupHtml(zones) {
       const ctr = (zones || []).filter(z => isCtrZone(z) && z.zoneNum);
       if (!ctr.length) return '';
@@ -6533,6 +6828,13 @@
           if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        if (COUNTRY === 'de') {
+          S.layers.dipulHover = L.layerGroup();
+          if (S.layerVisible.dipul) S.layers.dipulHover.addTo(S.map);
+          loadDipulAiracHover(S.layers.dipulHover);
+          S.map.on('mousemove', scheduleDipulWmsHover);
+          S.map.on('mouseout', stopDipulWmsHover);
+        }
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
         if (OVERLAY_ALL[COUNTRY]) {
@@ -6550,7 +6852,9 @@
           iconSize: [12, 12], iconAnchor: [6, 6], className: '',
         });
         S.layers.pin = L.marker([lat, lon], { icon: pinIcon })
-          .bindPopup(popStr)
+          .bindPopup(popStr, { closeButton: true, closeOnClick: false, autoClose: false })
+          .on('popupopen', () => { S.pinPopupWanted = true; })
+          .on('popupclose', () => { S.pinPopupWanted = false; })
           .addTo(S.map);
 
         // Suchradius-Kreis (5m oder 100m, per Button wählbar)
@@ -6579,17 +6883,32 @@
           });
         }
 
-        // Doppelklick Event (Neupositionierung)
-        S.map.on('dblclick', async (e) => {
-          S.lat = e.latlng.lat;
-          S.lon = e.latlng.lng;
-          try {
-            S.name = await reverseGeocode(S.lat, S.lon);
-          } catch {
-            S.name = `${S.lat.toFixed(4)}, ${S.lon.toFixed(4)}`;
+        // Einfachklick setzt den Prüfpunkt neu. Während Ortsname und Prüfdaten
+        // nachladen, wandern Marker, Radien und Popup bereits unmittelbar mit.
+        S.map.on('click', async (e) => {
+          stopDipulWmsHover();
+          const locationId = ++S.mapLocationSequence;
+          const nextLat = e.latlng.lat;
+          const nextLon = e.latlng.lng;
+          S.lat = nextLat;
+          S.lon = nextLon;
+          S.pinPopupWanted = true;
+          if (S.layers.pin) {
+            S.layers.pin
+              .setLatLng([nextLat, nextLon])
+              .setPopupContent(`<b>${_t('loading')}</b><br>${nextLat.toFixed(5)}, ${nextLon.toFixed(5)}`)
+              .openPopup();
           }
+          if (S.layers.radius) S.layers.radius.setLatLng([nextLat, nextLon]);
+          if (S.layers.radius1500) S.layers.radius1500.setLatLng([nextLat, nextLon]);
+          try {
+            S.name = await reverseGeocode(nextLat, nextLon);
+          } catch {
+            S.name = `${nextLat.toFixed(4)}, ${nextLon.toFixed(4)}`;
+          }
+          if (locationId !== S.mapLocationSequence) return;
           $('nav-loc-name').textContent = S.name;
-          runCheck();
+          await runCheck();
         });
 
         // Initiales Offset: Info-Overlay (rechts) sofort freihalten (nicht im Fullscreen)
@@ -6620,11 +6939,13 @@
           S.map.panTo(_tgt);
         }
         S.layers.pin.setLatLng([lat, lon]);
-        S.layers.pin.bindPopup(popStr);
+        S.layers.pin.setPopupContent(popStr);
         S.layers.radius.setLatLng([lat, lon]);
         S.layers.radius.setRadius(S.searchRadius);
         if (S.layers.radius1500) S.layers.radius1500.setLatLng([lat, lon]);
       }
+
+      if (S.pinPopupWanted && S.layers.pin) S.layers.pin.openPopup();
 
       // Always rendering aircraft markers visually
       renderAircraftMarkers(aircraft);
@@ -6642,6 +6963,12 @@
         const layer = S.layers[key];
         if (!layer) return;
         S.layerVisible[key] ? layer.addTo(S.map) : S.map.removeLayer(layer);
+        if (key === 'dipul' && S.layers.dipulHover) {
+          S.layerVisible.dipul
+            ? S.layers.dipulHover.addTo(S.map)
+            : S.map.removeLayer(S.layers.dipulHover);
+        }
+        if (key === 'dipul' && !S.layerVisible.dipul) stopDipulWmsHover();
       });
     });
 

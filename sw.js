@@ -1,4 +1,4 @@
-const CACHE_NAME = 'skycheck-v1';
+const CACHE_NAME = 'skycheck-v2';
 const SHELL = ['/skycheck.html','/icon-192x192.png','/icon-512x512.png','/manifest.json'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -12,6 +12,16 @@ self.addEventListener('fetch', e => {
   if (url.origin !== self.location.origin) return;
   if (e.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
     e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE_NAME).then(cache => cache.put(e.request, c)); return r; }).catch(() => caches.match(e.request)));
+    return;
+  }
+  // AIRAC-Dateien behalten stabile Namen. Network-first verhindert deshalb,
+  // dass ein alter 28-Tage-Zyklus durch den Offline-Cache festgehalten wird.
+  if (url.pathname.startsWith('/data/dipul-airac/')) {
+    e.respondWith(fetch(e.request).then(r => {
+      const c = r.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(e.request, c));
+      return r;
+    }).catch(() => caches.match(e.request)));
     return;
   }
   e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));

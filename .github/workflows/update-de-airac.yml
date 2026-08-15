@@ -1,0 +1,127 @@
+name: Update Germany DiPUL AIRAC vectors
+
+# Prüft wöchentlich das aktuelle AIRAC-Angebot der Mobilithek. Erst wenn sich
+# das Angebot geändert hat, wird das große Gesamtarchiv geladen. Aus dem
+# unveränderten Original werden nur die vier kleinen Luftverkehrs-Layer für
+# den schnellen Karten-Hover extrahiert; das DiPUL-WMS bleibt die vollständige
+# Darstellungsquelle der App.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-de-airac
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch current DiPUL AIRAC aviation vectors
+        id: fetch
+        env:
+          SEARCH_URL: https://mobilithek.info/mdp-api/mdp-msa-metadata/v2/offers/search?page=0&size=10&sort=latest,desc
+          DETAIL_BASE: https://mobilithek.info/mdp-api/mdp-msa-metadata/v2/offers
+          FILE_BASE: https://mobilithek.info/mdp-api/files/aux
+        run: |
+          set -euo pipefail
+          UA="Mozilla/5.0 (compatible; SkyCheck-AIRAC-Updater/1.0; +https://github.com/${GITHUB_REPOSITORY})"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+
+          curl -fsSL -A "$UA" -H 'Content-Type: application/json' \
+            -d '{"searchString":"statische Vektordaten der dipul"}' \
+            "$SEARCH_URL" > "$tmp/search.json"
+
+          offer_id=$(jq -r '.dataOffers.content[0].publicationId // empty' "$tmp/search.json")
+          if [ -z "$offer_id" ]; then
+            echo "::error::Kein aktuelles DiPUL-Vektorangebot gefunden"
+            exit 1
+          fi
+
+          current=""
+          [ -f data/dipul-airac/manifest.json ] && current=$(jq -r '.offerId // empty' data/dipul-airac/manifest.json)
+          if [ "$offer_id" = "$current" ]; then
+            echo "Bereits aktuell ($current) — kein Archiv-Download nötig."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          curl -fsSL -A "$UA" "$DETAIL_BASE/$offer_id" > "$tmp/detail.json"
+          access_url=$(jq -r '
+            .contentStandard[]
+            | select(.instance.fileName | startswith("GJ_"))
+            | select((.instance.fileName | startswith("ED318GJ_")) | not)
+            | .accessURL' "$tmp/detail.json" | head -1)
+          if [ -z "$access_url" ]; then
+            echo "::error::Kein einfaches GeoJSON-Archiv im Angebot gefunden"
+            exit 1
+          fi
+
+          echo "Neues Angebot $offer_id — lade $access_url"
+          curl -fsSL --retry 3 -A "$UA" -o "$tmp/dipul.zip" "$FILE_BASE$access_url"
+          mkdir -p "$tmp/extract"
+          unzip -q "$tmp/dipul.zip" \
+            'dipul_luftverkehr_flugplaetze.geojson' \
+            'dipul_luftverkehr_flughaefen.geojson' \
+            'dipul_luftverkehr_kontrollzonen.geojson' \
+            'dipul_luftverkehr_flugbeschraenkungsgebiete.geojson' \
+            'Lizenz.txt' 'Quellenvermerk.txt' \
+            -d "$tmp/extract"
+
+          files=(
+            dipul_luftverkehr_flugplaetze.geojson
+            dipul_luftverkehr_flughaefen.geojson
+            dipul_luftverkehr_kontrollzonen.geojson
+            dipul_luftverkehr_flugbeschraenkungsgebiete.geojson
+          )
+          for file in "${files[@]}"; do
+            jq -e '.type == "FeatureCollection" and (.features | length > 0)' "$tmp/extract/$file" >/dev/null
+          done
+
+          mkdir -p data/dipul-airac
+          cp "$tmp/extract"/*.geojson "$tmp/extract/Lizenz.txt" "$tmp/extract/Quellenvermerk.txt" data/dipul-airac/
+
+          title=$(jq -r '.title' "$tmp/detail.json")
+          effective=$(jq -r '.temporalCoverage.begin // empty' "$tmp/detail.json" | cut -c1-10)
+          valid_until=$(jq -r '.temporalCoverage.end // empty' "$tmp/detail.json" | cut -c1-10)
+          jq -n \
+            --arg offerId "$offer_id" \
+            --arg title "$title" \
+            --arg effectiveFrom "$effective" \
+            --arg validUntil "$valid_until" \
+            --arg source "https://mobilithek.info/offers/$offer_id" \
+            --arg license "CC BY-ND 4.0" \
+            --arg attribution "dipul, CC BY-ND 4.0" \
+            --argjson files '[
+              "dipul_luftverkehr_flugplaetze.geojson",
+              "dipul_luftverkehr_flughaefen.geojson",
+              "dipul_luftverkehr_kontrollzonen.geojson",
+              "dipul_luftverkehr_flugbeschraenkungsgebiete.geojson"
+            ]' \
+            '{offerId:$offerId,title:$title,effectiveFrom:$effectiveFrom,validUntil:$validUntil,source:$source,license:$license,attribution:$attribution,files:$files}' \
+            > data/dipul-airac/manifest.json
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "release=$offer_id" >> "$GITHUB_OUTPUT"
+
+      - name: Commit updated dataset
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/dipul-airac
+          if git diff --cached --quiet; then
+            echo "Keine inhaltliche Änderung — kein Commit."
+            exit 0
+          fi
+          git commit -m "data: update Germany DiPUL AIRAC (${{ steps.fetch.outputs.release }})"
+          git push

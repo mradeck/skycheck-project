@@ -24,3 +24,11 @@
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Die AIRAC-Dateien ändern sich nur mit einem neuen DiPUL-Zyklus. Ein kurzer
+# Browser-/CDN-Cache hält Wiederholungsaufrufe schnell, ohne einen neuen Stand
+# länger als einen Tag zurückzuhalten.
+[[headers]]
+  for = "/data/dipul-airac/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

@@ -1,0 +1,15 @@
+{
+  "offerId": "1020987195585863680",
+  "title": "Geografische Gebiete - statische Vektordaten der dipul AUGUST_26-AIRAC",
+  "effectiveFrom": "2026-08-06",
+  "validUntil": "2026-09-02",
+  "source": "https://mobilithek.info/offers/1020987195585863680",
+  "license": "CC BY-ND 4.0",
+  "attribution": "dipul, CC BY-ND 4.0",
+  "files": [
+    "dipul_luftverkehr_flugplaetze.geojson",
+    "dipul_luftverkehr_flughaefen.geojson",
+    "dipul_luftverkehr_kontrollzonen.geojson",
+    "dipul_luftverkehr_flugbeschraenkungsgebiete.geojson"
+  ]
+}
