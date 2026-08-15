@@ -1414,7 +1414,7 @@
       background: var(--accent-dim);
     }
 
-    /* AT-Zusatzebenen: eigene Toggle-Gruppe mit farbigem Punkt je Ebene */
+    /* Länder-Zusatzebenen: eigene Toggle-Gruppe mit farbigem Punkt je Ebene */
     .ctx-group {
       display: inline-flex;
       gap: 0.4rem;
@@ -2799,7 +2799,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '0.99';
+    const APP_VER = '1.00';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3889,6 +3889,7 @@
       if (CONTEXT_COUNTRIES[COUNTRY]) {
         const g = document.getElementById('ctx-group');
         if (g) g.style.display = '';
+        syncContextControls();
       }
 
       // Spanien: Geozonen-Quellenumschalter auf dem Startbildschirm einblenden + verdrahten
@@ -3930,12 +3931,19 @@
     } catch { }
     // Versionsmigration: v0.15-Default war 'reduced', v0.16+ Default ist 'all'
     if (!CFG._ver || CFG._ver < 17) { CFG.layerMode = 'all'; CFG._ver = 17; try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch { } }
-    // Zone-Buttons initial synchronisieren
-    document.querySelectorAll('.zone-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
-    );
+    // Zone-Buttons initial synchronisieren. In Ländern mit OSM-Zusatzebenen
+    // übernimmt syncContextControls() den Zustand, sobald der DOM bereit ist.
+    if (COUNTRY === 'de') {
+      document.querySelectorAll('.zone-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.zone === CFG.layerMode)
+      );
+    }
     document.querySelectorAll('.zone-btn').forEach(button => {
       button.addEventListener('click', () => {
+        if (CONTEXT_COUNTRIES[COUNTRY]) {
+          setAllContextLayers(button.dataset.zone !== 'reduced');
+          return;
+        }
         if (COUNTRY !== 'de') return;
         const nextMode = button.dataset.zone === 'reduced' ? 'reduced' : 'all';
         if (nextMode === CFG.layerMode) return;
@@ -4031,7 +4039,8 @@
       pinPopupWanted: true,
       layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
-      ctxLayers: {}, ctxCache: {},   // AT-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
+      ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
+      ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
       alarm: { active: false, silenced: false, intervalId: null },
     };
     const MAP_STYLES = [
@@ -6828,6 +6837,7 @@
           if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
+        if (CONTEXT_COUNTRIES[COUNTRY]) applyContextLayerState();
         if (COUNTRY === 'de') {
           S.layers.dipulHover = L.layerGroup();
           if (S.layerVisible.dipul) S.layers.dipulHover.addTo(S.map);
@@ -6972,23 +6982,44 @@
       });
     });
 
-    // AT-Zusatzebenen: lazy laden (erst bei Aktivierung), als Vektor-Overlay zeichnen.
+    // Länder-Zusatzebenen: beim ersten Kartenaufbau laden und als Vektor-Overlay zeichnen.
     // Rein informativ — fließen NICHT in die Flugstatus-Bewertung ein.
+    function syncContextControls() {
+      if (!CONTEXT_COUNTRIES[COUNTRY]) return;
+      const keys = Object.keys(CONTEXT_META);
+      document.querySelectorAll('.ctx-toggle').forEach(btn => {
+        btn.classList.toggle('active', S.ctxVisible[btn.dataset.ctx] !== false);
+      });
+      const allOn = keys.every(key => S.ctxVisible[key] !== false);
+      const allOff = keys.every(key => S.ctxVisible[key] === false);
+      document.querySelectorAll('.zone-btn').forEach(btn => {
+        btn.classList.toggle('active',
+          (btn.dataset.zone === 'all' && allOn) ||
+          (btn.dataset.zone === 'reduced' && allOff));
+      });
+    }
+
     async function toggleCtxLayer(key, on, btn) {
       const cfg = CONTEXT_META[key];
       if (!cfg || !S.map) return;
+      S.ctxVisible[key] = on;
+      syncContextControls();
       if (!on) {
-        btn.classList.remove('active');
         if (S.ctxLayers[key]) S.map.removeLayer(S.ctxLayers[key]);
         return;
       }
-      btn.classList.add('active');
       if (!S.ctxLayers[key]) {
         btn.classList.add('loading');
         try {
           if (!S.ctxCache[key]) S.ctxCache[key] = fetch(ctxFile(key)).then(r => r.ok ? r.json() : null);
           const gj = await S.ctxCache[key];
-          if (!gj) { btn.classList.remove('active', 'loading'); S.ctxCache[key] = null; return; }
+          if (!gj) {
+            S.ctxVisible[key] = false;
+            btn.classList.remove('loading');
+            S.ctxCache[key] = null;
+            syncContextControls();
+            return;
+          }
           const style = cfg.type === 'poly'
             ? { color: cfg.color, weight: 1, opacity: 0.85, fillColor: cfg.color, fillOpacity: 0.18 }
             : { color: cfg.color, weight: 2, opacity: 0.85 };
@@ -7003,14 +7034,41 @@
           // Datenquellen-Attribution einmalig ergänzen (OSM/ODbL)
           if (!S._ctxAttrib) { S.map.attributionControl.addAttribution('Zusatzebenen: © OpenStreetMap-Mitwirkende (ODbL)'); S._ctxAttrib = true; }
         } catch (e) {
-          console.warn('AT-ctx layer', key, e); btn.classList.remove('active', 'loading'); return;
+          console.warn('context layer', COUNTRY, key, e);
+          S.ctxVisible[key] = false;
+          btn.classList.remove('loading');
+          syncContextControls();
+          return;
         }
         btn.classList.remove('loading');
       }
       if (S.ctxLayers[key] && !S.map.hasLayer(S.ctxLayers[key])) S.ctxLayers[key].addTo(S.map);
     }
+
+    function applyContextLayerState() {
+      if (!CONTEXT_COUNTRIES[COUNTRY] || !S.map) return;
+      Object.keys(CONTEXT_META).forEach(key => {
+        const btn = document.querySelector(`.ctx-toggle[data-ctx="${key}"]`);
+        if (btn) toggleCtxLayer(key, S.ctxVisible[key] !== false, btn);
+      });
+    }
+
+    function setAllContextLayers(on) {
+      if (!CONTEXT_COUNTRIES[COUNTRY]) return;
+      Object.keys(CONTEXT_META).forEach(key => { S.ctxVisible[key] = on; });
+      syncContextControls();
+      if (!S.map) return;
+      Object.keys(CONTEXT_META).forEach(key => {
+        const btn = document.querySelector(`.ctx-toggle[data-ctx="${key}"]`);
+        if (btn) toggleCtxLayer(key, on, btn);
+      });
+    }
+
     document.querySelectorAll('.ctx-toggle').forEach(btn => {
-      btn.addEventListener('click', () => toggleCtxLayer(btn.dataset.ctx, !btn.classList.contains('active'), btn));
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.ctx;
+        toggleCtxLayer(key, S.ctxVisible[key] === false, btn);
+      });
     });
     // ── Radius Radio-Buttons (5m / 100m) ─────────────────────────────────────
     document.querySelectorAll('.radius-btn').forEach(btn => {
@@ -7037,8 +7095,8 @@
         }
       });
     });
-    // ── Zone-Mode-Buttons (Alle / Nur Risikozonen) ────────────────────────────
-    // Zone-Mode-Buttons sind reine Statusanzeigen – Umschalten nur ueber Einstellungen
+    // Zone-Mode-Buttons werden oben verdrahtet: DE steuert die DiPUL-Auswahl,
+    // Länder mit OSM-Kontextdaten schalten ihre vier Zusatzebenen gemeinsam.
 
 
 
