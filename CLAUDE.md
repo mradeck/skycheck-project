@@ -110,6 +110,7 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 5. `git add skycheck.html && git commit -m 'SkyCheck vX.XX' && git push`
 6. `curl | grep APP_VER` → Netlify-Verifikation
 7. Wiki-Updates: Changelog, Log, ggf. Architektur + Index
+8. **Bei UI-/Layoutänderungen verpflichtend:** visuelle Responsive-Prüfung im Browser bei mindestens einem schmalen Handy-, einem breiten Handy- und einem Desktop-Viewport; Kartenänderungen jeweils normal und im Vollbild prüfen. Reine Syntax-/DOM-Prüfung reicht nicht.
 
 ---
 

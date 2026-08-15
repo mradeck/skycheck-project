@@ -1715,19 +1715,43 @@
       }
 
       .map-wrap {
-        height: 300px;
+        /* Buttons und Status bilden oben einen echten, dynamischen Stapel.
+           Darunter bleiben mindestens rund 300 px freie, bedienbare Karte. */
+        height: clamp(720px, 85dvh, 840px);
+      }
+
+      .map-wrap > #map {
+        position: absolute;
+        inset: 0;
       }
 
       .map-controls {
-        left: 46px;
-        right: 8px;
-        max-width: calc(100% - 54px);
-        max-height: 78px;
-        overflow: auto;
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        width: auto;
+        max-width: none;
+        max-height: none;
+        margin: 8px 8px 0 46px;
+        overflow: visible;
+        box-sizing: border-box;
       }
 
-      .map-status {
-        top: 94px;
+      .map-wrap .leaflet-control-attribution {
+        max-width: calc(100vw - 64px);
+        font-size: 9px;
+        line-height: 1.2;
+        text-align: right;
+      }
+
+      .map-wrap.map-fs {
+        height: 100dvh !important;
+      }
+
+      .map-wrap.map-fs .map-controls,
+      .map-wrap.map-fs .map-status {
+        margin-right: max(8px, env(safe-area-inset-right));
       }
 
       .section {
@@ -1742,6 +1766,25 @@
 
       .l-logo {
         font-size: 2.4rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .map-wrap {
+        height: clamp(780px, 92dvh, 860px);
+      }
+
+      .map-controls {
+        margin-left: 42px;
+        gap: 0.28rem;
+        padding: 0.25rem;
+      }
+
+      .map-toggle,
+      .btn-av-open {
+        padding-left: 0.52rem;
+        padding-right: 0.52rem;
+        font-size: 0.69rem;
       }
     }
 
@@ -2129,6 +2172,33 @@
 
     .ms-location a:hover {
       text-decoration: underline;
+    }
+
+    /* Mobile Reihenfolge im Kartenviewer: erst Bedienung, dann Status,
+       anschließend freie Karte. Steht bewusst nach den Basis-Komponenten,
+       damit der Responsive-Zustand nicht von späteren Regeln überschrieben wird. */
+    @media (max-width: 600px) {
+      .map-status {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        margin: 8px 8px 0 46px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .map-status {
+        margin-left: 42px;
+      }
+
+      .zone-group .zone-btn {
+        padding-left: 0.52rem;
+        padding-right: 0.52rem;
+        font-size: 0.69rem;
+      }
     }
 
     .dipul-hover-tooltip {
@@ -2799,7 +2869,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '1.00';
+    const APP_VER = '1.01';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -4309,19 +4379,7 @@
         setTimeout(() => {
           S.map.invalidateSize();
           if (S.lat != null) {
-            if (fs) {
-              S.map.setView([S.lat, S.lon], S.map.getZoom(), { animate: false });
-            } else {
-              const msEl = document.getElementById('map-status');
-              const msW = (msEl && !msEl.classList.contains('hidden'))
-                ? Math.round(msEl.getBoundingClientRect().width) : 0;
-              const pxOff = msW > 0
-                ? Math.round((msW + 24) / 2)
-                : Math.round(S.map.getSize().x * 0.10);
-              const mkPx = S.map.latLngToContainerPoint([S.lat, S.lon]);
-              const tgt = S.map.containerPointToLatLng([mkPx.x + pxOff, mkPx.y]);
-              S.map.panTo(tgt, { animate: false });
-            }
+            S.map.panTo(mapFocusTarget(S.lat, S.lon), { animate: false });
           }
         }, 120);
       }
@@ -6788,6 +6846,36 @@
       return `<br><span style="color:var(--accent);font-weight:800">${_t('ctrZoneLabel')(limiting.zoneNum)} · max. ${limiting.ctrFlight.maxAglM} m AGL</span>`;
     }
 
+    function mapFocusTarget(lat, lon) {
+      if (!S.map) return [lat, lon];
+      const markerPx = S.map.latLngToContainerPoint([lat, lon]);
+      const mapSize = S.map.getSize();
+      const mobile = window.matchMedia('(max-width: 600px)').matches;
+
+      if (mobile) {
+        const wrap = document.querySelector('.map-wrap');
+        const controls = document.getElementById('map-controls');
+        const status = document.getElementById('map-status');
+        const wrapTop = wrap ? wrap.getBoundingClientRect().top : 0;
+        const controlsBottom = controls ? controls.getBoundingClientRect().bottom - wrapTop : 0;
+        const statusBottom = status && !status.classList.contains('hidden')
+          ? status.getBoundingClientRect().bottom - wrapTop : 0;
+        const freeTop = Math.min(Math.max(controlsBottom, statusBottom) + 12, mapSize.y - 180);
+        const freeBottom = Math.max(freeTop + 120, mapSize.y - 54);
+        const desiredMarkerY = freeTop + (freeBottom - freeTop) * 0.55;
+        const verticalOffset = desiredMarkerY - mapSize.y / 2;
+        return S.map.containerPointToLatLng([markerPx.x, markerPx.y - verticalOffset]);
+      }
+
+      const status = document.getElementById('map-status');
+      const statusWidth = status && !status.classList.contains('hidden')
+        ? Math.round(status.getBoundingClientRect().width) : 0;
+      const horizontalOffset = statusWidth > 0
+        ? Math.round((statusWidth + 24) / 2)
+        : Math.round(mapSize.x * 0.10);
+      return S.map.containerPointToLatLng([markerPx.x + horizontalOffset, markerPx.y]);
+    }
+
     function initMap(lat, lon, aircraft, zones) {
       const popStr = `<b>${escapeHtml(S.name)}</b><br>${lat.toFixed(5)}, ${lon.toFixed(5)}${ctrPopupHtml(zones)}`;
 
@@ -6921,33 +7009,13 @@
           await runCheck();
         });
 
-        // Initiales Offset: Info-Overlay (rechts) sofort freihalten (nicht im Fullscreen)
-        if (!document.querySelector('.map-wrap.map-fs')) {
-          const _msEl0 = document.getElementById('map-status');
-          const _msW0 = (_msEl0 && !_msEl0.classList.contains('hidden'))
-            ? Math.round(_msEl0.getBoundingClientRect().width) : 0;
-          const _pxOff0 = _msW0 > 0
-            ? Math.round((_msW0 + 24) / 2)
-            : Math.round(S.map.getSize().x * 0.10);
-          const _mkPx0 = S.map.latLngToContainerPoint([lat, lon]);
-          const _tgt0 = S.map.containerPointToLatLng([_mkPx0.x + _pxOff0, _mkPx0.y]);
-          S.map.panTo(_tgt0, { animate: false });
-        }
+        // Prüfpunkt in den tatsächlich freien Kartenbereich rücken: am Desktop
+        // links neben das Statusfenster, mobil unter Buttons und Statusfenster.
+        S.map.panTo(mapFocusTarget(lat, lon), { animate: false });
 
       } else {
         // Map exists, just update state gently!
-        // Marker aus dem Info-Overlay (rechts) freistellen (nicht im Fullscreen)
-        if (!document.querySelector('.map-wrap.map-fs')) {
-          const _msEl = document.getElementById('map-status');
-          const _msW = (_msEl && !_msEl.classList.contains('hidden'))
-            ? Math.round(_msEl.getBoundingClientRect().width) : 0;
-          const _pxOff = _msW > 0
-            ? Math.round((_msW + 24) / 2)
-            : Math.round(S.map.getSize().x * 0.10);
-          const _mkPx = S.map.latLngToContainerPoint([lat, lon]);
-          const _tgt = S.map.containerPointToLatLng([_mkPx.x + _pxOff, _mkPx.y]);
-          S.map.panTo(_tgt);
-        }
+        S.map.panTo(mapFocusTarget(lat, lon));
         S.layers.pin.setLatLng([lat, lon]);
         S.layers.pin.setPopupContent(popStr);
         S.layers.radius.setLatLng([lat, lon]);
