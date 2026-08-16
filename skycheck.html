@@ -59,6 +59,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0a1628">
+  <script>
+    try {
+      if (localStorage.getItem('skycheck-interface-theme') === 'light') document.documentElement.classList.add('light-mode');
+    } catch (_) {}
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.json">
@@ -97,6 +102,33 @@
       --radius-sm: 8px;
       --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       --transition: 0.2s ease;
+      --nav-bg: rgba(7, 16, 31, 0.85);
+      --card-bg: var(--card);
+      --radius-md: var(--radius);
+    }
+
+    :root.light-mode {
+      color-scheme: light;
+      --bg: #eef4fb;
+      --surface: #f8fbff;
+      --card: #ffffff;
+      --card-hover: #f3f8fd;
+      --border: #c8d7e8;
+      --border-hi: #8ea9c5;
+      --accent: #008eaf;
+      --accent-dim: rgba(0, 142, 175, 0.1);
+      --accent-glow: rgba(0, 142, 175, 0.2);
+      --go: #008c67;
+      --go-dim: rgba(0, 140, 103, 0.1);
+      --nogo: #c92f56;
+      --nogo-dim: rgba(201, 47, 86, 0.1);
+      --warn: #b87500;
+      --warn-dim: rgba(184, 117, 0, 0.1);
+      --text: #14263d;
+      --text2: #4d6684;
+      --text3: #71869e;
+      --shadow: 0 8px 28px rgba(35, 62, 92, 0.15);
+      --nav-bg: rgba(248, 251, 255, 0.9);
     }
 
     /* [S-RESET] =====================================================
@@ -120,6 +152,26 @@
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    :root.light-mode #landing::before {
+      background-image: radial-gradient(circle, rgba(0, 142, 175, 0.1) 1px, transparent 1px);
+    }
+
+    :root.light-mode .es-src-seg,
+    :root.light-mode .es-src-opt + .es-src-opt {
+      border-color: rgba(20, 38, 61, 0.15);
+    }
+
+    :root.light-mode .es-src-opt { background: rgba(20, 38, 61, 0.04); }
+
+    .landing-tools {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     button {
@@ -524,7 +576,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(7, 16, 31, 0.85);
+      background: var(--nav-bg);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
       padding: 0.65rem 1.25rem;
@@ -616,6 +668,20 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
       z-index: 9999;
       min-width: 130px;
+    }
+
+    :root.light-mode .s-layers-list { background: rgba(20, 38, 61, 0.05); }
+    :root.light-mode .s-layer-pill { background: rgba(20, 38, 61, 0.08); }
+
+    @media (max-width: 600px) {
+      .r-nav { padding-inline: 0.65rem; gap: 0.45rem; }
+      .r-nav .nav-icon-btn { width: 32px; height: 32px; }
+    }
+
+    @media (max-width: 380px) {
+      .r-nav { padding-inline: 0.45rem; gap: 0.3rem; }
+      .r-nav .nav-icon-btn { width: 30px; height: 30px; }
+      .nav-loc-time { display: none; }
     }
 
     .lang-opt {
@@ -1376,8 +1442,9 @@
       background: var(--card);
       border: 1px solid var(--accent);
       color: var(--accent);
-      padding: 0.25rem 0.65rem;
-      border-radius: 6px;
+      min-height: 32px;
+      padding: 0.3rem 0.75rem;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 0.8rem;
       font-weight: 700;
@@ -1407,22 +1474,24 @@
       width: max-content;
       max-width: calc(100% - 338px);
       margin: 0;
-      padding: 0.3rem;
+      padding: 0.45rem;
       flex-wrap: wrap;
       border: 1px solid rgba(100, 160, 255, .18);
-      border-radius: 10px;
+      border-radius: 12px;
       background: rgba(7, 16, 31, .82);
       box-shadow: 0 4px 16px rgba(0, 0, 0, .22);
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(12px);
     }
 
     .map-toggle {
       background: var(--card);
       border: 1px solid var(--border);
       color: var(--text2);
+      min-height: 32px;
       padding: 0.3rem 0.75rem;
-      border-radius: 20px;
+      border-radius: 8px;
       font-size: 0.75rem;
+      font-weight: 650;
       transition: all var(--transition);
     }
 
@@ -2045,7 +2114,7 @@
     /* [S-EXTRAS] ── Radius group (5m / 100m) ──────────────── */
     .radius-group {
       display: inline-flex;
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, .18);
       vertical-align: middle;
@@ -2064,7 +2133,7 @@
     /* ── Zone group (Alle / Nur Risikozonen) ───────────────── */
     .zone-group {
       display: inline-flex;
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, .18);
       vertical-align: middle;
@@ -2076,8 +2145,10 @@
       border-right: 1px solid rgba(255, 255, 255, .18) !important;
       background: var(--card);
       color: var(--text2);
-      padding: 0.25rem 0.6rem;
+      min-height: 32px;
+      padding: 0.3rem 0.7rem;
       font-size: 0.75rem;
+      font-weight: 650;
       cursor: pointer;
       pointer-events: auto;
       font-family: inherit;
@@ -2190,6 +2261,96 @@
 
     .ms-location a:hover {
       text-decoration: underline;
+    }
+
+    /* Helle Kartenoberfläche: einheitliche, helle Bedien- und Infopanels statt
+       dunkler Nacht-Overlays auf der OSM-Tageskarte. */
+    :root.light-mode .map-controls {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(89, 119, 151, 0.28);
+      box-shadow: 0 8px 24px rgba(35, 62, 92, 0.18);
+    }
+
+    :root.light-mode .map-toggle,
+    :root.light-mode .zone-group .zone-btn,
+    :root.light-mode .btn-av-open {
+      background: #f8fbff;
+      border-color: #b9cadd;
+      color: #38536f;
+    }
+
+    :root.light-mode .map-toggle:hover,
+    :root.light-mode .zone-group .zone-btn:not(.active):hover {
+      background: #eef7fb;
+      border-color: #72aabe;
+      color: #007e9d;
+    }
+
+    :root.light-mode .map-toggle.active {
+      background: #e4f6fa;
+      border-color: #008eaf;
+      color: #007b98;
+      box-shadow: inset 0 0 0 1px rgba(0, 142, 175, 0.08);
+    }
+
+    :root.light-mode .ctx-toggle.active {
+      background: color-mix(in srgb, var(--ctx-color) 12%, #fff);
+      border-color: var(--ctx-color);
+      color: var(--ctx-color);
+    }
+
+    :root.light-mode .zone-group,
+    :root.light-mode .radius-group {
+      border-color: #b9cadd;
+      background: #f8fbff;
+    }
+
+    :root.light-mode .zone-group .zone-btn,
+    :root.light-mode .radius-group .radius-btn {
+      border-right-color: #c8d7e8 !important;
+    }
+
+    :root.light-mode .zone-group .zone-btn.active {
+      background: #008eaf;
+      color: #fff;
+    }
+
+    :root.light-mode .btn-av-open {
+      background: #008eaf;
+      border-color: #008eaf;
+      color: #fff;
+      box-shadow: 0 2px 7px rgba(0, 142, 175, 0.22);
+    }
+
+    :root.light-mode .map-status {
+      background: rgba(255, 255, 255, 0.94);
+      border-color: rgba(89, 119, 151, 0.32);
+      color: #14263d;
+      box-shadow: 0 8px 24px rgba(35, 62, 92, 0.18);
+      backdrop-filter: blur(12px);
+    }
+
+    :root.light-mode .map-status .ms-zone-item,
+    :root.light-mode .map-status .ms-wind,
+    :root.light-mode .map-status .ms-location {
+      color: #4d6684;
+    }
+
+    :root.light-mode .map-status .ms-wind,
+    :root.light-mode .map-status .ms-location {
+      border-top-color: rgba(77, 102, 132, 0.18);
+    }
+
+    :root.light-mode .map-fs-btn,
+    :root.light-mode .map-style-btn {
+      background: rgba(255, 255, 255, 0.94);
+      border-color: rgba(89, 119, 151, 0.35);
+      color: #28445f;
+      box-shadow: 0 3px 12px rgba(35, 62, 92, 0.16);
+    }
+
+    :root.light-mode .map-style-btn:hover {
+      background: #fff;
     }
 
     /* Mobile Reihenfolge im Kartenviewer: erst Bedienung, dann Status,
@@ -2452,15 +2613,18 @@
             <line x1="12" y1="12" x2="12" y2="16" />
           </svg></button></p>
 
-      <div class="lang-wrap" id="lang-wrap-landing" style="margin-bottom:1rem;display:flex;justify-content:center">
-        <button class="nav-icon-btn lang-flag-btn" id="btn-lang-landing" title="Sprache / Language" style="font-size:1.3rem;padding:0.3rem 0.5rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px">🇩🇪</button>
-        <div class="lang-menu hidden" id="lang-menu-landing">
-          <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
-          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
-          <button class="lang-opt" data-lang="fr">🇫🇷 Français</button>
-          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
-          <button class="lang-opt" data-lang="pl">🇵🇱 Polski</button>
+      <div class="landing-tools">
+        <div class="lang-wrap" id="lang-wrap-landing">
+          <button class="nav-icon-btn lang-flag-btn" id="btn-lang-landing" title="Sprache / Language">🇩🇪</button>
+          <div class="lang-menu hidden" id="lang-menu-landing">
+            <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+            <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+            <button class="lang-opt" data-lang="fr">🇫🇷 Français</button>
+            <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+            <button class="lang-opt" data-lang="pl">🇵🇱 Polski</button>
+          </div>
         </div>
+        <button class="nav-icon-btn theme-toggle" id="btn-theme-landing" title="Helle Darstellung" data-i18n-title="btnTheme">☀</button>
       </div>
 
       <div class="search-wrap">
@@ -2573,6 +2737,7 @@
           </path>
         </svg>
       </button>
+      <button class="nav-icon-btn theme-toggle" id="btn-theme" title="Helle Darstellung" data-i18n-title="btnTheme">☀</button>
       <div class="lang-wrap" id="lang-wrap">
         <button class="nav-icon-btn lang-flag-btn" id="btn-lang" title="Sprache / Language">🇩🇪</button>
         <div class="lang-menu hidden" id="lang-menu">
@@ -2887,7 +3052,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '1.03';
+    const APP_VER = '1.06';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2926,7 +3091,7 @@
         placeholder: 'z. B. Brandenburger Tor, Berlin',
         btnCheck: 'Prüfen', gpsTitle: 'Aktuellen Standort verwenden',
         btnBack: 'Zurück', btnRefresh: 'Aktualisieren',
-        btnPrint: 'Als PDF speichern / Drucken', btnSettings: 'Einstellungen',
+        btnPrint: 'Als PDF speichern / Drucken', btnSettings: 'Einstellungen', btnTheme: 'Helle Darstellung umschalten',
         checking: 'Wird geprüft…', checkingDesc: 'Alle Daten werden abgerufen.',
         goTitle: 'Flug möglich', goDesc: 'Wetter: Alle Parameter im Normalbereich.',
         warnTitle: 'Bedingt flugfähig', warnDesc: 'Wetter: Eingeschränkte Bedingungen.',
@@ -3101,7 +3266,7 @@
         placeholder: 'e.g. Brandenburg Gate, Berlin',
         btnCheck: 'Check', gpsTitle: 'Use current location',
         btnBack: 'Back', btnRefresh: 'Refresh',
-        btnPrint: 'Save as PDF / Print', btnSettings: 'Settings',
+        btnPrint: 'Save as PDF / Print', btnSettings: 'Settings', btnTheme: 'Toggle light interface',
         checking: 'Checking…', checkingDesc: 'Fetching all data.',
         goTitle: 'Flight possible', goDesc: 'Weather: All parameters within normal range.',
         warnTitle: 'Conditionally flyable', warnDesc: 'Weather: Limited conditions.',
@@ -3276,7 +3441,7 @@
         placeholder: 'ex. Porte de Brandebourg, Berlin',
         btnCheck: 'Vérifier', gpsTitle: 'Utiliser la position actuelle',
         btnBack: 'Retour', btnRefresh: 'Actualiser',
-        btnPrint: 'Enregistrer en PDF / Imprimer', btnSettings: 'Paramètres',
+        btnPrint: 'Enregistrer en PDF / Imprimer', btnSettings: 'Paramètres', btnTheme: 'Basculer l’interface claire',
         checking: 'Vérification…', checkingDesc: 'Récupération de toutes les données.',
         goTitle: 'Vol possible', goDesc: 'Météo : Tous les paramètres dans la plage normale.',
         warnTitle: 'Vol conditionnel', warnDesc: 'Météo : Conditions limitées.',
@@ -3451,7 +3616,7 @@
         placeholder: 'p.ej. Puerta de Brandeburgo, Berlín',
         btnCheck: 'Verificar', gpsTitle: 'Usar ubicación actual',
         btnBack: 'Volver', btnRefresh: 'Actualizar',
-        btnPrint: 'Guardar como PDF / Imprimir', btnSettings: 'Ajustes',
+        btnPrint: 'Guardar como PDF / Imprimir', btnSettings: 'Ajustes', btnTheme: 'Alternar interfaz clara',
         checking: 'Verificando…', checkingDesc: 'Obteniendo todos los datos.',
         goTitle: 'Vuelo posible', goDesc: 'Meteorología: Todos los parámetros en rango normal.',
         warnTitle: 'Vuelo condicional', warnDesc: 'Meteorología: Condiciones limitadas.',
@@ -3626,7 +3791,7 @@
         placeholder: 'np. Brama Brandenburska, Berlin',
         btnCheck: 'Sprawdź', gpsTitle: 'Użyj bieżącej lokalizacji',
         btnBack: 'Powrót', btnRefresh: 'Odśwież',
-        btnPrint: 'Zapisz jako PDF / Drukuj', btnSettings: 'Ustawienia',
+        btnPrint: 'Zapisz jako PDF / Drukuj', btnSettings: 'Ustawienia', btnTheme: 'Przełącz jasny interfejs',
         checking: 'Sprawdzanie…', checkingDesc: 'Pobieranie wszystkich danych.',
         goTitle: 'Lot możliwy', goDesc: 'Pogoda: Wszystkie parametry w normie.',
         warnTitle: 'Lot warunkowo możliwy', warnDesc: 'Pogoda: Ograniczone warunki.',
@@ -4440,6 +4605,49 @@
       ]
     };
 
+    const INTERFACE_THEME_KEY = 'skycheck-interface-theme';
+    function applyOwnerMapStyle(owner, styles, index) {
+      owner.styleIdx = index;
+      if (!owner.map || !owner.tileL) return;
+      const style = styles[index];
+      owner.map.removeLayer(owner.tileL);
+      owner.tileL = L.tileLayer(style.u, {
+        attribution: style.a,
+        subdomains: style.s || 'abc',
+        maxZoom: 19,
+      }).addTo(owner.map);
+      owner.tileL.bringToBack();
+    }
+
+    function setInterfaceTheme(light, persist = true) {
+      const enabled = Boolean(light);
+      document.documentElement.classList.toggle('light-mode', enabled);
+      $('alarm-view').classList.toggle('av-light', enabled);
+      AV.lightMode = enabled;
+      // Oberfläche und Grundkarte als gemeinsames Tages-/Nachtprofil:
+      // hell = klassische OSM-Karte, dunkel = CARTO Dark. Der separate
+      // Kartenstil-Button kann danach weiterhin manuell überschreiben.
+      const mapStyleIndex = enabled ? 1 : 0;
+      applyOwnerMapStyle(S, MAP_STYLES, mapStyleIndex);
+      applyOwnerMapStyle(AV, AV.STYLES, mapStyleIndex);
+      const mapStyleLabel = $('map-style-label');
+      if (mapStyleLabel) mapStyleLabel.textContent = MAP_STYLES[mapStyleIndex].n;
+      $('btn-map-style').title = 'Kartenstil: ' + MAP_STYLES[mapStyleIndex].n;
+      document.querySelectorAll('.theme-toggle, #av-theme').forEach(button => {
+        button.textContent = enabled ? '🌙' : '☀';
+        button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      });
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.content = enabled ? '#eef4fb' : '#0a1628';
+      if (persist) {
+        try { localStorage.setItem(INTERFACE_THEME_KEY, enabled ? 'light' : 'dark'); } catch (_) {}
+      }
+    }
+    function toggleInterfaceTheme() { setInterfaceTheme(!document.documentElement.classList.contains('light-mode')); }
+    setInterfaceTheme(document.documentElement.classList.contains('light-mode'), false);
+    $('btn-theme').addEventListener('click', toggleInterfaceTheme);
+    $('btn-theme-landing').addEventListener('click', toggleInterfaceTheme);
+
     function avOpen() {
       AV.lat = S.lat || 48.137; AV.lon = S.lon || 11.575;
       $('alarm-view').classList.add('av-open');
@@ -4466,7 +4674,7 @@
     }
 
     function avInitMap() {
-      const s0 = AV.STYLES[0];
+      const s0 = AV.STYLES[AV.styleIdx];
       AV.map = L.map('alarm-map', { center: [AV.lat, AV.lon], zoom: 13, zoomControl: true, doubleClickZoom: false });
       AV.tileL = L.tileLayer(s0.u, { attribution: s0.a, maxZoom: 19 }).addTo(AV.map);
       if (COUNTRY === 'de') {
@@ -4697,11 +4905,7 @@
       $('av-style').title = s.n;
     });
 
-    $('av-theme').addEventListener('click', () => {
-      AV.lightMode = !AV.lightMode;
-      $('alarm-view').classList.toggle('av-light', AV.lightMode);
-      $('av-theme').textContent = AV.lightMode ? '\ud83c\udf19' : '\u2600';
-    });
+    $('av-theme').addEventListener('click', toggleInterfaceTheme);
 
     if (S.map) setTimeout(() => S.map.invalidateSize(), 50);
     async function doCheck() {
@@ -5743,16 +5947,137 @@
 
     // Österreich: Austro Control ED-269 via Netlify-Function zones-at (data/uas-zones-at.json).
     // lang wird mitgegeben, damit die Detailbeschreibung (localizedMessages) in der UI-Sprache kommt.
+    let atLocalZoneEntriesPromise = null;
+
+    function atLocalFeatureBBox(feature) {
+      const geometries = Array.isArray(feature?.geometry) ? feature.geometry : [];
+      let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+      geometries.forEach(geometry => {
+        const hp = geometry.horizontalProjection;
+        if (!hp) return;
+        if (hp.type === 'Polygon') {
+          (hp.coordinates || []).forEach(ring => (ring || []).forEach(([lon, lat]) => {
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+            minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+            minLon = Math.min(minLon, lon); maxLon = Math.max(maxLon, lon);
+          }));
+        } else if (hp.type === 'Circle' && Array.isArray(hp.center)) {
+          const [lon, lat] = hp.center;
+          const delta = (Number(hp.radius) || 0) / 111320;
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+          minLat = Math.min(minLat, lat - delta); maxLat = Math.max(maxLat, lat + delta);
+          minLon = Math.min(minLon, lon - delta); maxLon = Math.max(maxLon, lon + delta);
+        }
+      });
+      return Number.isFinite(minLat) ? { minLat, maxLat, minLon, maxLon } : null;
+    }
+
+    function atLocalColor(restriction) {
+      return ({
+        PROHIBITED: '#ef4444',
+        REQ_AUTHORISATION: '#f59e0b',
+        CONDITIONAL: '#f97316',
+        NO_RESTRICTION: '#22c55e',
+      })[restriction] || '#64748b';
+    }
+
+    function atLocalGeometry(feature) {
+      return (feature.geometry || []).map(geometry => {
+        const hp = geometry.horizontalProjection;
+        if (hp?.type === 'Polygon') return { type: 'Polygon', coordinates: hp.coordinates };
+        if (hp?.type === 'Circle' && Array.isArray(hp.center)) return { type: 'Circle', center: hp.center, radius: hp.radius || 0 };
+        return null;
+      }).filter(Boolean);
+    }
+
+    function atLocalFormatAltitude(value, ref, unit) {
+      if (value == null || value === '') return '—';
+      if (Number(value) === 0 && (ref === 'AGL' || ref === 'SFC')) return 'GND';
+      return `${Math.round(Number(value))} ${unit === 'FT' ? 'ft' : 'm'} ${ref || ''}`.trim();
+    }
+
+    function atLocalMessage(feature) {
+      const messages = feature.extendedProperties?.localizedMessages || [];
+      const wanted = LANG === 'de' ? 'de-AT' : LANG;
+      const find = language => messages.find(item => String(item.language || '').toLowerCase() === language.toLowerCase())?.message;
+      return find(wanted) || find('en') || find('de-AT') || messages[0]?.message || feature.message || '';
+    }
+
+    function normalizeLocalAtZone(feature, light = false) {
+      const restriction = feature.restriction || '';
+      const geometry = atLocalGeometry(feature);
+      const basic = {
+        name: feature.message || feature.name || feature.identifier || '—',
+        type: restriction || 'UAS_ZONE',
+        color: atLocalColor(restriction),
+        geometry,
+      };
+      if (light) return basic;
+      const volume = feature.geometry?.[0] || {};
+      return {
+        ...basic,
+        lower: atLocalFormatAltitude(volume.lowerLimit, volume.lowerVerticalReference, volume.uomDimensions),
+        upper: atLocalFormatAltitude(volume.upperLimit, volume.upperVerticalReference, volume.uomDimensions),
+        legal: feature.extendedProperties?.legalBasis || '—',
+        legalUrl: feature.extendedProperties?.legalBasisURL || '',
+        desc: atLocalMessage(feature),
+      };
+    }
+
+    function loadLocalAtZoneEntries() {
+      if (!atLocalZoneEntriesPromise) {
+        atLocalZoneEntriesPromise = fetch('data/uas-zones-at.json')
+          .then(response => {
+            if (!response.ok) throw new Error(`Austria local zones HTTP ${response.status}`);
+            return response.json();
+          })
+          .then(data => {
+            const features = Array.isArray(data) ? data : (data.features || data.UASZoneVersion || data.zones || []);
+            return features.map(feature => ({ feature, bbox: atLocalFeatureBBox(feature) })).filter(entry => entry.bbox);
+          })
+          .catch(error => {
+            atLocalZoneEntriesPromise = null;
+            throw error;
+          });
+      }
+      return atLocalZoneEntriesPromise;
+    }
+
+    async function fetchZonesATLocal(lat, lon, radiusM = 100) {
+      const entries = await loadLocalAtZoneEntries();
+      const delta = Math.max(0.001, radiusM / 111320);
+      const query = { minLat: lat - delta, maxLat: lat + delta, minLon: lon - delta, maxLon: lon + delta };
+      return entries.filter(({ bbox }) => bbox.minLat <= query.maxLat && bbox.maxLat >= query.minLat && bbox.minLon <= query.maxLon && bbox.maxLon >= query.minLon)
+        .slice(0, 50)
+        .map(({ feature }) => normalizeLocalAtZone(feature));
+    }
+
+    async function fetchAllZonesAT() {
+      try {
+        const response = await fetch('/.netlify/functions/zones-at?all=1');
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data.zones) ? data.zones : [];
+        }
+      } catch (_) { /* lokale Vorschau fällt auf die statische Datei zurück */ }
+      if (!IS_LOCAL_PREVIEW) return [];
+      const entries = await loadLocalAtZoneEntries();
+      return entries.map(({ feature }) => normalizeLocalAtZone(feature, true));
+    }
+
     async function fetchZonesAT(lat, lon, radiusM = 100) {
       try {
         const r = await fetch(`/.netlify/functions/zones-at?lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
-        if (!r.ok) return [];
-        const data = await r.json();
-        return Array.isArray(data.zones) ? data.zones : [];
+        if (r.ok) {
+          const data = await r.json();
+          return Array.isArray(data.zones) ? data.zones : [];
+        }
       } catch (e) {
         console.warn('Zones AT fetch error', e);
-        return [];
       }
+      if (!IS_LOCAL_PREVIEW) return [];
+      try { return await fetchZonesATLocal(lat, lon, radiusM); }
+      catch (error) { console.warn('Zones AT local fallback error', error); return []; }
     }
 
     // Flächiges AT-Karten-Overlay: ALLE Zonen (286) einmalig laden und zeichnen — analog
@@ -5764,7 +6089,7 @@
     function ensureAllZones() {
       if (_overlayPromise[COUNTRY]) return _overlayPromise[COUNTRY];
       let p;
-      if (COUNTRY === 'at') p = fetch('/.netlify/functions/zones-at?all=1').then(r => r.ok ? r.json() : { zones: [] }).then(d => Array.isArray(d.zones) ? d.zones : []);
+      if (COUNTRY === 'at') p = fetchAllZonesAT();
       else if (COUNTRY === 'dk') p = fetchAllZonesDK();
       else if (COUNTRY === 'ie') p = fetchAllZonesIE();
       else p = Promise.resolve([]);

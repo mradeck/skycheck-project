@@ -25,7 +25,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v1.03
+📦 **Current version:** v1.06
 
 ---
 
@@ -211,6 +211,9 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v1.06 | **Polished light map overlays.** The map controls, status panel, fullscreen button and map-style switch now use bright translucent surfaces on OSM. Controls follow a consistent rectangular 32 px system, while coloured context-layer toggles retain their category colour. Verified visually on desktop and 390 px mobile. |
+| v1.05 | **Theme/map pairing and local Austria fallback.** Light interface now selects the standard OSM basemap, dark interface selects CARTO Dark; the separate map-style button can still override this afterwards. Local previews load the bundled Austro Control ED-269 file when Netlify Functions are unavailable, restoring all Austrian airport/control zones and point details. |
+| v1.04 | **Global light interface.** A sun/moon button on the landing page and results navigation switches the complete SkyCheck interface, persists the preference, and keeps the integrated alarm view in sync. The same implementation applies to all seven country variants; map styling remains independently selectable. |
 | v0.98 | **Browser tab title now follows the UI language.** The `<title>` tag was a static German string never wired to i18n, so every non-DE site showed a German tab title. Now `document.title` is set from a `docTitle` i18n key inside `applyLang()` — it updates on load (per country default language) and on every manual language switch, in all five languages |
 | v0.97 | **Context layers extended to CH, ES, DK, IE, FR.** The Austria overlays from v0.96 (protected areas, motorways, power lines, railways) now exist for all non-DE countries (DE already has them via DiPUL). The client is generalised — `CONTEXT_META` + `CONTEXT_COUNTRIES`, one data file per country (`data/<cc>-<layer>.json`); the toggle group appears automatically for any listed country. The generator is now a single reusable tool (`scripts/gen-context.mjs` + a robust `fetch-context.sh` driver with curl-retry and resume) that **stitches OSM segments into long polylines before simplifying**, which shrank the large countries a lot (FR motorways 9 → 3.5 MB, ES 6 → 2.9 MB before gzip). France is clipped to a metropolitan bounding box (the ISO area would drag in overseas territories). Adding a future country = generate the data + add the code to `CONTEXT_COUNTRIES` (see `scripts/README.md`) |
 | v0.96 | 🇦🇹 **Austria context layers.** skycheck-at can now overlay four extra, individually toggleable layers — **protected areas** (national parks, Natura 2000, nature reserves, landscape-protection areas, nature parks, biosphere reserves, protected landscape elements, natural monuments), **motorways**, **high-voltage power lines** and **main railways**. Sourced from **OpenStreetMap** (ODbL) as static, pre-simplified GeoJSON snapshots in `data/at-*.json` (generators in `scripts/`), lazy-loaded on toggle and drawn as coloured client-side vector overlays. They are **informational context** (distance-keeping guidance) — the binding zone check stays Austro Control / dronespace.at, so they do not feed the flight-status evaluation. Inspired by drohnenkarte.at, which uses the same open sources |

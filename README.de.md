@@ -25,7 +25,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v1.03
+📦 **Aktuelle Version:** v1.06
 
 ---
 
@@ -202,6 +202,9 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v1.06 | **Helle Karten-Overlays überarbeitet:** Bedienkachel, Status-/Infotafel, Vollbild- und Kartenstil-Schalter verwenden auf OSM nun helle, halbtransparente Flächen. Die Buttons folgen einem konsistenten rechteckigen 32-px-System; farbige Kontextlayer behalten ihre Kategoriefarbe. Desktop und 390-px-Mobile visuell geprüft. |
+| v1.05 | **Theme/Karte gekoppelt und Österreich lokal repariert:** Helles Interface wählt standardmäßig OSM, dunkles Interface CARTO Dark; der separate Kartenstil-Button bleibt als manuelle Überschreibung erhalten. Lokale Vorschauen laden bei fehlenden Netlify Functions die mitgelieferte Austro-Control-ED-269-Datei, sodass Flughafenzonen, Kontrollzonen und Punktdetails wieder erscheinen. |
+| v1.04 | **Globaler Hellmodus:** Ein Sonnen-/Mond-Button auf Startseite und Ergebnisnavigation schaltet die gesamte SkyCheck-Oberfläche um, speichert die Auswahl und hält die integrierte Alarmansicht synchron. Da alle Länder dieselbe Datei verwenden, gilt dies automatisch für alle sieben SkyChecks; der Kartenstil bleibt separat wählbar. |
 | v1.03 | Frankreich-Performance: Die vier OSM-Zusatzebenen werden nicht mehr als vollständige Länderdateien geladen, sondern pro 2°-Viewport gebündelt. Für Paris sinkt die Übertragung damit von rund 4,1 MB auf rund 0,25 MB gzip. Auch die französische Zonen-Function liest beim Cold Start nur relevante räumliche Kacheln statt des vollständigen 8,8-MB-Datensatzes. |
 | v1.02 | Punktanalyse ohne blockierenden Vollbild-Lader, animierter Analysekreis, parallele Abfragen, räumliche Kurzzeit-Caches, Canvas-Rendering und verbessertes Browser-/CDN-Caching. |
 | v0.98 | **Browser-Tab-Titel folgt jetzt der UI-Sprache.** Das `<title>`-Tag war eine statische deutsche Zeichenkette, die nie an die i18n angebunden war — jede Nicht-DE-Seite zeigte einen deutschen Tab-Titel. Nun wird `document.title` aus einem `docTitle`-i18n-Key in `applyLang()` gesetzt — aktualisiert beim Laden (je nach Länder-Standardsprache) und bei jedem Sprachwechsel, in allen fünf Sprachen. |

@@ -29,7 +29,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5290 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v1.03 — Frankreich lädt die vier OSM-Kontextlayer als gebündelte 2°-Viewport-Kacheln; die FR-Zonen-Function nutzt ebenfalls räumliche Kacheln statt des 8,8-MB-Vollbestands. Vorgänger v1.02 — nicht-blockierende Kartenanalyse, animierter Analysekreis, parallele Abfragen, räumliche Kurzzeit-Caches, Canvas-Rendering und Service-Worker-/CDN-Caching. Ältere Historie siehe Tabelle unten.
+**Aktuell:** v1.06 — Die Karten-Bedienkachel und die Standort-Infotafel verwenden im Hellmodus nun helle, halbtransparente Oberflächen mit konsistenten rechteckigen Bedienelementen; Desktop und Mobile wurden visuell geprüft.
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -203,6 +203,9 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v1.06 | **Helle Karten-Overlays überarbeitet.** Bedienkachel, Status-/Infotafel, Vollbild- und Kartenstil-Schalter erscheinen auf OSM als helle, kontrastreiche Glasflächen. Buttons folgen einem konsistenten 32-px-Raster mit klaren Einzel- und Segmentgruppen; farbige Kontextlayer behalten ihren Farbcode. Desktop und 390-px-Mobile visuell geprüft. |
+| v1.05 | **Theme/Kartenprofil und AT-Local-Fallback.** `setInterfaceTheme()` koppelt hell→OSM und dunkel→CARTO Dark sowohl in Hauptkarte als auch integrierter Alarmkarte. `fetchZonesAT()` und das vollständige AT-Overlay verwenden bei lokaler Vorschau ohne Netlify Function die gebündelte Austro-Control-Datei; Client-Normalisierung entspricht der Function. Geprüft am Flughafen Wien: 288 Overlay-Zonen, Punktanalyse mit Flugplatz- und Kontrollzone, 290 gerenderte Pfade. |
+| v1.04 | **Globaler Hellmodus für alle SkyChecks.** Früh gesetzte `html.light-mode`-Klasse verhindert einen dunklen Startblitz; helle Design-Tokens decken Startseite, Ergebnis-Karten, Navigation und Modale ab. Sonnen-/Mond-Buttons stehen auf Startseite und Ergebnisnavigation, die Auswahl wird in `localStorage` gespeichert und mit der integrierten Alarmansicht synchronisiert. Mobile Navigation auf 390/380 px ohne horizontalen Überlauf geprüft. |
 | v1.03 | **Frankreich räumlich gekachelt.** Die vier OSM-Kontextlayer kommen pro Viewport gebündelt aus `data/context/fr/`; die Netlify-Punktabfrage liest nur relevante Dateien aus `data/fr-zones-tiles/`. Generator: `scripts/build-fr-spatial-data.mjs`. Function-Bundles enthalten nur noch ihre tatsächlich benötigten Datendateien. |
 | v1.02 | **Performance-Flow.** Kartenklick ohne Vollbild-Lader, animierter 200-m-Analysering, parallele Punktabfragen, räumliche Kurzzeit-Caches, Leerlauf-Parsing, Canvas-Vektoren und stale-while-revalidate für statische Daten. |
 | v0.98 | **Browser-Tab-Titel folgt der UI-Sprache.** `<title>` war statisch deutsch und nie an i18n gebunden → alle Nicht-DE-Seiten zeigten einen deutschen Tab-Titel. Fix: `document.title = _t('docTitle')` in `applyLang()` (neuer Key `docTitle` × 5 Sprachen) — greift bei Laden (Länder-Default-Sprache) und bei jedem Sprachwechsel |
