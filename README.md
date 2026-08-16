@@ -25,7 +25,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v0.98
+📦 **Current version:** v1.03
 
 ---
 
@@ -94,10 +94,12 @@ netlify/
   functions/
     awc.js                  ← NOAA AWC proxy for METAR/TAF (CORS workaround)
     gfz.js                  ← GFZ Potsdam proxy for Kp-index/Hp30
-    zones-fr.js             ← France UAS zones (reads data/uas-zones-fr.json, bbox-filtered)
+    zones-fr.js             ← France UAS zones (reads spatial 2° tiles, bbox-filtered)
     zones-at.js             ← Austria UAS zones (reads data/uas-zones-at.json; ?all=1 = full overlay)
 data/
   uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
+  fr-zones-tiles/           ← generated spatial index for the Netlify function
+  context/fr/               ← bundled viewport tiles for the four France context layers
   uas-zones-at.json         ← ED-269 Austria UAS zones (286 zones, auto-updated)
   uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
   <cc>-protected.json       ← context: protected areas (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr

@@ -1,5 +1,8 @@
-[functions]
-  included_files = ["data/**/*"]
+[functions."zones-fr"]
+  included_files = ["data/fr-zones-tiles/**/*"]
+
+[functions."zones-at"]
+  included_files = ["data/uas-zones-at.json"]
 
 # Root-URL liefert die App ohne /skycheck.html-Suffix.
 # Rewrite (Status 200) — die URL in der Adresszeile bleibt "/".
@@ -24,6 +27,14 @@
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Die statischen OSM-Zusatzebenen sind groß und ändern sich nur bei einem
+# bewusst erzeugten Datenupdate. CDN und Browser dürfen sie deshalb einen Tag
+# direkt bedienen und danach im Hintergrund neu validieren.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
 
 # Die AIRAC-Dateien ändern sich nur mit einem neuen DiPUL-Zyklus. Ein kurzer
 # Browser-/CDN-Cache hält Wiederholungsaufrufe schnell, ohne einen neuen Stand

@@ -24,5 +24,20 @@ self.addEventListener('fetch', e => {
     }).catch(() => caches.match(e.request)));
     return;
   }
+  // Große, stabile Länder-GeoJSONs sofort aus dem Cache liefern und im
+  // Hintergrund aktualisieren. So blockiert ein Folgebesuch nicht erneut auf
+  // mehrere Megabyte Zusatzebenen, ohne dauerhaft auf einem alten Stand zu bleiben.
+  if (url.pathname.startsWith('/data/') && url.pathname.endsWith('.json')) {
+    const update = fetch(e.request).then(async response => {
+      if (response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(e.request, response.clone());
+      }
+      return response;
+    });
+    e.respondWith(caches.match(e.request).then(cached => cached || update));
+    e.waitUntil(update.catch(() => undefined));
+    return;
+  }
   e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
 });

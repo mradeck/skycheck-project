@@ -1,139 +1,57 @@
 // SkyCheck — France UAS zones provider (ED-269 JSON)
-// Reads data/uas-zones-fr.json once per warm instance, filters by bbox, returns
-// normalized { name, type, lower, upper, legal, color } shape.
+// Reads only the 2° spatial tiles touched by the query bbox. This avoids parsing
+// the complete 8.8 MB country snapshot on every serverless cold start.
 
 const fs = require('fs');
 const path = require('path');
 
-let cachedZones = null;
-let cachedTitle = null;
+let cachedManifest = null;
+let cachedDataDir = null;
+const cachedTiles = new Map();
 
-function findDataFile() {
+function findDataDir() {
   const candidates = [
-    path.join(__dirname, '..', '..', 'data', 'uas-zones-fr.json'),
-    path.join(__dirname, 'data', 'uas-zones-fr.json'),
-    path.join(process.cwd(), 'data', 'uas-zones-fr.json'),
+    path.join(__dirname, '..', '..', 'data', 'fr-zones-tiles'),
+    path.join(__dirname, 'data', 'fr-zones-tiles'),
+    path.join(process.cwd(), 'data', 'fr-zones-tiles'),
   ];
-  for (const p of candidates) {
-    try { fs.statSync(p); return p; } catch (_) {}
+  for (const directory of candidates) {
+    try { fs.statSync(path.join(directory, 'manifest.json')); return directory; } catch (_) {}
   }
-  throw new Error('uas-zones-fr.json not found in any expected location');
+  throw new Error('France zone tile manifest not found');
 }
 
-function loadZones() {
-  if (cachedZones) return cachedZones;
-  const filePath = findDataFile();
-  let raw = fs.readFileSync(filePath, 'utf8');
-  if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1); // strip BOM
-  const data = JSON.parse(raw);
-  cachedTitle = data.title || '';
-  const feats = data.features || [];
-  cachedZones = feats.map(f => {
-    const bbox = featureBBox(f);
-    return { f, bbox };
-  }).filter(x => x.bbox);
-  return cachedZones;
+function loadManifest() {
+  if (cachedManifest) return cachedManifest;
+  cachedDataDir = findDataDir();
+  cachedManifest = JSON.parse(fs.readFileSync(path.join(cachedDataDir, 'manifest.json'), 'utf8'));
+  cachedManifest.tileSet = new Set(cachedManifest.tiles || []);
+  return cachedManifest;
 }
 
-function featureBBox(f) {
-  if (!f.geometry || f.geometry.length === 0) return null;
-  let minLat = +Infinity, maxLat = -Infinity, minLon = +Infinity, maxLon = -Infinity;
-  for (const g of f.geometry) {
-    const hp = g.horizontalProjection;
-    if (!hp) continue;
-    if (hp.type === 'Polygon') {
-      for (const ring of hp.coordinates) {
-        for (const [lon, lat] of ring) {
-          if (lat < minLat) minLat = lat;
-          if (lat > maxLat) maxLat = lat;
-          if (lon < minLon) minLon = lon;
-          if (lon > maxLon) maxLon = lon;
-        }
-      }
-    } else if (hp.type === 'Circle') {
-      const [lon, lat] = hp.center || [];
-      const r = (hp.radius || 0) / 111320; // meters → degrees (approx, lat)
-      if (typeof lat === 'number' && typeof lon === 'number') {
-        if (lat - r < minLat) minLat = lat - r;
-        if (lat + r > maxLat) maxLat = lat + r;
-        if (lon - r < minLon) minLon = lon - r;
-        if (lon + r > maxLon) maxLon = lon + r;
-      }
+function tileKeysForBBox(bbox, manifest) {
+  const size = Number(manifest.tileSize) || 2;
+  const keys = [];
+  for (let x = Math.floor(bbox.minLon / size); x <= Math.floor(bbox.maxLon / size); x++) {
+    for (let y = Math.floor(bbox.minLat / size); y <= Math.floor(bbox.maxLat / size); y++) {
+      const key = `${x}_${y}`;
+      if (manifest.tileSet.has(key)) keys.push(key);
     }
   }
-  if (!isFinite(minLat)) return null;
-  return { minLat, maxLat, minLon, maxLon };
+  return keys;
 }
 
-function bboxOverlap(a, b) {
-  return a.minLat <= b.maxLat && a.maxLat >= b.minLat
-      && a.minLon <= b.maxLon && a.maxLon >= b.minLon;
+function loadTile(key) {
+  if (cachedTiles.has(key)) return cachedTiles.get(key);
+  const data = JSON.parse(fs.readFileSync(path.join(cachedDataDir, `${key}.json`), 'utf8'));
+  const zones = Array.isArray(data.zones) ? data.zones : [];
+  cachedTiles.set(key, zones);
+  return zones;
 }
 
-const RESTRICTION_LABEL = {
-  PROHIBITED: 'PROHIBITED',
-  CONDITIONAL: 'CONDITIONAL',
-  REQ_AUTHORISATION: 'REQ_AUTHORISATION',
-};
-
-function zoneColor(restriction) {
-  switch (restriction) {
-    case 'PROHIBITED':         return '#ef4444';
-    case 'REQ_AUTHORISATION':  return '#f59e0b';
-    case 'CONDITIONAL':        return '#f97316';
-    default:                   return '#64748b';
-  }
-}
-
-function formatAlt(value, ref, uom) {
-  if (value === undefined || value === null || value === '') return '—';
-  if (value === 0 && (ref === 'AGL' || ref === 'SFC')) return 'GND';
-  const unit = (uom === 'FT') ? 'ft' : 'm';
-  return `${Math.round(value)} ${unit} ${ref || ''}`.trim();
-}
-
-function normalize(f) {
-  const restriction = f.restriction || '';
-  const reason = Array.isArray(f.reason) ? f.reason.join(', ') : (f.reason || '');
-  const country = f.country || '';
-  const exempt = f.regulationExemption || '';
-  const note = f.otherReasonInfo || '';
-
-  const g0 = (f.geometry && f.geometry[0]) || {};
-  const lower = formatAlt(g0.lowerLimit, g0.lowerVerticalReference, g0.uomDimensions);
-  const upper = formatAlt(g0.upperLimit, g0.upperVerticalReference, g0.uomDimensions);
-
-  const legalParts = [];
-  if (reason) legalParts.push(reason);
-  if (note) legalParts.push(note);
-  if (exempt) legalParts.push(exempt);
-  const legal = legalParts.length ? legalParts.join(' · ') : '—';
-
-  const typeLabel = RESTRICTION_LABEL[restriction] || (restriction || 'UAS_ZONE');
-
-  // Geometry für Map-Overlay (Leaflet-Renderer auf Client-Seite)
-  // GeoJSON-Koordinaten bleiben [lon, lat]; Client konvertiert für L.polygon/L.circle.
-  const geometry = (f.geometry || []).map(g => {
-    const hp = g.horizontalProjection;
-    if (!hp) return null;
-    if (hp.type === 'Polygon') {
-      return { type: 'Polygon', coordinates: hp.coordinates };
-    }
-    if (hp.type === 'Circle' && Array.isArray(hp.center)) {
-      return { type: 'Circle', center: hp.center, radius: hp.radius || 0 };
-    }
-    return null;
-  }).filter(Boolean);
-
-  return {
-    name: (f.name || f.identifier || '—') + (country ? ` [${country}]` : ''),
-    type: typeLabel,
-    lower,
-    upper,
-    legal,
-    color: zoneColor(restriction),
-    geometry,
-  };
+function compactBBoxOverlap(bbox, query) {
+  return bbox[0] <= query.maxLat && bbox[1] >= query.minLat
+      && bbox[2] <= query.maxLon && bbox[3] >= query.minLon;
 }
 
 exports.handler = async (event) => {
@@ -145,13 +63,6 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Missing lat/lon' };
   }
 
-  let zones;
-  try {
-    zones = loadZones();
-  } catch (e) {
-    return { statusCode: 500, body: 'Data file unavailable: ' + e.message };
-  }
-
   // Query bbox: ±(radius in degrees, latitude-aligned)
   const δ = Math.max(0.001, radiusM / 111320);
   const queryBox = {
@@ -161,10 +72,22 @@ exports.handler = async (event) => {
     maxLon: lon + δ,
   };
 
+  let manifest;
+  let zones;
+  try {
+    manifest = loadManifest();
+    zones = tileKeysForBBox(queryBox, manifest).flatMap(loadTile);
+  } catch (e) {
+    return { statusCode: 500, body: 'Data file unavailable: ' + e.message };
+  }
+
   const hits = [];
-  for (const z of zones) {
-    if (bboxOverlap(z.bbox, queryBox)) {
-      hits.push(normalize(z.f));
+  const seen = new Set();
+  for (const zone of zones) {
+    if (compactBBoxOverlap(zone.b, queryBox)) {
+      if (seen.has(zone.i)) continue;
+      seen.add(zone.i);
+      hits.push(zone.z);
       if (hits.length >= 50) break; // safety cap
     }
   }
@@ -176,6 +99,6 @@ exports.handler = async (event) => {
       'Access-Control-Allow-Origin': '*',
       'Cache-Control': 'public, max-age=300',
     },
-    body: JSON.stringify({ title: cachedTitle, zones: hits }),
+    body: JSON.stringify({ title: manifest.title || '', zones: hits }),
   };
 };
