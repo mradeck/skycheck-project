@@ -1096,6 +1096,24 @@
       height: 100%;
     }
 
+    /* Nicht-blockierender Ladestatus bei einer neuen Karten-Punktanalyse:
+       Die Striche laufen um den temporär auf 200 m vergrößerten Suchkreis. */
+    .map-analysis-loading {
+      animation: map-analysis-dash 0.75s linear infinite;
+      filter: drop-shadow(0 0 3px rgba(0, 220, 255, 0.9));
+    }
+
+    @keyframes map-analysis-dash {
+      to { stroke-dashoffset: -32; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .map-analysis-loading {
+        animation: none;
+        opacity: 0.75;
+      }
+    }
+
     .leaflet-container {
       background: var(--bg) !important;
     }
@@ -2869,7 +2887,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '1.01';
+    const APP_VER = '1.02';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -4026,7 +4044,7 @@
         if (S.layers.dipul && typeof S.layers.dipul.setParams === 'function') {
           S.layers.dipul.setParams({ layers: getActiveDipulLayers() });
         }
-        if (S.lat != null) runCheck();
+        if (S.lat != null) runMapAnalysis();
       });
     });
 
@@ -4106,6 +4124,7 @@
       inDfsCtr: false,
       checkSequence: 0,
       mapLocationSequence: 0,
+      mapAnalysisSequence: 0,
       pinPopupWanted: true,
       layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null },
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
@@ -4177,7 +4196,7 @@
     });
 
     $('btn-refresh').addEventListener('click', () => {
-      if (S.lat != null) runCheck();
+      if (S.lat != null) runMapAnalysis();
     });
 
     $('btn-print').addEventListener('click', () => {
@@ -4245,7 +4264,7 @@
       }
       if (layerChanged || forecastChanged) {
         try { localStorage.setItem('skycheck_cfg', JSON.stringify(CFG)); } catch { }
-        if (layerChanged && S.lat != null) runCheck();
+        if (layerChanged && S.lat != null) runMapAnalysis();
       }
     });
 
@@ -4683,12 +4702,13 @@
     /* [J-MAIN] ==========================================================
        MAIN CHECK
     ================================================================ */
-    async function runCheck() {
+    async function runCheck(options = {}) {
       const checkId = ++S.checkSequence;
       const checkLat = S.lat;
       const checkLon = S.lon;
+      const blocking = options.blocking !== false;
       S.inDfsCtr = false;
-      showLoad(_t('loadingWeather'));
+      if (blocking) showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
       $res.style.display = 'block';
 
@@ -4696,13 +4716,16 @@
       $('nav-loc-time').textContent = 'Wird aktualisiert…';
 
       try {
-        $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
+        if (blocking) $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
+        // Die standortkritischen Geozonen sofort starten. Bisher begann diese
+        // Abfrage erst nach Wetter/Kp/ADS-B und verlängerte jeden Punktwechsel.
+        const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => []);
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
         const [weatherArr, kp, aircraft] = await Promise.all([
-          fetchWeather(checkLat, checkLon),
+          fetchWeatherCached(checkLat, checkLon),
           fetchKp(),
-          fetchAircraft(checkLat, checkLon),
+          fetchAircraftCached(checkLat, checkLon),
         ]);
         if (checkId !== S.checkSequence) return;
 
@@ -4728,7 +4751,7 @@
         renderFreezingRain(now);
 
         // DFS UTM altitude weather data (non-blocking, best-effort)
-        fetchDfsWeather(checkLat, checkLon).then(dfs => {
+        fetchDfsWeatherCached(checkLat, checkLon).then(dfs => {
           if (checkId !== S.checkSequence) return;
           S._dfs = dfs;   // Cache für Re-Render bei Sprachwechsel
           renderTempProfile(dfs);
@@ -4745,8 +4768,7 @@
         // benötigt. Innerhalb einer DFS-CTR 2–4 kommen 24 Geländestichproben im
         // 100-m-Umkreis für die konservative Min-/Max-Flughöhenanalyse hinzu.
         // GPS, Suche und Kartenklick laufen sämtlich durch dieselbe Logik.
-        let zones = [];
-        try { zones = await fetchZones(checkLat, checkLon, S.searchRadius); } catch { }
+        let zones = await zonesPromise;
         if (checkId !== S.checkSequence) return;
         const needsCtrElevation = COUNTRY === 'de' && zones.some(z => z.ctrExact && [2, 3, 4].includes(z.zoneNum));
         S.groundElevationProfile = needsCtrElevation
@@ -4774,16 +4796,16 @@
         }
 
         // METAR/TAF (non-blocking)
-        fetchMetar(checkLat, checkLon).then(async metars => {
+        fetchMetarCached(checkLat, checkLon).then(async metars => {
           if (checkId !== S.checkSequence) return;
           metars.forEach(m => { const dLat = m.lat - checkLat, dLon = m.lon - checkLon; m._dist = Math.sqrt(dLat*dLat + dLon*dLon); });
           let tafData = null, tafCache = {};
           if (metars.length > 0) {
             const sorted = [...metars].sort((a, b) => a._dist - b._dist);
-            tafData = await fetchTaf(sorted[0].icaoId);
+            tafData = await fetchTafCached(sorted[0].icaoId);
             tafCache[sorted[0].icaoId] = tafData;
             const others = sorted.slice(1, 5);
-            const tr = await Promise.allSettled(others.map(m => fetchTaf(m.icaoId)));
+            const tr = await Promise.allSettled(others.map(m => fetchTafCached(m.icaoId)));
             tr.forEach((r, i) => { if (r.status === 'fulfilled' && r.value) tafCache[others[i].icaoId] = r.value; });
           }
           if (checkId !== S.checkSequence) return;
@@ -4804,16 +4826,16 @@
         }).catch(e => console.warn('METAR flow error:', e));
 
         // Map
-        $loadMsg.textContent = _t('loadingMap');
+        if (blocking) $loadMsg.textContent = _t('loadingMap');
         initMap(checkLat, checkLon, aircraft, zones);
 
         S._updatedAt = new Date();
         renderUpdated();
 
-        hideLoad();
+        if (blocking) hideLoad();
       } catch (e) {
         if (checkId !== S.checkSequence) return;
-        hideLoad();
+        if (blocking) hideLoad();
         console.error(e);
         setStatus('warn', '⚠️', _t('errLoad'), e.message);
       }
@@ -4822,6 +4844,26 @@
     /* [J-API-BRIGHT] ====================================================
        API: BRIGHT SKY (DWD)
     ================================================================ */
+    let _weatherCacheEntry = null;
+    const WEATHER_CACHE_MS = 5 * 60 * 1000;
+    const WEATHER_MOVE_THRESH_KM = 5;
+
+    function fetchWeatherCached(lat, lon) {
+      const now = Date.now();
+      if (_weatherCacheEntry &&
+          now - _weatherCacheEntry.at < WEATHER_CACHE_MS &&
+          _acDistKm(lat, lon, _weatherCacheEntry.lat, _weatherCacheEntry.lon) < WEATHER_MOVE_THRESH_KM) {
+        return _weatherCacheEntry.promise;
+      }
+      const entry = { at: now, lat, lon, promise: null };
+      entry.promise = fetchWeather(lat, lon).catch(error => {
+        if (_weatherCacheEntry === entry) _weatherCacheEntry = null;
+        throw error;
+      });
+      _weatherCacheEntry = entry;
+      return entry.promise;
+    }
+
     async function fetchWeather(lat, lon) {
       const now = new Date();
       const end = new Date(now.getTime() + 7 * 24 * 3600 * 1000);
@@ -4845,6 +4887,24 @@
        API: DFS UTM Weather (Temp, Wind, Humidity at altitude levels)
        POST to utm-service.dfs.de — no API key required
     ================================================================ */
+    let _dfsWeatherCacheEntry = null;
+    const DFS_WEATHER_CACHE_MS = 5 * 60 * 1000;
+    function fetchDfsWeatherCached(lat, lon) {
+      const now = Date.now();
+      if (_dfsWeatherCacheEntry &&
+          now - _dfsWeatherCacheEntry.at < DFS_WEATHER_CACHE_MS &&
+          _acDistKm(lat, lon, _dfsWeatherCacheEntry.lat, _dfsWeatherCacheEntry.lon) < 5) {
+        return _dfsWeatherCacheEntry.promise;
+      }
+      const entry = { at: now, lat, lon, promise: null };
+      entry.promise = fetchDfsWeather(lat, lon).catch(error => {
+        if (_dfsWeatherCacheEntry === entry) _dfsWeatherCacheEntry = null;
+        throw error;
+      });
+      _dfsWeatherCacheEntry = entry;
+      return entry.promise;
+    }
+
     async function fetchDfsWeather(lat, lon) {
       try {
         const now = new Date();
@@ -4924,11 +4984,27 @@
       return null;
     }
 
+    const _gfzSeriesCache = new Map();
+    // Kp (3 h) und Hp30 (30 min) ändern sich deutlich langsamer als ein
+    // Karten-Scrub. Fünf Minuten vermeiden unnötige Wiederholungsaufrufe.
+    const GFZ_CACHE_MS = 5 * 60 * 1000;
+    function gfzSeries(index, lookbackMs) {
+      const key = `${index}:${lookbackMs}`;
+      const now = Date.now();
+      const cached = _gfzSeriesCache.get(key);
+      if (cached && now - cached.at < GFZ_CACHE_MS) return cached.promise;
+      const entry = {
+        at: now,
+        promise: gfzFetch(now - lookbackMs, now, index),
+      };
+      _gfzSeriesCache.set(key, entry);
+      return entry.promise;
+    }
+
     async function fetchKp() {
       // 1) GFZ Potsdam (direkter Versuch + CORS-Proxy)
       try {
-        const now = Date.now();
-        const d = await gfzFetch(now - 9 * 3600 * 1000, now);
+        const d = await gfzSeries('Kp', 9 * 3600 * 1000);
         if (d && d.Kp && d.Kp.length > 0) {
           const v = parseFloat(d.Kp[d.Kp.length - 1]);
           if (!isNaN(v)) return v;
@@ -4953,10 +5029,9 @@
 
     async function fetchKpGfz() {
       try {
-        const now = Date.now();
         const [d3, d30] = await Promise.all([
-          gfzFetch(now - 9 * 3600 * 1000, now, 'Kp'),
-          gfzFetch(now - 2.5 * 3600 * 1000, now, 'Hp30'),
+          gfzSeries('Kp', 9 * 3600 * 1000),
+          gfzSeries('Hp30', 2.5 * 3600 * 1000),
         ]);
         if (d30 && d30.Hp30 && d30.Hp30.length > 0) {
           // Letzte 3 gültige Hp30-Messungen (30-min-Intervalle)
@@ -5010,7 +5085,7 @@
         return _acCache;
       }
       _acLastFetch = now; _acLastLat = lat; _acLastLon = lon;
-      _acCache = await fetchAircraftCached(lat, lon);
+      _acCache = await fetchAircraft(lat, lon);
       return _acCache;
     }
 
@@ -5087,6 +5162,22 @@
        API: NOAA Aviation Weather Center - METAR + TAF
     ================================================================ */
     const NOAA_AWC = '/.netlify/functions/awc';
+    let _metarCacheEntry = null;
+    const _tafCache = new Map();
+    const AVIATION_WEATHER_CACHE_MS = 5 * 60 * 1000;
+
+    function fetchMetarCached(lat, lon) {
+      const now = Date.now();
+      if (_metarCacheEntry &&
+          now - _metarCacheEntry.at < AVIATION_WEATHER_CACHE_MS &&
+          _acDistKm(lat, lon, _metarCacheEntry.lat, _metarCacheEntry.lon) < 10) {
+        return _metarCacheEntry.promise;
+      }
+      const entry = { at: now, lat, lon, promise: fetchMetar(lat, lon) };
+      _metarCacheEntry = entry;
+      return entry.promise;
+    }
+
     async function fetchMetar(lat, lon) {
       const d = 0.8;
       const url = `${NOAA_AWC}?endpoint=metar&bbox=${(lat-d).toFixed(2)},${(lon-d).toFixed(2)},${(lat+d).toFixed(2)},${(lon+d).toFixed(2)}&format=json`;
@@ -5096,6 +5187,14 @@
     async function fetchTaf(icao) {
       try { const r = await fetch(`${NOAA_AWC}?endpoint=taf&ids=${icao}&format=json`); if (!r.ok) return null; const data = await r.json(); return Array.isArray(data) && data.length > 0 ? data[0] : null; }
       catch (e) { console.warn('TAF fetch error:', e); return null; }
+    }
+    function fetchTafCached(icao) {
+      const now = Date.now();
+      const cached = _tafCache.get(icao);
+      if (cached && now - cached.at < AVIATION_WEATHER_CACHE_MS) return cached.promise;
+      const entry = { at: now, promise: fetchTaf(icao) };
+      _tafCache.set(icao, entry);
+      return entry.promise;
     }
     function parseMetarCeiling(m) {
       if (!m || !m.clouds || m.clouds.length === 0) {
@@ -6634,12 +6733,20 @@
           if (!manifestResponse.ok) throw new Error(`AIRAC manifest HTTP ${manifestResponse.status}`);
           const manifest = await manifestResponse.json();
           const files = Array.isArray(manifest.files) ? manifest.files : [];
-          const collections = await Promise.all(files.map(async file => {
+          // Dateien parallel übertragen, die großen JSON-Texte anschließend
+          // nacheinander in Leerlaufphasen parsen. Vier gleichzeitige
+          // response.json()-Aufrufe verursachten besonders mobil sichtbare Janks.
+          const payloads = await Promise.all(files.map(async file => {
             if (!/^dipul_luftverkehr_[a-z_]+\.geojson$/.test(file)) throw new Error('Invalid AIRAC file name');
             const response = await fetch(`data/dipul-airac/${file}`);
             if (!response.ok) throw new Error(`${file} HTTP ${response.status}`);
-            return response.json();
+            return { file, text: await response.text() };
           }));
+          const collections = [];
+          for (const payload of payloads) {
+            await waitForBrowserIdle();
+            collections.push(JSON.parse(payload.text));
+          }
           return { manifest, collections };
         })();
       }
@@ -6647,8 +6754,10 @@
       try {
         const { manifest, collections } = await dipulAiracLoadPromise;
         layerGroup.clearLayers();
+        const hoverRenderer = L.canvas({ padding: 0.35 });
         collections.forEach(collection => {
           L.geoJSON(collection, {
+            renderer: hoverRenderer,
             style: {
               stroke: false,
               fill: true,
@@ -6846,6 +6955,42 @@
       return `<br><span style="color:var(--accent);font-weight:800">${_t('ctrZoneLabel')(limiting.zoneNum)} · max. ${limiting.ctrFlight.maxAglM} m AGL</span>`;
     }
 
+    function setMapAnalysisLoading(active) {
+      const radius = S.layers.radius;
+      if (!radius || !S.map) return;
+      radius.setRadius(active ? Math.max(200, S.searchRadius) : S.searchRadius);
+      radius.setStyle(active
+        ? { color: '#00dcff', weight: 3, dashArray: '8 8', fillOpacity: 0.05 }
+        : { color: '#00b4d8', weight: 1.5, dashArray: '5 5', fillOpacity: 0.15 });
+      const path = radius.getElement();
+      if (path) path.classList.toggle('map-analysis-loading', active);
+      const mapEl = document.getElementById('map');
+      if (mapEl) mapEl.setAttribute('aria-busy', active ? 'true' : 'false');
+    }
+
+    function beginMapAnalysis() {
+      const id = ++S.mapAnalysisSequence;
+      setMapAnalysisLoading(true);
+      return id;
+    }
+
+    function endMapAnalysis(id) {
+      if (id === S.mapAnalysisSequence) setMapAnalysisLoading(false);
+    }
+
+    async function runMapAnalysis() {
+      const analysisId = beginMapAnalysis();
+      try { await runCheck({ blocking: false }); }
+      finally { endMapAnalysis(analysisId); }
+    }
+
+    function waitForBrowserIdle(timeout = 700) {
+      return new Promise(resolve => {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, { timeout });
+        else setTimeout(resolve, 80);
+      });
+    }
+
     function mapFocusTarget(lat, lon) {
       if (!S.map) return [lat, lon];
       const markerPx = S.map.latLngToContainerPoint([lat, lon]);
@@ -6925,7 +7070,7 @@
           if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
-        if (CONTEXT_COUNTRIES[COUNTRY]) applyContextLayerState();
+        if (CONTEXT_COUNTRIES[COUNTRY]) scheduleContextLayerState();
         if (COUNTRY === 'de') {
           S.layers.dipulHover = L.layerGroup();
           if (S.layerVisible.dipul) S.layers.dipulHover.addTo(S.map);
@@ -6990,6 +7135,7 @@
           const nextLon = e.latlng.lng;
           S.lat = nextLat;
           S.lon = nextLon;
+          S.name = `${nextLat.toFixed(4)}, ${nextLon.toFixed(4)}`;
           S.pinPopupWanted = true;
           if (S.layers.pin) {
             S.layers.pin
@@ -6999,14 +7145,36 @@
           }
           if (S.layers.radius) S.layers.radius.setLatLng([nextLat, nextLon]);
           if (S.layers.radius1500) S.layers.radius1500.setLatLng([nextLat, nextLon]);
-          try {
-            S.name = await reverseGeocode(nextLat, nextLon);
-          } catch {
-            S.name = `${nextLat.toFixed(4)}, ${nextLon.toFixed(4)}`;
-          }
-          if (locationId !== S.mapLocationSequence) return;
           $('nav-loc-name').textContent = S.name;
-          await runCheck();
+          const analysisId = beginMapAnalysis();
+
+          // Ortsname und eigentliche Punktanalyse parallel laden. Der Marker
+          // sowie die Karte bleiben dabei sichtbar und bedienbar.
+          const checkPromise = runCheck({ blocking: false });
+          try {
+            try {
+              const resolvedName = await reverseGeocode(nextLat, nextLon);
+              if (locationId === S.mapLocationSequence) {
+                S.name = resolvedName;
+                $('nav-loc-name').textContent = resolvedName;
+                if (S.layers.pin) {
+                  S.layers.pin.setPopupContent(
+                    `<b>${escapeHtml(resolvedName)}</b><br>${nextLat.toFixed(5)}, ${nextLon.toFixed(5)}<br>${_t('loading')}`
+                  );
+                }
+              }
+            } catch { /* Koordinaten bleiben als belastbarer Fallback stehen. */ }
+
+            await checkPromise;
+            if (locationId !== S.mapLocationSequence) return;
+            if (S.layers.pin) {
+              S.layers.pin.setPopupContent(
+                `<b>${escapeHtml(S.name)}</b><br>${nextLat.toFixed(5)}, ${nextLon.toFixed(5)}${ctrPopupHtml(lastZones)}`
+              );
+            }
+          } finally {
+            endMapAnalysis(analysisId);
+          }
         });
 
         // Prüfpunkt in den tatsächlich freien Kartenbereich rücken: am Desktop
@@ -7092,6 +7260,9 @@
             ? { color: cfg.color, weight: 1, opacity: 0.85, fillColor: cfg.color, fillOpacity: 0.18 }
             : { color: cfg.color, weight: 2, opacity: 0.85 };
           S.ctxLayers[key] = L.geoJSON(gj, {
+            // Massendaten wie Frankreich enthalten hunderttausende Punkte.
+            // Canvas hält sie aus dem SVG-DOM heraus und bleibt tooltip-fähig.
+            renderer: L.canvas({ padding: 0.35 }),
             style,
             onEachFeature: (f, l) => {
               const p = f.properties || {};
@@ -7113,12 +7284,21 @@
       if (S.ctxLayers[key] && !S.map.hasLayer(S.ctxLayers[key])) S.ctxLayers[key].addTo(S.map);
     }
 
-    function applyContextLayerState() {
+    // Mehrere große Länder-GeoJSONs nicht gleichzeitig parsen und in Leaflet
+    // materialisieren. Sie erscheinen schrittweise in Leerlaufphasen, während
+    // Karte, Marker und amtliche Geozonen sofort benutzbar bleiben.
+    function scheduleContextLayerState() {
       if (!CONTEXT_COUNTRIES[COUNTRY] || !S.map) return;
-      Object.keys(CONTEXT_META).forEach(key => {
-        const btn = document.querySelector(`.ctx-toggle[data-ctx="${key}"]`);
-        if (btn) toggleCtxLayer(key, S.ctxVisible[key] !== false, btn);
-      });
+      const scheduledMap = S.map;
+      (async () => {
+        for (const key of Object.keys(CONTEXT_META)) {
+          await waitForBrowserIdle();
+          if (S.map !== scheduledMap) return;
+          if (S.ctxVisible[key] === false) continue;
+          const btn = document.querySelector(`.ctx-toggle[data-ctx="${key}"]`);
+          if (btn) await toggleCtxLayer(key, true, btn);
+        }
+      })();
     }
 
     function setAllContextLayers(on) {
@@ -7254,6 +7434,7 @@
 
     function renderMetarMarkers(metars, tafCache) {
       if (!S.map || !S.layers.metarGroup) return;
+      if (S._metarsRendered === metars && S._metarsRenderedMap === S.map) return;
       S.layers.metarGroup.clearLayers();
       (metars || []).forEach(m => {
         const ceil = parseMetarCeiling(m), vis = metarVisKm(m), wind = metarWindKt(m);
@@ -7272,9 +7453,12 @@
         const pop = `<div style="font-size:12px;min-width:200px;max-width:280px"><div style="font-weight:700;margin-bottom:4px">${escapeHtml(m.name || m.icaoId)} <span style="color:${fc}">${escapeHtml(m.fltCat || '?')}</span></div><div style="display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:11px"><span style="opacity:0.6">${_t('metarVis')}</span><span>${visText}</span><span style="opacity:0.6">${_t('metarCeiling')}</span><span>${ceilText}</span><span style="opacity:0.6">${_t('metarWind')}</span><span>${wind.dir}\u00b0 <span class="${pwc}">${windMs} m/s</span>${gustMs ? ' <span class="'+pgc+'">G'+gustMs+'</span>' : ''}</span><span style="opacity:0.6">${_t('metarTemp')}</span><span>${m.temp != null ? fmtTemp(m.temp) : '?'} / ${m.dewp != null ? fmtTemp(m.dewp) : '?'} \u00b0C</span><span style="opacity:0.6">${_t('metarAge')}</span><span>${age} ${_t('metarMin')}</span></div><div style="font-size:9px;opacity:0.5;margin-top:4px;font-family:monospace;word-break:break-all">${escapeHtml(m.rawOb || '')}</div>${tafBlock}</div>`;
         L.marker([m.lat, m.lon], { icon }).bindPopup(pop).addTo(S.layers.metarGroup);
       });
+      S._metarsRendered = metars;
+      S._metarsRenderedMap = S.map;
     }
 
     function renderAircraftMarkers(aircraft) {
+      if (S._aircraftRendered === aircraft && S._aircraftRenderedMap === S.map) return;
       if (S.layers.aircraft) S.map.removeLayer(S.layers.aircraft);
       const validAc = aircraft.filter(a => !a.api_error);
       const markers = validAc.map(a => {
@@ -7289,6 +7473,8 @@
       });
       S.layers.aircraft = L.layerGroup(markers);
       if (S.layerVisible.aircraft) S.layers.aircraft.addTo(S.map);
+      S._aircraftRendered = aircraft;
+      S._aircraftRenderedMap = S.map;
     }
 
   </script>
