@@ -2887,7 +2887,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '1.02';
+    const APP_VER = '1.03';
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -2907,6 +2907,8 @@
         return 'de';
       } catch (_) { return 'de'; }
     })();
+    const IS_LOCAL_PREVIEW = location.protocol === 'file:' ||
+      ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(location.hostname);
     console.info('[SkyCheck] country=' + COUNTRY);
     document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
 
@@ -3874,7 +3876,15 @@
       if (!box) return;
       box.innerHTML = COUNTRY_VARIANTS.filter(v => v.c !== COUNTRY).map(v => {
         const nm = COUNTRY_NAMES[v.c][LANG] || COUNTRY_NAMES[v.c].en;
-        return `<a class="l-country-link" href="https://skycheck-${v.c}.netlify.app/" target="_blank" rel="noopener">`
+        let href = `https://skycheck-${v.c}.netlify.app/`;
+        if (IS_LOCAL_PREVIEW) {
+          const url = new URL(location.href);
+          url.searchParams.set('country', v.c);
+          url.hash = '';
+          href = url.href;
+        }
+        const externalAttrs = IS_LOCAL_PREVIEW ? '' : ' target="_blank" rel="noopener"';
+        return `<a class="l-country-link" href="${escapeHtml(href)}"${externalAttrs}>`
           + `<span class="cl-flag">${v.flag}</span>`
           + `<span class="cl-logo">Sky<span>Check</span><b>-${v.c}</b></span>`
           + `<span class="cl-name">${escapeHtml(nm)}</span></a>`;
@@ -4130,6 +4140,15 @@
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
+      frContext: {
+        manifestPromise: null,
+        tilePromises: new Map(),
+        tileControllers: new Map(),
+        tileLayers: {},
+        renderers: {},
+        refreshSequence: 0,
+        moveTimer: null,
+      },
       alarm: { active: false, silenced: false, intervalId: null },
     };
     const MAP_STYLES = [
@@ -4191,7 +4210,11 @@
       $res.style.display = 'none';
       $land.style.display = 'flex';
       S.lat = S.lon = null;
-      if (S.map) { S.map.remove(); S.map = null; }
+      if (S.map) {
+        if (COUNTRY === 'fr') resetFrContextMapState();
+        S.map.remove();
+        S.map = null;
+      }
       S.pinPopupWanted = true;
     });
 
@@ -5379,7 +5402,7 @@
     /* [J-API-ZONES] ======================================================
        Geozonen-Dispatcher (Country-Adapter, seit v0.73)
        DE → DiPUL WMS GetFeatureInfo (uas-betrieb.de)
-       FR → Netlify-Function zones-fr (data/uas-zones-fr.json, ED-269)
+       FR → Netlify-Function zones-fr (räumliche ED-269-Kacheln aus data/fr-zones-tiles)
        AT → Netlify-Function zones-at (data/uas-zones-at.json, Austro Control ED-269;
             monatliches Auto-Update via .github/workflows/update-at-zones.yml)
     ================================================================ */
@@ -5634,13 +5657,85 @@
       }
     }
 
+    let frLocalZoneManifestPromise = null;
+    const frLocalZoneTilePromises = new Map();
+
+    function loadLocalFrZoneManifest() {
+      if (!frLocalZoneManifestPromise) {
+        frLocalZoneManifestPromise = fetch('data/fr-zones-tiles/manifest.json')
+          .then(r => {
+            if (!r.ok) throw new Error(`France zone manifest HTTP ${r.status}`);
+            return r.json();
+          })
+          .then(manifest => ({ ...manifest, tileSet: new Set(manifest.tiles || []) }))
+          .catch(error => {
+            frLocalZoneManifestPromise = null;
+            throw error;
+          });
+      }
+      return frLocalZoneManifestPromise;
+    }
+
+    function loadLocalFrZoneTile(key) {
+      if (!frLocalZoneTilePromises.has(key)) {
+        frLocalZoneTilePromises.set(key, fetch(`data/fr-zones-tiles/${key}.json`)
+          .then(r => {
+            if (!r.ok) throw new Error(`France zone tile ${key} HTTP ${r.status}`);
+            return r.json();
+          })
+          .then(data => Array.isArray(data.zones) ? data.zones : [])
+          .catch(error => {
+            frLocalZoneTilePromises.delete(key);
+            throw error;
+          }));
+      }
+      return frLocalZoneTilePromises.get(key);
+    }
+
+    async function fetchZonesFRLocal(lat, lon, radiusM) {
+      const manifest = await loadLocalFrZoneManifest();
+      const size = Number(manifest.tileSize) || 2;
+      const delta = Math.max(0.001, radiusM / 111320);
+      const query = {
+        minLat: lat - delta, maxLat: lat + delta,
+        minLon: lon - delta, maxLon: lon + delta,
+      };
+      const keys = [];
+      for (let x = Math.floor(query.minLon / size); x <= Math.floor(query.maxLon / size); x++) {
+        for (let y = Math.floor(query.minLat / size); y <= Math.floor(query.maxLat / size); y++) {
+          const key = `${x}_${y}`;
+          if (manifest.tileSet.has(key)) keys.push(key);
+        }
+      }
+      const entries = (await Promise.all(keys.map(loadLocalFrZoneTile))).flat();
+      const seen = new Set();
+      const hits = [];
+      for (const entry of entries) {
+        const bbox = entry.b;
+        const overlaps = bbox[0] <= query.maxLat && bbox[1] >= query.minLat &&
+          bbox[2] <= query.maxLon && bbox[3] >= query.minLon;
+        if (!overlaps || seen.has(entry.i)) continue;
+        seen.add(entry.i);
+        hits.push(entry.z);
+        if (hits.length >= 50) break;
+      }
+      return hits;
+    }
+
     async function fetchZonesFR(lat, lon, radiusM = 100) {
       try {
         const r = await fetch(`/.netlify/functions/zones-fr?lat=${lat}&lon=${lon}&radius=${radiusM}`);
-        if (!r.ok) return [];
-        const data = await r.json();
-        return Array.isArray(data.zones) ? data.zones : [];
+        if (r.ok) {
+          const data = await r.json();
+          return Array.isArray(data.zones) ? data.zones : [];
+        }
+        if (IS_LOCAL_PREVIEW) return fetchZonesFRLocal(lat, lon, radiusM);
+        return [];
       } catch (e) {
+        if (IS_LOCAL_PREVIEW) {
+          try { return await fetchZonesFRLocal(lat, lon, radiusM); }
+          catch (fallbackError) { console.warn('Zones FR local fallback error', fallbackError); }
+        }
         console.warn('Zones FR fetch error', e);
         return [];
       }
@@ -7071,6 +7166,9 @@
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         if (CONTEXT_COUNTRIES[COUNTRY]) scheduleContextLayerState();
+        if (COUNTRY === 'fr') {
+          S.map.on('moveend', scheduleFrContextRefresh);
+        }
         if (COUNTRY === 'de') {
           S.layers.dipulHover = L.layerGroup();
           if (S.layerVisible.dipul) S.layers.dipulHover.addTo(S.map);
@@ -7236,6 +7334,7 @@
     }
 
     async function toggleCtxLayer(key, on, btn) {
+      if (COUNTRY === 'fr') return toggleFrContextLayer(key, on, btn);
       const cfg = CONTEXT_META[key];
       if (!cfg || !S.map) return;
       S.ctxVisible[key] = on;
@@ -7282,6 +7381,167 @@
         btn.classList.remove('loading');
       }
       if (S.ctxLayers[key] && !S.map.hasLayer(S.ctxLayers[key])) S.ctxLayers[key].addTo(S.map);
+    }
+
+    const FR_CONTEXT_MANIFEST_URL = 'data/context/fr/manifest.json';
+
+    function contextLayerOptions(key, renderer) {
+      const cfg = CONTEXT_META[key];
+      return {
+        renderer,
+        style: cfg.type === 'poly'
+          ? { color: cfg.color, weight: 1, opacity: 0.85, fillColor: cfg.color, fillOpacity: 0.18 }
+          : { color: cfg.color, weight: 2, opacity: 0.85 },
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties || {};
+          const label = p.label || (p.ref ? 'A' + String(p.ref).replace(/^A/i, '') : '') || '';
+          if (label) layer.bindTooltip(escapeHtml(String(label)), { sticky: true });
+        },
+      };
+    }
+
+    function ensureFrContextGroups() {
+      for (const key of Object.keys(CONTEXT_META)) {
+        if (!S.ctxLayers[key]) S.ctxLayers[key] = L.layerGroup();
+        if (!S.frContext.tileLayers[key]) S.frContext.tileLayers[key] = new Map();
+        if (!S.frContext.renderers[key]) S.frContext.renderers[key] = L.canvas({ padding: 0.35 });
+        if (S.ctxVisible[key] !== false && !S.map.hasLayer(S.ctxLayers[key])) {
+          S.ctxLayers[key].addTo(S.map);
+        }
+      }
+      if (!S._ctxAttrib) {
+        S.map.attributionControl.addAttribution('Zusatzebenen: © OpenStreetMap-Mitwirkende (ODbL)');
+        S._ctxAttrib = true;
+      }
+    }
+
+    function resetFrContextMapState() {
+      clearTimeout(S.frContext.moveTimer);
+      S.frContext.moveTimer = null;
+      S.frContext.refreshSequence++;
+      for (const controller of S.frContext.tileControllers.values()) controller.abort();
+      S.frContext.tileControllers.clear();
+      S.frContext.tilePromises.clear();
+      S.frContext.tileLayers = {};
+      S.frContext.renderers = {};
+      for (const key of Object.keys(CONTEXT_META)) S.ctxLayers[key] = null;
+      S._ctxAttrib = false;
+    }
+
+    function loadFrContextManifest() {
+      if (!S.frContext.manifestPromise) {
+        S.frContext.manifestPromise = fetch(FR_CONTEXT_MANIFEST_URL)
+          .then(response => {
+            if (!response.ok) throw new Error(`France context manifest HTTP ${response.status}`);
+            return response.json();
+          })
+          .then(manifest => ({ ...manifest, tileSet: new Set(manifest.tiles || []) }))
+          .catch(error => {
+            S.frContext.manifestPromise = null;
+            throw error;
+          });
+      }
+      return S.frContext.manifestPromise;
+    }
+
+    function frContextTileKeys(bounds, manifest) {
+      const size = Number(manifest.tileSize) || 2;
+      const keys = [];
+      for (let x = Math.floor(bounds.getWest() / size); x <= Math.floor(bounds.getEast() / size); x++) {
+        for (let y = Math.floor(bounds.getSouth() / size); y <= Math.floor(bounds.getNorth() / size); y++) {
+          const key = `${x}_${y}`;
+          if (manifest.tileSet.has(key)) keys.push(key);
+        }
+      }
+      return keys;
+    }
+
+    function loadFrContextTile(key) {
+      if (!S.frContext.tilePromises.has(key)) {
+        const controller = new AbortController();
+        S.frContext.tileControllers.set(key, controller);
+        const promise = fetch(`data/context/fr/${key}.json`, { signal: controller.signal })
+          .then(response => {
+            if (!response.ok) throw new Error(`France context tile ${key} HTTP ${response.status}`);
+            return response.json();
+          })
+          .catch(error => {
+            S.frContext.tilePromises.delete(key);
+            if (error.name === 'AbortError') return null;
+            throw error;
+          })
+          .finally(() => {
+            if (S.frContext.tileControllers.get(key) === controller) {
+              S.frContext.tileControllers.delete(key);
+            }
+          });
+        S.frContext.tilePromises.set(key, promise);
+      }
+      return S.frContext.tilePromises.get(key);
+    }
+
+    async function refreshFrContextViewport() {
+      if (COUNTRY !== 'fr' || !S.map) return;
+      const map = S.map;
+      const sequence = ++S.frContext.refreshSequence;
+      ensureFrContextGroups();
+      const manifest = await loadFrContextManifest();
+      if (map !== S.map || sequence !== S.frContext.refreshSequence) return;
+      const needed = new Set(frContextTileKeys(map.getBounds(), manifest));
+
+      // Nicht mehr sichtbare Geometrie tatsächlich aus Leaflet und dem
+      // JS-Objektcache entfernen. HTTP-/Service-Worker-Cache bleiben erhalten.
+      for (const key of Object.keys(CONTEXT_META)) {
+        const tileLayers = S.frContext.tileLayers[key];
+        for (const [tileKey, layer] of tileLayers) {
+          if (needed.has(tileKey)) continue;
+          S.ctxLayers[key].removeLayer(layer);
+          tileLayers.delete(tileKey);
+        }
+      }
+      for (const tileKey of [...S.frContext.tilePromises.keys()]) {
+        if (needed.has(tileKey)) continue;
+        S.frContext.tileControllers.get(tileKey)?.abort();
+        S.frContext.tileControllers.delete(tileKey);
+        S.frContext.tilePromises.delete(tileKey);
+      }
+
+      const payloads = await Promise.all([...needed].map(async key => [key, await loadFrContextTile(key)]));
+      if (map !== S.map || sequence !== S.frContext.refreshSequence) return;
+      for (const [tileKey, payload] of payloads) {
+        if (!payload) continue;
+        for (const key of Object.keys(CONTEXT_META)) {
+          if (S.ctxVisible[key] === false || S.frContext.tileLayers[key].has(tileKey)) continue;
+          const layer = L.geoJSON(payload.layers?.[key] || { type: 'FeatureCollection', features: [] },
+            contextLayerOptions(key, S.frContext.renderers[key]));
+          S.frContext.tileLayers[key].set(tileKey, layer);
+          layer.addTo(S.ctxLayers[key]);
+        }
+      }
+    }
+
+    async function toggleFrContextLayer(key, on, btn) {
+      if (!CONTEXT_META[key] || !S.map) return;
+      S.ctxVisible[key] = on;
+      syncContextControls();
+      ensureFrContextGroups();
+      if (!on) {
+        S.map.removeLayer(S.ctxLayers[key]);
+        return;
+      }
+      if (!S.map.hasLayer(S.ctxLayers[key])) S.ctxLayers[key].addTo(S.map);
+      btn.classList.add('loading');
+      try { await refreshFrContextViewport(); }
+      catch (error) { console.warn('France context tiles:', error); }
+      finally { btn.classList.remove('loading'); }
+    }
+
+    function scheduleFrContextRefresh() {
+      if (COUNTRY !== 'fr') return;
+      clearTimeout(S.frContext.moveTimer);
+      S.frContext.moveTimer = setTimeout(() => {
+        refreshFrContextViewport().catch(error => console.warn('France context viewport:', error));
+      }, 180);
     }
 
     // Mehrere große Länder-GeoJSONs nicht gleichzeitig parsen und in Leaflet

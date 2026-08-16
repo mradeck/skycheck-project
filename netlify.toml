@@ -1,5 +1,8 @@
-[functions]
-  included_files = ["data/**/*"]
+[functions."zones-fr"]
+  included_files = ["data/fr-zones-tiles/**/*"]
+
+[functions."zones-at"]
+  included_files = ["data/uas-zones-at.json"]
 
 # Root-URL liefert die App ohne /skycheck.html-Suffix.
 # Rewrite (Status 200) — die URL in der Adresszeile bleibt "/".

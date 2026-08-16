@@ -25,7 +25,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v0.98
+📦 **Aktuelle Version:** v1.03
 
 ---
 
@@ -93,10 +93,12 @@ netlify/
   functions/
     awc.js                  ← NOAA AWC Proxy für METAR/TAF (CORS-Umgehung)
     gfz.js                  ← GFZ Potsdam Proxy für Kp-Index/Hp30
-    zones-fr.js             ← Frankreich UAS-Zonen (liest data/uas-zones-fr.json, bbox-gefiltert)
+    zones-fr.js             ← Frankreich UAS-Zonen (liest räumliche 2°-Kacheln, bbox-gefiltert)
     zones-at.js             ← Österreich UAS-Zonen (liest data/uas-zones-at.json; ?all=1 = vollständiges Overlay)
 data/
   uas-zones-fr.json         ← ED-269 Frankreich UAS-Zonen (monatlicher Snapshot, austauschbar)
+  fr-zones-tiles/           ← daraus erzeugter räumlicher Index für die Netlify-Function
+  context/fr/               ← gebündelte Viewport-Kacheln der vier Frankreich-Kontextlayer
   uas-zones-at.json         ← ED-269 Österreich UAS-Zonen (286 Zonen, automatisch aktualisiert)
   uas-zones-at.version      ← Marker des zuletzt importierten Austro-Control-Release (Idempotenz)
 .github/
@@ -200,6 +202,8 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v1.03 | Frankreich-Performance: Die vier OSM-Zusatzebenen werden nicht mehr als vollständige Länderdateien geladen, sondern pro 2°-Viewport gebündelt. Für Paris sinkt die Übertragung damit von rund 4,1 MB auf rund 0,25 MB gzip. Auch die französische Zonen-Function liest beim Cold Start nur relevante räumliche Kacheln statt des vollständigen 8,8-MB-Datensatzes. |
+| v1.02 | Punktanalyse ohne blockierenden Vollbild-Lader, animierter Analysekreis, parallele Abfragen, räumliche Kurzzeit-Caches, Canvas-Rendering und verbessertes Browser-/CDN-Caching. |
 | v0.98 | **Browser-Tab-Titel folgt jetzt der UI-Sprache.** Das `<title>`-Tag war eine statische deutsche Zeichenkette, die nie an die i18n angebunden war — jede Nicht-DE-Seite zeigte einen deutschen Tab-Titel. Nun wird `document.title` aus einem `docTitle`-i18n-Key in `applyLang()` gesetzt — aktualisiert beim Laden (je nach Länder-Standardsprache) und bei jedem Sprachwechsel, in allen fünf Sprachen. |
 | v0.97 | Kontextlayer auf CH, ES, DK, IE und FR erweitert. Die in v0.96 eingeführten Österreich-Overlays (Schutzgebiete, Autobahnen, Hochspannungsleitungen, Bahnstrecken) existieren nun für alle Nicht-DE-Länder (DE besitzt sie bereits über DiPUL). Der Client ist verallgemeinert — `CONTEXT_META` + `CONTEXT_COUNTRIES`, eine Datendatei pro Land (`data/<cc>-<layer>.json`); die Toggle-Gruppe erscheint automatisch für jedes gelistete Land. Der Generator ist jetzt ein einziges wiederverwendbares Werkzeug (`scripts/gen-context.mjs` plus ein robuster `fetch-context.sh`-Treiber mit curl-Retry und Resume), das OSM-Segmente zu langen Polylinien zusammenfügt, bevor es vereinfacht — das hat die großen Länder deutlich verkleinert (FR-Autobahnen 9 → 3,5 MB, ES 6 → 2,9 MB vor gzip). Frankreich wird auf eine Bounding-Box des Mutterlandes zugeschnitten (die ISO-Fläche würde Überseegebiete mit hineinziehen). Ein künftiges Land hinzufügen = Daten generieren + den Ländercode zu `CONTEXT_COUNTRIES` ergänzen (siehe `scripts/README.md`). |
 | v0.96 | 🇦🇹 Österreich-Kontextlayer. skycheck-at kann nun vier zusätzliche, einzeln zuschaltbare Layer einblenden — Schutzgebiete (Nationalparks, Natura 2000, Naturschutzgebiete, Landschaftsschutzgebiete, Naturparks, Biosphärenreservate, geschützte Landschaftsteile, Naturdenkmäler), Autobahnen, Hochspannungsleitungen und Hauptbahnstrecken. Die Daten stammen aus OpenStreetMap (ODbL) als statische, vorab vereinfachte GeoJSON-Schnappschüsse in `data/at-*.json` (Generatoren unter `scripts/`), werden beim Zuschalten nachgeladen und als farbige clientseitige Vektor-Overlays gezeichnet. Sie sind informativer Kontext (Hilfestellung zur Abstandswahrung) — die verbindliche Zonenprüfung bleibt Austro Control / dronespace.at, sie fließen daher nicht in die Flugstatus-Bewertung ein. Inspiriert von drohnenkarte.at, das dieselben offenen Quellen nutzt. |
