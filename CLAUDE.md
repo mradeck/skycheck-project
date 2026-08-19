@@ -29,7 +29,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5290 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v1.06 — Die Karten-Bedienkachel und die Standort-Infotafel verwenden im Hellmodus nun helle, halbtransparente Oberflächen mit konsistenten rechteckigen Bedienelementen; Desktop und Mobile wurden visuell geprüft.
+**Aktuell:** v1.09 — Die Kartenansicht nutzt auf allen Bildschirmgrößen eine kompakte Bedienzeile mit aufklappbaren Radius-/Zusatzfunktionen. Zonen bleiben sichtbar, Wetter, Höhe und Koordinaten sind ausklappbar.
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -203,6 +203,9 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v1.09 | **Aufklapp-Kartenoberfläche jetzt überall.** Auch Desktop, Split-Screen und breite Vorschaufenster verwenden die kompakte Ein-Zeilen-Bedienung und die zunächst eingeklappte Detailtafel; die alte große Desktop-Kachel entfällt. |
+| v1.08 | **Mobile Kartenansicht als Aufklapper.** Einzeilige Bedienleiste mit kurzen Beschriftungen; 5/100/200 m und 1,5-km-Kreis liegen in einem Zusatzstreifen. Die Zonenliste bleibt kompakt sichtbar, Wetter/Höhe/Koordinaten sind ausklappbar. Das Adress-Popup enthält nur noch die Adresse; WGS84 steht bei den UTM-Daten. Responsive geprüft auf schmalem/breitem Handy, Desktop und Karten-Vollbild. |
+| v1.07 | **GPS-Koordinatentransformation und Höhenbezug.** Gemeinsames Browsermodul für WGS84/ETRS89 → UTM, Gauß-Krüger-Näherung und GCG2016/DHHN2016. Die Karten-Infotafel zeigt UTM sofort und weitere Werte ausklappbar; `coordinates.html` bietet eine mobile Live-GPS-App mit amtlichem Lübben-Prüfpunkt. Das 1,9-MB-Int16-Geoid wird dank HTTP-Kompression mit rund 243 KB übertragen und offline gecacht. |
 | v1.06 | **Helle Karten-Overlays überarbeitet.** Bedienkachel, Status-/Infotafel, Vollbild- und Kartenstil-Schalter erscheinen auf OSM als helle, kontrastreiche Glasflächen. Buttons folgen einem konsistenten 32-px-Raster mit klaren Einzel- und Segmentgruppen; farbige Kontextlayer behalten ihren Farbcode. Desktop und 390-px-Mobile visuell geprüft. |
 | v1.05 | **Theme/Kartenprofil und AT-Local-Fallback.** `setInterfaceTheme()` koppelt hell→OSM und dunkel→CARTO Dark sowohl in Hauptkarte als auch integrierter Alarmkarte. `fetchZonesAT()` und das vollständige AT-Overlay verwenden bei lokaler Vorschau ohne Netlify Function die gebündelte Austro-Control-Datei; Client-Normalisierung entspricht der Function. Geprüft am Flughafen Wien: 288 Overlay-Zonen, Punktanalyse mit Flugplatz- und Kontrollzone, 290 gerenderte Pfade. |
 | v1.04 | **Globaler Hellmodus für alle SkyChecks.** Früh gesetzte `html.light-mode`-Klasse verhindert einen dunklen Startblitz; helle Design-Tokens decken Startseite, Ergebnis-Karten, Navigation und Modale ab. Sonnen-/Mond-Buttons stehen auf Startseite und Ergebnisnavigation, die Auswahl wird in `localStorage` gespeichert und mit der integrierten Alarmansicht synchronisiert. Mobile Navigation auf 390/380 px ohne horizontalen Überlauf geprüft. |
