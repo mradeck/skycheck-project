@@ -4,15 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101f">
-  <title>GPS → UTM · Koordinaten</title>
+  <meta name="description" content="GPS2UTM — GPS-Koordinaten direkt in ETRS89 / UTM, Gauß-Krüger und DHHN2016 umrechnen">
+  <title>GPS2UTM — Koordinaten</title>
   <style>
-    :root { color-scheme: dark; --bg:#07101f; --card:#101f36; --card2:#0c1a2e; --border:#28466d; --text:#e3f1ff; --muted:#8ca6c8; --accent:#00c2e8; --ok:#06d6a0; --warn:#ffb703; }
+    :root { color-scheme: dark; --bg:#07101f; --card:#101f36; --card2:#0c1a2e; --border:#28466d; --text:#e3f1ff; --muted:#8ca6c8; --accent:#00c2e8; --brand-red:#ef4444; --ok:#06d6a0; --warn:#ffb703; }
     :root.light { color-scheme:light; --bg:#eef4fb; --card:#fff; --card2:#f8fbff; --border:#bfd0e2; --text:#132840; --muted:#526d8a; --accent:#008eaf; --ok:#007e61; --warn:#9a6700; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
     main { width:min(760px,100%); margin:auto; padding:max(18px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom)); }
     header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:18px; }
     h1 { margin:0; font-size:clamp(1.45rem,7vw,2.15rem); line-height:1.08; }
+    .brand { display:inline-flex; align-items:baseline; letter-spacing:-.045em; font-weight:900; }
+    .brand-gps { color:var(--text); }
+    .brand-two { color:var(--brand-red); padding:0 .035em; }
+    .brand-utm { color:var(--accent); }
+    .brand-version { margin-left:.45rem; color:var(--muted); font-size:.34em; font-weight:500; letter-spacing:0; white-space:nowrap; }
     header p { margin:.45rem 0 0; color:var(--muted); }
     button { font:inherit; }
     .icon-btn { width:44px; height:44px; flex:0 0 auto; border:1px solid var(--border); border-radius:12px; background:var(--card); color:var(--text); cursor:pointer; }
@@ -42,17 +48,30 @@
     .manual { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-top:12px; }
     input { width:100%; min-width:0; border:1px solid var(--border); border-radius:9px; padding:10px; background:var(--card2); color:var(--text); font:inherit; }
     .mini { border:1px solid var(--border); border-radius:9px; background:var(--card2); color:var(--text); padding:0 12px; cursor:pointer; }
+    .other-apps { margin-top:18px; }
+    .other-title { margin:0 0 8px; color:var(--muted); font-size:.7rem; font-weight:800; letter-spacing:.13em; text-align:center; text-transform:uppercase; }
+    .app-list { display:grid; gap:8px; }
+    .app-card { display:flex; align-items:center; gap:12px; min-height:64px; padding:11px 13px; border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border)); border-radius:14px; background:color-mix(in srgb,var(--accent) 5%,var(--card)); color:var(--text); text-decoration:none; transition:border-color .18s,background .18s,transform .18s; }
+    .app-card:hover { border-color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,var(--card)); transform:translateY(-1px); }
+    .app-name { flex:0 0 116px; font-size:1rem; font-weight:900; letter-spacing:-.03em; white-space:nowrap; }
+    .app-name .accent { color:var(--accent); }
+    .app-name.pointcloud { white-space:normal; line-height:1.05; }
+    .app-name .alarm { color:var(--brand-red); }
+    .app-copy { min-width:0; color:var(--muted); font-size:.76rem; line-height:1.35; }
+    .app-arrow { margin-left:auto; color:var(--accent); font-size:1.1rem; }
+    .support-links { display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-top:10px; }
+    .support-links a { padding:5px 9px; border-radius:7px; background:var(--card2); color:var(--accent); font-size:.76rem; text-decoration:none; }
     footer { margin:20px 4px 0; color:var(--muted); font-size:.78rem; }
     footer a,.card a { color:var(--accent); }
     .hidden { display:none !important; }
-    @media (min-width:680px) { .grid { grid-template-columns:1fr 1fr; } .wide { grid-column:1/-1; } }
-    @media (max-width:390px) { .actions { grid-template-columns:1fr; } .secondary { min-height:44px; } .manual { grid-template-columns:1fr 1fr; } .manual button { grid-column:1/-1; min-height:42px; } .row { grid-template-columns:1fr; gap:2px; } .value,.copy { text-align:left; } }
+    @media (min-width:680px) { .grid { grid-template-columns:1fr 1fr; } .wide { grid-column:1/-1; } .app-list { grid-template-columns:repeat(3,1fr); } .app-card { align-items:flex-start; flex-direction:column; } .app-name { flex-basis:auto; } .app-arrow { display:none; } }
+    @media (max-width:390px) { .actions { grid-template-columns:1fr; } .secondary { min-height:44px; } .manual { grid-template-columns:1fr 1fr; } .manual button { grid-column:1/-1; min-height:42px; } .row { grid-template-columns:1fr; gap:2px; } .value,.copy { text-align:left; } .app-name { flex-basis:104px; font-size:.92rem; } }
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div><h1>GPS → UTM</h1><p>WGS 84 zu ETRS89 / UTM, Gauß‑Krüger und DHHN2016</p></div>
+    <div><h1 class="brand" aria-label="GPS2UTM"><span class="brand-gps">GPS</span><span class="brand-two">2</span><span class="brand-utm">UTM</span><sup class="brand-version app-version"></sup></h1><p>WGS 84 zu ETRS89 / UTM, Gauß‑Krüger und DHHN2016</p></div>
     <button id="theme" class="icon-btn" aria-label="Darstellung wechseln">☀</button>
   </header>
 
@@ -108,13 +127,42 @@
     <div class="manual"><input id="manual-lat" inputmode="decimal" aria-label="Breitengrad" placeholder="Breite"><input id="manual-lon" inputmode="decimal" aria-label="Längengrad" placeholder="Länge"><button id="manual-go" class="mini">Umrechnen</button></div>
   </details>
 
+  <nav class="other-apps" aria-label="Weitere Apps und Links">
+    <div class="other-title">Weitere Apps</div>
+    <div class="app-list">
+      <a class="app-card" href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener">
+        <span class="app-name">Sky<span class="accent">Check</span></span>
+        <span class="app-copy">Drohnenflugprüfung mit Geozonen, Wetter und Luftrauminformationen</span>
+        <span class="app-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="app-card" href="https://skyalarm.netlify.app/" target="_blank" rel="noopener">
+        <span class="app-name">Sky<span class="alarm">Alarm</span></span>
+        <span class="app-copy">Echtzeit-Tiefflieger-Alarm und Geozonen-Karte</span>
+        <span class="app-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="app-card" href="https://pointcloud-manager.app/" target="_blank" rel="noopener">
+        <span class="app-name pointcloud">PointCloud<span class="accent"> Manager</span></span>
+        <span class="app-copy">Punktwolken verwalten, prüfen und für weitere Workflows vorbereiten</span>
+        <span class="app-arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="support-links">
+      <a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a>
+      <a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>
+    </div>
+  </nav>
+
   <footer>
-    Koordinaten sind eine Orientierungshilfe, kein Vermessungsnachweis. GCG2016 © GeoBasis-DE / BKG (2026), <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">CC BY 4.0</a>. Bezug: <a href="https://gdz.bkg.bund.de/koordinatentransformation" target="_blank" rel="noopener">BKG Koordinatentransformation</a>. · v0.2
+    Koordinaten sind eine Orientierungshilfe, kein Vermessungsnachweis. GCG2016 © GeoBasis-DE / BKG (2026), <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">CC BY 4.0</a>. Bezug: <a href="https://gdz.bkg.bund.de/koordinatentransformation" target="_blank" rel="noopener">BKG Koordinatentransformation</a>. · GPS2UTM <span class="app-version"></span>
   </footer>
 </main>
-<script src="coordinate-tools.js?v=0.2"></script>
+<script src="coordinate-tools.js?v=26.08.3.0"></script>
 <script>
   'use strict';
+  const APP_VERSION = '26.08.3.0';
+  const APP_VERSION_CODE = `v${APP_VERSION}`;
+  document.title = `GPS2UTM ${APP_VERSION_CODE} — Koordinaten`;
+  document.querySelectorAll('.app-version').forEach(element => { element.textContent = APP_VERSION_CODE; });
   const REF = { lat: 51 + 56 / 60 + 31.768 / 3600, lon: 13 + 53 / 60 + 46.094 / 3600, altitude: 94.04 };
   let watchId = null;
   let renderSequence = 0;

@@ -2707,6 +2707,10 @@
       color: #ef4444;
     }
 
+    .l-app-logo.gps2utm-logo .gps-white { color: var(--text); }
+    .l-app-logo.gps2utm-logo .gps-two { color: #ef4444; }
+    .l-app-logo.gps2utm-logo .gps-utm { color: var(--accent); }
+
     .l-app-desc {
       font-size: 0.78rem;
       color: var(--text2);
@@ -2911,11 +2915,32 @@
 
       <div class="l-other-apps">
         <div class="l-other-label" data-i18n="otherApps">Weitere Apps</div>
+        <div class="l-country-box" style="margin-top:0;">
+          <div class="l-country-hdr" data-i18n="otherCountries">SkyCheck in anderen Ländern</div>
+          <div class="l-country-links" id="l-country-links"></div>
+        </div>
         <a href="https://skyalarm.netlify.app/skyalarm.html" target="_blank" rel="noopener" class="l-app-card">
           <div>
             <div class="l-app-logo"><span>Sky</span><span class="sa-alarm">Alarm</span></div>
             <div class="l-app-desc" data-i18n="skyAlarmDesc">Echtzeit-Tiefflieger-Alarm und Geozonen-Karte
               &mdash; akustische und visuelle Warnung bei Annäherung von Luftfahrzeugen</div>
+          </div>
+          <div class="l-app-arrow">&#8594;</div>
+        </a>
+        <a href="https://pointcloud-manager.app/" target="_blank" rel="noopener" class="l-app-card"
+          style="margin-top:0.6rem;">
+          <div>
+            <div class="l-app-logo">PointCloud <span>Manager</span></div>
+            <div class="l-app-desc" data-i18n="pointCloudDesc">Punktwolken verwalten, prüfen und für weitere Workflows vorbereiten</div>
+          </div>
+          <div class="l-app-arrow">&#8594;</div>
+        </a>
+        <a href="https://gps2utm.netlify.app/" target="_blank" rel="noopener" class="l-app-card"
+          style="margin-top:0.6rem;">
+          <div>
+            <div class="l-app-logo gps2utm-logo" aria-label="GPS2UTM"><span class="gps-white">GPS</span><span class="gps-two">2</span><span class="gps-utm">UTM</span></div>
+            <div class="l-app-desc" data-i18n="gps2utmDesc">GPS-Position direkt in ETRS89 / UTM,
+              Gauß-Krüger und DHHN2016 umrechnen</div>
           </div>
           <div class="l-app-arrow">&#8594;</div>
         </a>
@@ -2928,10 +2953,6 @@
           </div>
           <div class="l-app-arrow">&#8594;</div>
         </a>
-        <div class="l-country-box">
-          <div class="l-country-hdr" data-i18n="otherCountries">SkyCheck in anderen Ländern</div>
-          <div class="l-country-links" id="l-country-links"></div>
-        </div>
       </div>
 
       <div class="l-sources">
@@ -3329,7 +3350,8 @@
   <script>
     'use strict';
 
-    const APP_VER = '1.09';
+    const APP_VER = '26.08.110.2';
+    const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
     // Aktiviert via ?country=fr|at in URL ODER Hostname enthält "skycheck-fr"/"skycheck-at"
@@ -3352,7 +3374,7 @@
     const IS_LOCAL_PREVIEW = location.protocol === 'file:' ||
       ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(location.hostname);
     console.info('[SkyCheck] country=' + COUNTRY);
-    document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = 'v' + APP_VER);
+    document.querySelectorAll('.l-ver, .f-ver').forEach(e => e.textContent = APP_VERSION_CODE);
 
     /* [J-I18N] ==========================================================
        I18N – Lightweight localisation (de = default, en)
@@ -3476,6 +3498,8 @@
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
+        gps2utmDesc: 'GPS-Position direkt in ETRS89 / UTM, Gauß-Krüger und DHHN2016 umrechnen',
+        pointCloudDesc: 'Punktwolken verwalten, prüfen und für weitere Workflows vorbereiten',
         otherCountries: 'SkyCheck in anderen Ländern',
         setForecastHdr: '48h-Vorschau Modus',
         setForecastIntro: 'Wähle, ob die 48h-Wettervorschau nur Taglichtstunden (Drohnenflug-Standard) oder alle Stunden inkl. Nacht anzeigt.',
@@ -3653,6 +3677,8 @@
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
+        gps2utmDesc: 'Convert a GPS position directly to ETRS89 / UTM, Gauss-Krueger and DHHN2016',
+        pointCloudDesc: 'Manage, inspect and prepare point clouds for further workflows',
         otherCountries: 'SkyCheck in other countries',
         setForecastHdr: '48 h forecast mode',
         setForecastIntro: 'Choose whether the 48 h weather forecast shows only daylight hours (drone-flight standard) or all hours including night.',
@@ -3822,6 +3848,8 @@
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
+        gps2utmDesc: 'Convertir directement une position GPS en ETRS89 / UTM, Gauss-Krueger et DHHN2016',
+        pointCloudDesc: 'Gérer, contrôler et préparer des nuages de points pour d’autres flux de travail',
         otherCountries: 'SkyCheck dans d\'autres pays',
         setForecastHdr: 'Mode prévisions 48 h',
         setForecastIntro: 'Choisissez si les prévisions météo sur 48 h affichent uniquement les heures de jour (standard pour le vol de drone) ou toutes les heures, nuit comprise.',
@@ -3999,6 +4027,8 @@
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
+        gps2utmDesc: 'Convertir directamente una posición GPS a ETRS89 / UTM, Gauss-Krueger y DHHN2016',
+        pointCloudDesc: 'Gestionar, comprobar y preparar nubes de puntos para otros flujos de trabajo',
         otherCountries: 'SkyCheck en otros países',
         setForecastHdr: 'Modo de pronóstico de 48 h',
         setForecastIntro: 'Elige si el pronóstico meteorológico de 48 h muestra solo las horas de luz diurna (estándar para vuelos de dron) o todas las horas, incluida la noche.',
@@ -4176,6 +4206,8 @@
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
+        gps2utmDesc: 'Przelicz pozycję GPS bezpośrednio na ETRS89 / UTM, Gauss-Krueger i DHHN2016',
+        pointCloudDesc: 'Zarządzaj, sprawdzaj i przygotowuj chmury punktów do dalszej pracy',
         otherCountries: 'SkyCheck w innych krajach',
         setForecastHdr: 'Tryb prognozy 48 h',
         setForecastIntro: 'Wybierz, czy 48-godzinna prognoza pogody ma pokazywać tylko godziny dzienne (standard dla lotów dronem), czy wszystkie godziny wraz z nocą.',
@@ -4385,7 +4417,7 @@
       const LANG_FLAGS = { de: '🇩🇪', en: '🇬🇧', fr: '🇫🇷', es: '🇪🇸', pl: '🇵🇱' };
       document.querySelectorAll('.lang-flag-btn').forEach(lb => lb.textContent = LANG_FLAGS[LANG] || '🇩🇪');
       // Browser-Tab-Titel folgt der UI-Sprache (statt statischem <title> in Deutsch)
-      document.title = _t('docTitle');
+      document.title = `${_t('docTitle')} · ${APP_VERSION_CODE}`;
       syncMobileZoneControl();
     }
     // Lang-switcher wiring – runs after DOM ready

@@ -29,7 +29,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5290 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v1.09 — Die Kartenansicht nutzt auf allen Bildschirmgrößen eine kompakte Bedienzeile mit aufklappbaren Radius-/Zusatzfunktionen. Zonen bleiben sichtbar, Wetter, Höhe und Koordinaten sind ausklappbar.
+**Aktuell:** v26.08.110.2 — Die Startseite zeigt zuerst die Länder-Varianten, danach SkyAlarm, PointCloud Manager, GPS2UTM und MetaLens; alle App-Versionen folgen dem Schema `vYY.MM.major.subversion`.
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -64,10 +64,10 @@ grep -n '\[J-RENDER-GRID\]' skycheck.html
 sed -n '/<script>$/,/<\/script>/p' skycheck.html | head -n -1 | tail -n +2 > /tmp/check.js && node --check /tmp/check.js
 
 # 4. Commit & Push:
-git add skycheck.html && git commit -m 'SkyCheck vX.XX' && git push
+git add skycheck.html && git commit -m 'SkyCheck vYY.MM.major.subversion' && git push
 
 # 5. Netlify-Verifikation (~20s warten):
-curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" | grep -o "APP_VER = '0\.[0-9]*'"
+curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" | grep -o "APP_VER = '[0-9.]*'"
 ```
 
 ### Sekundär: Cowork (Desktop-App) — für Nicht-Code-Aufgaben
@@ -82,7 +82,7 @@ Cowork eignet sich für Aufgaben, die über reines Coding hinausgehen:
 - **Schreiben:** Read/Edit-Tools arbeiten auf einem Overlay-Dateisystem. Änderungen sind in der Sandbox sichtbar, aber **nicht persistent auf dem Mac**.
 - **Lesen:** Das Overlay ist ein Snapshot vom Mount-Zeitpunkt. Jede Änderung via Claude Code macht das Overlay veraltet. **Vor Prompts immer die Live-Version prüfen:**
   ```bash
-  curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" | grep -o "APP_VER = '0\.[0-9]*'"
+  curl -s "https://enchanting-stardust-f713da.netlify.app/skycheck.html" | grep -o "APP_VER = '[0-9.]*'"
   ```
 - Für Code-Patches und aktuelle Code-Analyse immer Claude Code oder curl verwenden.
 
@@ -95,19 +95,22 @@ Nur noch nötig, wenn weder Claude Code noch Cowork-Bash funktionieren
 
 ## ⚠️ PFLICHT-REGEL: Versionsnummer erhöhen
 
-**Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.**
-`const APP_VER` (Zeile ~2488) wird um 0.01 hochgezählt (z. B. 0.76 → 0.77).
-Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.XX`.
+**Jede Änderung an skycheck.html MUSS die Versionsnummer erhöhen.** Das Schema
+entspricht dem PointCloud Manager: `vYY.MM.major.subversion`. Die fortlaufende
+SkyCheck-Version bildet `major`; ein neuer Funktionsstand setzt `subversion`
+auf `0`, reine lokale Fixes und Hotfixes erhöhen nur die letzte Stelle.
+`APP_VER` enthält die Nummer ohne führendes `v`; die UI und der Browser-Tab
+zeigen immer den vollständigen `APP_VERSION_CODE`. Keine Ausnahme.
 
 ---
 
 ## Patch-Checkliste
 
-1. `const APP_VER = 'X.XX';` aktualisieren (Zeile ~2488)
+1. `const APP_VER = 'YY.MM.major.subversion';` aktualisieren (Zeile ~3345)
 2. Anker-Eindeutigkeit vorab mit `grep` prüfen (genau 1 Treffer)
 3. Änderungen vornehmen (Claude Code: direkte Edits / Cowork: nur Analyse)
 4. **JS-Syntaxcheck:** `node --check` auf extrahiertem Script-Block
-5. `git add skycheck.html && git commit -m 'SkyCheck vX.XX' && git push`
+5. `git add skycheck.html && git commit -m 'SkyCheck vYY.MM.major.subversion' && git push`
 6. `curl | grep APP_VER` → Netlify-Verifikation
 7. Wiki-Updates: Changelog, Log, ggf. Architektur + Index
 8. **Bei UI-/Layoutänderungen verpflichtend:** visuelle Responsive-Prüfung im Browser bei mindestens einem schmalen Handy-, einem breiten Handy- und einem Desktop-Viewport; Kartenänderungen jeweils normal und im Vollbild prüfen. Reine Syntax-/DOM-Prüfung reicht nicht.
@@ -118,7 +121,7 @@ Dies gilt auch für kleine Fixes. Keine Ausnahme. Commit-Message: `SkyCheck vX.X
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '0.98';` | ~2488 | **Versionsvariable** – hier ändern für neue Version |
+| `const APP_VER = '26.08.110.2';` | ~3354 | **Zentrale Versionsvariable** im Schema `YY.MM.major.subversion` |
 | `const COUNTRY_NAMES = {` | nach `_t()` | Lookup-Tabelle pro UI-Sprache × Country (nominativ); neuen Country: neue Zeile, neue UI-Sprache: neue Spalte |
 | `function _country()` | nach `COUNTRY_NAMES` | Liefert lokalisierten Country-Namen für aktuellen `COUNTRY`/`LANG` |
 | `function drawZoneOverlay(zones, layerGroup)` | nach `renderZones` | Zeichnet FR-Geozonen (Polygon/Circle) auf Leaflet-Map; DE-Zonen ohne `geometry`-Feld werden übersprungen |
@@ -203,6 +206,9 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v26.08.110.2 | **Startseiten-Reihenfolge geklärt.** Zuerst erscheinen die SkyCheck-Länder-Varianten, dann SkyAlarm, PointCloud Manager, GPS2UTM und MetaLens. |
+| v26.08.110.1 | **App-Verbund vervollständigt.** Die SkyCheck-Startseite enthält nun zusätzlich eine PointCloud-Manager-Kachel neben SkyAlarm und GPS2UTM. |
+| v26.08.110.0 | **GPS2UTM im App-Verbund und neues Versionsschema.** Neue Startseiten-Kachel mit Wortmarke GPS weiß, 2 rot und UTM türkis. SkyCheck verwendet nun das PointCloud-Schema `vYY.MM.major.subversion`; die vollständige Nummer erscheint im App-Kopf, Footer und Browser-Tab. |
 | v1.09 | **Aufklapp-Kartenoberfläche jetzt überall.** Auch Desktop, Split-Screen und breite Vorschaufenster verwenden die kompakte Ein-Zeilen-Bedienung und die zunächst eingeklappte Detailtafel; die alte große Desktop-Kachel entfällt. |
 | v1.08 | **Mobile Kartenansicht als Aufklapper.** Einzeilige Bedienleiste mit kurzen Beschriftungen; 5/100/200 m und 1,5-km-Kreis liegen in einem Zusatzstreifen. Die Zonenliste bleibt kompakt sichtbar, Wetter/Höhe/Koordinaten sind ausklappbar. Das Adress-Popup enthält nur noch die Adresse; WGS84 steht bei den UTM-Daten. Responsive geprüft auf schmalem/breitem Handy, Desktop und Karten-Vollbild. |
 | v1.07 | **GPS-Koordinatentransformation und Höhenbezug.** Gemeinsames Browsermodul für WGS84/ETRS89 → UTM, Gauß-Krüger-Näherung und GCG2016/DHHN2016. Die Karten-Infotafel zeigt UTM sofort und weitere Werte ausklappbar; `coordinates.html` bietet eine mobile Live-GPS-App mit amtlichem Lübben-Prüfpunkt. Das 1,9-MB-Int16-Geoid wird dank HTTP-Kompression mit rund 243 KB übertragen und offline gecacht. |

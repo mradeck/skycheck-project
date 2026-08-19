@@ -25,7 +25,13 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v1.09
+📦 **Current version:** v26.08.110.2
+
+Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
+existing sequential SkyCheck release is the `major` component; feature
+releases start at subversion `0`, while local fixes and hotfixes increment only
+the final component. The complete version is visible in the browser tab and
+the app header.
 
 ---
 
@@ -211,6 +217,9 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.110.2 | **Landing-page order clarified.** Country-specific SkyCheck variants now come first, followed by SkyAlarm, PointCloud Manager, GPS2UTM and MetaLens. |
+| v26.08.110.1 | **Cross-app navigation completed.** SkyCheck now includes a PointCloud Manager card alongside SkyAlarm and GPS2UTM. |
+| v26.08.110.0 | **GPS2UTM integration and shared version format.** The landing page links to GPS2UTM with the shared white/red/cyan wordmark. SkyCheck now uses `vYY.MM.major.subversion`, shown completely in the app header, footer and browser tab. |
 | v1.09 | **Collapsible map controls on every screen size.** The compact one-row toolbar and collapsed weather/elevation/coordinate details now also replace the former desktop overlays, so split-screen and wide previews use the same interface as phones. |
 | v1.08 | **Compact mobile map overlays.** The map toolbar is reduced to one row on phones; search radii 5/100/200 m and the 1.5 km alarm circle open on demand. The zone list stays visible while weather, terrain and coordinates are collapsible; address popups no longer duplicate GPS coordinates. |
 | v1.07 | **GPS coordinate conversion and vertical datum.** WGS84/ETRS89 positions now show UTM immediately plus expandable Gauss-Krueger and GCG2016/DHHN2016 details. `coordinates.html` is a mobile live-GPS converter with the official Lübben control point as a built-in numerical check. |
