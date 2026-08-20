@@ -1246,6 +1246,22 @@
     .map-style-btn:hover { background: rgba(0,0,0,0.82); }
     .map-style-btn .ms-icon { font-size: 14px; }
 
+    /* Höhengitter (DE): Toggle-Loading + Karten-Legende */
+    .hgrid-toggle.loading { opacity: .55; pointer-events: none; }
+    .hgrid-legend {
+      position: absolute; left: 10px; bottom: 10px; z-index: 500;
+      display: none; width: 190px; padding: 9px 11px; border-radius: 10px;
+      background: rgba(15,22,30,0.86); color: #eef3f8; box-shadow: 0 4px 16px rgba(0,0,0,.35);
+      backdrop-filter: blur(4px); font-size: 11px; line-height: 1.35;
+    }
+    .hgrid-legend.show { display: block; }
+    .hgl-title { font-weight: 600; margin-bottom: 6px; font-size: 11.5px; }
+    .hgl-ramp { display: flex; height: 12px; border-radius: 3px; overflow: hidden; }
+    .hgl-ramp span { flex: 1; }
+    .hgl-scale { display: flex; justify-content: space-between; margin-top: 3px; opacity: .8; font-size: 10px; }
+    .hgl-note { margin-top: 6px; opacity: .7; font-size: 9.5px; }
+    :root.light-mode .hgrid-legend { background: rgba(255,255,255,0.92); color: #17202a; box-shadow: 0 4px 16px rgba(20,40,60,.18); }
+
     /* [S-ALARM] === ALARM VIEW === */
     #alarm-view {
       position: fixed;
@@ -3116,10 +3132,17 @@
             <button class="map-toggle ctx-toggle" data-ctx="powerlines" data-i18n="ctxPowerlines">Stromleitungen</button>
             <button class="map-toggle ctx-toggle" data-ctx="rail" data-i18n="ctxRail">Bahn</button>
           </div>
+          <button class="map-toggle hgrid-toggle" id="hgrid-toggle" data-i18n="hgridToggle" style="display:none">Höhengitter</button>
         </div>
         <button class="map-fs-btn" id="btn-map-fs" title="Vollbild">⛶</button>
         <button class="map-style-btn" id="btn-map-style" title="Kartenstil"><span class="ms-icon">⧉</span><span id="map-style-label">Dark</span></button>
         <div class="map-status hidden" id="map-status"></div>
+        <div class="hgrid-legend" id="hgrid-legend" aria-hidden="true">
+          <div class="hgl-title" data-i18n="hgridLegendTitle">Max. Flughöhe (Näherung)</div>
+          <div class="hgl-ramp" id="hgl-ramp"></div>
+          <div class="hgl-scale"><span data-i18n="hgridLow">niedrig</span><span data-i18n="hgridHigh">hoch</span></div>
+          <div class="hgl-note" data-i18n="hgridNote">Näherung aus Gelände + erkannter CTR-Zone. Verbindlich: DiPUL / NfL.</div>
+        </div>
       </div>
     </div>
 
@@ -3350,7 +3373,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.111.0';
+    const APP_VER = '26.08.112.0';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3464,6 +3487,8 @@
         secMap: 'Karte & Luftraum', secWarnings: 'Hinweise & Warnungen',
         mapDipul: 'Geozonen', mapAircraft: 'Flugbewegungen',
         ctxProtected: 'Schutzgebiete', ctxMotorways: 'Autobahnen', ctxPowerlines: 'Stromleitungen', ctxRail: 'Bahn',
+        hgridToggle: 'Höhengitter', hgridMax: 'Max. Flughöhe', hgridLegendTitle: 'Max. Flughöhe (Näherung)',
+        hgridLow: 'niedrig', hgridHigh: 'hoch', hgridNote: 'Näherung aus Gelände + erkannter CTR-Zone. Verbindlich: DiPUL / NfL.',
         mapAllZones: 'Alle Geozonen', mapRiskyZones: 'Nur Risikozonen',
         mapZonesShort: 'Zonen', mapAircraftShort: 'Flüge', mapAllShort: 'Alle', mapRiskShort: 'Risiko',
         mapMoreDetails: 'Wetter, Höhe und Koordinaten anzeigen',
@@ -3643,6 +3668,8 @@
         secMap: 'Map & Airspace', secWarnings: 'Notes & Warnings',
         mapDipul: 'Drone zones', mapAircraft: 'Flight Movements',
         ctxProtected: 'Protected areas', ctxMotorways: 'Motorways', ctxPowerlines: 'Power lines', ctxRail: 'Railways',
+        hgridToggle: 'Height grid', hgridMax: 'Max. height', hgridLegendTitle: 'Max. flight height (approx.)',
+        hgridLow: 'low', hgridHigh: 'high', hgridNote: 'Approximation from terrain + detected CTR zone. Binding: DiPUL / NfL.',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         mapZonesShort: 'Zones', mapAircraftShort: 'Flights', mapAllShort: 'All', mapRiskShort: 'Risk',
         mapMoreDetails: 'Show weather, elevation and coordinates',
@@ -3814,6 +3841,8 @@
         secMap: 'Carte & Espace aérien', secWarnings: 'Notes & Avertissements',
         mapDipul: 'Géozones', mapAircraft: 'Trafic aérien',
         ctxProtected: 'Zones protégées', ctxMotorways: 'Autoroutes', ctxPowerlines: 'Lignes électriques', ctxRail: 'Voies ferrées',
+        hgridToggle: 'Grille de hauteur', hgridMax: 'Hauteur max.', hgridLegendTitle: 'Hauteur de vol max. (approx.)',
+        hgridLow: 'basse', hgridHigh: 'haute', hgridNote: 'Approximation à partir du relief + zone CTR détectée. Contraignant : DiPUL / NfL.',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         mapZonesShort: 'Zones', mapAircraftShort: 'Vols', mapAllShort: 'Toutes', mapRiskShort: 'Risque',
         mapMoreDetails: 'Afficher météo, altitude et coordonnées',
@@ -3993,6 +4022,8 @@
         secMap: 'Mapa & Espacio aéreo', secWarnings: 'Notas & Advertencias',
         mapDipul: 'Geozonas', mapAircraft: 'Tráfico aéreo',
         ctxProtected: 'Áreas protegidas', ctxMotorways: 'Autopistas', ctxPowerlines: 'Líneas eléctricas', ctxRail: 'Ferrocarriles',
+        hgridToggle: 'Rejilla de altura', hgridMax: 'Altura máx.', hgridLegendTitle: 'Altura máx. de vuelo (aprox.)',
+        hgridLow: 'baja', hgridHigh: 'alta', hgridNote: 'Aproximación a partir del terreno + zona CTR detectada. Vinculante: DiPUL / NfL.',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         mapZonesShort: 'Zonas', mapAircraftShort: 'Vuelos', mapAllShort: 'Todas', mapRiskShort: 'Riesgo',
         mapMoreDetails: 'Mostrar clima, elevación y coordenadas',
@@ -4172,6 +4203,8 @@
         secMap: 'Mapa & Przestrzeń powietrzna', secWarnings: 'Uwagi & Ostrzeżenia',
         mapDipul: 'Geostrefy', mapAircraft: 'Ruch lotniczy',
         ctxProtected: 'Obszary chronione', ctxMotorways: 'Autostrady', ctxPowerlines: 'Linie energetyczne', ctxRail: 'Koleje',
+        hgridToggle: 'Siatka wysokości', hgridMax: 'Maks. wysokość', hgridLegendTitle: 'Maks. wysokość lotu (przybliż.)',
+        hgridLow: 'niska', hgridHigh: 'wysoka', hgridNote: 'Przybliżenie z terenu + wykrytej strefy CTR. Wiążące: DiPUL / NfL.',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         mapZonesShort: 'Strefy', mapAircraftShort: 'Loty', mapAllShort: 'Wszystkie', mapRiskShort: 'Ryzyko',
         mapMoreDetails: 'Pokaż pogodę, wysokość i współrzędne',
@@ -4645,7 +4678,8 @@
       mapLocationSequence: 0,
       mapAnalysisSequence: 0,
       pinPopupWanted: true,
-      layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null },
+      layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null, heightGrid: null },
+      hgridZone: null, hgridOn: false, _hgridSeq: 0,   // DE-Höhengitter: erkannte CTR-Zone, an/aus, Stale-Guard
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
@@ -5365,6 +5399,7 @@
         renderZones(zones);
         updateZoneOverlay(zones);
         renderMapStatus(now, zones);
+        updateHeightGridControl(zones);   // DE-Höhengitter-Toggle verfügbar machen / aktualisieren
         const zoneStatus = evalZoneStatus(zones);
         renderStatus(status, zoneStatus);
         if ($('alarm-view').classList.contains('av-open')) {
@@ -5902,6 +5937,84 @@
             ctrTerrainRange: computeCtrTerrainRange(z, terrainProfile),
           }
         : z);
+    }
+
+    /* [J-HEIGHT-GRID] ===================================================
+       DE-Höhengitter (zuschaltbar): Heatmap der max. Flughöhe je Rasterzelle in
+       einer DFS-CTR 2–4, nach dem tschechischen GRID-Vorbild (Ampel Rot→Grün).
+       Hybrid: DiPUL-WMS zeigt die Sub-Zonen-Grenzen; dieses Overlay färbt ein
+       Gelände-Raster (Open-Meteo) mit computeCtrFlightInfo unter Verwendung der am
+       Standort erkannten CTR-Zone. Näherung — verbindlich bleiben DiPUL/NfL.
+    ================================================================ */
+    const HGRID_COLORS = ['#d7191c', '#f4703b', '#fdae61', '#dfe86a', '#8ecb5a', '#1a9641']; // niedrig→hoch (Ampel)
+    // max. Flughöhe (m AGL) → Farbklasse. 0 = kein Höhenspielraum (rot), ≥75 m = grün.
+    function hgridBand(m) {
+      if (!(m > 0)) return 0;
+      if (m < 15) return 1;
+      if (m < 30) return 2;
+      if (m < 50) return 3;
+      if (m < 75) return 4;
+      return 5;
+    }
+    // Open-Meteo-Geländehöhen für viele Punkte, in ≤100er-Blöcken (API-Limit).
+    async function fetchElevations(points) {
+      const out = new Array(points.length).fill(null);
+      for (let i = 0; i < points.length; i += 100) {
+        const chunk = points.slice(i, i + 100);
+        const lat = chunk.map(p => p.lat.toFixed(6)).join(',');
+        const lon = chunk.map(p => p.lon.toFixed(6)).join(',');
+        try {
+          const r = await safeFetch(`${OPEN_METEO_ELEVATION_URL}?latitude=${lat}&longitude=${lon}`, 8000);
+          if (!r.ok) continue;
+          const d = await r.json();
+          if (Array.isArray(d.elevation)) d.elevation.forEach((e, k) => { out[i + k] = (e == null) ? null : Number(e); });
+        } catch (e) { console.warn('Höhengitter-Gelände:', e.message); }
+      }
+      return out;
+    }
+    // Raster um den Standort erzeugen, Gelände holen, max. AGL je Zelle → Ampel-Rechtecke.
+    async function buildHeightGrid() {
+      if (!S.map || !S.hgridZone || S.lat == null) return;
+      const seq = ++S._hgridSeq;
+      const lat = S.lat, lon = S.lon;
+      const N = 13, rM = 3000, mPerDeg = 111320;
+      const lonScale = Math.max(0.01, Math.cos(lat * Math.PI / 180));
+      const dLat = rM / mPerDeg, dLon = rM / (mPerDeg * lonScale), step = 2 / (N - 1);
+      const pts = [];
+      for (let iy = 0; iy < N; iy++) for (let ix = 0; ix < N; ix++) {
+        pts.push({ lat: lat - (-1 + iy * step) * dLat, lon: lon + (-1 + ix * step) * dLon });
+      }
+      const elev = await fetchElevations(pts);
+      if (seq !== S._hgridSeq) return;
+      const zone = { zoneNum: S.hgridZone.zoneNum, lowerMslM: S.hgridZone.lowerMslM, ctrExact: true };
+      const cellLat = step * dLat / 2, cellLon = step * dLon / 2;
+      const grp = L.layerGroup();
+      pts.forEach((p, k) => {
+        const e = elev[k]; if (!Number.isFinite(e)) return;
+        const info = computeCtrFlightInfo(zone, e); if (!info || !info.available) return;
+        const m = info.maxAglM;
+        L.rectangle([[p.lat - cellLat, p.lon - cellLon], [p.lat + cellLat, p.lon + cellLon]], {
+          stroke: false, fillColor: HGRID_COLORS[hgridBand(m)], fillOpacity: 0.85, interactive: true,
+        }).bindTooltip(`${_t('hgridMax')}: ${m} m AGL`, { sticky: true }).addTo(grp);
+      });
+      if (seq !== S._hgridSeq) return;
+      if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
+      S.layers.heightGrid = grp;
+    }
+    // Toggle-Verfügbarkeit + ggf. Neuaufbau nach jedem Check. Sichtbar nur in DE-CTR 2–4.
+    function updateHeightGridControl(zones) {
+      const btn = document.getElementById('hgrid-toggle');
+      if (!btn) return;
+      const z = (zones || []).find(x => x.ctrExact && [2, 3, 4].includes(Number(x.zoneNum)) && Number.isFinite(x.lowerMslM));
+      if (COUNTRY === 'de' && z) {
+        S.hgridZone = { zoneNum: Number(z.zoneNum), lowerMslM: z.lowerMslM };
+        btn.style.display = '';
+        if (S.hgridOn) buildHeightGrid().then(() => { if (S.hgridOn && S.layers.heightGrid && S.map && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map); });
+      } else {
+        S.hgridZone = null; btn.style.display = 'none';
+        if (S.layers.heightGrid && S.map) S.map.removeLayer(S.layers.heightGrid);
+        S.layers.heightGrid = null;
+      }
     }
 
     function terrainSamplePoints(lat, lon, radiusM) {
@@ -8114,6 +8227,26 @@
         if (key === 'dipul' && !S.layerVisible.dipul) stopDipulWmsHover();
       });
     });
+
+    // Höhengitter-Toggle (DE): lazy aufbauen, ein-/ausblenden; Legenden-Rampe einmal füllen
+    (function initHeightGrid() {
+      const ramp = document.getElementById('hgl-ramp');
+      if (ramp) ramp.innerHTML = HGRID_COLORS.map(c => `<span style="background:${c}"></span>`).join('');
+      const btn = document.getElementById('hgrid-toggle');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        if (!S.map || !S.hgridZone) return;
+        S.hgridOn = !S.hgridOn;
+        btn.classList.toggle('active', S.hgridOn);
+        document.getElementById('hgrid-legend')?.classList.toggle('show', S.hgridOn);
+        if (S.hgridOn) {
+          if (!S.layers.heightGrid) { btn.classList.add('loading'); await buildHeightGrid(); btn.classList.remove('loading'); }
+          if (S.layers.heightGrid && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map);
+        } else if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) {
+          S.map.removeLayer(S.layers.heightGrid);
+        }
+      });
+    })();
 
     // Länder-Zusatzebenen: beim ersten Kartenaufbau laden und als Vektor-Overlay zeichnen.
     // Rein informativ — fließen NICHT in die Flugstatus-Bewertung ein.
