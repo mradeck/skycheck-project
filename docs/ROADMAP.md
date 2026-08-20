@@ -29,3 +29,16 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
 
 - [ ] Prüfen, welche weiteren EU-Staaten ihre Geozonen gemäß Art. 15(3) VO (EU) 2019/947
       offen (ED-269/ED-318) bereitstellen und als neue `skycheck-<xx>`-Variante anbinden.
+
+- [ ] **Tschechien (skycheck-cz) — offizielle ŘLP-ED-269-Quelle.** Recherche 2026-08:
+      Die offizielle CZ-Drohnenkarte ist **dronemap.gov.cz** (früher DronView / dron.rlp.cz),
+      betrieben von der Flugsicherung **ŘLP ČR**, GIS-Backend **`aimgis.rlp.cz`** (ArcGIS,
+      WMS/WFS, ohne Auth). Problem: Die zusammengesetzte „alle Geozonen"-Geometrie holt DronMap
+      über `getGJ.php` mit **AES-verschlüsselten** Requests/Responses (Obfuskation) — kein sauberer
+      Endpoint. Die offenen `aimgis`-WMS-Dienste sind **fragmentiert** (ein Layer je Service:
+      `zony`/AD_inner_zones, `Gridy`/GRID_CTR+GRID_ATZ, `ODOS`, …) — kein einzelner Geozonen-Layer
+      wie DiPUL. Der kommerzielle „Dronecharts"-WMS (`gis.lagunasolutions.cz/geoserver/dronecharts/wms`,
+      Layer `dronecharts:dronecharts_cz`, anonymes GetMap möglich) ist © Dronecharts/CopterShop.cz →
+      Weiterverwendung nur mit Erlaubnis. **Sauberer Weg (Option 1):** den amtlichen **ED-269/ED-318**-
+      Datensatz suchen (data.gov.cz/NKOD) bzw. bei ŘLP anfragen und wie FR/AT bündeln. (Notiert
+      2026-08 auf Nutzerwunsch; zunächst NL + PT via EASA umgesetzt.)

@@ -3350,7 +3350,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.110.2';
+    const APP_VER = '26.08.111.0';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3368,6 +3368,8 @@
         if (host.includes('skycheck-es') || host.endsWith('skycheck.es')) return 'es';
         if (host.includes('skycheck-dk') || host.endsWith('skycheck.dk')) return 'dk';
         if (host.includes('skycheck-ie') || host.endsWith('skycheck.ie')) return 'ie';
+        if (host.includes('skycheck-nl') || host.endsWith('skycheck.nl')) return 'nl';
+        if (host.includes('skycheck-pt') || host.endsWith('skycheck.pt')) return 'pt';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -4277,7 +4279,7 @@
       }
     };
     // Standard-UI-Sprache pro Land (nur beim Erstbesuch; eine gespeicherte Wahl hat Vorrang).
-    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en' };
+    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en', nl: 'en', pt: 'en' };
     // Adressvorschlag: bekanntes Wahrzeichen der jeweiligen Hauptstadt (sprachneutrale Eigennamen).
     const COUNTRY_LANDMARK = {
       de: 'Brandenburger Tor, Berlin',
@@ -4287,6 +4289,8 @@
       es: 'Puerta del Sol, Madrid',
       dk: 'Nyhavn, København',
       ie: "O'Connell Street, Dublin",
+      nl: 'Dam, Amsterdam',
+      pt: 'Praça do Comércio, Lisboa',
     };
     // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
     const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
@@ -4300,12 +4304,14 @@
       es: '-18.3,27.5,4.5,44.0',
       dk: '7.7,54.5,15.5,58.0',
       ie: '-10.8,51.2,-5.3,55.5',
+      nl: '3.2,50.7,7.3,53.6',
+      pt: '-31.4,32.3,-6.1,42.2',
     };
     // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
     const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
     // ISO-Ländercode pro Land — für exakten Photon-`countrycode`-Filter (die Bbox überlappt
     // an Grenzen leicht mit Nachbarländern; der Code entfernt diese Fremdtreffer).
-    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE' };
+    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE', nl: 'NL', pt: 'PT' };
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -4325,6 +4331,8 @@
       es: { de: 'Spanien',     en: 'Spain',       fr: 'Espagne', es: 'España',  pl: 'Hiszpania' },
       dk: { de: 'Dänemark',    en: 'Denmark',     fr: 'Danemark', es: 'Dinamarca', pl: 'Dania' },
       ie: { de: 'Irland',      en: 'Ireland',     fr: 'Irlande', es: 'Irlanda', pl: 'Irlandia' },
+      nl: { de: 'Niederlande', en: 'Netherlands', fr: 'Pays-Bas', es: 'Países Bajos', pl: 'Holandia' },
+      pt: { de: 'Portugal',    en: 'Portugal',    fr: 'Portugal', es: 'Portugal', pl: 'Portugalia' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -4344,11 +4352,14 @@
       es: [{ label: 'ENAIRE', url: 'https://drones.enaire.es/' }, { label: 'EASA', url: 'https://www.easa.europa.eu/' }],
       dk: [{ label: 'Trafikstyrelsen', url: 'https://www.droneregler.dk/' }],
       ie: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }],
+      nl: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }],
+      pt: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }, { label: 'ANAC', url: 'https://www.voanaeuropa.eu/' }],
     };
     // Reihenfolge der Länder-Varianten in der Landing-Kachel „SkyCheck in anderen Ländern".
     const COUNTRY_VARIANTS = [
       { c: 'de', flag: '🇩🇪' }, { c: 'fr', flag: '🇫🇷' }, { c: 'at', flag: '🇦🇹' },
       { c: 'ch', flag: '🇨🇭' }, { c: 'es', flag: '🇪🇸' }, { c: 'dk', flag: '🇩🇰' }, { c: 'ie', flag: '🇮🇪' },
+      { c: 'nl', flag: '🇳🇱' }, { c: 'pt', flag: '🇵🇹' },
     ];
     function renderZoneSources() {
       const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
@@ -4586,6 +4597,11 @@
     ];
     // Irland: EASA Common Repository ArcGIS-FeatureServer (ED-318, CORS-offen). „preliminary".
     const IE_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/ie_geozones/FeatureServer/0';
+    // Niederlande: EASA Common Repository, ED-318 (Polygone, ~162 Zonen, CORS-offen). Wie IE.
+    const NL_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/Netherlands_ED318/FeatureServer/93';
+    // Portugal: EASA Common Repository (Polygone, ~314 Zonen, CORS-offen). KML-abgeleitetes Schema
+    // (FolderPath/Risk/Restriction, ANAC-Kontakt) — eigener Mapper _mapPT.
+    const PT_LAYER = 'https://services-eu1.arcgis.com/71Lfb7umh2boMcWI/arcgis/rest/services/Portugal_Geo_Zones_Polygons/FeatureServer/14';
     // Spanien EASA-Alternativquelle: EASA Common Repository (Layer geozone_EASA, ~15.800 Zonen,
     // ED-318, CORS-offen). Clientseitige Vektor-Darstellung nach type gefärbt — übersichtlicher
     // als der flächige ENAIRE-WMS-Blob. Auf dem Startbildschirm umschaltbar (Default: EASA).
@@ -5949,6 +5965,8 @@
       if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
       if (COUNTRY === 'dk') return fetchZonesDK(lat, lon, radiusM);
       if (COUNTRY === 'ie') return fetchZonesIE(lat, lon, radiusM);
+      if (COUNTRY === 'nl') return fetchZonesNL(lat, lon, radiusM);
+      if (COUNTRY === 'pt') return fetchZonesPT(lat, lon, radiusM);
       if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
       return fetchZonesDE(lat, lon, radiusM);
     }
@@ -6039,6 +6057,70 @@
     async function fetchAllZonesIE() {
       const fs = await _arcgisQuery(IE_LAYER, { outFields: 'name,identifier,type' });
       return fs.map(f => _mapIE(f, true));
+    }
+
+    // --- Niederlande (EASA, ED-318) ---
+    // Wie IE, aber die Ampelfarbe kommt aus `restriction` (type ist konstant „COMMON").
+    function _mapNL(f, withGeom) {
+      const p = f.properties || {};
+      return {
+        name: p.name || p.identifier || '—',
+        type: p.restriction || p.type || 'UAS_ZONE',
+        lower: '—', upper: '—',
+        legal: _ieAuthority(p.zoneAuthority) || (p.reason || '—'),
+        legalUrl: '',
+        desc: _stripHtml([p.message, p.restrictionConditions].filter(Boolean).join(' · ')),
+        color: _esZoneColor(p.restriction || p.type),
+        geometry: withGeom ? _geoToOverlay(f.geometry) : [],
+      };
+    }
+    async function fetchZonesNL(lat, lon, radiusM = 100) {
+      try {
+        const fs = await _arcgisQuery(NL_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        return fs.map(f => _mapNL(f, false));
+      } catch (e) { console.warn('Zones NL fetch error', e); return []; }
+    }
+    async function fetchAllZonesNL() {
+      const fs = await _arcgisQuery(NL_LAYER, { outFields: 'name,identifier,type,restriction' });
+      return fs.map(f => _mapNL(f, true));
+    }
+
+    // --- Portugal (EASA, KML-abgeleitet) ---
+    // Ampel aus `Restriction` (Open/restricted/Prohibited); Typ = letzte FolderPath-Ebene
+    // (Aeroportos, CTRs, Zonas Militares, Área de natureza protegida …).
+    function _ptColor(r) {
+      const s = (r || '').toLowerCase();
+      if (s === 'prohibited') return '#ef4444';
+      if (s === 'restricted') return '#f59e0b';
+      if (s === 'open') return '#22c55e';
+      return '#64748b';
+    }
+    function _mapPT(f, withGeom) {
+      const p = f.properties || {};
+      const folder = String(p.FolderPath || '').split('/').filter(x => x && x !== 'Document').shift() || '';
+      const baseFt = (p.Base != null && p.Base !== '' && !isNaN(+p.Base)) ? `${Math.round(+p.Base)} ft` : '';
+      const _url = v => { v = _esVal(v); if (/^https?:\/\//i.test(v)) return v; if (/^www\./i.test(v)) return 'https://' + v; return ''; };
+      const anac = _esVal(p.ANAC), anacUrl = _url(p.ANAC);
+      return {
+        name: p.Name || '—',
+        type: folder || p.Restriction || 'UAS_ZONE',
+        lower: '—', upper: '—',
+        legal: (anac && !anacUrl) ? anac : (_esVal(p.ContactName) || 'ANAC'),
+        legalUrl: anacUrl || _url(p.ContactSite),
+        desc: _stripHtml([p.info, p.Restriction, p.Conditions, p.Hours, baseFt && ('Base ' + baseFt)].filter(Boolean).join(' · ')),
+        color: _ptColor(p.Restriction),
+        geometry: withGeom ? _geoToOverlay(f.geometry) : [],
+      };
+    }
+    async function fetchZonesPT(lat, lon, radiusM = 100) {
+      try {
+        const fs = await _arcgisQuery(PT_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        return fs.map(f => _mapPT(f, false));
+      } catch (e) { console.warn('Zones PT fetch error', e); return []; }
+    }
+    async function fetchAllZonesPT() {
+      const fs = await _arcgisQuery(PT_LAYER, { outFields: 'Name,FolderPath,Restriction' });
+      return fs.map(f => _mapPT(f, true));
     }
 
     // --- Spanien (EASA Common Repository) ---
@@ -6418,13 +6500,15 @@
     // weiterhin nur Detailliste + Flugstatus. Promise wird gecacht (kein Doppel-Fetch).
     // Flächiges „alle Zonen"-Overlay (AT-Datei, DK/IE-ArcGIS) — einmal geladen, Promise gecacht.
     const _overlayPromise = {};
-    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1 };   // Länder mit flächigem Client-Vektor-Overlay
+    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1, nl: 1, pt: 1 };   // Länder mit flächigem Client-Vektor-Overlay
     function ensureAllZones() {
       if (_overlayPromise[COUNTRY]) return _overlayPromise[COUNTRY];
       let p;
       if (COUNTRY === 'at') p = fetchAllZonesAT();
       else if (COUNTRY === 'dk') p = fetchAllZonesDK();
       else if (COUNTRY === 'ie') p = fetchAllZonesIE();
+      else if (COUNTRY === 'nl') p = fetchAllZonesNL();
+      else if (COUNTRY === 'pt') p = fetchAllZonesPT();
       else p = Promise.resolve([]);
       _overlayPromise[COUNTRY] = p.catch(e => { console.warn('Overlay-Zonen Fehler', e); return []; });
       return _overlayPromise[COUNTRY];
@@ -7871,7 +7955,7 @@
         } else {
           // FR & AT & ES-EASA: LayerGroup wird über drawZoneOverlay() befüllt, sobald fetchZones liefert
           S.layers.dipul = L.layerGroup();
-          if (esEasa()) S.map.attributionControl.addAttribution('© EASA Common Repository');
+          if (esEasa() || COUNTRY === 'nl' || COUNTRY === 'pt') S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         if (CONTEXT_COUNTRIES[COUNTRY]) scheduleContextLayerState();
