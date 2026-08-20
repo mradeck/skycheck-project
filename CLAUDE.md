@@ -29,7 +29,7 @@
 **Datei:** `skycheck.html` (Single-File HTML/JS/CSS, ~5290 Zeilen)
 **Live:** https://enchanting-stardust-f713da.netlify.app/skycheck.html
 **Repo:** https://github.com/mradeck/skycheck-project.git
-**Aktuell:** v26.08.110.2 — Die Startseite zeigt zuerst die Länder-Varianten, danach SkyAlarm, PointCloud Manager, GPS2UTM und MetaLens; alle App-Versionen folgen dem Schema `vYY.MM.major.subversion`.
+**Aktuell:** v26.08.111.0 — **Niederlande (`skycheck-nl`) + Portugal (`skycheck-pt`)** ergänzt: beide über das **EASA Common Repository** (ArcGIS-FeatureServer, clientseitige Vektor-Polygone, CORS-offen) nach dem IE-Adapter-Muster. NL = ED-318 (~162 Zonen, Ampel nach `restriction`), PT = KML-abgeleitetes Schema (~314 Zonen, Ampel nach `Restriction`, Typ aus `FolderPath`, ANAC-Kontakt). Country-Wiring (Detection, Namen, Bbox, Landmark, CC, Quellenleiste, Länder-Kachel) + `OVERLAY_ALL` auf `nl`/`pt` erweitert. Tschechien-ED-269 auf der Roadmap. Vorgänger v26.08.110.2 — Startseiten-Reihenfolge (Länder-Varianten zuerst); alle App-Versionen folgen `vYY.MM.major.subversion`.
 **Projektpfad (Mac):** `/Users/michaelradeck/Downloads/code/cowork/skycheck_project`
 **LLM-Wiki (Mac):** `~/Library/Mobile Documents/com~apple~CloudDocs/code/obsidian-claude-llm-wiki`
 **Netlify-Funktionen:**
@@ -121,7 +121,7 @@ zeigen immer den vollständigen `APP_VERSION_CODE`. Keine Ausnahme.
 
 | Anker-String | Position (ca.) | Bedeutung |
 |---|---|---|
-| `const APP_VER = '26.08.110.2';` | ~3354 | **Zentrale Versionsvariable** im Schema `YY.MM.major.subversion` |
+| `const APP_VER = '26.08.111.0';` | ~3354 | **Zentrale Versionsvariable** im Schema `YY.MM.major.subversion` |
 | `const COUNTRY_NAMES = {` | nach `_t()` | Lookup-Tabelle pro UI-Sprache × Country (nominativ); neuen Country: neue Zeile, neue UI-Sprache: neue Spalte |
 | `function _country()` | nach `COUNTRY_NAMES` | Liefert lokalisierten Country-Namen für aktuellen `COUNTRY`/`LANG` |
 | `function drawZoneOverlay(zones, layerGroup)` | nach `renderZones` | Zeichnet FR-Geozonen (Polygon/Circle) auf Leaflet-Map; DE-Zonen ohne `geometry`-Feld werden übersprungen |
@@ -206,6 +206,7 @@ const δ = Math.max(0.001134, radiusM * 101 / (4 * 111320));
 
 | Version | Änderungen |
 |---|---|
+| v26.08.111.0 | 🇳🇱🇵🇹 **Niederlande + Portugal** (`skycheck-nl`, `skycheck-pt`) via EASA Common Repository (ArcGIS-Vektor, CORS-offen), Adapter nach IE-Muster. NL `Netherlands_ED318/93` (ED-318, ~162 Zonen, `_mapNL` färbt nach `restriction`), PT `Portugal_Geo_Zones_Polygons/14` (~314 Zonen, `_mapPT` färbt nach `Restriction`, Typ aus `FolderPath`-Blattebene, ANAC-URL→`legalUrl`). Neu: `NL_LAYER`/`PT_LAYER`, `fetchZonesNL/PT` + `fetchAllZonesNL/PT`, Dispatcher + `OVERLAY_ALL={…,nl,pt}` + `ensureAllZones`; COUNTRY-Tabellen (DEFAULT_LANG en, LANDMARK Amsterdam/Lissabon, BBOX, CC, NAMES, ZONE_SOURCES, VARIANTS) erweitert. CSP unverändert (`services-eu1.arcgis.com` seit IE erlaubt). Live geprüft: NL 163 Overlay-Polygone, PT 314 + Punkttreffer am Flughafen Lissabon. Tschechien-ED-269 → `docs/ROADMAP.md`. |
 | v26.08.110.2 | **Startseiten-Reihenfolge geklärt.** Zuerst erscheinen die SkyCheck-Länder-Varianten, dann SkyAlarm, PointCloud Manager, GPS2UTM und MetaLens. |
 | v26.08.110.1 | **App-Verbund vervollständigt.** Die SkyCheck-Startseite enthält nun zusätzlich eine PointCloud-Manager-Kachel neben SkyAlarm und GPS2UTM. |
 | v26.08.110.0 | **GPS2UTM im App-Verbund und neues Versionsschema.** Neue Startseiten-Kachel mit Wortmarke GPS weiß, 2 rot und UTM türkis. SkyCheck verwendet nun das PointCloud-Schema `vYY.MM.major.subversion`; die vollständige Nummer erscheint im App-Kopf, Footer und Browser-Tab. |

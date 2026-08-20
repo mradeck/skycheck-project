@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES · DK · IE)
+# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES · DK · IE · NL · PT)
 
 **SkyCheck** is a free single-page web app for quickly pre-checking drone flights. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -22,10 +22,12 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | 🇪🇸 **Spain** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (vector) **or** ENAIRE servAIS (WMS) — switchable on the start screen, EASA default |
 | 🇩🇰 **Denmark** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (vector) |
 | 🇮🇪 **Ireland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (vector, preliminary) |
+| 🇳🇱 **Netherlands** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (vector, ED-318) |
+| 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (vector) |
 
-> All seven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
+> All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.110.2
+📦 **Current version:** v26.08.111.0
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -82,6 +84,8 @@ the app header.
 | **Geo-zones 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Spanish UAS zones — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **or** EASA `geozone_EASA` (ArcGIS vector, viewport-based); switchable, EASA default | ✅ |
 | **Geo-zones 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Danish UAS zones (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geo-zones 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irish UAS zones `ie_geozones` (ArcGIS, ED-318, preliminary) | ✅ |
+| **Geo-zones 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Dutch UAS zones `Netherlands_ED318` (ArcGIS vector, ED-318, ~162 zones) | ✅ |
+| **Geo-zones 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Portuguese UAS zones `Portugal_Geo_Zones_Polygons` (ArcGIS vector, ~314 zones; KML-derived schema) | ✅ |
 | **Context layers** (🇦🇹🇨🇭🇪🇸🇩🇰🇮🇪🇫🇷) [OpenStreetMap](https://www.openstreetmap.org/) (ODbL) | Optional overlays — protected areas, motorways, power lines, railways (static GeoJSON snapshots in `data/<cc>-*.json`, generated via `scripts/`); informational only, not part of the flight-status check. DE already has these via DiPUL | ✅ |
 
 ---
@@ -126,7 +130,7 @@ redirect.html               ← optional redirect page
 
 ### Multi-country support (since v0.73)
 
-SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
+SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
 
 | Country | Geo-zone source | Overlay | Detail list / status | Data & updates |
 |---|---|---|---|---|
@@ -217,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.111.0 | 🇳🇱🇵🇹 **Netherlands and Portugal added** (`skycheck-nl`, `skycheck-pt`). Both use the **EASA Common Repository** ArcGIS FeatureServers (client-side vector polygons, CORS-open) via the existing IE-style adapter: NL is ED-318 (~162 zones, coloured by `restriction`), PT is a KML-derived schema (~314 zones, coloured by `Restriction`, type from `FolderPath` — Aeroportos, CTRs, Zonas Militares, protected areas — ANAC contact). Country wiring (detection, names, bbox, landmark, CC, zone-source strip, country tile) and the full-overlay mechanism extended to `nl`/`pt`. For Czech Republic the clean official ED-269 route is on the roadmap (the ŘLP DronMap API is AES-obfuscated, the commercial Dronecharts WMS needs permission). |
 | v26.08.110.2 | **Landing-page order clarified.** Country-specific SkyCheck variants now come first, followed by SkyAlarm, PointCloud Manager, GPS2UTM and MetaLens. |
 | v26.08.110.1 | **Cross-app navigation completed.** SkyCheck now includes a PointCloud Manager card alongside SkyAlarm and GPS2UTM. |
 | v26.08.110.0 | **GPS2UTM integration and shared version format.** The landing page links to GPS2UTM with the shared white/red/cyan wordmark. SkyCheck now uses `vYY.MM.major.subversion`, shown completely in the app header, footer and browser tab. |

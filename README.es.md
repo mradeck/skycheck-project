@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Verificación de vuelo de drones (DE · FR · AT · CH · ES · DK · IE)
+# SkyCheck — Verificación de vuelo de drones (DE · FR · AT · CH · ES · DK · IE · NL · PT)
 
 **SkyCheck** es una aplicación web monopágina gratuita para verificar rápidamente, antes del despegue, las condiciones de un vuelo de drone. La app agrega datos en tiempo real de varias fuentes oficiales y ofrece una recomendación de vuelo inmediata. Nuestros casos de uso: topografía, inspección, vídeos corporativos, producciones de TV y cine, así como formación para la licencia de drone A2/STS en [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -22,10 +22,12 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 | 🇪🇸 **España** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (vectorial) **o** ENAIRE servAIS (WMS) — conmutable en la pantalla de inicio, EASA por defecto |
 | 🇩🇰 **Dinamarca** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (vectorial) |
 | 🇮🇪 **Irlanda** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (vectorial, preliminar) |
+| 🇳🇱 **Países Bajos** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (vectorial, ED-318) |
+| 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (vectorial) |
 
-> Los siete son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
+> Los nueve son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v1.06
+📦 **Versión actual:** v26.08.111.0
 
 ---
 
@@ -76,6 +78,8 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 | **Geozonas 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Zonas UAS españolas — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **o** EASA `geozone_EASA` (vectorial ArcGIS, basado en el área visible); conmutable, EASA por defecto | ✅ |
 | **Geozonas 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Zonas UAS danesas (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geozonas 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Zonas UAS irlandesas `ie_geozones` (ArcGIS, ED-318, preliminar) | ✅ |
+| **Geozonas 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Zonas UAS neerlandesas `Netherlands_ED318` (vectorial ArcGIS, ED-318, ~162 zonas) | ✅ |
+| **Geozonas 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Zonas UAS portuguesas `Portugal_Geo_Zones_Polygons` (vectorial ArcGIS, ~314 zonas; esquema derivado de KML) | ✅ |
 
 ---
 
@@ -202,6 +206,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.08.111.0 | 🇳🇱🇵🇹 **Países Bajos y Portugal añadidos** (`skycheck-nl`, `skycheck-pt`) vía **EASA Common Repository** (vectorial ArcGIS, CORS abierto) con el adaptador estilo IE: NL = ED-318 (~162 zonas, color según `restriction`), PT = esquema derivado de KML (~314 zonas, color según `Restriction`, tipo desde `FolderPath`, contacto ANAC). Cableado de país + superposición nacional ampliados a `nl`/`pt`. ED-269 checo en la hoja de ruta. |
 | v1.06 | **Superposiciones claras refinadas.** Los controles del mapa, el panel de estado, el botón de pantalla completa y el selector de mapa usan ahora superficies claras translúcidas sobre OSM. Los controles siguen un sistema rectangular coherente de 32 px y las capas contextuales conservan su color. Verificado en escritorio y móvil de 390 px. |
 | v1.05 | **Tema/mapa vinculados y vista local de Austria reparada.** La interfaz clara selecciona OSM y la oscura CARTO Dark; el botón de estilo del mapa sigue disponible. Sin Netlify Functions, la vista local carga ahora el archivo ED-269 de Austro Control y muestra las zonas aeroportuarias y de control. |
 | v1.04 | **Interfaz clara global.** Un botón de sol/luna en la portada y en la navegación de resultados cambia toda la interfaz, guarda la preferencia y sincroniza la vista de alarma integrada. Está disponible en las siete variantes nacionales; el estilo del mapa sigue siendo independiente. |

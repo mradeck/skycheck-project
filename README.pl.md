@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Sprawdzenie lotu dronem (DE · FR · AT · CH · ES · DK · IE)
+# SkyCheck — Sprawdzenie lotu dronem (DE · FR · AT · CH · ES · DK · IE · NL · PT)
 
 **SkyCheck** to bezpłatna aplikacja webowa typu single-page do szybkiego wstępnego sprawdzenia warunków lotu dronem. Agreguje dane w czasie rzeczywistym z kilku oficjalnych źródeł i wydaje natychmiastową rekomendację lotu. Nasze zastosowania: pomiary, inspekcje, filmy wizerunkowe, produkcje TV i filmowe oraz szkolenia na świadectwo kompetencji A2/STS w [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -22,10 +22,12 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | 🇪🇸 **Hiszpania** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (wektor) **lub** ENAIRE servAIS (WMS) — przełączane na ekranie startowym, domyślnie EASA |
 | 🇩🇰 **Dania** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (wektor) |
 | 🇮🇪 **Irlandia** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (wektor, wstępne) |
+| 🇳🇱 **Holandia** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (wektor, ED-318) |
+| 🇵🇹 **Portugalia** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (wektor) |
 
-> Wszystkie siedem to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
+> Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v1.06
+📦 **Aktualna wersja:** v26.08.111.0
 
 ---
 
@@ -76,6 +78,8 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Geostrefy 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | hiszpańskie strefy UAS — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **lub** EASA `geozone_EASA` (wektor ArcGIS, oparty na widocznym obszarze); przełączane, domyślnie EASA | ✅ |
 | **Geostrefy 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | duńskie strefy UAS (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geostrefy 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | irlandzkie strefy UAS `ie_geozones` (ArcGIS, ED-318, wstępne) | ✅ |
+| **Geostrefy 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | holenderskie strefy UAS `Netherlands_ED318` (wektor ArcGIS, ED-318, ~162 stref) | ✅ |
+| **Geostrefy 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | portugalskie strefy UAS `Portugal_Geo_Zones_Polygons` (wektor ArcGIS, ~314 stref; schemat pochodzący z KML) | ✅ |
 
 ---
 
@@ -111,7 +115,7 @@ redirect.html               ← optional redirect page
 
 ### Wsparcie wielokrajowe (od v0.73)
 
-SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch|es|dk|ie`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF i indeks Kp są globalne; **język interfejsu, punkt orientacyjny wskazówki wyszukiwania oraz bounding box geokodowania** są ustawiane per kraj.
+SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF i indeks Kp są globalne; **język interfejsu, punkt orientacyjny wskazówki wyszukiwania oraz bounding box geokodowania** są ustawiane per kraj.
 
 | Kraj | Źródło geostref | Nakładka | Lista szczegółów / status | Dane i aktualizacje |
 |---|---|---|---|---|
@@ -202,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.111.0 | 🇳🇱🇵🇹 **Dodano Holandię i Portugalię** (`skycheck-nl`, `skycheck-pt`). Oba warianty korzystają z ArcGIS FeatureServerów **EASA Common Repository** (wektorowe poligony po stronie klienta, otwarty CORS) poprzez istniejący adapter w stylu IE: NL to ED-318 (~162 strefy, kolorowane wg `restriction`), PT to schemat pochodzący z KML (~314 stref, kolorowane wg `Restriction`, typ z `FolderPath` — Aeroportos, CTR-y, Zonas Militares, obszary chronione — kontakt ANAC). Okablowanie kraju (wykrywanie, nazwy, bbox, punkt orientacyjny, CC, pasek źródła stref, kafelek kraju) oraz mechanizm nakładki całego kraju rozszerzone na `nl`/`pt`. Dla Czech czysta oficjalna ścieżka ED-269 jest na mapie drogowej (API ŘLP DronMap jest zaciemnione AES, komercyjny WMS Dronecharts wymaga zgody). |
 | v1.06 | **Dopracowane jasne nakładki mapy.** Panel sterowania, panel stanu, pełny ekran i przełącznik mapy używają teraz jasnych półprzezroczystych powierzchni na OSM. Elementy sterujące mają spójny prostokątny system 32 px, a warstwy kontekstowe zachowują swoje kolory. Sprawdzono na desktopie i ekranie mobilnym 390 px. |
 | v1.05 | **Połączony motyw/mapa i naprawiony lokalny podgląd Austrii.** Jasny interfejs wybiera OSM, ciemny CARTO Dark; przycisk stylu mapy nadal pozwala na ręczną zmianę. Bez Netlify Functions lokalny podgląd wczytuje plik ED-269 Austro Control i pokazuje strefy lotniskowe oraz kontrolowane. |
 | v1.04 | **Globalny jasny interfejs.** Przycisk słońce/księżyc na ekranie startowym i w nawigacji wyników przełącza cały interfejs, zapamiętuje wybór i synchronizuje zintegrowany widok alarmu. Funkcja działa we wszystkich siedmiu wariantach krajowych; styl mapy pozostaje niezależny. |

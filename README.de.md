@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Drohnenflugprüfung (DE · FR · AT · CH · ES · DK · IE)
+# SkyCheck — Drohnenflugprüfung (DE · FR · AT · CH · ES · DK · IE · NL · PT)
 
 **SkyCheck** ist eine kostenlose Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung. Unser Verwendungszweck: Vermessung, Inspektion, Imagefilm, TV- & Filmproduktionen sowie Schulungen für den Drohnenführerschein A2/STS bei [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -22,10 +22,12 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | 🇪🇸 **Spanien** | [skycheck-es.netlify.app](https://skycheck-es.netlify.app/) | EASA Common Repository (Vektor) **oder** ENAIRE servAIS (WMS) — auf dem Startbildschirm umschaltbar, Default EASA |
 | 🇩🇰 **Dänemark** | [skycheck-dk.netlify.app](https://skycheck-dk.netlify.app/) | Trafikstyrelsen — ArcGIS FeatureServer (Vektor) |
 | 🇮🇪 **Irland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, vorläufig) |
+| 🇳🇱 **Niederlande** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, ED-318) |
+| 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (Vektor) |
 
-> Alle sieben sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
+> Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v1.06
+📦 **Aktuelle Version:** v26.08.111.0
 
 ---
 
@@ -76,6 +78,8 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | **Geozonen 🇪🇸** [ENAIRE servAIS](https://www.enaire.es/) / [EASA Common Repository](https://www.easa.europa.eu/) | Spanische UAS-Zonen — ENAIRE `SRV_UAS_ZG_V0` (WMS + ArcGIS Identify) **oder** EASA `geozone_EASA` (ArcGIS-Vektor, viewport-basiert); umschaltbar, Default EASA | ✅ |
 | **Geozonen 🇩🇰** [Trafikstyrelsen](https://www.droneregler.dk/) | Dänische UAS-Zonen (ArcGIS FeatureServer, GeoJSON) | ✅ |
 | **Geozonen 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irische UAS-Zonen `ie_geozones` (ArcGIS, ED-318, vorläufig) | ✅ |
+| **Geozonen 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Niederländische UAS-Zonen `Netherlands_ED318` (ArcGIS-Vektor, ED-318, ~162 Zonen) | ✅ |
+| **Geozonen 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Portugiesische UAS-Zonen `Portugal_Geo_Zones_Polygons` (ArcGIS-Vektor, ~314 Zonen; KML-abgeleitetes Schema) | ✅ |
 
 ---
 
@@ -111,7 +115,7 @@ redirect.html               ← optionale Weiterleitungsseite
 
 ### Multi-Country-Support (seit v0.73)
 
-SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen. Das Land wird aus dem Hostname (z. B. `skycheck-ch.netlify.app`) oder dem URL-Parameter `?country=de|fr|at|ch|es|dk|ie` erkannt. Default: `de`. Wetter, ADS-B, METAR/TAF und Kp-Index sind global; die **UI-Sprache, das Suchhinweis-Wahrzeichen und die Geocoding-Bounding-Box** werden pro Land gesetzt.
+SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen. Das Land wird aus dem Hostname (z. B. `skycheck-ch.netlify.app`) oder dem URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt` erkannt. Default: `de`. Wetter, ADS-B, METAR/TAF und Kp-Index sind global; die **UI-Sprache, das Suchhinweis-Wahrzeichen und die Geocoding-Bounding-Box** werden pro Land gesetzt.
 
 | Land | Geozonen-Quelle | Overlay | Detailliste / Status | Daten & Updates |
 |---|---|---|---|---|
@@ -202,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.111.0 | 🇳🇱🇵🇹 **Niederlande und Portugal ergänzt** (`skycheck-nl`, `skycheck-pt`) über das **EASA Common Repository** (ArcGIS-Vektor, CORS-offen) nach dem IE-Adapter-Muster: NL = ED-318 (~162 Zonen, Farbe nach `restriction`), PT = KML-abgeleitetes Schema (~314 Zonen, Farbe nach `Restriction`, Typ aus `FolderPath` — Aeroportos, CTRs, Zonas Militares, Schutzgebiete — ANAC-Kontakt). Country-Wiring (Erkennung, Namen, Bounding-Box, Wahrzeichen, CC, Quellenleiste, Länderkachel) und das Ganzland-Overlay auf `nl`/`pt` erweitert. Für Tschechien steht der saubere offizielle ED-269-Weg auf der Roadmap (die ŘLP-DronMap-API ist AES-obfuskiert, der kommerzielle Dronecharts-WMS braucht eine Freigabe). |
 | v1.06 | **Helle Karten-Overlays überarbeitet:** Bedienkachel, Status-/Infotafel, Vollbild- und Kartenstil-Schalter verwenden auf OSM nun helle, halbtransparente Flächen. Die Buttons folgen einem konsistenten rechteckigen 32-px-System; farbige Kontextlayer behalten ihre Kategoriefarbe. Desktop und 390-px-Mobile visuell geprüft. |
 | v1.05 | **Theme/Karte gekoppelt und Österreich lokal repariert:** Helles Interface wählt standardmäßig OSM, dunkles Interface CARTO Dark; der separate Kartenstil-Button bleibt als manuelle Überschreibung erhalten. Lokale Vorschauen laden bei fehlenden Netlify Functions die mitgelieferte Austro-Control-ED-269-Datei, sodass Flughafenzonen, Kontrollzonen und Punktdetails wieder erscheinen. |
 | v1.04 | **Globaler Hellmodus:** Ein Sonnen-/Mond-Button auf Startseite und Ergebnisnavigation schaltet die gesamte SkyCheck-Oberfläche um, speichert die Auswahl und hält die integrierte Alarmansicht synchron. Da alle Länder dieselbe Datei verwenden, gilt dies automatisch für alle sieben SkyChecks; der Kartenstil bleibt separat wählbar. |
