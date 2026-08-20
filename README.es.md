@@ -27,7 +27,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 > Los nueve son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v26.08.111.0
+📦 **Versión actual:** v26.08.112.0
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.08.112.0 | 🇩🇪 **Rejilla de alturas (conmutable).** Un mapa de calor tipo semáforo de la altura máxima de vuelo por celda dentro de una zona de control de la DFS (CTR 2–4), inspirado en la GRID de DroneMap checa. Híbrido: el WMS de DiPUL muestra los límites de las subzonas; la nueva superposición colorea una rejilla de terreno de 13×13 (~3 km, lote de Open-Meteo) mediante la ya existente computeCtrFlightInfo, usando la zona CTR detectada en la ubicación. Conmutador de mapa propio + leyenda; solo aparece dentro de una CTR alemana 2/3/4. Es una aproximación (una única subzona detectada aplicada a toda la rejilla: en terreno llano dentro de una zona se lee bastante uniforme; los escalones 2/3/4 aparecen al pasar de una subzona a otra); el carácter vinculante sigue siendo DiPUL / NfL. |
 | v26.08.111.0 | 🇳🇱🇵🇹 **Países Bajos y Portugal añadidos** (`skycheck-nl`, `skycheck-pt`) vía **EASA Common Repository** (vectorial ArcGIS, CORS abierto) con el adaptador estilo IE: NL = ED-318 (~162 zonas, color según `restriction`), PT = esquema derivado de KML (~314 zonas, color según `Restriction`, tipo desde `FolderPath`, contacto ANAC). Cableado de país + superposición nacional ampliados a `nl`/`pt`. ED-269 checo en la hoja de ruta. |
 | v26.08.110.2 | **Orden de la página de inicio clarificado.** Las variantes de SkyCheck específicas por país aparecen ahora primero, seguidas de SkyAlarm, PointCloud Manager, GPS2UTM y MetaLens. |
 | v26.08.110.1 | **Navegación entre aplicaciones completada.** SkyCheck incluye ahora una tarjeta de PointCloud Manager junto a SkyAlarm y GPS2UTM. |

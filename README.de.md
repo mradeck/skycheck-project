@@ -27,7 +27,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.111.0
+📦 **Aktuelle Version:** v26.08.112.0
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.112.0 | 🇩🇪 **Höhengitter (zuschaltbar).** Eine Ampel-Heatmap der maximalen Flughöhe je Zelle innerhalb einer DFS-Kontrollzone (CTR 2–4) — inspiriert von der tschechischen DroneMap GRID. Hybrid: Das DiPUL-WMS zeigt die Sub-Zonen-Grenzen; das neue Overlay färbt ein 13×13-Geländegitter (~3 km, Open-Meteo-Batch) über das bestehende computeCtrFlightInfo anhand der am Standort erkannten CTR-Zone. Eigener Karten-Umschalter samt Legende; erscheint nur innerhalb einer deutschen CTR 2/3/4. Es handelt sich um eine Näherung (eine erkannte Sub-Zone über das gesamte Gitter angewandt — bei flachem Gelände innerhalb einer Zone liest sich das recht einheitlich; die Stufen 2/3/4 treten beim Übergang zwischen Sub-Zonen auf) — verbindlich bleibt DiPUL / NfL. |
 | v26.08.111.0 | 🇳🇱🇵🇹 **Niederlande und Portugal ergänzt** (`skycheck-nl`, `skycheck-pt`) über das **EASA Common Repository** (ArcGIS-Vektor, CORS-offen) nach dem IE-Adapter-Muster: NL = ED-318 (~162 Zonen, Farbe nach `restriction`), PT = KML-abgeleitetes Schema (~314 Zonen, Farbe nach `Restriction`, Typ aus `FolderPath` — Aeroportos, CTRs, Zonas Militares, Schutzgebiete — ANAC-Kontakt). Country-Wiring (Erkennung, Namen, Bounding-Box, Wahrzeichen, CC, Quellenleiste, Länderkachel) und das Ganzland-Overlay auf `nl`/`pt` erweitert. Für Tschechien steht der saubere offizielle ED-269-Weg auf der Roadmap (die ŘLP-DronMap-API ist AES-obfuskiert, der kommerzielle Dronecharts-WMS braucht eine Freigabe). |
 | v26.08.110.2 | **Reihenfolge der Startseite geklärt.** Die länderspezifischen SkyCheck-Varianten stehen nun zuerst, gefolgt von SkyAlarm, PointCloud Manager, GPS2UTM und MetaLens. |
 | v26.08.110.1 | **App-übergreifende Navigation vervollständigt.** SkyCheck enthält nun neben SkyAlarm und GPS2UTM auch eine PointCloud-Manager-Kachel. |
