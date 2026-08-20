@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.112.0
+📦 **Current version:** v26.08.113.0
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.113.0 | 🇩🇪 **Height grid now covers the whole CTR (WFS redesign).** The traffic-light heatmap now spans the **entire** DFS control zone (like the Czech GRID) instead of a pin-centred 3 km grid, and is **computed once per CTR and cached** — clicking new positions inside the same CTR no longer rebuilds it (fixing the heatmap/button inconsistently disappearing after a few clicks). New data source: the **DiPUL WFS** (`dipul:kontrollzonen`) delivers the exact sub-zone polygons (each `U_CONTROL_ZONE_1…4` with its MSL lower limit); every cell is assigned to its **correct** sub-zone by point-in-polygon, terrain is fetched (Open-Meteo) and coloured via `computeCtrFlightInfo` — so the 2/3/4 steps are real rather than one detected zone applied everywhere. Toggle stays visible throughout Germany; binding remains DiPUL / NfL. |
 | v26.08.112.0 | 🇩🇪 **Height grid (toggleable).** A traffic-light heatmap of the **maximum flight height per cell** inside a DFS control zone (CTR 2–4) — inspired by the Czech DroneMap GRID. **Hybrid**: DiPUL's WMS shows the sub-zone boundaries; the new overlay colours a 13×13 terrain grid (~3 km, Open-Meteo batch) via the existing `computeCtrFlightInfo` using the CTR zone detected at the location. Own map toggle + legend; appears only inside a German CTR 2/3/4. It is an **approximation** (one detected sub-zone applied across the grid — flat terrain in one zone reads fairly uniform; the 2/3/4 steps appear when moving between sub-zones) — binding remains DiPUL / NfL. |
 | v26.08.111.0 | 🇳🇱🇵🇹 **Netherlands and Portugal added** (`skycheck-nl`, `skycheck-pt`). Both use the **EASA Common Repository** ArcGIS FeatureServers (client-side vector polygons, CORS-open) via the existing IE-style adapter: NL is ED-318 (~162 zones, coloured by `restriction`), PT is a KML-derived schema (~314 zones, coloured by `Restriction`, type from `FolderPath` — Aeroportos, CTRs, Zonas Militares, protected areas — ANAC contact). Country wiring (detection, names, bbox, landmark, CC, zone-source strip, country tile) and the full-overlay mechanism extended to `nl`/`pt`. For Czech Republic the clean official ED-269 route is on the roadmap (the ŘLP DronMap API is AES-obfuscated, the commercial Dronecharts WMS needs permission). |
 | v26.08.110.2 | **Landing-page order clarified.** Country-specific SkyCheck variants now come first, followed by SkyAlarm, PointCloud Manager, GPS2UTM and MetaLens. |
