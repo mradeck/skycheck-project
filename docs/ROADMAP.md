@@ -39,6 +39,17 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
       `zony`/AD_inner_zones, `Gridy`/GRID_CTR+GRID_ATZ, `ODOS`, …) — kein einzelner Geozonen-Layer
       wie DiPUL. Der kommerzielle „Dronecharts"-WMS (`gis.lagunasolutions.cz/geoserver/dronecharts/wms`,
       Layer `dronecharts:dronecharts_cz`, anonymes GetMap möglich) ist © Dronecharts/CopterShop.cz →
-      Weiterverwendung nur mit Erlaubnis. **Sauberer Weg (Option 1):** den amtlichen **ED-269/ED-318**-
-      Datensatz suchen (data.gov.cz/NKOD) bzw. bei ŘLP anfragen und wie FR/AT bündeln. (Notiert
-      2026-08 auf Nutzerwunsch; zunächst NL + PT via EASA umgesetzt.)
+      Weiterverwendung nur mit Erlaubnis.
+      **Amtliche Quelle gefunden (Update 2026-08):** ŘLP AIM publiziert die UAS-Geozonen offiziell im
+      **ED-318-Format** — Seite **`aim.rlp.cz/?lang=en&p=uas-gz`** (UAS – Geo zones). Zwei ZIP-Pakete
+      **`ed_318_a1_a2.zip`** (Kategorien A1/A2, inkl. HOP „dicht besiedeltes Gebiet") und
+      **`ed_318_a3.zip`** (Kategorie A3, inkl. „Settled Area"), plus **`.geojson`-Referenzdateien** mit
+      den exakten, rechtsverbindlichen Grenzen (die ED-318-ZIPs sind für Geoawareness generalisiert;
+      in nummerierte Kacheln mit 2,3 km Überlappung zerlegt; AIRAC-Update). **Aber:** Die Download-
+      Tabelle auf der Seite ist **derzeit leer** — ŘLP baut die Website gerade um („changes to the
+      website structure … easier access to published data packages"); Datei-Links weder im DOM noch im
+      Web-Archiv, geratene Pfade 404. Gelände-/Hindernisdaten laufen dort ohnehin „On Request"
+      (`aim@ans.cz`). **Nächster Schritt:** nach Abschluss des Umbaus die `.geojson`-Referenzdateien
+      (bzw. `ed_318_*.zip`) von `aim.rlp.cz/?p=uas-gz` ziehen und wie FR/AT als Datei bündeln — ODER
+      direkt bei `aim@ans.cz` anfragen. Damit wäre skycheck-cz sauber und lizenzkonform baubar.
+      (Notiert 2026-08 auf Nutzerwunsch; NL + PT via EASA bereits umgesetzt.)
