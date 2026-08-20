@@ -3373,7 +3373,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.112.0';
+    const APP_VER = '26.08.113.0';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3488,7 +3488,8 @@
         mapDipul: 'Geozonen', mapAircraft: 'Flugbewegungen',
         ctxProtected: 'Schutzgebiete', ctxMotorways: 'Autobahnen', ctxPowerlines: 'Stromleitungen', ctxRail: 'Bahn',
         hgridToggle: 'Höhengitter', hgridMax: 'Max. Flughöhe', hgridLegendTitle: 'Max. Flughöhe (Näherung)',
-        hgridLow: 'niedrig', hgridHigh: 'hoch', hgridNote: 'Näherung aus Gelände + erkannter CTR-Zone. Verbindlich: DiPUL / NfL.',
+        hgridLow: 'niedrig', hgridHigh: 'hoch', hgridZoneShort: 'Zone', hgridIndiv: 'individuelle Freigabe',
+        hgridNote: 'Näherung je CTR-Sub-Zone aus DiPUL-Grenze + Gelände. Verbindlich: DiPUL / NfL.',
         mapAllZones: 'Alle Geozonen', mapRiskyZones: 'Nur Risikozonen',
         mapZonesShort: 'Zonen', mapAircraftShort: 'Flüge', mapAllShort: 'Alle', mapRiskShort: 'Risiko',
         mapMoreDetails: 'Wetter, Höhe und Koordinaten anzeigen',
@@ -3669,7 +3670,8 @@
         mapDipul: 'Drone zones', mapAircraft: 'Flight Movements',
         ctxProtected: 'Protected areas', ctxMotorways: 'Motorways', ctxPowerlines: 'Power lines', ctxRail: 'Railways',
         hgridToggle: 'Height grid', hgridMax: 'Max. height', hgridLegendTitle: 'Max. flight height (approx.)',
-        hgridLow: 'low', hgridHigh: 'high', hgridNote: 'Approximation from terrain + detected CTR zone. Binding: DiPUL / NfL.',
+        hgridLow: 'low', hgridHigh: 'high', hgridZoneShort: 'Zone', hgridIndiv: 'individual clearance',
+        hgridNote: 'Approximation per CTR sub-zone from DiPUL limit + terrain. Binding: DiPUL / NfL.',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         mapZonesShort: 'Zones', mapAircraftShort: 'Flights', mapAllShort: 'All', mapRiskShort: 'Risk',
         mapMoreDetails: 'Show weather, elevation and coordinates',
@@ -3842,7 +3844,8 @@
         mapDipul: 'Géozones', mapAircraft: 'Trafic aérien',
         ctxProtected: 'Zones protégées', ctxMotorways: 'Autoroutes', ctxPowerlines: 'Lignes électriques', ctxRail: 'Voies ferrées',
         hgridToggle: 'Grille de hauteur', hgridMax: 'Hauteur max.', hgridLegendTitle: 'Hauteur de vol max. (approx.)',
-        hgridLow: 'basse', hgridHigh: 'haute', hgridNote: 'Approximation à partir du relief + zone CTR détectée. Contraignant : DiPUL / NfL.',
+        hgridLow: 'basse', hgridHigh: 'haute', hgridZoneShort: 'Zone', hgridIndiv: 'autorisation individuelle',
+        hgridNote: 'Approximation par sous-zone CTR : limite DiPUL + relief. Contraignant : DiPUL / NfL.',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         mapZonesShort: 'Zones', mapAircraftShort: 'Vols', mapAllShort: 'Toutes', mapRiskShort: 'Risque',
         mapMoreDetails: 'Afficher météo, altitude et coordonnées',
@@ -4023,7 +4026,8 @@
         mapDipul: 'Geozonas', mapAircraft: 'Tráfico aéreo',
         ctxProtected: 'Áreas protegidas', ctxMotorways: 'Autopistas', ctxPowerlines: 'Líneas eléctricas', ctxRail: 'Ferrocarriles',
         hgridToggle: 'Rejilla de altura', hgridMax: 'Altura máx.', hgridLegendTitle: 'Altura máx. de vuelo (aprox.)',
-        hgridLow: 'baja', hgridHigh: 'alta', hgridNote: 'Aproximación a partir del terreno + zona CTR detectada. Vinculante: DiPUL / NfL.',
+        hgridLow: 'baja', hgridHigh: 'alta', hgridZoneShort: 'Zona', hgridIndiv: 'autorización individual',
+        hgridNote: 'Aproximación por subzona CTR: límite DiPUL + terreno. Vinculante: DiPUL / NfL.',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         mapZonesShort: 'Zonas', mapAircraftShort: 'Vuelos', mapAllShort: 'Todas', mapRiskShort: 'Riesgo',
         mapMoreDetails: 'Mostrar clima, elevación y coordenadas',
@@ -4204,7 +4208,8 @@
         mapDipul: 'Geostrefy', mapAircraft: 'Ruch lotniczy',
         ctxProtected: 'Obszary chronione', ctxMotorways: 'Autostrady', ctxPowerlines: 'Linie energetyczne', ctxRail: 'Koleje',
         hgridToggle: 'Siatka wysokości', hgridMax: 'Maks. wysokość', hgridLegendTitle: 'Maks. wysokość lotu (przybliż.)',
-        hgridLow: 'niska', hgridHigh: 'wysoka', hgridNote: 'Przybliżenie z terenu + wykrytej strefy CTR. Wiążące: DiPUL / NfL.',
+        hgridLow: 'niska', hgridHigh: 'wysoka', hgridZoneShort: 'Strefa', hgridIndiv: 'zezwolenie indywidualne',
+        hgridNote: 'Przybliżenie na podstrefę CTR: granica DiPUL + teren. Wiążące: DiPUL / NfL.',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         mapZonesShort: 'Strefy', mapAircraftShort: 'Loty', mapAllShort: 'Wszystkie', mapRiskShort: 'Ryzyko',
         mapMoreDetails: 'Pokaż pogodę, wysokość i współrzędne',
@@ -4679,7 +4684,7 @@
       mapAnalysisSequence: 0,
       pinPopupWanted: true,
       layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null, heightGrid: null },
-      hgridZone: null, hgridOn: false, _hgridSeq: 0,   // DE-Höhengitter: erkannte CTR-Zone, an/aus, Stale-Guard
+      hgridOn: false, _hgridSeq: 0, _hgridBBox: null,   // DE-Höhengitter: an/aus, Stale-Guard, gecachte CTR-Ausdehnung
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
@@ -5940,12 +5945,17 @@
     }
 
     /* [J-HEIGHT-GRID] ===================================================
-       DE-Höhengitter (zuschaltbar): Heatmap der max. Flughöhe je Rasterzelle in
-       einer DFS-CTR 2–4, nach dem tschechischen GRID-Vorbild (Ampel Rot→Grün).
-       Hybrid: DiPUL-WMS zeigt die Sub-Zonen-Grenzen; dieses Overlay färbt ein
-       Gelände-Raster (Open-Meteo) mit computeCtrFlightInfo unter Verwendung der am
-       Standort erkannten CTR-Zone. Näherung — verbindlich bleiben DiPUL/NfL.
+       DE-Höhengitter (zuschaltbar): Heatmap der max. Flughöhe je Rasterzelle
+       über die GESAMTE DFS-CTR, nach dem tschechischen GRID-Vorbild
+       (Ampel Rot→Grün). Die exakte Sub-Zonen-Geometrie kommt aus dem
+       DiPUL-WFS (dipul:kontrollzonen; je U_CONTROL_ZONE_1…4 ein (Multi-)Polygon
+       mit lower_limit_altitude MSL). Jede Rasterzelle wird per Punkt-in-Polygon
+       ihrer Sub-Zone zugeordnet, das Gelände (Open-Meteo) geholt und via
+       computeCtrFlightInfo eingefärbt. Ergebnis wird pro CTR EINMAL berechnet
+       und gecacht — Pin-Klicks innerhalb derselben CTR bauen nichts neu.
+       Näherung — verbindlich bleiben DiPUL/NfL.
     ================================================================ */
+    const DIPUL_WFS_URL = DIPUL_WMS_URL.replace(/\/wms(\?.*)?$/, '/wfs');
     const HGRID_COLORS = ['#d7191c', '#f4703b', '#fdae61', '#dfe86a', '#8ecb5a', '#1a9641']; // niedrig→hoch (Ampel)
     // max. Flughöhe (m AGL) → Farbklasse. 0 = kein Höhenspielraum (rot), ≥75 m = grün.
     function hgridBand(m) {
@@ -5972,49 +5982,117 @@
       }
       return out;
     }
-    // Raster um den Standort erzeugen, Gelände holen, max. AGL je Zelle → Ampel-Rechtecke.
+    // Even-odd-Punkt-in-Ringsatz: Außenring + Löcher gemeinsam → korrekt für Löcher.
+    function pointInRings(lon, lat, rings) {
+      let inside = false;
+      for (const ring of rings) {
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+          if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+        }
+      }
+      return inside;
+    }
+    // Punkt in einem Feature (Polygon = 1 Ringsatz, MultiPolygon = mehrere), BBox-vorgefiltert.
+    function pointInFeature(lon, lat, feat) {
+      if (lon < feat.bbox[0] || lon > feat.bbox[2] || lat < feat.bbox[1] || lat > feat.bbox[3]) return false;
+      return feat.polys.some(rings => pointInRings(lon, lat, rings));
+    }
+    // DiPUL-WFS: CTR-Sub-Zonen (U_CONTROL_ZONE_1…4) als Polygone mit MSL-Untergrenze.
+    async function fetchCtrSubzones(lat, lon) {
+      const dLat = 0.45, dLon = 0.6;
+      const bbox = `${(lat - dLat).toFixed(4)},${(lon - dLon).toFixed(4)},${(lat + dLat).toFixed(4)},${(lon + dLon).toFixed(4)}`;
+      const url = `${DIPUL_WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=dipul:kontrollzonen&outputFormat=application/json&count=300&bbox=${bbox}`;
+      const r = await safeFetch(url, 9000);
+      if (!r.ok) return [];
+      const data = await r.json();
+      const feats = [];
+      (data.features || []).forEach(f => {
+        const p = f.properties || {}, g = f.geometry;
+        const zm = /^U_CONTROL_ZONE_([1-4])$/i.exec(String(p.type_code_detail || ''));
+        if (!zm || !g) return;
+        const zoneNum = Number(zm[1]);
+        const lowerMslM = String(p.lower_limit_alt_ref || '').toUpperCase() === 'MSL'
+          ? altitudeToMetres(p.lower_limit_altitude, p.lower_limit_unit) : null;
+        const polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+        if (!polys.length) return;
+        let minX = 180, minY = 90, maxX = -180, maxY = -90;
+        polys.forEach(rings => rings.forEach(ring => ring.forEach(c => {
+          if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+          if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+        })));
+        feats.push({ zoneNum, lowerMslM, polys, bbox: [minX, minY, maxX, maxY] });
+      });
+      // Kleinere Zonennummern (engere Zonen mit niedrigerer Grenze) zuerst → gewinnen bei Überlappung.
+      feats.sort((a, b) => a.zoneNum - b.zoneNum);
+      return feats;
+    }
+    // Ganze CTR als Ampel-Raster: WFS-Sub-Zonen → Zellen klassifizieren → Gelände → einfärben.
     async function buildHeightGrid() {
-      if (!S.map || !S.hgridZone || S.lat == null) return;
+      if (!S.map || S.lat == null) return;
       const seq = ++S._hgridSeq;
       const lat = S.lat, lon = S.lon;
-      const N = 13, rM = 3000, mPerDeg = 111320;
-      const lonScale = Math.max(0.01, Math.cos(lat * Math.PI / 180));
-      const dLat = rM / mPerDeg, dLon = rM / (mPerDeg * lonScale), step = 2 / (N - 1);
-      const pts = [];
-      for (let iy = 0; iy < N; iy++) for (let ix = 0; ix < N; ix++) {
-        pts.push({ lat: lat - (-1 + iy * step) * dLat, lon: lon + (-1 + ix * step) * dLon });
-      }
-      const elev = await fetchElevations(pts);
+      let feats;
+      try { feats = await fetchCtrSubzones(lat, lon); }
+      catch (e) { console.warn('Höhengitter-WFS:', e.message); return; }
       if (seq !== S._hgridSeq) return;
-      const zone = { zoneNum: S.hgridZone.zoneNum, lowerMslM: S.hgridZone.lowerMslM, ctrExact: true };
-      const cellLat = step * dLat / 2, cellLon = step * dLon / 2;
+      if (!feats.length) {
+        if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
+        S.layers.heightGrid = null; S._hgridBBox = null; return;
+      }
+      // Union-BBox aller Sub-Zonen = tatsächliche CTR-Ausdehnung.
+      let minLon = 180, minLat = 90, maxLon = -180, maxLat = -90;
+      feats.forEach(f => { minLon = Math.min(minLon, f.bbox[0]); minLat = Math.min(minLat, f.bbox[1]); maxLon = Math.max(maxLon, f.bbox[2]); maxLat = Math.max(maxLat, f.bbox[3]); });
+      const spanLat = maxLat - minLat, spanLon = maxLon - minLon;
+      let cell = Math.max(spanLat, spanLon) / 42; if (cell < 0.006) cell = 0.006;
+      const rows = Math.min(70, Math.max(1, Math.ceil(spanLat / cell)));
+      const cols = Math.min(70, Math.max(1, Math.ceil(spanLon / cell)));
+      const cLat = spanLat / rows, cLon = spanLon / cols;
+      // Zellen ihren Sub-Zonen zuordnen.
+      const cells = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const cy = minLat + (r + 0.5) * cLat, cx = minLon + (c + 0.5) * cLon;
+        const feat = feats.find(f => pointInFeature(cx, cy, f));
+        if (feat) cells.push({ r, c, cy, cx, feat });
+      }
+      // Gelände nur für berechenbare Zonen (2–4) holen.
+      const needTerrain = cells.filter(x => x.feat.zoneNum !== 1 && Number.isFinite(x.feat.lowerMslM));
+      const elev = await fetchElevations(needTerrain.map(x => ({ lat: x.cy, lon: x.cx })));
+      if (seq !== S._hgridSeq) return;
+      needTerrain.forEach((x, i) => { x.elev = elev[i]; });
       const grp = L.layerGroup();
-      pts.forEach((p, k) => {
-        const e = elev[k]; if (!Number.isFinite(e)) return;
-        const info = computeCtrFlightInfo(zone, e); if (!info || !info.available) return;
-        const m = info.maxAglM;
-        L.rectangle([[p.lat - cellLat, p.lon - cellLon], [p.lat + cellLat, p.lon + cellLon]], {
-          stroke: false, fillColor: HGRID_COLORS[hgridBand(m)], fillOpacity: 0.85, interactive: true,
-        }).bindTooltip(`${_t('hgridMax')}: ${m} m AGL`, { sticky: true }).addTo(grp);
+      cells.forEach(x => {
+        let band, label;
+        if (x.feat.zoneNum === 1) {
+          band = 0; label = `${_t('hgridZoneShort')} 1 · ${_t('hgridIndiv')}`;
+        } else if (Number.isFinite(x.feat.lowerMslM) && Number.isFinite(x.elev)) {
+          const info = computeCtrFlightInfo({ zoneNum: x.feat.zoneNum, lowerMslM: x.feat.lowerMslM, ctrExact: true }, x.elev);
+          if (!info || !info.available) return;
+          band = hgridBand(info.maxAglM);
+          label = `${_t('hgridZoneShort')} ${x.feat.zoneNum} · ${_t('hgridMax')}: ${info.maxAglM} m AGL`;
+        } else { return; }
+        L.rectangle([[minLat + x.r * cLat, minLon + x.c * cLon], [minLat + (x.r + 1) * cLat, minLon + (x.c + 1) * cLon]], {
+          stroke: false, fillColor: HGRID_COLORS[band], fillOpacity: 0.85, interactive: true,
+        }).bindTooltip(label, { sticky: true }).addTo(grp);
       });
       if (seq !== S._hgridSeq) return;
       if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
       S.layers.heightGrid = grp;
+      S._hgridBBox = { minLat, minLon, maxLat, maxLon };
+      if (S.hgridOn) grp.addTo(S.map);
     }
-    // Toggle-Verfügbarkeit + ggf. Neuaufbau nach jedem Check. Sichtbar nur in DE-CTR 2–4.
-    function updateHeightGridControl(zones) {
+    // Nach jedem Check: Toggle in DE stets sichtbar; Grid nur neu bauen, wenn der Pin
+    // die gecachte CTR verlassen hat (sonst stabil — "einmal berechnet").
+    function updateHeightGridControl() {
       const btn = document.getElementById('hgrid-toggle');
       if (!btn) return;
-      const z = (zones || []).find(x => x.ctrExact && [2, 3, 4].includes(Number(x.zoneNum)) && Number.isFinite(x.lowerMslM));
-      if (COUNTRY === 'de' && z) {
-        S.hgridZone = { zoneNum: Number(z.zoneNum), lowerMslM: z.lowerMslM };
-        btn.style.display = '';
-        if (S.hgridOn) buildHeightGrid().then(() => { if (S.hgridOn && S.layers.heightGrid && S.map && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map); });
-      } else {
-        S.hgridZone = null; btn.style.display = 'none';
-        if (S.layers.heightGrid && S.map) S.map.removeLayer(S.layers.heightGrid);
-        S.layers.heightGrid = null;
-      }
+      if (COUNTRY !== 'de') { btn.style.display = 'none'; return; }
+      btn.style.display = '';
+      if (!S.hgridOn) return;
+      const b = S._hgridBBox;
+      const inside = b && S.lat >= b.minLat && S.lat <= b.maxLat && S.lon >= b.minLon && S.lon <= b.maxLon
+        && S.layers.heightGrid && S.map && S.map.hasLayer(S.layers.heightGrid);
+      if (!inside) buildHeightGrid();
     }
 
     function terrainSamplePoints(lat, lon, radiusM) {
@@ -8235,12 +8313,14 @@
       const btn = document.getElementById('hgrid-toggle');
       if (!btn) return;
       btn.addEventListener('click', async () => {
-        if (!S.map || !S.hgridZone) return;
+        if (!S.map) return;
         S.hgridOn = !S.hgridOn;
         btn.classList.toggle('active', S.hgridOn);
         document.getElementById('hgrid-legend')?.classList.toggle('show', S.hgridOn);
         if (S.hgridOn) {
-          if (!S.layers.heightGrid) { btn.classList.add('loading'); await buildHeightGrid(); btn.classList.remove('loading'); }
+          const b = S._hgridBBox;
+          const inside = b && S.lat >= b.minLat && S.lat <= b.maxLat && S.lon >= b.minLon && S.lon <= b.maxLon && S.layers.heightGrid;
+          if (!inside) { btn.classList.add('loading'); await buildHeightGrid(); btn.classList.remove('loading'); }
           if (S.layers.heightGrid && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map);
         } else if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) {
           S.map.removeLayer(S.layers.heightGrid);
