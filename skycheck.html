@@ -1258,6 +1258,8 @@
     .hgl-title { font-weight: 600; margin-bottom: 6px; font-size: 11.5px; }
     .hgl-ramp { display: flex; height: 12px; border-radius: 3px; overflow: hidden; }
     .hgl-ramp span { flex: 1; }
+    /* Höhengitter-Rasterbild knackscharf (keine Browser-Glättung → klare Zellen/Zonengrenzen). */
+    .hgrid-overlay { image-rendering: pixelated; image-rendering: crisp-edges; }
     .hgl-scale { display: flex; justify-content: space-between; margin-top: 3px; opacity: .8; font-size: 10px; }
     .hgl-note { margin-top: 6px; opacity: .7; font-size: 9.5px; }
     :root.light-mode .hgrid-legend { background: rgba(255,255,255,0.92); color: #17202a; box-shadow: 0 4px 16px rgba(20,40,60,.18); }
@@ -2993,7 +2995,8 @@
       <div class="l-sources">
         <span id="l-src-zones-landing" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
-        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Geländehöhe</a>
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Punkthöhe</a>
+        <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener" class="l-src">Terrain Tiles (AWS) · Höhengitter</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
         <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
@@ -3244,7 +3247,8 @@
       <div class="l-sources" style="margin-top: 0;">
         <span id="l-src-zones-results" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
-        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Geländehöhe</a>
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Punkthöhe</a>
+        <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener" class="l-src">Terrain Tiles (AWS) · Höhengitter</a>
         <a href="https://kp.gfz.de/" target="_blank" class="l-src">GFZ Kp-Index</a>
         <a href="https://airplanes.live/" target="_blank" class="l-src">Airplanes.live</a>
         <a href="https://photon.komoot.io/" target="_blank" class="l-src">Photon (komoot)</a>
@@ -3392,7 +3396,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.113.2';
+    const APP_VER = '26.08.114.0';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -5356,10 +5360,13 @@
         const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => []);
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
+        // Wetter/Kp/Luftverkehr sind je EINZELN nicht-fatal: fällt eine Quelle (z. B. BrightSky
+        // kurz nicht erreichbar) aus, bleiben Geozonen und der Rest des Checks trotzdem sichtbar,
+        // statt dass ein einziger „Failed to fetch" den ganzen Check abbricht.
         const [weatherArr, kp, aircraft] = await Promise.all([
-          fetchWeatherCached(checkLat, checkLon),
-          fetchKp(),
-          fetchAircraftCached(checkLat, checkLon),
+          fetchWeatherCached(checkLat, checkLon).catch(e => { console.warn('Wetter (BrightSky) nicht verfügbar:', e.message); return []; }),
+          fetchKp().catch(() => null),
+          fetchAircraftCached(checkLat, checkLon).catch(() => []),
         ]);
         if (checkId !== S.checkSequence) return;
 
@@ -5502,11 +5509,13 @@
 
     async function fetchWeather(lat, lon) {
       const now = new Date();
-      const end = new Date(now.getTime() + 7 * 24 * 3600 * 1000);
+      // 6 Tage decken die 48-h- und 5-Tage-Vorschau; das frühere 7-Tage-Fenster lief bei BrightSky
+      // in Timeouts (nur die ganz großen Fenster), 6 Tage antworten zuverlässig in <1 s.
+      const end = new Date(now.getTime() + 6 * 24 * 3600 * 1000);
       const dFmt = d => d.toISOString().slice(0, 10);
       // units=si → wind in m/s (gewünscht), aber Temperatur in Kelvin → K→°C normalisieren
       const url = `${BRIGHTSKY_URL}?lat=${lat}&lon=${lon}&date=${dFmt(now)}&last_date=${dFmt(end)}&units=si`;
-      const r = await fetch(url);
+      const r = await safeFetch(url, 8000);   // Timeout: ein hängendes BrightSky bremst den Check nicht aus
       if (!r.ok) throw new Error('Bright Sky: ' + r.status);
       const d = await r.json();
       // Kelvin → Celsius für alle Temperaturfelder
@@ -5976,60 +5985,84 @@
        Näherung — verbindlich bleiben DiPUL/NfL.
     ================================================================ */
     const DIPUL_WFS_URL = DIPUL_WMS_URL.replace(/\/wms(\?.*)?$/, '/wfs');
-    const HGRID_COLORS = ['#d7191c', '#f4703b', '#fdae61', '#dfe86a', '#8ecb5a', '#1a9641']; // niedrig→hoch (Ampel)
-    // max. Flughöhe (m AGL) → Farbklasse. 0 = kein Höhenspielraum (rot), ≥75 m = grün.
-    function hgridBand(m) {
-      if (!(m > 0)) return 0;
-      if (m < 15) return 1;
-      if (m < 30) return 2;
-      if (m < 50) return 3;
-      if (m < 75) return 4;
-      return 5;
+    // Ampel-Stützstellen als (max. Flughöhe m AGL → RGB), NICHT-linear an die DFS-Bedeutung
+    // geeicht: 0 m rot, ~25 m orange (≈ Zone-2-Deckel), ~45 m gelb (≈ Zone-3-Deckel), ab ~65 m
+    // grün. So liest sich ein 45-m-Bereich gelb und ein Hügel mit ~23 m orange (wie Zone 2).
+    const HGRID_STOPS = [
+      [0,   [215, 25, 28]],    // rot
+      [15,  [244, 109, 67]],   // orange-rot
+      [25,  [253, 174, 97]],   // orange
+      [45,  [255, 225, 110]],  // gelb
+      [65,  [166, 217, 106]],  // gelb-grün
+      [100, [26, 150, 80]],    // grün
+    ];
+    function hgridColorRGB(m) {
+      const v = Math.max(0, m || 0);
+      if (v <= HGRID_STOPS[0][0]) return HGRID_STOPS[0][1];
+      for (let i = 1; i < HGRID_STOPS.length; i++) {
+        if (v <= HGRID_STOPS[i][0]) {
+          const [m0, c0] = HGRID_STOPS[i - 1], [m1, c1] = HGRID_STOPS[i], f = (v - m0) / (m1 - m0);
+          return [Math.round(c0[0] + (c1[0] - c0[0]) * f), Math.round(c0[1] + (c1[1] - c0[1]) * f), Math.round(c0[2] + (c1[2] - c0[2]) * f)];
+        }
+      }
+      return HGRID_STOPS[HGRID_STOPS.length - 1][1];
     }
-    // Open-Meteo-Geländehöhen für viele Punkte, in ≤100er-Blöcken (API-Limit).
-    // Jeder Block wird bei Fehler/Leerantwort einmal wiederholt (Open-Meteo drosselt
-    // Bursts): ein gedrosselter Block darf sonst ein ganzes Stützgitter-Band leeren.
-    async function fetchElevations(points) {
-      const out = new Array(points.length).fill(null);
-      for (let i = 0; i < points.length; i += 100) {
-        const chunk = points.slice(i, i + 100);
-        const lat = chunk.map(p => p.lat.toFixed(6)).join(',');
-        const lon = chunk.map(p => p.lon.toFixed(6)).join(',');
-        const url = `${OPEN_METEO_ELEVATION_URL}?latitude=${lat}&longitude=${lon}`;
-        for (let attempt = 0; attempt < 2; attempt++) {
+    /* DEM-Höhenkacheln (Terrarium/AWS Open Data): wenige PNG-Kacheln liefern die volle Gelände-
+       auflösung (~25 m/Pixel) der ganzen CTR — kein Rate-Limit, schnell. Höhe = R·256 + G + B/256
+       − 32768. Ersetzt die vielen Open-Meteo-Punktabfragen für das Höhengitter. */
+    const _demTileXY = (lon, lat, z) => ({
+      x: Math.floor((lon + 180) / 360 * 2 ** z),
+      y: Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** z),
+    });
+    const _demTileCache = new Map();
+    function loadDemTile(z, x, y) {
+      const key = `${z}/${x}/${y}`;
+      if (_demTileCache.has(key)) return _demTileCache.get(key);
+      const p = new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
           try {
-            const r = await safeFetch(url, 8000);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            const d = await r.json();
-            if (!Array.isArray(d.elevation)) throw new Error('kein elevation-Array');
-            d.elevation.forEach((e, k) => { out[i + k] = (e == null) ? null : Number(e); });
-            break;   // Erfolg
-          } catch (e) {
-            if (attempt === 0) { await new Promise(res => setTimeout(res, 400)); continue; }
-            console.warn('Höhengitter-Gelände (Block ausgelassen):', e.message);
-          }
-        }
-      }
-      return out;
+            const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
+            const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+            resolve(cx.getImageData(0, 0, 256, 256).data);
+          } catch (e) { resolve(null); }
+        };
+        img.onerror = () => resolve(null);
+        img.src = `${DEM_TILE_URL}/${z}/${x}/${y}.png`;
+      });
+      _demTileCache.set(key, p);
+      return p;
     }
-    // Rest-Lücken (null) im Gelände-Stützgitter per Nearest-Neighbor auffüllen, damit
-    // ein einzelner ausgefallener Block nicht eine ganze Region unkoloriert lässt.
-    function fillTerrainGaps(elev, nLat, nLon) {
-      const idx = (i, j) => i * nLon + j;
-      for (let i = 0; i < nLat; i++) for (let j = 0; j < nLon; j++) {
-        if (Number.isFinite(elev[idx(i, j)])) continue;
-        let best = null, bestD = Infinity;
-        for (let di = -nLat; di <= nLat; di++) for (let dj = -nLon; dj <= nLon; dj++) {
-          const ni = i + di, nj = j + dj;
-          if (ni < 0 || nj < 0 || ni >= nLat || nj >= nLon) continue;
-          const v = elev[idx(ni, nj)];
-          if (!Number.isFinite(v)) continue;
-          const d = di * di + dj * dj;
-          if (d < bestD) { bestD = d; best = v; }
-        }
-        if (best != null) elev[idx(i, j)] = best;
+    // Lädt alle DEM-Kacheln über die BBox und liefert einen Sampler .at(lat,lon) → Geländehöhe (MSL).
+    async function buildTileTerrainSampler(minLat, minLon, maxLat, maxLon) {
+      let z = 13;
+      for (; z >= 9; z--) {
+        const a = _demTileXY(minLon, maxLat, z), b = _demTileXY(maxLon, minLat, z);
+        if ((b.x - a.x + 1) * (b.y - a.y + 1) <= DEM_TILE_MAX) break;
       }
-      return elev;
+      const a = _demTileXY(minLon, maxLat, z), b = _demTileXY(maxLon, minLat, z);
+      const jobs = [];
+      for (let x = a.x; x <= b.x; x++) for (let y = a.y; y <= b.y; y++) jobs.push({ x, y });
+      const datas = await Promise.all(jobs.map(j => loadDemTile(z, j.x, j.y)));
+      const tiles = new Map();
+      jobs.forEach((j, i) => { if (datas[i]) tiles.set(`${j.x}/${j.y}`, datas[i]); });
+      const n = 2 ** z;
+      return {
+        loaded: tiles.size,
+        at(lat, lon) {
+          const gx = ((lon + 180) / 360) * n * 256;
+          const latRad = lat * Math.PI / 180;
+          const gy = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n * 256;
+          const tx = Math.floor(gx / 256), ty = Math.floor(gy / 256);
+          const data = tiles.get(`${tx}/${ty}`);
+          if (!data) return NaN;
+          const px = Math.max(0, Math.min(255, Math.floor(gx - tx * 256)));
+          const py = Math.max(0, Math.min(255, Math.floor(gy - ty * 256)));
+          const i = (py * 256 + px) * 4;
+          return data[i] * 256 + data[i + 1] + data[i + 2] / 256 - 32768;
+        },
+      };
     }
     // Even-odd-Punkt-in-Ringsatz: Außenring + Löcher gemeinsam → korrekt für Löcher.
     function pointInRings(lon, lat, rings) {
@@ -6076,13 +6109,10 @@
       feats.sort((a, b) => a.zoneNum - b.zoneNum);
       return feats;
     }
-    /* Live-Hover-Tooltip: rechnet die max. Flughöhe an der EXAKTEN Cursorposition, nicht den
-       gestuften Zellwert. Sofort erscheint der interpolierte Wert aus dem Stützgitter; sobald die
-       Maus kurz ruht, wird die exakte Open-Meteo-Geländehöhe am Punkt nachgeladen (debounced,
-       gecacht) und der Wert präzisiert — auf markanten Hügeln (z. B. Domberg) ändert er sich so
-       sichtbar. */
-    let _hgridTip = null, _hgridHoverTimer = null, _hgridHoverBound = false;
-    const _hgridElevCache = new Map();
+    /* Live-Hover-Tooltip: rechnet die max. Flughöhe an der EXAKTEN Cursorposition. Das Gelände kommt
+       aus den DEM-Kacheln (~25 m/Pixel, bereits geladen) — der Wert ist damit SOFORT präzise, kein
+       Nachladen/Warten mehr. */
+    let _hgridTip = null, _hgridHoverBound = false;
     function _hgridTooltip() {
       // UNTER dem Cursor (der DiPUL-Zonen-Tooltip sitzt darüber, direction:'top') —
       // so überlagern sich Zonenname (oben) und Höhenwert (unten) nicht.
@@ -6103,41 +6133,25 @@
       const feat = m.feats.find(f => pointInFeature(lon, lat, f));
       const tip = _hgridTooltip();
       if (!feat) { S.map.closeTooltip(tip); return; }
-      // Sofortwert (verzögerungsfrei) aus dem interpolierten Stützgitter.
-      const instant = _hgridLabel(feat, feat.zoneNum === 1 ? null : m.sampleTerrain(lat, lon));
-      if (instant) { tip.setLatLng(e.latlng).setContent(instant); S.map.openTooltip(tip); }
-      if (feat.zoneNum === 1) return;
-      // Präziser Wert: exakte Open-Meteo-Höhe am Cursor (debounced + gecacht auf ~10 m Raster).
-      clearTimeout(_hgridHoverTimer);
-      const key = lat.toFixed(4) + ',' + lon.toFixed(4);
-      if (_hgridElevCache.has(key)) {
-        const l = _hgridLabel(feat, _hgridElevCache.get(key));
-        if (l) tip.setContent(l);
-        return;
-      }
-      _hgridHoverTimer = setTimeout(async () => {
-        try {
-          const el = await fetchElevations([{ lat, lon }]);
-          if (Number.isFinite(el[0]) && S.hgridOn && S._hgridModel === m) {
-            _hgridElevCache.set(key, el[0]);
-            const l = _hgridLabel(feat, el[0]);
-            if (l) { tip.setLatLng(e.latlng).setContent(l); S.map.openTooltip(tip); }
-          }
-        } catch (_) {}
-      }, 200);
+      // Präziser Wert direkt aus den DEM-Kacheln (verzögerungsfrei).
+      const label = _hgridLabel(feat, feat.zoneNum === 1 ? null : m.sampleTerrain(lat, lon));
+      if (label) { tip.setLatLng(e.latlng).setContent(label); S.map.openTooltip(tip); }
+      else S.map.closeTooltip(tip);
     }
     function hgridHoverOn() { if (S.map && !_hgridHoverBound) { S.map.on('mousemove', onHgridHover); _hgridHoverBound = true; } }
     function hgridHoverOff() {
       if (S.map && _hgridHoverBound) { S.map.off('mousemove', onHgridHover); _hgridHoverBound = false; }
       if (_hgridTip && S.map) S.map.closeTooltip(_hgridTip);
-      clearTimeout(_hgridHoverTimer);
     }
     // Ganze CTR als Ampel-Raster: WFS-Sub-Zonen → feine Zellen klassifizieren → Gelände → einfärben.
-    // Feines Raster (~300 m) für scharfe, an die runden Zonengrenzen geschmiegte Kacheln; das Gelände
-    // wird aus einem groben Open-Meteo-Stützgitter bilinear interpoliert (wenige Requests, glatt).
-    const HGRID_CELL_M = 300;      // Zielkantenlänge einer Kachel
-    const HGRID_DIM_CAP = 200;     // max. Zeilen/Spalten (Schutz bei großen CTR)
-    const HGRID_TERR_NODES = 25;   // Stützgitter-Knoten je Achse (Geländeabtastung)
+    // Die Heatmap wird als EIN Rasterbild (L.imageOverlay) gezeichnet — die Zellzahl kostet fast
+    // nichts (nur Bildpixel), daher feines ~120-m-Raster. Das Gelände kommt aus DEM-HÖHENKACHELN
+    // (Terrarium/AWS Open Data, ~25 m/Pixel): wenige PNG-Kacheln liefern die volle Geländeauflösung
+    // der ganzen CTR — kein Rate-Limit, schnell, und markante Einzelhügel (Domberg) werden aufgelöst.
+    const HGRID_CELL_M = 120;          // Bild-Auflösung (Zielkantenlänge einer Zelle)
+    const HGRID_DIM_CAP = 520;         // max. Bildzeilen/-spalten (Schutz bei großen CTR)
+    const DEM_TILE_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium';
+    const DEM_TILE_MAX = 40;           // max. Kacheln pro CTR (steuert den Zoom/die Auflösung)
     async function buildHeightGrid() {
       if (!S.map || S.lat == null) return;
       const seq = ++S._hgridSeq;
@@ -6162,52 +6176,47 @@
       if (cols > HGRID_DIM_CAP) cols = HGRID_DIM_CAP;
       cLat = spanLat / rows; cLon = spanLon / cols;
 
-      // Grobes Gelände-Stützgitter (bilinear interpoliert) — hält die Zahl der Open-Meteo-Requests klein.
-      const nLat = Math.min(rows + 1, HGRID_TERR_NODES), nLon = Math.min(cols + 1, HGRID_TERR_NODES);
-      const stepLat = spanLat / (nLat - 1 || 1), stepLon = spanLon / (nLon - 1 || 1);
-      const nodePts = [];
-      for (let i = 0; i < nLat; i++) for (let j = 0; j < nLon; j++)
-        nodePts.push({ lat: minLat + i * stepLat, lon: minLon + j * stepLon });
-      const nodeElev = fillTerrainGaps(await fetchElevations(nodePts), nLat, nLon);
+      // Gelände aus DEM-Höhenkacheln (volle Auflösung über die ganze CTR, in einem Rutsch geladen).
+      const tileTerr = await buildTileTerrainSampler(minLat, minLon, maxLat, maxLon);
       if (seq !== S._hgridSeq) return;
-      const terrAt = (la, lo) => {
-        const fi = (la - minLat) / stepLat, fj = (lo - minLon) / stepLon;
-        let i0 = Math.max(0, Math.min(nLat - 2, Math.floor(fi))), j0 = Math.max(0, Math.min(nLon - 2, Math.floor(fj)));
-        const ti = fi - i0, tj = fj - j0;
-        const a = nodeElev[i0 * nLon + j0], b = nodeElev[i0 * nLon + j0 + 1], c = nodeElev[(i0 + 1) * nLon + j0], d = nodeElev[(i0 + 1) * nLon + j0 + 1];
-        if (![a, b, c, d].every(Number.isFinite)) return NaN;
-        return a * (1 - ti) * (1 - tj) + b * (1 - ti) * tj + c * ti * (1 - tj) + d * ti * tj;
-      };
+      const terrAt = (la, lo) => tileTerr.at(la, lo);
 
-      // Canvas-Renderer: tausende kleine Kacheln performant und ohne SVG-Overhead.
-      const renderer = L.canvas({ padding: 0.3 });
-      const grp = L.layerGroup();
+      // Heatmap als EIN Rasterbild in ein Offscreen-Canvas malen (eine Zelle = ein Pixel), dann als
+      // L.imageOverlay über die CTR-BBox legen. Vorteil ggü. tausender L.rectangle: keine Kachel-Fugen
+      // / schwarzen Subpixel-Ränder, keine Interferenzstreifen, flüssiges Pan/Zoom. Der Browser glättet
+      // das Bild beim Skalieren (weicher Verlauf); Zonengrenzen bleiben bei ~120-m-Zellen scharf genug.
+      const canvas = document.createElement('canvas');
+      canvas.width = cols; canvas.height = rows;
+      const cctx = canvas.getContext('2d');
+      const imgData = cctx.createImageData(cols, rows), data = imgData.data;
       for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
         const cy = minLat + (r + 0.5) * cLat, cx = minLon + (c + 0.5) * cLon;
         const feat = feats.find(f => pointInFeature(cx, cy, f));
-        if (!feat) continue;
-        // Nur die Farbe (Band) je Zelle; den exakten Höhenwert liefert der Live-Hover
-        // (onHgridHover) an der genauen Cursorposition, nicht der gestufte Zellwert.
-        let band;
+        if (!feat) continue;                        // außerhalb der CTR → transparent (alpha 0)
+        let rgb;
         if (feat.zoneNum === 1) {
-          band = 0;
+          rgb = HGRID_STOPS[0][1];   // Zone 1 = individuelle Freigabe → rot
         } else {
           const g = terrAt(cy, cx);
           if (!Number.isFinite(g) || !Number.isFinite(feat.lowerMslM)) continue;
           const info = computeCtrFlightInfo({ zoneNum: feat.zoneNum, lowerMslM: feat.lowerMslM, ctrExact: true }, g);
           if (!info || !info.available) continue;
-          band = hgridBand(info.maxAglM);
+          rgb = hgridColorRGB(info.maxAglM);
         }
-        L.rectangle([[minLat + r * cLat, minLon + c * cLon], [minLat + (r + 1) * cLat, minLon + (c + 1) * cLon]], {
-          stroke: false, fillColor: HGRID_COLORS[band], fillOpacity: 0.85, interactive: false, renderer,
-        }).addTo(grp);
+        const py = rows - 1 - r;                     // Canvas-Y: oben = maxLat, unten = minLat
+        const idx = (py * cols + c) * 4;
+        data[idx] = rgb[0]; data[idx + 1] = rgb[1]; data[idx + 2] = rgb[2]; data[idx + 3] = 255;
       }
+      cctx.putImageData(imgData, 0, 0);
       if (seq !== S._hgridSeq) return;
+      const overlay = L.imageOverlay(canvas.toDataURL(), [[minLat, minLon], [maxLat, maxLon]], {
+        opacity: 0.82, interactive: false, className: 'hgrid-overlay',
+      });
       if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
-      S.layers.heightGrid = grp;
+      S.layers.heightGrid = overlay;
       S._hgridBBox = { minLat, minLon, maxLat, maxLon };
       S._hgridModel = { feats, sampleTerrain: terrAt };   // für den Live-Hover
-      if (S.hgridOn) { grp.addTo(S.map); hgridHoverOn(); }
+      if (S.hgridOn) { overlay.addTo(S.map); hgridHoverOn(); }
     }
     // Nach jedem Check: Toggle in DE stets sichtbar; Grid nur neu bauen, wenn der Pin
     // die gecachte CTR verlassen hat (sonst stabil — "einmal berechnet").
@@ -7964,7 +7973,7 @@
         S.geoidSeparationM = value;
         renderMapStatus(lastWeather, lastZones);
         const alarmStatus = document.getElementById('av-map-status');
-        if (alarmStatus && !$alarm.classList.contains('hidden')) renderMapStatus(lastWeather, lastZones, alarmStatus);
+        if (alarmStatus && $('alarm-view')?.classList.contains('av-open')) renderMapStatus(lastWeather, lastZones, alarmStatus);
       }).catch(error => console.warn('GCG2016 unavailable:', error));
     }
 
@@ -8437,7 +8446,7 @@
     // Höhengitter-Toggle (DE): lazy aufbauen, ein-/ausblenden; Legenden-Rampe einmal füllen
     (function initHeightGrid() {
       const ramp = document.getElementById('hgl-ramp');
-      if (ramp) ramp.innerHTML = HGRID_COLORS.map(c => `<span style="background:${c}"></span>`).join('');
+      if (ramp) { ramp.innerHTML = ''; ramp.style.background = `linear-gradient(to right, ${HGRID_STOPS.map(([m, c]) => `rgb(${c.join(',')}) ${m}%`).join(', ')})`; }
       const btn = document.getElementById('hgrid-toggle');
       if (!btn) return;
       btn.addEventListener('click', async () => {
