@@ -3396,7 +3396,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.114.0';
+    const APP_VER = '26.08.114.1';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -6250,32 +6250,38 @@
     }
 
     async function fetchGroundElevationProfile(lat, lon, radiusM = 100) {
+      const points = terrainSamplePoints(lat, lon, radiusM);
+      const build = (centerMslM, samples) => ({
+        radiusM, centerMslM, samples,
+        minTerrainMslM: Math.min(...samples.map(s => s.elevationMslM)),
+        maxTerrainMslM: Math.max(...samples.map(s => s.elevationMslM)),
+      });
+      // Primär: DEM-Höhenkacheln (kein Tageslimit, konsistent mit dem Höhengitter).
       try {
-        const points = terrainSamplePoints(lat, lon, radiusM);
-        const latitudes = points.map(point => point.lat.toFixed(6)).join(',');
-        const longitudes = points.map(point => point.lon.toFixed(6)).join(',');
+        const lats = points.map(p => p.lat), lons = points.map(p => p.lon);
+        const s = await buildTileTerrainSampler(Math.min(...lats), Math.min(...lons), Math.max(...lats), Math.max(...lons));
+        const center = s.at(lat, lon);
+        if (Number.isFinite(center)) {
+          const samples = points.map(p => ({ ...p, elevationMslM: s.at(p.lat, p.lon) })).filter(x => Number.isFinite(x.elevationMslM));
+          if (samples.length) return build(center, samples);
+        }
+      } catch (e) { console.warn('Geländeprofil (Kacheln):', e.message); }
+      // Fallback: Open-Meteo (Tageslimit möglich; toleranter als früher — Mittelpunkt genügt).
+      try {
+        const latitudes = points.map(p => p.lat.toFixed(6)).join(',');
+        const longitudes = points.map(p => p.lon.toFixed(6)).join(',');
         const url = `${OPEN_METEO_ELEVATION_URL}?latitude=${encodeURIComponent(latitudes)}&longitude=${encodeURIComponent(longitudes)}`;
         const r = await safeFetch(url, 7000);
         if (!r.ok) return null;
         const data = await r.json();
-        if (!Array.isArray(data.elevation) || data.elevation.length !== points.length) return null;
-        const samples = points.map((point, index) => {
-          const rawElevation = data.elevation[index];
-          return {
-            ...point,
-            elevationMslM: rawElevation == null ? NaN : Number(rawElevation),
-          };
-        }).filter(sample => Number.isFinite(sample.elevationMslM));
-        if (samples.length !== points.length) return null;
-        return {
-          radiusM,
-          centerMslM: samples[0].elevationMslM,
-          samples,
-          minTerrainMslM: Math.min(...samples.map(sample => sample.elevationMslM)),
-          maxTerrainMslM: Math.max(...samples.map(sample => sample.elevationMslM)),
-        };
+        if (!Array.isArray(data.elevation)) return null;
+        const samples = points.map((p, i) => ({ ...p, elevationMslM: data.elevation[i] == null ? NaN : Number(data.elevation[i]) }))
+          .filter(x => Number.isFinite(x.elevationMslM));
+        if (!samples.length) return null;
+        const c0 = Number(data.elevation[0]);
+        return build(Number.isFinite(c0) ? c0 : samples[0].elevationMslM, samples);
       } catch (e) {
-        console.warn('Geländeprofil nicht verfügbar:', e.message);
+        console.warn('Geländeprofil (Open-Meteo):', e.message);
         return null;
       }
     }
