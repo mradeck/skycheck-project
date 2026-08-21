@@ -2661,6 +2661,25 @@
       font-weight: 700;
     }
 
+    /* Höhengitter-Hover: dunkler Chip UNTER dem Cursor, klar abgesetzt vom weißen
+       Zonen-Tooltip darüber. */
+    .hgrid-tip {
+      padding: 0.3rem 0.55rem;
+      border: 0;
+      border-radius: 6px;
+      background: rgba(12, 22, 40, .96);
+      color: #eaf2ff;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, .34);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .hgrid-tip.leaflet-tooltip-bottom::before {
+      border-bottom-color: rgba(12, 22, 40, .96);
+    }
+
     /* ── Kachel-Titel als klickbarer Link ─────────────────────────────────────── */
     .m-lbl-link {
       color: var(--text3);
@@ -3373,7 +3392,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.113.0';
+    const APP_VER = '26.08.113.2';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -4684,7 +4703,7 @@
       mapAnalysisSequence: 0,
       pinPopupWanted: true,
       layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null, heightGrid: null },
-      hgridOn: false, _hgridSeq: 0, _hgridBBox: null,   // DE-Höhengitter: an/aus, Stale-Guard, gecachte CTR-Ausdehnung
+      hgridOn: false, _hgridSeq: 0, _hgridBBox: null, _hgridModel: null,   // DE-Höhengitter: an/aus, Stale-Guard, gecachte CTR-Ausdehnung, Hover-Modell
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
@@ -5405,6 +5424,7 @@
         updateZoneOverlay(zones);
         renderMapStatus(now, zones);
         updateHeightGridControl(zones);   // DE-Höhengitter-Toggle verfügbar machen / aktualisieren
+        positionMapStatus();              // Geozonen-Panel unter die (ggf. mehrzeilige) Steuerung setzen
         const zoneStatus = evalZoneStatus(zones);
         renderStatus(status, zoneStatus);
         if ($('alarm-view').classList.contains('av-open')) {
@@ -5967,20 +5987,49 @@
       return 5;
     }
     // Open-Meteo-Geländehöhen für viele Punkte, in ≤100er-Blöcken (API-Limit).
+    // Jeder Block wird bei Fehler/Leerantwort einmal wiederholt (Open-Meteo drosselt
+    // Bursts): ein gedrosselter Block darf sonst ein ganzes Stützgitter-Band leeren.
     async function fetchElevations(points) {
       const out = new Array(points.length).fill(null);
       for (let i = 0; i < points.length; i += 100) {
         const chunk = points.slice(i, i + 100);
         const lat = chunk.map(p => p.lat.toFixed(6)).join(',');
         const lon = chunk.map(p => p.lon.toFixed(6)).join(',');
-        try {
-          const r = await safeFetch(`${OPEN_METEO_ELEVATION_URL}?latitude=${lat}&longitude=${lon}`, 8000);
-          if (!r.ok) continue;
-          const d = await r.json();
-          if (Array.isArray(d.elevation)) d.elevation.forEach((e, k) => { out[i + k] = (e == null) ? null : Number(e); });
-        } catch (e) { console.warn('Höhengitter-Gelände:', e.message); }
+        const url = `${OPEN_METEO_ELEVATION_URL}?latitude=${lat}&longitude=${lon}`;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const r = await safeFetch(url, 8000);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const d = await r.json();
+            if (!Array.isArray(d.elevation)) throw new Error('kein elevation-Array');
+            d.elevation.forEach((e, k) => { out[i + k] = (e == null) ? null : Number(e); });
+            break;   // Erfolg
+          } catch (e) {
+            if (attempt === 0) { await new Promise(res => setTimeout(res, 400)); continue; }
+            console.warn('Höhengitter-Gelände (Block ausgelassen):', e.message);
+          }
+        }
       }
       return out;
+    }
+    // Rest-Lücken (null) im Gelände-Stützgitter per Nearest-Neighbor auffüllen, damit
+    // ein einzelner ausgefallener Block nicht eine ganze Region unkoloriert lässt.
+    function fillTerrainGaps(elev, nLat, nLon) {
+      const idx = (i, j) => i * nLon + j;
+      for (let i = 0; i < nLat; i++) for (let j = 0; j < nLon; j++) {
+        if (Number.isFinite(elev[idx(i, j)])) continue;
+        let best = null, bestD = Infinity;
+        for (let di = -nLat; di <= nLat; di++) for (let dj = -nLon; dj <= nLon; dj++) {
+          const ni = i + di, nj = j + dj;
+          if (ni < 0 || nj < 0 || ni >= nLat || nj >= nLon) continue;
+          const v = elev[idx(ni, nj)];
+          if (!Number.isFinite(v)) continue;
+          const d = di * di + dj * dj;
+          if (d < bestD) { bestD = d; best = v; }
+        }
+        if (best != null) elev[idx(i, j)] = best;
+      }
+      return elev;
     }
     // Even-odd-Punkt-in-Ringsatz: Außenring + Löcher gemeinsam → korrekt für Löcher.
     function pointInRings(lon, lat, rings) {
@@ -6027,7 +6076,68 @@
       feats.sort((a, b) => a.zoneNum - b.zoneNum);
       return feats;
     }
-    // Ganze CTR als Ampel-Raster: WFS-Sub-Zonen → Zellen klassifizieren → Gelände → einfärben.
+    /* Live-Hover-Tooltip: rechnet die max. Flughöhe an der EXAKTEN Cursorposition, nicht den
+       gestuften Zellwert. Sofort erscheint der interpolierte Wert aus dem Stützgitter; sobald die
+       Maus kurz ruht, wird die exakte Open-Meteo-Geländehöhe am Punkt nachgeladen (debounced,
+       gecacht) und der Wert präzisiert — auf markanten Hügeln (z. B. Domberg) ändert er sich so
+       sichtbar. */
+    let _hgridTip = null, _hgridHoverTimer = null, _hgridHoverBound = false;
+    const _hgridElevCache = new Map();
+    function _hgridTooltip() {
+      // UNTER dem Cursor (der DiPUL-Zonen-Tooltip sitzt darüber, direction:'top') —
+      // so überlagern sich Zonenname (oben) und Höhenwert (unten) nicht.
+      if (!_hgridTip) _hgridTip = L.tooltip({ sticky: true, direction: 'bottom', offset: [0, 12], opacity: 1, className: 'hgrid-tip' });
+      return _hgridTip;
+    }
+    function _hgridLabel(feat, groundMslM) {
+      if (feat.zoneNum === 1) return `${_t('hgridZoneShort')} 1 · ${_t('hgridIndiv')}`;
+      if (!Number.isFinite(groundMslM) || !Number.isFinite(feat.lowerMslM)) return null;
+      const info = computeCtrFlightInfo({ zoneNum: feat.zoneNum, lowerMslM: feat.lowerMslM, ctrExact: true }, groundMslM);
+      if (!info || !info.available) return null;
+      return `${_t('hgridZoneShort')} ${feat.zoneNum} · ${_t('hgridMax')}: ${info.maxAglM} m AGL`;
+    }
+    function onHgridHover(e) {
+      const m = S._hgridModel;
+      if (!m || !S.hgridOn || !S.map) return;
+      const lat = e.latlng.lat, lon = e.latlng.lng;
+      const feat = m.feats.find(f => pointInFeature(lon, lat, f));
+      const tip = _hgridTooltip();
+      if (!feat) { S.map.closeTooltip(tip); return; }
+      // Sofortwert (verzögerungsfrei) aus dem interpolierten Stützgitter.
+      const instant = _hgridLabel(feat, feat.zoneNum === 1 ? null : m.sampleTerrain(lat, lon));
+      if (instant) { tip.setLatLng(e.latlng).setContent(instant); S.map.openTooltip(tip); }
+      if (feat.zoneNum === 1) return;
+      // Präziser Wert: exakte Open-Meteo-Höhe am Cursor (debounced + gecacht auf ~10 m Raster).
+      clearTimeout(_hgridHoverTimer);
+      const key = lat.toFixed(4) + ',' + lon.toFixed(4);
+      if (_hgridElevCache.has(key)) {
+        const l = _hgridLabel(feat, _hgridElevCache.get(key));
+        if (l) tip.setContent(l);
+        return;
+      }
+      _hgridHoverTimer = setTimeout(async () => {
+        try {
+          const el = await fetchElevations([{ lat, lon }]);
+          if (Number.isFinite(el[0]) && S.hgridOn && S._hgridModel === m) {
+            _hgridElevCache.set(key, el[0]);
+            const l = _hgridLabel(feat, el[0]);
+            if (l) { tip.setLatLng(e.latlng).setContent(l); S.map.openTooltip(tip); }
+          }
+        } catch (_) {}
+      }, 200);
+    }
+    function hgridHoverOn() { if (S.map && !_hgridHoverBound) { S.map.on('mousemove', onHgridHover); _hgridHoverBound = true; } }
+    function hgridHoverOff() {
+      if (S.map && _hgridHoverBound) { S.map.off('mousemove', onHgridHover); _hgridHoverBound = false; }
+      if (_hgridTip && S.map) S.map.closeTooltip(_hgridTip);
+      clearTimeout(_hgridHoverTimer);
+    }
+    // Ganze CTR als Ampel-Raster: WFS-Sub-Zonen → feine Zellen klassifizieren → Gelände → einfärben.
+    // Feines Raster (~300 m) für scharfe, an die runden Zonengrenzen geschmiegte Kacheln; das Gelände
+    // wird aus einem groben Open-Meteo-Stützgitter bilinear interpoliert (wenige Requests, glatt).
+    const HGRID_CELL_M = 300;      // Zielkantenlänge einer Kachel
+    const HGRID_DIM_CAP = 200;     // max. Zeilen/Spalten (Schutz bei großen CTR)
+    const HGRID_TERR_NODES = 25;   // Stützgitter-Knoten je Achse (Geländeabtastung)
     async function buildHeightGrid() {
       if (!S.map || S.lat == null) return;
       const seq = ++S._hgridSeq;
@@ -6038,48 +6148,66 @@
       if (seq !== S._hgridSeq) return;
       if (!feats.length) {
         if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
-        S.layers.heightGrid = null; S._hgridBBox = null; return;
+        S.layers.heightGrid = null; S._hgridBBox = null; S._hgridModel = null; hgridHoverOff(); return;
       }
       // Union-BBox aller Sub-Zonen = tatsächliche CTR-Ausdehnung.
       let minLon = 180, minLat = 90, maxLon = -180, maxLat = -90;
       feats.forEach(f => { minLon = Math.min(minLon, f.bbox[0]); minLat = Math.min(minLat, f.bbox[1]); maxLon = Math.max(maxLon, f.bbox[2]); maxLat = Math.max(maxLat, f.bbox[3]); });
       const spanLat = maxLat - minLat, spanLon = maxLon - minLon;
-      let cell = Math.max(spanLat, spanLon) / 42; if (cell < 0.006) cell = 0.006;
-      const rows = Math.min(70, Math.max(1, Math.ceil(spanLat / cell)));
-      const cols = Math.min(70, Math.max(1, Math.ceil(spanLon / cell)));
-      const cLat = spanLat / rows, cLon = spanLon / cols;
-      // Zellen ihren Sub-Zonen zuordnen.
-      const cells = [];
+      // Kachelgröße in Grad (Längengrad um Breitenkosinus korrigiert), gedeckelt auf HGRID_DIM_CAP.
+      const mPerDeg = 111320, lonScale = Math.max(0.2, Math.cos((minLat + maxLat) / 2 * Math.PI / 180));
+      let cLat = HGRID_CELL_M / mPerDeg, cLon = HGRID_CELL_M / (mPerDeg * lonScale);
+      let rows = Math.max(1, Math.ceil(spanLat / cLat)), cols = Math.max(1, Math.ceil(spanLon / cLon));
+      if (rows > HGRID_DIM_CAP) rows = HGRID_DIM_CAP;
+      if (cols > HGRID_DIM_CAP) cols = HGRID_DIM_CAP;
+      cLat = spanLat / rows; cLon = spanLon / cols;
+
+      // Grobes Gelände-Stützgitter (bilinear interpoliert) — hält die Zahl der Open-Meteo-Requests klein.
+      const nLat = Math.min(rows + 1, HGRID_TERR_NODES), nLon = Math.min(cols + 1, HGRID_TERR_NODES);
+      const stepLat = spanLat / (nLat - 1 || 1), stepLon = spanLon / (nLon - 1 || 1);
+      const nodePts = [];
+      for (let i = 0; i < nLat; i++) for (let j = 0; j < nLon; j++)
+        nodePts.push({ lat: minLat + i * stepLat, lon: minLon + j * stepLon });
+      const nodeElev = fillTerrainGaps(await fetchElevations(nodePts), nLat, nLon);
+      if (seq !== S._hgridSeq) return;
+      const terrAt = (la, lo) => {
+        const fi = (la - minLat) / stepLat, fj = (lo - minLon) / stepLon;
+        let i0 = Math.max(0, Math.min(nLat - 2, Math.floor(fi))), j0 = Math.max(0, Math.min(nLon - 2, Math.floor(fj)));
+        const ti = fi - i0, tj = fj - j0;
+        const a = nodeElev[i0 * nLon + j0], b = nodeElev[i0 * nLon + j0 + 1], c = nodeElev[(i0 + 1) * nLon + j0], d = nodeElev[(i0 + 1) * nLon + j0 + 1];
+        if (![a, b, c, d].every(Number.isFinite)) return NaN;
+        return a * (1 - ti) * (1 - tj) + b * (1 - ti) * tj + c * ti * (1 - tj) + d * ti * tj;
+      };
+
+      // Canvas-Renderer: tausende kleine Kacheln performant und ohne SVG-Overhead.
+      const renderer = L.canvas({ padding: 0.3 });
+      const grp = L.layerGroup();
       for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
         const cy = minLat + (r + 0.5) * cLat, cx = minLon + (c + 0.5) * cLon;
         const feat = feats.find(f => pointInFeature(cx, cy, f));
-        if (feat) cells.push({ r, c, cy, cx, feat });
-      }
-      // Gelände nur für berechenbare Zonen (2–4) holen.
-      const needTerrain = cells.filter(x => x.feat.zoneNum !== 1 && Number.isFinite(x.feat.lowerMslM));
-      const elev = await fetchElevations(needTerrain.map(x => ({ lat: x.cy, lon: x.cx })));
-      if (seq !== S._hgridSeq) return;
-      needTerrain.forEach((x, i) => { x.elev = elev[i]; });
-      const grp = L.layerGroup();
-      cells.forEach(x => {
-        let band, label;
-        if (x.feat.zoneNum === 1) {
-          band = 0; label = `${_t('hgridZoneShort')} 1 · ${_t('hgridIndiv')}`;
-        } else if (Number.isFinite(x.feat.lowerMslM) && Number.isFinite(x.elev)) {
-          const info = computeCtrFlightInfo({ zoneNum: x.feat.zoneNum, lowerMslM: x.feat.lowerMslM, ctrExact: true }, x.elev);
-          if (!info || !info.available) return;
+        if (!feat) continue;
+        // Nur die Farbe (Band) je Zelle; den exakten Höhenwert liefert der Live-Hover
+        // (onHgridHover) an der genauen Cursorposition, nicht der gestufte Zellwert.
+        let band;
+        if (feat.zoneNum === 1) {
+          band = 0;
+        } else {
+          const g = terrAt(cy, cx);
+          if (!Number.isFinite(g) || !Number.isFinite(feat.lowerMslM)) continue;
+          const info = computeCtrFlightInfo({ zoneNum: feat.zoneNum, lowerMslM: feat.lowerMslM, ctrExact: true }, g);
+          if (!info || !info.available) continue;
           band = hgridBand(info.maxAglM);
-          label = `${_t('hgridZoneShort')} ${x.feat.zoneNum} · ${_t('hgridMax')}: ${info.maxAglM} m AGL`;
-        } else { return; }
-        L.rectangle([[minLat + x.r * cLat, minLon + x.c * cLon], [minLat + (x.r + 1) * cLat, minLon + (x.c + 1) * cLon]], {
-          stroke: false, fillColor: HGRID_COLORS[band], fillOpacity: 0.85, interactive: true,
-        }).bindTooltip(label, { sticky: true }).addTo(grp);
-      });
+        }
+        L.rectangle([[minLat + r * cLat, minLon + c * cLon], [minLat + (r + 1) * cLat, minLon + (c + 1) * cLon]], {
+          stroke: false, fillColor: HGRID_COLORS[band], fillOpacity: 0.85, interactive: false, renderer,
+        }).addTo(grp);
+      }
       if (seq !== S._hgridSeq) return;
       if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
       S.layers.heightGrid = grp;
       S._hgridBBox = { minLat, minLon, maxLat, maxLon };
-      if (S.hgridOn) grp.addTo(S.map);
+      S._hgridModel = { feats, sampleTerrain: terrAt };   // für den Live-Hover
+      if (S.hgridOn) { grp.addTo(S.map); hgridHoverOn(); }
     }
     // Nach jedem Check: Toggle in DE stets sichtbar; Grid nur neu bauen, wenn der Pin
     // die gecachte CTR verlassen hat (sonst stabil — "einmal berechnet").
@@ -8322,10 +8450,38 @@
           const inside = b && S.lat >= b.minLat && S.lat <= b.maxLat && S.lon >= b.minLon && S.lon <= b.maxLon && S.layers.heightGrid;
           if (!inside) { btn.classList.add('loading'); await buildHeightGrid(); btn.classList.remove('loading'); }
           if (S.layers.heightGrid && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map);
+          hgridHoverOn();
         } else if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) {
           S.map.removeLayer(S.layers.heightGrid);
+          hgridHoverOff();
         }
       });
+    })();
+
+    /* Mobile-Layout: die Kartensteuerung (.map-controls) bricht auf schmalen Displays auf mehrere
+       Zeilen um; das Geozonen-Panel (.map-status) darf davon nicht überlappt werden. Statt fester
+       top-Werte (die 2/3 Zeilen nicht abfangen) wird das Panel per gemessener Steuerungshöhe direkt
+       darunter gesetzt. Ein ResizeObserver fängt Umbruch, Sprachwechsel und den zusätzlichen
+       Höhengitter-Button ab. */
+    function positionMapStatus() {
+      const controls = document.querySelector('.map-wrap .map-controls');
+      const status = document.querySelector('.map-wrap .map-status');
+      if (!controls || !status) return;
+      if (window.matchMedia('(max-width: 600px)').matches) {
+        // Nur setzen, wenn die Steuerung tatsächlich gelayoutet ist (nicht 0, z. B. vor dem
+        // ersten Check, solange die Karte noch unsichtbar ist) — sonst greift die CSS-Position.
+        if (controls.offsetHeight > 0) status.style.top = (controls.offsetTop + controls.offsetHeight + 8) + 'px';
+      } else {
+        status.style.top = '';   // Desktop: CSS-Position (top: 8px) gilt
+      }
+    }
+    (function initMapStatusLayout() {
+      const controls = document.querySelector('.map-wrap .map-controls');
+      if (!controls) return;
+      if (typeof ResizeObserver === 'function') new ResizeObserver(positionMapStatus).observe(controls);
+      window.addEventListener('resize', positionMapStatus);
+      window.addEventListener('orientationchange', positionMapStatus);
+      positionMapStatus();
     })();
 
     // Länder-Zusatzebenen: beim ersten Kartenaufbau laden und als Vektor-Overlay zeichnen.
