@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Maximale Drohnen-Flughöhen in DFS-Kontrollzonen nach NfL 2026-1-3960 — Infografik von SkyCheck.">
+<title>Drohnen-Flughöhen in der CTR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --bg:#eef1f5; --surface:#ffffff; --surface2:#f6f8fb;
+    --ink:#16212e; --ink2:#51606f; --ink3:#7c8a99;
+    --line:#dbe2ea; --line2:#c6d0db;
+    --accent:#0e7c93; --accent2:#0891b2;
+    --terrain:#5c6b7a; --terrain2:#47535f; --terrainEdge:#3c4753;
+    --skyTop:#dCE9F6; --skyBot:#eef5fc;
+    --z1:#d7191c;
+    --a0:#d7191c; --a15:#f4703b; --a25:#fdae61; --a45:#ffe36b; --a65:#a6d96a; --a100:#1a9850;
+    --shadow:0 6px 22px rgba(20,33,46,.10);
+    --radius:16px;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme:dark){
+      --bg:#0c141d; --surface:#141e29; --surface2:#0f1822;
+      --ink:#e7eef6; --ink2:#9fb0c0; --ink3:#6b7c8c;
+      --line:#243444; --line2:#2f4356;
+      --accent:#2bb6d0; --accent2:#22d3ee;
+      --terrain:#3a4653; --terrain2:#2c3742; --terrainEdge:#222c36;
+      --skyTop:#132433; --skyBot:#0f1c28;
+      --shadow:0 8px 26px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0c141d; --surface:#141e29; --surface2:#0f1822;
+    --ink:#e7eef6; --ink2:#9fb0c0; --ink3:#6b7c8c;
+    --line:#243444; --line2:#2f4356;
+    --accent:#2bb6d0; --accent2:#22d3ee;
+    --terrain:#3a4653; --terrain2:#2c3742; --terrainEdge:#222c36;
+    --skyTop:#132433; --skyBot:#0f1c28;
+    --shadow:0 8px 26px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,3.2vw,44px);}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;}
+
+  header.head{margin-bottom:22px}
+  .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;}
+  h1{font-size:clamp(1.55rem,3.6vw,2.5rem);line-height:1.08;margin:.28em 0 .12em;font-weight:700;letter-spacing:-.01em;text-wrap:balance;}
+  .sub{color:var(--ink2);font-size:clamp(.95rem,1.5vw,1.06rem);max-width:62ch;}
+
+  .scene-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:clamp(10px,1.6vw,18px);overflow:hidden;}
+  svg.scene{display:block;width:100%;height:auto}
+
+  .scale-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:20px 2px 4px;}
+  .scale-lbl{font-size:.82rem;color:var(--ink2);font-weight:600;}
+  .scale-bar{flex:1 1 240px;height:14px;border-radius:7px;min-width:200px;
+    background:linear-gradient(to right,var(--a0),var(--a15) 15%,var(--a25) 25%,var(--a45) 45%,var(--a65) 65%,var(--a100) 100%);
+    border:1px solid var(--line2);}
+  .scale-ticks{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink3);
+    max-width:none;margin:2px 2px 0;}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-top:22px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c,var(--accent));
+    border-radius:12px;padding:14px 15px;box-shadow:var(--shadow);}
+  .card h3{margin:0 0 2px;font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink2);font-weight:600;}
+  .card .zname{font-size:1.02rem;font-weight:700;margin:0 0 6px;color:var(--ink);display:flex;align-items:baseline;gap:8px;}
+  .card .zh{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--c,var(--accent));font-size:.95rem;}
+  .card p{margin:0;font-size:.86rem;color:var(--ink2);}
+  .card .rule{color:var(--ink);font-weight:500}
+
+  .note{margin-top:20px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;font-size:.86rem;color:var(--ink2);}
+  .note b{color:var(--ink)}
+  .fvk{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}
+  .fvk span{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;color:var(--ink);}
+  .dot{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15)}
+
+  footer.foot{margin-top:24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    align-items:center;font-size:.8rem;color:var(--ink3);border-top:1px solid var(--line);padding-top:16px;}
+  footer.foot a{color:var(--accent);text-decoration:none;font-weight:600}
+  footer.foot a:hover{text-decoration:underline}
+  .brand{font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .brand .k{color:var(--accent2)}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow">DFS-Kontrollzone · UAS-Betrieb</div>
+    <h1>Drohnen-Flughöhen in der CTR</h1>
+    <p class="sub">Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <b>NfL&nbsp;2026-1-3960</b> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.</p>
+  </header>
+
+  <div class="scene-card">
+    <svg class="scene" id="scene" viewBox="0 0 1600 800" role="img"
+         aria-label="Querschnitt durch eine Kontrollzone mit maximalen Drohnen-Flughöhen je Zone">
+    </svg>
+  </div>
+
+  <div class="scale-row">
+    <span class="scale-lbl">Max. Flughöhe über Grund</span>
+    <span class="scale-bar" aria-hidden="true"></span>
+  </div>
+  <div class="scale-ticks mono"><span>0 m</span><span>25 m</span><span>45 m</span><span>≥ 65 m</span><span>100 m</span></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="note">
+    <b>Freigabe:</b> In den <b>Zonen 2–4</b> gilt die <b>allgemeine FVK-Freigabe automatisch</b>, sofern alle Auflagen der NfL 2026-1-3960 eingehalten werden. Die <b>Zone 1</b> erfordert immer eine <b>individuelle FVK-Freigabe</b> (Antrag über <span class="mono">ais.dfs.de</span>, i.d.R. ~14 Tage Vorlauf). Werden die Höhen überschritten oder Auflagen nicht erfüllt, ist ebenfalls eine individuelle Freigabe nötig.
+    <div class="fvk">
+      <span><i class="dot" style="background:var(--a100)"></i>Allgemeine FVK-Freigabe (automatisch)</span>
+      <span><i class="dot" style="background:var(--z1)"></i>Individuelle FVK-Freigabe erforderlich</span>
+      <span><i class="dot" style="background:var(--a25)"></i>Höhe stark geländeabhängig</span>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <div>Verbindlich sind <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL</a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.</div>
+    <div>Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a></div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.getElementById("scene");
+  const W=1600,H=800;
+
+  // ---- Geometrie / Maßstab -------------------------------------------------
+  const cx=800;                 // Flughafen-Referenzpunkt (Bildmitte)
+  const PXKM=86;                // Pixel pro km (Horizontaldistanz vom ARP; lässt Flanken für „außerhalb CTR" frei)
+  const R1=1.2,R2=4,R3=6,RCTR=7.6;   // Zonenradien in km
+  const airportElev=452;        // Flugplatzhöhe (m MSL), Beispiel EDDM-nah
+  const groundBottom=H-6;       // untere Kante der Geländefüllung
+  const eDatum=418;             // MSL am unteren Bezug
+  const VS=2.55;                // Pixel pro Höhenmeter
+  const yOf=e=>groundBottom-40-(e-eDatum)*VS;   // MSL-Meter -> y
+
+  // ---- Gelände (natürliche Undulation + zwei markante Hügel) ---------------
+  function terrain(x){
+    const d=(x-cx);
+    let e=452
+      +16*Math.sin(x/205)
+      +9*Math.sin(x/83+1.1)
+      +5*Math.sin(x/47+0.5);
+    e+=26*Math.exp(-Math.pow((x-360)/120,2));   // Hügel links (Zone 3/4)
+    e+=32*Math.exp(-Math.pow((x-1300)/150,2));  // Höhenzug rechts (Zone 4)
+    e-=10*Math.exp(-Math.pow((x-cx)/260,2));    // flaches Flughafenareal
+    return e;
+  }
+  const zoneOf=x=>{const km=Math.abs(x-cx)/PXKM;
+    if(km<=R1)return 1; if(km<=R2)return 2; if(km<=R3)return 3; if(km<=RCTR)return 4; return 0;};
+
+  // Max. Flughöhe über Grund je Regel (NfL 2026-1-3960); null = individuell (Zone 1)
+  function maxAgl(x){
+    const z=zoneOf(x), t=terrain(x);
+    if(z===0)return 120;                                   // außerhalb CTR
+    if(z===1)return null;                                  // individuell
+    if(z===2)return Math.max(0,Math.min(25,(airportElev+25)-t));
+    if(z===3)return Math.max(0,Math.min(45,(airportElev+45)-t));
+    return Math.min(100,Math.max(50,(airportElev+100)-t)); // Zone 4: größere Höhe
+  }
+
+  // ---- Ampel-Farbe (0..100 m), an DFS-Deckel geeicht -----------------------
+  const stops=[[0,[215,25,28]],[15,[244,112,59]],[25,[253,174,97]],[45,[255,227,107]],[65,[166,217,106]],[100,[26,152,80]]];
+  function ampel(v){v=Math.max(0,Math.min(100,v));
+    for(let i=1;i<stops.length;i++){if(v<=stops[i][0]){const[m0,c0]=stops[i-1],[m1,c1]=stops[i],f=(v-m0)/(m1-m0);
+      return`rgb(${Math.round(c0[0]+(c1[0]-c0[0])*f)},${Math.round(c0[1]+(c1[1]-c0[1])*f)},${Math.round(c0[2]+(c1[2]-c0[2])*f)})`;}}
+    return"rgb(26,152,80)";}
+
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const add=(n,a)=>{const e=el(n,a);svg.appendChild(e);return e;};
+
+  // ---- Defs: Himmel-Verlauf ------------------------------------------------
+  const defs=add("defs",{});
+  const sky=el("linearGradient",{id:"sky",x1:0,y1:0,x2:0,y2:1});
+  sky.appendChild(el("stop",{offset:0,"stop-color":"var(--skyTop)"}));
+  sky.appendChild(el("stop",{offset:1,"stop-color":"var(--skyBot)"}));
+  defs.appendChild(sky);
+  add("rect",{x:0,y:0,width:W,height:H,fill:"url(#sky)"});
+
+  // ---- Zonen-Hintergrundbänder (dezent) + Trennlinien ----------------------
+  const bnd=[cx-RCTR*PXKM,cx-R3*PXKM,cx-R2*PXKM,cx-R1*PXKM,cx+R1*PXKM,cx+R2*PXKM,cx+R3*PXKM,cx+RCTR*PXKM];
+  function vline(x,lbl){
+    add("line",{x1:x,y1:70,x2:x,y2:groundBottom-30,stroke:"var(--line2)","stroke-width":1.4,"stroke-dasharray":"3 6",opacity:.7});
+  }
+  bnd.forEach(x=>{if(x>4&&x<W-4)vline(x);});
+
+  // ---- Höhengitter-Bars (der eigentliche „GRID") ---------------------------
+  const OUTSIDE="#3f9fe0";   // himmelsblau: außerhalb der CTR (klar von Zone-4-Grün abgesetzt)
+  const step=13, bw=9;
+  for(let x=6;x<W;x+=step){
+    const t=terrain(x), z=zoneOf(x), v=maxAgl(x);
+    const tTop=yOf(t);
+    if(z===1){ // individuell: rote, gedämpfte Bars
+      const top=yOf(t+ (16+6*Math.sin(x/30)) );
+      add("rect",{x:x-bw/2,y:top,width:bw,height:tTop-top,fill:"var(--z1)",opacity:.30});
+      continue;
+    }
+    const top=yOf(t+v);
+    add("rect",{x:x-bw/2,y:top,width:bw,height:Math.max(0,tTop-top),fill:(z===0?OUTSIDE:ampel(v)),opacity:(z===0?.6:.92)});
+  }
+
+  // ---- „120 m über Grund"-Linie (folgt dem Gelände, außerhalb CTR betont) --
+  let dPath="";
+  for(let x=0;x<=W;x+=8){const y=yOf(terrain(x)+120);dPath+=(x===0?"M":"L")+x+" "+y.toFixed(1)+" ";}
+  add("path",{d:dPath,fill:"none",stroke:"var(--ink2)","stroke-width":2,"stroke-dasharray":"9 7",opacity:.65});
+  const tag120=add("g",{});
+  tag120.appendChild(el("rect",{x:cx-70,y:yOf(terrain(cx)+120)-30,width:140,height:22,rx:6,fill:"var(--surface)",stroke:"var(--line2)"}));
+  tag120.appendChild(el("text",{x:cx,y:yOf(terrain(cx)+120)-14,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":13,"font-weight":600,fill:"var(--ink2)"})).textContent="120 m über Grund";
+
+  // ---- Flugplatzhöhe-Referenz (horizontale Linie) --------------------------
+  add("line",{x1:cx-R1*PXKM-8,y1:yOf(airportElev),x2:cx+R1*PXKM+8,y2:yOf(airportElev),
+    stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"2 5",opacity:.8});
+
+  // ---- Gelände-Silhouette (oben drüber, damit Bars auf dem Grund stehen) ---
+  let gp="M0 "+groundBottom+" L0 "+yOf(terrain(0)).toFixed(1)+" ";
+  for(let x=0;x<=W;x+=6)gp+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
+  gp+="L"+W+" "+groundBottom+" Z";
+  add("path",{d:gp,fill:"var(--terrain)"});
+  // dünne Geländekante
+  let ep="M0 "+yOf(terrain(0)).toFixed(1)+" ";
+  for(let x=0;x<=W;x+=6)ep+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
+  add("path",{d:ep,fill:"none",stroke:"var(--terrainEdge)","stroke-width":2.5,opacity:.6});
+
+  // ---- Flughafen (Tower + Bahn) im Zentrum ---------------------------------
+  (function airport(){
+    const gy=yOf(terrain(cx));
+    // Landebahn
+    add("rect",{x:cx-95,y:gy-4,width:190,height:9,rx:2,fill:"var(--terrain2)"});
+    for(let i=-3;i<=3;i++)add("rect",{x:cx-6+i*24,y:gy-1,width:12,height:3,rx:1.5,fill:"#e9eef4",opacity:.75});
+    // Tower
+    const tx=cx+120, base=gy;
+    add("rect",{x:tx-4,y:base-52,width:8,height:52,fill:"var(--terrain2)"});
+    add("path",{d:`M${tx-13} ${base-52} L${tx+13} ${base-52} L${tx+9} ${base-66} L${tx-9} ${base-66} Z`,fill:"var(--accent)"});
+    add("rect",{x:tx-9,y:base-64,width:18,height:8,rx:1.5,fill:"#dff3f8"});
+  })();
+
+  // ---- Drohnen-Icon + Status-Marker ---------------------------------------
+  function drone(x,y,col){
+    const g=add("g",{transform:`translate(${x},${y})`});
+    g.appendChild(el("line",{x1:-11,y1:-6,x2:11,y2:6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
+    g.appendChild(el("line",{x1:-11,y1:6,x2:11,y2:-6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
+    [[-11,-6],[11,-6],[-11,6],[11,6]].forEach(p=>g.appendChild(el("circle",{cx:p[0],cy:p[1],r:3.2,fill:col})));
+    g.appendChild(el("rect",{x:-5,y:-3,width:10,height:6,rx:2,fill:col}));
+    return g;
+  }
+  function marker(x,y,kind){ // kind: ok | warn | ind
+    const col=kind==="ok"?"var(--a100)":kind==="warn"?"var(--a25)":"var(--z1)";
+    const g=add("g",{transform:`translate(${x},${y})`});
+    g.appendChild(el("rect",{x:-15,y:-15,width:30,height:30,rx:8,fill:"var(--surface)",stroke:col,"stroke-width":2.4}));
+    if(kind==="ok"){g.appendChild(el("path",{d:"M-7 0 L-2 6 L8 -7",fill:"none",stroke:col,"stroke-width":3,"stroke-linecap":"round","stroke-linejoin":"round"}));}
+    else{g.appendChild(el("path",{d:"M0 -8 L9 8 L-9 8 Z",fill:"none",stroke:col,"stroke-width":2.6,"stroke-linejoin":"round"}));
+         g.appendChild(el("line",{x1:0,y1:-2,x2:0,y2:3,stroke:col,"stroke-width":2.6,"stroke-linecap":"round"}));
+         g.appendChild(el("circle",{cx:0,cy:6,r:1.5,fill:col}));}
+    return g;
+  }
+  // Beispiel-Drohnen: mehrheitlich klar im legalen Bereich (grüner Haken, deutlich
+  // UNTER dem Deckel); einige wenige DEUTLICH über dem Deckel (Ausrufezeichen = zu hoch,
+  // individuelle Freigabe nötig); Zone 1 immer individuell (rot). Nicht an der Grenze.
+  const droneScenes=[
+    {x:cx-720, m:"legal"},   // außerhalb CTR – ok
+    {x:cx-560, m:"legal"},   // Zone 4 – ok
+    {x:cx-430, m:"over"},    // Zone 3 – zu hoch
+    {x:cx-215, m:"legal"},   // Zone 2 – ok
+    {x:cx-40,  m:"zone1"},   // Zone 1 – individuell
+    {x:cx+250, m:"legal"},   // Zone 2/3 – ok
+    {x:cx+470, m:"over"},    // Zone 3 – zu hoch
+    {x:cx+610, m:"legal"},   // Zone 4 – ok
+    {x:cx+740, m:"legal"},   // außerhalb CTR – ok
+  ];
+  droneScenes.forEach(s=>{
+    const z=zoneOf(s.x), v=maxAgl(s.x);
+    let agl, kind, col="var(--accent2)";
+    if(s.m==="zone1" || z===1){ agl=10; kind="ind"; col="var(--z1)"; }
+    else if(s.m==="over"){ agl=Math.min(130, Math.round((v||100)+32)); kind="warn"; }  // deutlich über dem Deckel
+    else { agl=Math.max(8, Math.round((v||115)*0.55)); kind="ok"; }                     // klar im legalen Bereich
+    const y=yOf(terrain(s.x)+agl)-4;
+    drone(s.x,y,col);
+    marker(s.x+34,y+2,kind);
+  });
+
+  // ---- Zonen-Beschriftungen (oben) ----------------------------------------
+  const segs=[
+    [0,cx-RCTR*PXKM,"außerhalb CTR"],
+    [cx-RCTR*PXKM,cx-R3*PXKM,"Zone 4"],
+    [cx-R3*PXKM,cx-R2*PXKM,"Zone 3"],
+    [cx-R2*PXKM,cx-R1*PXKM,"Zone 2"],
+    [cx-R1*PXKM,cx+R1*PXKM,"Zone 1"],
+    [cx+R1*PXKM,cx+R2*PXKM,"Zone 2"],
+    [cx+R2*PXKM,cx+R3*PXKM,"Zone 3"],
+    [cx+R3*PXKM,cx+RCTR*PXKM,"Zone 4"],
+    [cx+RCTR*PXKM,W,"außerhalb CTR"],
+  ];
+  segs.forEach(s=>{ if(s[1]-s[0]<40)return;
+    add("text",{x:(s[0]+s[1])/2,y:50,"text-anchor":"middle","font-family":"IBM Plex Sans",
+      "font-size":17,"font-weight":700,fill:s[2]==="Zone 1"?"var(--z1)":"var(--ink)"}).textContent=s[2];
+  });
+  // Höhen-Kürzel je Zone (klein, unter dem Label)
+  const caps=[[cx-(R2+R3)/2*PXKM,"45 m"],[cx-(R1+R2)/2*PXKM,"25 m"],[cx,"individuell"],
+              [cx+(R1+R2)/2*PXKM,"25 m"],[cx+(R2+R3)/2*PXKM,"45 m"],
+              [cx-(R3+RCTR)/2*PXKM,"100 / 50 m"],[cx+(R3+RCTR)/2*PXKM,"100 / 50 m"]];
+  caps.forEach(c=>add("text",{x:c[0],y:70,"text-anchor":"middle","font-family":"IBM Plex Mono",
+    "font-size":12.5,"font-weight":600,fill:c[1]==="individuell"?"var(--z1)":"var(--accent)"}).textContent=c[1]);
+
+  // ---- CTR-D-Ausdehnung markieren (Bodenstreifen) --------------------------
+  (function ctrSpan(){
+    const ctrL=cx-RCTR*PXKM, ctrR=cx+RCTR*PXKM, sy=H-30;
+    // Klammer über die gesamte CTR-D
+    const ln={stroke:"#ffffff","stroke-width":2.5,"stroke-linecap":"round",opacity:.92};
+    add("line",Object.assign({x1:ctrL,y1:sy,x2:ctrR,y2:sy},ln));
+    add("line",Object.assign({x1:ctrL,y1:sy-8,x2:ctrL,y2:sy+8},ln));
+    add("line",Object.assign({x1:ctrR,y1:sy-8,x2:ctrR,y2:sy+8},ln));
+    // Label-Pille „CTR-D"
+    const pw=224,ph=27;
+    add("rect",{x:cx-pw/2,y:sy-ph/2,width:pw,height:ph,rx:13.5,fill:"var(--surface)",stroke:"var(--line2)","stroke-width":1.4});
+    add("text",{x:cx,y:sy+5.5,"text-anchor":"middle","font-family":"IBM Plex Sans",
+      "font-size":15,"font-weight":700,fill:"var(--ink)"}).textContent="CTR-D · Kontrollzone";
+    // „außerhalb"-Beschriftung auf den Flanken
+    [ctrL/2,(ctrR+W)/2].forEach(xm=>{ if(xm<ctrL-30||xm>ctrR+30)
+      add("text",{x:xm,y:sy+5,"text-anchor":"middle","font-family":"IBM Plex Sans",
+        "font-size":13,"font-weight":600,fill:"#eef3f8",opacity:.85}).textContent="außerhalb CTR";});
+  })();
+})();
+
+// ---- Regel-Karten (HTML) ---------------------------------------------------
+(function(){
+  const cards=[
+    {c:"var(--z1)",t:"CTR-Innenbereich",z:"Zone 1",h:"individuell",p:"<span class='rule'>Immer individuelle FVK-Freigabe</span> — unabhängig von der Flughöhe. Über dem Flughafen, ±1 km um dessen Grenze und 5 km hinter den Bahnenden."},
+    {c:"var(--a25)",t:"4-km-Kreis um ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
+    {c:"var(--a45)",t:"6-km-Kreis um ARP",z:"Zone 3",h:"45 m",p:"<span class='rule'>45 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
+    {c:"var(--a100)",t:"restliche CTR",z:"Zone 4",h:"100 / 50 m",p:"<span class='rule'>100 m über der Flugplatzhöhe oder 50 m über Grund</span> — die <b>größere</b> Höhe ist maßgeblich (unter Flugplatzhöhe: 100 m über Grund)."},
+    {c:"var(--accent)",t:"hindernisnah",z:"Sonderfall",h:"+15 m",p:"Bis <span class='rule'>Hindernishöhe + 15 m</span> (max. 30 m seitlich) — <b>unabhängig</b> von der sonstigen Höhengrenze."},
+    {c:"#3f9fe0",t:"außerhalb der CTR",z:"Regelfall",h:"120 m",p:"Generell <span class='rule'>120 m über Grund</span> (allgemeine Regel für die offene Kategorie)."},
+  ];
+  const wrap=document.getElementById("cards");
+  cards.forEach(o=>{
+    const d=document.createElement("div");d.className="card";d.style.setProperty("--c",o.c);
+    d.innerHTML=`<h3>${o.t}</h3><div class="zname">${o.z} <span class="zh">${o.h}</span></div><p>${o.p}</p>`;
+    wrap.appendChild(d);
+  });
+})();
+</script>
+
+</body>
+</html>

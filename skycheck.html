@@ -1249,18 +1249,26 @@
     /* Höhengitter (DE): Toggle-Loading + Karten-Legende */
     .hgrid-toggle.loading { opacity: .55; pointer-events: none; }
     .hgrid-legend {
-      position: absolute; left: 10px; bottom: 10px; z-index: 500;
-      display: none; width: 190px; padding: 9px 11px; border-radius: 10px;
+      /* bottom: 46px hält die Legende über dem Vollbild-Button (.map-fs-btn, bottom:8 + 30px). */
+      position: absolute; left: 10px; bottom: 46px; z-index: 1002;
+      display: none; width: 196px; padding: 9px 11px; border-radius: 10px;
       background: rgba(15,22,30,0.86); color: #eef3f8; box-shadow: 0 4px 16px rgba(0,0,0,.35);
       backdrop-filter: blur(4px); font-size: 11px; line-height: 1.35;
     }
     .hgrid-legend.show { display: block; }
-    .hgl-title { font-weight: 600; margin-bottom: 6px; font-size: 11.5px; }
+    .hgl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .hgl-title { font-weight: 600; font-size: 11.5px; }
+    .hgl-info {
+      flex: none; width: 17px; height: 17px; border-radius: 50%; border: 1px solid currentColor;
+      color: inherit; opacity: .65; text-decoration: none; font-family: Georgia, "Times New Roman", serif;
+      font-style: italic; font-weight: 700; font-size: 11px; line-height: 15px; text-align: center;
+    }
+    .hgl-info:hover { opacity: 1; }
     .hgl-ramp { display: flex; height: 12px; border-radius: 3px; overflow: hidden; }
     .hgl-ramp span { flex: 1; }
     /* Höhengitter-Rasterbild knackscharf (keine Browser-Glättung → klare Zellen/Zonengrenzen). */
     .hgrid-overlay { image-rendering: pixelated; image-rendering: crisp-edges; }
-    .hgl-scale { display: flex; justify-content: space-between; margin-top: 3px; opacity: .8; font-size: 10px; }
+    .hgl-scale { display: flex; justify-content: space-between; margin-top: 3px; opacity: .85; font-size: 9.5px; font-variant-numeric: tabular-nums; }
     .hgl-note { margin-top: 6px; opacity: .7; font-size: 9.5px; }
     :root.light-mode .hgrid-legend { background: rgba(255,255,255,0.92); color: #17202a; box-shadow: 0 4px 16px rgba(20,40,60,.18); }
 
@@ -3160,9 +3168,12 @@
         <button class="map-style-btn" id="btn-map-style" title="Kartenstil"><span class="ms-icon">⧉</span><span id="map-style-label">Dark</span></button>
         <div class="map-status hidden" id="map-status"></div>
         <div class="hgrid-legend" id="hgrid-legend" aria-hidden="true">
-          <div class="hgl-title" data-i18n="hgridLegendTitle">Max. Flughöhe (Näherung)</div>
+          <div class="hgl-head">
+            <span class="hgl-title" data-i18n="hgridLegendTitle">Max. Flughöhe (Näherung)</span>
+            <a class="hgl-info" href="ctr-hoehenregeln.html" target="_blank" rel="noopener" title="Info: Drohnen-Flughöhen in der CTR (Grafik)" aria-label="Info zu den Flughöhenregeln öffnen">i</a>
+          </div>
           <div class="hgl-ramp" id="hgl-ramp"></div>
-          <div class="hgl-scale"><span data-i18n="hgridLow">niedrig</span><span data-i18n="hgridHigh">hoch</span></div>
+          <div class="hgl-scale"><span>0</span><span>25</span><span>45</span><span>≥65</span><span>100&nbsp;m</span></div>
           <div class="hgl-note" data-i18n="hgridNote">Näherung aus Gelände + erkannter CTR-Zone. Verbindlich: DiPUL / NfL.</div>
         </div>
       </div>
@@ -3396,7 +3407,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.114.2';
+    const APP_VER = '26.08.114.3';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
