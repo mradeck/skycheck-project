@@ -52,6 +52,8 @@
   .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;}
   h1{font-size:clamp(1.55rem,3.6vw,2.5rem);line-height:1.08;margin:.28em 0 .12em;font-weight:700;letter-spacing:-.01em;text-wrap:balance;}
   .sub{color:var(--ink2);font-size:clamp(.95rem,1.5vw,1.06rem);max-width:62ch;}
+  .sub a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+  .sub a:hover{border-bottom-color:var(--accent);}
 
   .scene-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:clamp(10px,1.6vw,18px);overflow:hidden;}
@@ -87,6 +89,49 @@
   footer.foot a:hover{text-decoration:underline}
   .brand{font-weight:700;color:var(--ink);letter-spacing:-.01em}
   .brand .k{color:var(--accent2)}
+
+  /* --- Sektions-Überschriften --- */
+  section.block{margin-top:clamp(38px,5.5vw,64px)}
+  .block h2{font-size:clamp(1.28rem,2.7vw,1.78rem);font-weight:700;letter-spacing:-.01em;margin:0 0 .3em;text-wrap:balance;}
+  .block .lead{color:var(--ink2);font-size:clamp(.92rem,1.45vw,1.04rem);max-width:66ch;margin:0 0 18px;}
+
+  /* --- Annotierter Screenshot --- */
+  .annot{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+    box-shadow:var(--shadow);background:#0c141d;line-height:0;}
+  .annot img{display:block;width:100%;height:auto}
+  .pin{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;
+    background:var(--accent2);border:2.5px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.55);
+    font-family:"IBM Plex Mono",monospace;z-index:2;}
+  @media (max-width:640px){.pin{width:23px;height:23px;font-size:.74rem;border-width:2px}}
+  .annot-cap{line-height:1.4;font-size:.78rem;color:var(--ink3);margin:8px 2px 0;}
+
+  /* --- Schritt-Liste --- */
+  .steps{list-style:none;margin:18px 0 0;padding:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px;counter-reset:st;}
+  .steps li{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:13px 15px 14px 48px;position:relative;box-shadow:var(--shadow);font-size:.87rem;color:var(--ink2);}
+  .steps li::before{counter-increment:st;content:counter(st);position:absolute;left:13px;top:13px;
+    width:25px;height:25px;border-radius:50%;background:var(--accent2);color:#fff;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:.82rem;font-family:"IBM Plex Mono",monospace;}
+  .steps li b{color:var(--ink);display:block;margin-bottom:2px;font-size:.92rem}
+
+  .howcalc{margin-top:18px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .howcalc h3{margin:0 0 6px;font-size:1.02rem;color:var(--ink)}
+  .howcalc p{margin:0 0 4px;font-size:.9rem;color:var(--ink2)}
+  .howcalc b{color:var(--ink)}
+  .formula{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--accent);background:var(--surface);
+    border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:10px 0 4px;display:block;
+    overflow-x:auto;white-space:nowrap;}
+
+  /* --- Flughafen-Galerie --- */
+  .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:6px}
+  figure.shot{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;box-shadow:var(--shadow);}
+  figure.shot img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#0c141d}
+  figure.shot figcaption{padding:10px 13px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  figure.shot .city{font-weight:700;color:var(--ink);font-size:.96rem}
+  figure.shot .icao{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--accent);font-size:.84rem}
 </style>
 </head>
 <body>
@@ -96,7 +141,7 @@
   <header class="head">
     <div class="eyebrow">DFS-Kontrollzone · UAS-Betrieb</div>
     <h1>Drohnen-Flughöhen in der CTR</h1>
-    <p class="sub">Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <b>NfL&nbsp;2026-1-3960</b> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.</p>
+    <p class="sub">Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.</p>
   </header>
 
   <div class="scene-card">
@@ -121,6 +166,45 @@
       <span><i class="dot" style="background:var(--a25)"></i>Höhe stark geländeabhängig</span>
     </div>
   </div>
+
+  <!-- ============ ANLEITUNG: Live-Höhengitter ============ -->
+  <section class="block">
+    <h2>So funktioniert das Live-Höhengitter</h2>
+    <p class="lead">In <span class="brand">Sky<span class="k">Check</span></span> lässt sich die obige Regel als <b>Farbraster über die reale Karte</b> legen: Jede Zelle zeigt die an dieser Stelle maximal zulässige Flughöhe — automatisch aus Zonendeckel, Flugplatzhöhe und Geländehöhe berechnet.</p>
+
+    <div class="annot">
+      <img src="img/hoehengrid-anleitung-stuttgart.webp" width="1600" height="869"
+           alt="SkyCheck-Höhengitter über der Kontrollzone Stuttgart (EDDS): Farbraster der maximal erlaubten Drohnen-Flughöhen mit Bedienelementen, Legende, Tooltip und Status-Overlay.">
+      <span class="pin" style="left:26.5%;top:4%">1</span>
+      <span class="pin" style="left:44%;top:40%">2</span>
+      <span class="pin" style="left:6.5%;top:85.5%">3</span>
+      <span class="pin" style="left:42%;top:68%">4</span>
+      <span class="pin" style="left:85%;top:5.5%">5</span>
+    </div>
+    <p class="annot-cap mono">Beispiel: Kontrollzone Stuttgart (EDDS) — über den Höhenzügen (rot) sinkt die erlaubte Flughöhe, in den Tälern (grün) steigt sie.</p>
+
+    <ol class="steps">
+      <li><b>Höhengitter aktivieren</b>Der Button „Höhengitter" in der Kartenleiste blendet das Farbraster für die aktuelle CTR ein.</li>
+      <li><b>Farbe = erlaubte Flughöhe</b>Jede Rasterzelle ist nach der maximalen Flughöhe über Grund eingefärbt — Rot ≈ 0 m, Grün bis 100 m.</li>
+      <li><b>Legende mit Höhen-Ticks</b>Die Skala unten links ordnet den Farben feste Höhen zu: 0 · 25 · 45 · ≥ 65 · 100 m.</li>
+      <li><b>Tooltip am Cursor</b>Über einer Zelle erscheinen Zone, max. Flughöhe (m AGL) und die Geländehöhe am Punkt (DHHN2016).</li>
+      <li><b>Status-Overlay</b>Oben rechts steht die CTR-Zone am Punkt; aufgeklappt zeigt es Wetter, Geländehöhe (m MSL, DEM/EGM96), Koordinaten und einen DiPUL-Direktlink.</li>
+    </ol>
+
+    <div class="howcalc">
+      <h3>Warum dasselbe Zonenband unterschiedlich rot ist</h3>
+      <p>Die Deckel der Zonen 2–4 gelten <b>relativ zur Flugplatzhöhe</b>. Steigt das Gelände über die Flugplatzhöhe, „frisst" es den Deckel auf — die verbleibende Höhe über Grund sinkt, die Zelle wird röter. Über tieferem Gelände bleibt mehr Luft nach oben.</p>
+      <span class="formula">max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe )</span>
+      <p>Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Verbindlich bleiben stets <b>DiPUL</b> und die <b>NfL&nbsp;2026-1-3960</b>; das Raster ist eine Näherung zur Orientierung.</p>
+    </div>
+  </section>
+
+  <!-- ============ GALERIE: Verkehrsflughäfen ============ -->
+  <section class="block">
+    <h2>Höhengitter deutscher Verkehrsflughäfen</h2>
+    <p class="lead">Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
+    <div class="gallery-grid" id="gallery"></div>
+  </section>
 
   <footer class="foot">
     <div>Verbindlich sind <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL</a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.</div>
@@ -346,6 +430,40 @@
     const d=document.createElement("div");d.className="card";d.style.setProperty("--c",o.c);
     d.innerHTML=`<h3>${o.t}</h3><div class="zname">${o.z} <span class="zh">${o.h}</span></div><p>${o.p}</p>`;
     wrap.appendChild(d);
+  });
+})();
+
+// ---- Flughafen-Galerie (HTML) ---------------------------------------------
+(function(){
+  // Alphabetisch nach Stadt; slug = Dateiname unter img/hoehengrid-flughoehen-drohnen-<slug>.webp
+  const ports=[
+    ["berlin-brandenburg","Berlin Brandenburg","EDDB"],
+    ["braunschweig-wolfsburg","Braunschweig-Wolfsburg","EDVE"],
+    ["bremen","Bremen","EDDW"],
+    ["dresden","Dresden","EDDC"],
+    ["duesseldorf","Düsseldorf","EDDL"],
+    ["frankfurt","Frankfurt Main","EDDF"],
+    ["friedrichshafen","Friedrichshafen","EDNY"],
+    ["hamburg","Hamburg","EDDH"],
+    ["hannover","Hannover","EDDV"],
+    ["karlsruhe-baden-baden","Karlsruhe/Baden-Baden","EDSB"],
+    ["koeln-bonn","Köln/Bonn","EDDK"],
+    ["lahr","Lahr","EDTL"],
+    ["leipzig-halle","Leipzig/Halle","EDDP"],
+    ["memmingen","Memmingen","EDJA"],
+    ["muenster-osnabrueck","Münster/Osnabrück","EDDG"],
+    ["nuernberg","Nürnberg","EDDN"],
+    ["saarbruecken","Saarbrücken","EDDR"],
+    ["stuttgart","Stuttgart","EDDS"],
+  ];
+  const g=document.getElementById("gallery");
+  ports.forEach(([slug,city,icao])=>{
+    const f=document.createElement("figure");f.className="shot";
+    f.innerHTML=`<img loading="lazy" decoding="async" width="1600" height="900"`+
+      ` src="img/hoehengrid-flughoehen-drohnen-${slug}.webp"`+
+      ` alt="Höhengitter der maximal erlaubten Drohnen-Flughöhen in der Kontrollzone ${city} (${icao})">`+
+      `<figcaption><span class="city">${city}</span><span class="icao">${icao}</span></figcaption>`;
+    g.appendChild(f);
   });
 })();
 </script>
