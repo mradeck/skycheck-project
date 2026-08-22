@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.114.3
+📦 **Aktualna wersja:** v26.08.115.0
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.115.0 | 🇩🇪 **Strona reguł wysokości CTR: instrukcja + galeria lotnisk.** `ctr-hoehenregeln.html` zyskuje (1) ilustrowaną instrukcję „So funktioniert das Live-Höhengitter" — opatrzony adnotacjami zrzut ekranu Stuttgartu z pięcioma numerowanymi znacznikami (przycisk siatki, raster koloru, legenda, dymek, overlay statusu), listę pięciu kart-kroków oraz blok z wzorem `maks. wysokość (AGL) = min(pułap nad gruntem, wysokość lotniska + pułap − wysokość terenu)`; (2) galerię 18 niemieckich lotnisk z CTR-D jako leniwie ładowaną siatkę WebP (`img/hoehengrid-flughoehen-drohnen-<miasto>.webp`, ~2,5 MB łącznie). Wszystkie zrzuty przekompresowane do WebP (1600 px). NfL 2026-1-3960 jest teraz również podlinkowana we wstępie. |
 | v26.08.114.3 | 🇩🇪 **Legenda siatki wysokości + infografika reguł.** Legenda siatki wysokości pokazuje teraz znaczniki wysokości pod skalą (`0 · 25 · 45 · ≥65 · 100 m`), przycisk ⓘ otwiera nową hostowaną stronę **`ctr-hoehenregeln.html`** (infografika przekrojowa maksymalnych wysokości lotu dronów według strefy CTR wg NfL 2026-1-3960; oficjalny PDF NfL jest podlinkowany w jej stopce), a legenda została podniesiona nad przycisk pełnego ekranu, aby już się nie nakładały. CSP rozszerzone o Google Fonts dla nowej strony. |
 | v26.08.114.2 | 🇩🇪 **Etykiety układu wysokości.** Wysokość terenu w panelu strefy pokazuje teraz pionowy układ odniesienia DEM („≈ X m MSL (DEM, EGM96)" — kafelki Terrarium = EGM96, zapas Open-Meteo = EGM2008), a dymek najechania siatki wysokości dodaje wysokość terenu pod kursorem jako **DHHN2016** („… m AGL · teren ≈ X m DHHN2016"; ortometryczna wysokość DEM równa się DHHN2016 w Niemczech z dokładnością poniżej metra, poniżej własnej dokładności DEM). |
 | v26.08.114.1 | 🇩🇪 **Punktowa wysokość terenu z kafelków DEM (niezawodnie).** Wysokość terenu pokazywana w panelu strefy („≈ X m MSL") zależała wyłącznie od API wysokości Open-Meteo i pozostawała pusta („—") przy jego dziennym limicie; teraz pochodzi głównie z **kafelków wysokości DEM** (bez dziennego limitu, spójnie z siatką wysokości), a Open-Meteo służy już tylko jako tolerancyjny zapas (wystarczy punkt środkowy). Etykieta „m MSL" już tam była. |

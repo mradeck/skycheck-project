@@ -27,7 +27,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 
 > Les neuf sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
-📦 **Version actuelle :** v26.08.114.3
+📦 **Version actuelle :** v26.08.115.0
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v26.08.115.0 | 🇩🇪 **Page des règles d'altitude CTR : tutoriel + galerie d'aéroports.** `ctr-hoehenregeln.html` gagne (1) un tutoriel illustré « So funktioniert das Live-Höhengitter » — une capture d'écran annotée de Stuttgart avec cinq repères numérotés (bouton grille, trame de couleur, légende, infobulle, overlay d'état), une liste de cinq cartes-étapes et un encadré avec la formule `hauteur max (AGL) = min(plafond au-dessus du sol, altitude de l'aéroport + plafond − altitude du terrain)` ; (2) une galerie de 18 aéroports allemands avec CTR-D en grille WebP à chargement différé (`img/hoehengrid-flughoehen-drohnen-<ville>.webp`, ~2,5 Mo au total). Toutes les captures recompressées en WebP (1600 px). La NfL 2026-1-3960 est désormais aussi liée dans l'introduction. |
 | v26.08.114.3 | 🇩🇪 **Légende de la grille de hauteurs + infographie des règles.** La légende de la grille de hauteurs affiche désormais des graduations d'altitude sous l'échelle (`0 · 25 · 45 · ≥65 · 100 m`), un bouton ⓘ ouvre une nouvelle page hébergée **`ctr-hoehenregeln.html`** (une infographie en coupe des hauteurs de vol maximales des drones par zone CTR selon la NfL 2026-1-3960 ; le PDF officiel de la NfL est lié dans son pied de page), et la légende a été remontée au-dessus du bouton plein écran pour qu'ils ne se chevauchent plus. CSP étendu avec Google Fonts pour la nouvelle page. |
 | v26.08.114.2 | 🇩🇪 **Étiquettes de référence altimétrique.** L'altitude du terrain dans le panneau de zone indique désormais le référentiel vertical du MNT (« ≈ X m MSL (DEM, EGM96) » — tuiles Terrarium = EGM96, repli Open-Meteo = EGM2008), et l'infobulle de survol de la grille de hauteurs ajoute l'altitude du terrain au curseur en **DHHN2016** (« … m AGL · terrain ≈ X m DHHN2016 » ; l'altitude orthométrique du MNT égale la DHHN2016 en Allemagne à moins d'un mètre, en deçà de la précision propre du MNT). |
 | v26.08.114.1 | 🇩🇪 **Altitude du sol ponctuelle depuis les tuiles DEM (fiable).** L'altitude du terrain affichée dans le panneau de zone (« ≈ X m MSL ») dépendait uniquement de l'API d'altitude d'Open-Meteo et restait vide (« — ») à sa limite quotidienne ; elle provient désormais principalement des **tuiles d'altitude DEM** (sans limite quotidienne, cohérent avec la grille de hauteurs), Open-Meteo n'étant plus qu'un repli tolérant (le point central suffit). La mention « m MSL » était déjà présente. |
