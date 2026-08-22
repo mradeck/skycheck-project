@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.114.2
+📦 **Current version:** v26.08.114.3
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.114.3 | 🇩🇪 **Height-grid legend + rules infographic.** The height-grid legend now shows altitude ticks below the ramp (`0 · 25 · 45 · ≥65 · 100 m`), an ⓘ button opening a new hosted page **`ctr-hoehenregeln.html`** (a cross-section infographic of the maximum drone flight heights per CTR zone under NfL 2026-1-3960; the official NfL PDF is linked in its footer), and the legend was raised above the fullscreen button so the two no longer overlap. CSP extended with Google Fonts for the new page. |
 | v26.08.114.2 | 🇩🇪 **Height datum labels.** The ground elevation in the zone panel now shows the DEM's vertical datum (“≈ X m MSL (DEM, EGM96)” — Terrarium tiles = EGM96, Open-Meteo fallback = EGM2008), and the height-grid hover popup adds the terrain height at the cursor as **DHHN2016** (“… m AGL · ground ≈ X m DHHN2016”; the DEM's orthometric MSL equals DHHN2016 in Germany to within sub-metre, below the DEM's own accuracy). |
 | v26.08.114.1 | 🇩🇪 **Point ground elevation from DEM tiles (reliable).** The ground elevation shown in the zone panel (“≈ X m MSL”) relied solely on Open-Meteo's elevation API and went blank (“—”) at its daily limit (`Daily API request limit exceeded`); it now comes primarily from the **DEM elevation tiles** (no daily limit, consistent with the height grid), with Open-Meteo only as a tolerant fallback (the centre point is enough). The “m MSL” label was already there. |
 | v26.08.114.0 | 🇩🇪 **Height grid on DEM elevation tiles + check robustness.** The height grid now reads terrain from **DEM elevation tiles** (Terrarium/AWS Open Data, ~25 m/px) instead of many Open-Meteo point queries: a few PNG tiles give full-resolution terrain for the whole CTR → natural terrain ridges, the **Domberg is now visible**, build ~1.6 s, and the hover is **instantly precise** (no more waiting). The heatmap is a single crisp `L.imageOverlay` (no tile seams/artefacts) and the traffic-light scale is calibrated to the DFS caps (25 m orange, 45 m yellow). **Robustness** (fixes live bugs from 113.2): weather/Kp/traffic are each non-fatal so one failing source no longer blanks the whole check; `fetchWeather` uses a 6-day window + timeout (the 7-day window was timing out at BrightSky); a `$alarm` typo is fixed. |

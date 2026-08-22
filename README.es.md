@@ -27,7 +27,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 > Los nueve son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v26.08.114.2
+📦 **Versión actual:** v26.08.114.3
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.08.114.3 | 🇩🇪 **Leyenda de la rejilla de alturas + infografía de reglas.** La leyenda de la rejilla de alturas muestra ahora marcas de altitud bajo la escala (`0 · 25 · 45 · ≥65 · 100 m`), un botón ⓘ abre una nueva página alojada **`ctr-hoehenregeln.html`** (una infografía en sección transversal de las alturas máximas de vuelo de drones por zona CTR según la NfL 2026-1-3960; el PDF oficial de la NfL está enlazado en su pie de página), y la leyenda se elevó por encima del botón de pantalla completa para que ya no se solapen. CSP ampliado con Google Fonts para la nueva página. |
 | v26.08.114.2 | 🇩🇪 **Etiquetas de datum de altura.** La altitud del terreno en el panel de zona muestra ahora el datum vertical del MDE («≈ X m MSL (DEM, EGM96)» — teselas Terrarium = EGM96, respaldo Open-Meteo = EGM2008), y el tooltip del cursor de la rejilla de alturas añade la altitud del terreno como **DHHN2016** («… m AGL · terreno ≈ X m DHHN2016»; la altitud ortométrica del MDE equivale a DHHN2016 en Alemania con diferencia inferior al metro, por debajo de la precisión propia del MDE). |
 | v26.08.114.1 | 🇩🇪 **Altitud del terreno puntual desde teselas DEM (fiable).** La altitud del terreno mostrada en el panel de zona («≈ X m MSL») dependía solo de la API de elevación de Open-Meteo y quedaba vacía («—») en su límite diario; ahora proviene principalmente de las **teselas de elevación DEM** (sin límite diario, coherente con la rejilla de alturas), con Open-Meteo solo como respaldo tolerante (basta el punto central). El «m MSL» ya estaba. |
 | v26.08.114.0 | 🇩🇪 **Rejilla de alturas sobre teselas de elevación DEM + robustez del chequeo.** La rejilla lee ahora el terreno desde **teselas de elevación DEM** (Terrarium/AWS Open Data, ~25 m/px) en vez de muchas consultas puntuales de Open-Meteo: unas pocas teselas PNG dan el terreno a resolución completa de toda la CTR → relieves naturales, el **Domberg ya es visible**, cálculo ~1,6 s, y el cursor es **preciso al instante** (sin esperas). El mapa de calor es un único `L.imageOverlay` nítido (sin costuras/artefactos) y la escala tipo semáforo está calibrada a los topes de la DFS (25 m naranja, 45 m amarillo). **Robustez** (corrige errores en producción de 113.2): meteo/Kp/tráfico son no fatales cada uno, una fuente caída ya no vacía todo el chequeo; `fetchWeather` usa una ventana de 6 días + tiempo de espera (la de 7 días expiraba en BrightSky); se corrige una errata `$alarm`. |

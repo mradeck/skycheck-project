@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.114.2
+📦 **Aktualna wersja:** v26.08.114.3
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.114.3 | 🇩🇪 **Legenda siatki wysokości + infografika reguł.** Legenda siatki wysokości pokazuje teraz znaczniki wysokości pod skalą (`0 · 25 · 45 · ≥65 · 100 m`), przycisk ⓘ otwiera nową hostowaną stronę **`ctr-hoehenregeln.html`** (infografika przekrojowa maksymalnych wysokości lotu dronów według strefy CTR wg NfL 2026-1-3960; oficjalny PDF NfL jest podlinkowany w jej stopce), a legenda została podniesiona nad przycisk pełnego ekranu, aby już się nie nakładały. CSP rozszerzone o Google Fonts dla nowej strony. |
 | v26.08.114.2 | 🇩🇪 **Etykiety układu wysokości.** Wysokość terenu w panelu strefy pokazuje teraz pionowy układ odniesienia DEM („≈ X m MSL (DEM, EGM96)" — kafelki Terrarium = EGM96, zapas Open-Meteo = EGM2008), a dymek najechania siatki wysokości dodaje wysokość terenu pod kursorem jako **DHHN2016** („… m AGL · teren ≈ X m DHHN2016"; ortometryczna wysokość DEM równa się DHHN2016 w Niemczech z dokładnością poniżej metra, poniżej własnej dokładności DEM). |
 | v26.08.114.1 | 🇩🇪 **Punktowa wysokość terenu z kafelków DEM (niezawodnie).** Wysokość terenu pokazywana w panelu strefy („≈ X m MSL") zależała wyłącznie od API wysokości Open-Meteo i pozostawała pusta („—") przy jego dziennym limicie; teraz pochodzi głównie z **kafelków wysokości DEM** (bez dziennego limitu, spójnie z siatką wysokości), a Open-Meteo służy już tylko jako tolerancyjny zapas (wystarczy punkt środkowy). Etykieta „m MSL" już tam była. |
 | v26.08.114.0 | 🇩🇪 **Siatka wysokości na kafelkach wysokości DEM + odporność sprawdzania.** Siatka pobiera teraz teren z **kafelków wysokości DEM** (Terrarium/AWS Open Data, ~25 m/piksel) zamiast wielu zapytań punktowych Open-Meteo: kilka kafelków PNG daje pełną rozdzielczość terenu całej CTR → naturalne grzbiety, **Domberg jest teraz widoczny**, budowa ~1,6 s, a najechanie jest **natychmiast dokładne** (bez czekania). Mapa cieplna to pojedynczy ostry `L.imageOverlay` (bez szwów/artefaktów), a skala sygnalizacji świetlnej jest skalibrowana do limitów DFS (25 m pomarańczowy, 45 m żółty). **Odporność** (naprawia błędy produkcyjne z 113.2): pogoda/Kp/ruch są każde niefatalne, awaria jednego źródła nie czyści już całego sprawdzania; `fetchWeather` używa okna 6-dniowego + limitu czasu (okno 7-dniowe wygasało w BrightSky); poprawiono literówkę `$alarm`. |
