@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Maximale Drohnen-Flughöhen in DFS-Kontrollzonen nach NfL 2026-1-3960 — Infografik von SkyCheck.">
 <title>Drohnen-Flughöhen in der CTR</title>
+<script>
+  /* Theme früh setzen (kein Flash) */
+  try{var _p=new URLSearchParams(location.search);var _t=_p.get('theme')||localStorage.getItem('ctrhr-theme');
+    if(_t==='dark'||_t==='light')document.documentElement.setAttribute('data-theme',_t);}catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -47,6 +52,15 @@
     line-height:1.5;-webkit-font-smoothing:antialiased;}
   .wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,3.2vw,44px);}
   .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;}
+
+  /* --- Topbar: Theme + Sprache --- */
+  .topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px}
+  .tbtn{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Sans",sans-serif;font-size:.82rem;
+    font-weight:600;cursor:pointer;color:var(--ink2);background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;line-height:1;transition:border-color .12s,color .12s;}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  #theme-ic{font-size:1rem;line-height:1}
 
   header.head{margin-bottom:22px}
   .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;}
@@ -124,6 +138,7 @@
   .formula{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--accent);background:var(--surface);
     border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:10px 0 4px;display:block;
     overflow-x:auto;white-space:nowrap;}
+  .formula .res{color:var(--z1);font-weight:600}
 
   /* --- Flughafen-Galerie --- */
   .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:6px}
@@ -135,7 +150,6 @@
   figure.shot .icao{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--accent);font-size:.84rem}
 
   /* --- Genauigkeits-Kapitel --- */
-  .formula .res{color:var(--z1);font-weight:600}
   .acc-sub{margin-top:20px}
   .factgrid{list-style:none;margin:14px 0 0;padding:0;display:grid;
     grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
@@ -158,16 +172,29 @@
     border-radius:12px;padding:15px 17px;font-size:.9rem;color:var(--ink2)}
   .accnote h3{margin:0 0 6px;font-size:1.02rem;color:var(--ink)}
   .accnote b{color:var(--ink)}
+
+  /* --- Quellen- & Impressum-Leiste --- */
+  .srcbar{margin-top:clamp(34px,5vw,56px);padding-top:18px;border-top:1px solid var(--line);}
+  .srcbar h3{font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink2);font-weight:600;margin:0 0 12px;}
+  .srcbar .links{display:flex;flex-wrap:wrap;gap:8px;}
+  .srcbar a{display:inline-flex;align-items:center;font-size:.82rem;color:var(--ink2);text-decoration:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;transition:border-color .12s,color .12s;}
+  .srcbar a:hover{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
 
 
 <div class="wrap">
+  <div class="topbar">
+    <button class="tbtn" id="lang-btn" type="button" aria-label="Sprache wechseln">EN</button>
+    <button class="tbtn" id="theme-btn" type="button" aria-label="Design wechseln"><span id="theme-ic">🌙</span></button>
+  </div>
+
   <header class="head">
-    <div class="eyebrow">DFS-Kontrollzone · UAS-Betrieb</div>
-    <h1>Drohnen-Flughöhen in der CTR</h1>
-    <p class="sub">Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.</p>
+    <div class="eyebrow" data-i18n="eyebrow">DFS-Kontrollzone · UAS-Betrieb</div>
+    <h1 data-i18n="h1">Drohnen-Flughöhen in der CTR</h1>
+    <p class="sub" data-i18n-html="sub">Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.</p>
   </header>
 
   <div class="scene-card">
@@ -177,14 +204,14 @@
   </div>
 
   <div class="scale-row">
-    <span class="scale-lbl">Max. Flughöhe über Grund</span>
+    <span class="scale-lbl" data-i18n="scaleLbl">Max. Flughöhe über Grund</span>
     <span class="scale-bar" aria-hidden="true"></span>
   </div>
   <div class="scale-ticks mono"><span>0 m</span><span>25 m</span><span>45 m</span><span>≥ 65 m</span><span>100 m</span></div>
 
   <div class="cards" id="cards"></div>
 
-  <div class="note">
+  <div class="note" data-i18n-html="note">
     <b>Freigabe:</b> In den <b>Zonen 2–4</b> gilt die <b>allgemeine FVK-Freigabe automatisch</b>, sofern alle Auflagen der <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> eingehalten werden. Die <b>Zone 1</b> erfordert immer eine <b>individuelle FVK-Freigabe</b> (Antrag über <span class="mono">ais.dfs.de</span>, i.d.R. ~14 Tage Vorlauf). Werden die Höhen überschritten oder Auflagen nicht erfüllt, ist ebenfalls eine individuelle Freigabe nötig.
     <div class="fvk">
       <span><i class="dot" style="background:var(--a100)"></i>Allgemeine FVK-Freigabe (automatisch)</span>
@@ -195,11 +222,11 @@
 
   <!-- ============ ANLEITUNG: Live-Höhengitter ============ -->
   <section class="block">
-    <h2>So funktioniert das Live-Höhengitter</h2>
-    <p class="lead">In <span class="brand">Sky<span class="k">Check</span></span> lässt sich die obige Regel als <b>Farbraster über die reale Karte</b> legen: Jede Zelle zeigt die an dieser Stelle maximal zulässige Flughöhe — automatisch aus Zonendeckel, Flugplatzhöhe und Geländehöhe berechnet.</p>
+    <h2 data-i18n="h2a">So funktioniert das Live-Höhengitter</h2>
+    <p class="lead" data-i18n-html="leada">In <span class="brand">Sky<span class="k">Check</span></span> lässt sich die obige Regel als <b>Farbraster über die reale Karte</b> legen: Jede Zelle zeigt die an dieser Stelle maximal zulässige Flughöhe — automatisch aus Zonendeckel, Flugplatzhöhe und Geländehöhe berechnet.</p>
 
     <div class="annot">
-      <img src="img/hoehengrid-anleitung-stuttgart.webp" width="1600" height="869"
+      <img id="annot-img" src="img/hoehengrid-anleitung-stuttgart.webp" width="1600" height="869"
            alt="SkyCheck-Höhengitter über der Kontrollzone Stuttgart (EDDS): Farbraster der maximal erlaubten Drohnen-Flughöhen mit Bedienelementen, Legende, Tooltip und Status-Overlay.">
       <span class="pin" style="left:26.5%;top:4%">1</span>
       <span class="pin" style="left:44%;top:40%">2</span>
@@ -207,9 +234,9 @@
       <span class="pin" style="left:42%;top:68%">4</span>
       <span class="pin" style="left:85%;top:5.5%">5</span>
     </div>
-    <p class="annot-cap mono">Beispiel: Kontrollzone Stuttgart (EDDS) — über den Höhenzügen (rot) sinkt die erlaubte Flughöhe, in den Tälern (grün) steigt sie.</p>
+    <p class="annot-cap mono" data-i18n="annotCap">Beispiel: Kontrollzone Stuttgart (EDDS) — über den Höhenzügen (rot) sinkt die erlaubte Flughöhe, in den Tälern (grün) steigt sie.</p>
 
-    <ol class="steps">
+    <ol class="steps" data-i18n-html="stepsHtml">
       <li><b>Höhengitter aktivieren</b>Der Button „Höhengitter" in der Kartenleiste blendet das Farbraster für die aktuelle CTR ein.</li>
       <li><b>Farbe = erlaubte Flughöhe</b>Jede Rasterzelle ist nach der maximalen Flughöhe über Grund eingefärbt — Rot ≈ 0 m, Grün bis 100 m.</li>
       <li><b>Legende mit Höhen-Ticks</b>Die Skala unten links ordnet den Farben feste Höhen zu: 0 · 25 · 45 · ≥ 65 · 100 m.</li>
@@ -218,29 +245,29 @@
     </ol>
 
     <div class="howcalc">
-      <h3>Warum dasselbe Zonenband unterschiedlich rot ist</h3>
-      <p>Die Deckel der Zonen 2–4 gelten <b>relativ zur Flugplatzhöhe</b>. Steigt das Gelände über die Flugplatzhöhe, „frisst" es den Deckel auf — die verbleibende Höhe über Grund sinkt, die Zelle wird röter. Über tieferem Gelände bleibt mehr Luft nach oben.</p>
-      <span class="formula">max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe ) − <span class="res">Sicherheitsreserve (≈ 5 m)</span></span>
-      <p>Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Die <b class="res" style="color:var(--z1)">Sicherheitsreserve (≈ 5 m)</b> deckt den Höhenfehler des Geländemodells ab — sie ist eine <b>Empfehlung, die das Live-Raster nicht automatisch abzieht</b>; <b class="res" style="color:var(--z1)">plane sie selbst ein</b>. Mehr dazu im Abschnitt <b>„Wie genau sind diese Höhenwerte?"</b> unten. Verbindlich bleiben stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>; das Raster ist eine Näherung zur Orientierung.</p>
+      <h3 data-i18n="hcH3">Warum dasselbe Zonenband unterschiedlich rot ist</h3>
+      <p data-i18n-html="hcP1">Die Deckel der Zonen 2–4 gelten <b>relativ zur Flugplatzhöhe</b>. Steigt das Gelände über die Flugplatzhöhe, „frisst" es den Deckel auf — die verbleibende Höhe über Grund sinkt, die Zelle wird röter. Über tieferem Gelände bleibt mehr Luft nach oben.</p>
+      <span class="formula" data-i18n-html="hcFormula">max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe ) − <span class="res">Sicherheitsreserve (≈ 5 m)</span></span>
+      <p data-i18n-html="hcP2">Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Die <b class="res" style="color:var(--z1)">Sicherheitsreserve (≈ 5 m)</b> deckt den Höhenfehler des Geländemodells ab — sie ist eine <b>Empfehlung, die das Live-Raster nicht automatisch abzieht</b>; <b class="res" style="color:var(--z1)">plane sie selbst ein</b>. Mehr dazu im Abschnitt <b>„Wie genau sind diese Höhenwerte?"</b> unten. Verbindlich bleiben stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>; das Raster ist eine Näherung zur Orientierung.</p>
     </div>
   </section>
 
   <!-- ============ GALERIE: Verkehrsflughäfen ============ -->
   <section class="block">
-    <h2>Höhengitter deutscher Verkehrsflughäfen</h2>
-    <p class="lead">Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
+    <h2 data-i18n="h2g">Höhengitter deutscher Verkehrsflughäfen</h2>
+    <p class="lead" data-i18n-html="leadg">Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
     <div class="gallery-grid" id="gallery"></div>
   </section>
 
   <!-- ============ GENAUIGKEIT ============ -->
   <section class="block">
-    <h2>Wie genau sind diese Höhenwerte?</h2>
-    <p class="lead">Das Höhengitter ist eine <b>Näherung zur Orientierung</b>, keine vermessungsgenaue Freigabehöhe. Drei Dinge bestimmen die Genauigkeit: das Geländemodell, seine Auflösung und wie SkyCheck rundet.</p>
+    <h2 data-i18n="h2acc">Wie genau sind diese Höhenwerte?</h2>
+    <p class="lead" data-i18n-html="leadacc">Das Höhengitter ist eine <b>Näherung zur Orientierung</b>, keine vermessungsgenaue Freigabehöhe. Drei Dinge bestimmen die Genauigkeit: das Geländemodell, seine Auflösung und wie SkyCheck rundet.</p>
 
     <div class="acc-sub">
-      <h3>1. Geländemodell &amp; Auflösung</h3>
-      <p>Die Geländehöhe stammt aus dem <b>DEM „Terrarium"</b> (AWS Open Data / Mapzen) als Web-Mercator-Kacheln — in Deutschland überwiegend SRTM-/Copernicus-Erbe. Fällt der Kachelabruf aus, dient <b>Open-Meteo</b> (Copernicus GLO-90, ~90 m) als Punkt-Fallback. Der Zoom wird je Kontrollzone automatisch gewählt (gedeckelt auf 40 Kacheln), die Pixel-Bodenauflösung bei ~50° N:</p>
-      <div class="tbl-wrap">
+      <h3 data-i18n="acc1H3">1. Geländemodell & Auflösung</h3>
+      <p data-i18n-html="acc1P1">Die Geländehöhe stammt aus dem <b>DEM „Terrarium"</b> (AWS Open Data / Mapzen) als Web-Mercator-Kacheln — in Deutschland überwiegend SRTM-/Copernicus-Erbe. Fällt der Kachelabruf aus, dient <b>Open-Meteo</b> (Copernicus GLO-90, ~90 m) als Punkt-Fallback. Der Zoom wird je Kontrollzone automatisch gewählt (gedeckelt auf 40 Kacheln), die Pixel-Bodenauflösung bei ~50° N:</p>
+      <div class="tbl-wrap" data-i18n-html="tbl1Html">
         <table class="acc">
           <thead><tr><th>Zoom</th><th>Auflösung @ 50° N</th><th>Einsatz</th></tr></thead>
           <tbody>
@@ -251,13 +278,13 @@
           </tbody>
         </table>
       </div>
-      <p>Der <b>Tooltip</b> liest die DEM-Höhe direkt am Cursor (volle Auflösung, ~25 m). Die <b>Farbraster-Zellen</b> sind gröber (~120 m Zielkantenlänge), sampeln die DEM aber je in ihrer Mitte.</p>
+      <p data-i18n-html="acc1P2">Der <b>Tooltip</b> liest die DEM-Höhe direkt am Cursor (volle Auflösung, ~25 m). Die <b>Farbraster-Zellen</b> sind gröber (~120 m Zielkantenlänge), sampeln die DEM aber je in ihrer Mitte.</p>
     </div>
 
     <div class="acc-sub">
-      <h3>2. Höhengenauigkeit — nicht dasselbe wie Auflösung</h3>
-      <p>Die ~25 m sind die <b>Pixelgröße</b>, nicht die Höhengenauigkeit. Die absolute vertikale Genauigkeit liegt bei mehreren Metern:</p>
-      <div class="tbl-wrap">
+      <h3 data-i18n="acc2H3">2. Höhengenauigkeit — nicht dasselbe wie Auflösung</h3>
+      <p data-i18n-html="acc2P1">Die ~25 m sind die <b>Pixelgröße</b>, nicht die Höhengenauigkeit. Die absolute vertikale Genauigkeit liegt bei mehreren Metern:</p>
+      <div class="tbl-wrap" data-i18n-html="tbl2Html">
         <table class="acc">
           <thead><tr><th>Kennwert</th><th>typisch</th></tr></thead>
           <tbody>
@@ -267,255 +294,313 @@
           </tbody>
         </table>
       </div>
-      <p>In flachem, offenem Gelände ist <b>~5 m realistisch</b> — aber als statistische Streuung, nicht als Zusicherung. Fehlervergrößernde Effekte:</p>
-      <ul class="factgrid">
+      <p data-i18n-html="acc2P2">In flachem, offenem Gelände ist <b>~5 m realistisch</b> — aber als statistische Streuung, nicht als Zusicherung. Fehlervergrößernde Effekte:</p>
+      <ul class="factgrid" data-i18n-html="factHtml">
         <li><b>Wald &amp; Bebauung</b>Radar-DEMs messen nahe der Vegetations-/Dachoberfläche, nicht den Boden → oft <b>mehrere Meter zu hoch</b> (im Wald +5–10 m).</li>
         <li><b>Hang- &amp; Steilgelände</b>Systematisch schlechter; der ~25-m-Rasterwert weicht vom exakten Punkt ab (10 % Neigung ~1–2 m, 30 % ~3–4 m je Zelle).</li>
       </ul>
     </div>
 
     <div class="acc-sub">
-      <h3>3. Rundung — „konservativ" heißt konkret</h3>
-      <p>SkyCheck rundet die berechnete Höhe <b>immer ab</b> auf ganze Meter (nie auf): aus 44,8 m wird <b>44 m</b>. Ergäbe die Formel eine negative Höhe (Gelände über der DiPUL-MSL-Grenze), wird <b>0 m AGL</b> ausgegeben und die Zone auf <b>individuelle Freigabe</b> gesetzt. In Zone 4 greift zusätzlich <span class="mono">min(100 m, max(50 m, …))</span>.</p>
+      <h3 data-i18n="acc3H3">3. Rundung — „konservativ" heißt konkret</h3>
+      <p data-i18n-html="acc3P1">SkyCheck rundet die berechnete Höhe <b>immer ab</b> auf ganze Meter (nie auf): aus 44,8 m wird <b>44 m</b>. Ergäbe die Formel eine negative Höhe (Gelände über der DiPUL-MSL-Grenze), wird <b>0 m AGL</b> ausgegeben und die Zone auf <b>individuelle Freigabe</b> gesetzt. In Zone 4 greift zusätzlich <span class="mono">min(100 m, max(50 m, …))</span>.</p>
     </div>
 
     <div class="accnote">
-      <h3>Warum die Sicherheitsreserve empfohlen ist</h3>
-      <p>Das Abrunden bringt <b>höchstens ~1 m</b> und ist <b>kein Puffer für den DEM-Höhenfehler</b> von mehreren Metern. Liegt die DEM-Höhe z.&nbsp;B. im Wald 7 m zu hoch, rechnet SkyCheck die erlaubte Höhe 7 m zu niedrig — sicherheitsseitig, aber ein Nebeneffekt des Datenfehlers, kein bewusster Zuschlag. Deshalb empfehlen wir eine zusätzliche <b class="res" style="color:var(--z1)">Sicherheitsreserve von ≈ 5 m</b> (siehe Formel oben). Diese Reserve <b>zieht das Live-Raster nicht automatisch ab</b> — <b class="res" style="color:var(--z1)">plane sie selbst ein</b>.</p>
-      <p>Verbindlich sind stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>. Für eine vermessungsgenaue Geländehöhe an einem konkreten Punkt ist das <b>DGM1 des jeweiligen Landesvermessungsamts</b> maßgeblich (1 m Raster, ~±0,3–0,5 m) — global CORS-frei nicht als Kachel-Layer verfügbar, daher hier das Terrarium-DEM.</p>
+      <h3 data-i18n="accnoteH3">Warum die Sicherheitsreserve empfohlen ist</h3>
+      <p data-i18n-html="accnoteP1">Das Abrunden bringt <b>höchstens ~1 m</b> und ist <b>kein Puffer für den DEM-Höhenfehler</b> von mehreren Metern. Liegt die DEM-Höhe z.&nbsp;B. im Wald 7 m zu hoch, rechnet SkyCheck die erlaubte Höhe 7 m zu niedrig — sicherheitsseitig, aber ein Nebeneffekt des Datenfehlers, kein bewusster Zuschlag. Deshalb empfehlen wir eine zusätzliche <b class="res" style="color:var(--z1)">Sicherheitsreserve von ≈ 5 m</b> (siehe Formel oben). Diese Reserve <b>zieht das Live-Raster nicht automatisch ab</b> — <b class="res" style="color:var(--z1)">plane sie selbst ein</b>.</p>
+      <p data-i18n-html="accnoteP2">Verbindlich sind stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>. Für eine vermessungsgenaue Geländehöhe an einem konkreten Punkt ist das <b>DGM1 des jeweiligen Landesvermessungsamts</b> maßgeblich (1 m Raster, ~±0,3–0,5 m) — global CORS-frei nicht als Kachel-Layer verfügbar, daher hier das Terrarium-DEM.</p>
+    </div>
+  </section>
+
+  <!-- ============ QUELLEN & IMPRESSUM ============ -->
+  <section class="srcbar">
+    <h3 data-i18n="srcH3">Quellen &amp; Impressum</h3>
+    <div class="links" data-i18n-html="srcLinksHtml">
+      <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL WMS</a>
+      <a href="https://utm.dfs.de/" target="_blank" rel="noopener">DFS UTM</a>
+      <a href="https://brightsky.dev/" target="_blank" rel="noopener">DWD · Bright Sky</a>
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo · Punkthöhe</a>
+      <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles (AWS) · Höhengitter</a>
+      <a href="https://kp.gfz.de/" target="_blank" rel="noopener">GFZ Kp-Index</a>
+      <a href="https://airplanes.live/" target="_blank" rel="noopener">Airplanes.live</a>
+      <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon (komoot)</a>
+      <a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" rel="noopener">Impressum</a>
+      <a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a>
+      <a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>
     </div>
   </section>
 
   <footer class="foot">
-    <div>Verbindlich sind <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL</a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.</div>
-    <div>Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a></div>
+    <div data-i18n-html="footerL">Verbindlich sind <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL</a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.</div>
+    <div data-i18n-html="footerR">Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a></div>
   </footer>
 </div>
 
 <script>
 (function(){
+  const NFL='https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf';
+  const DIPUL='https://www.dipul.de/';
+
+  // ==== I18N =================================================================
+  const T={
+    de:{
+      title:"Drohnen-Flughöhen in der CTR",
+      metaDesc:"Maximale Drohnen-Flughöhen in DFS-Kontrollzonen nach NfL 2026-1-3960 — Infografik von SkyCheck.",
+      langLabel:"Sprache wechseln", themeLabel:"Design wechseln",
+      eyebrow:"DFS-Kontrollzone · UAS-Betrieb",
+      h1:"Drohnen-Flughöhen in der CTR",
+      sub:`Maximal zulässige Flughöhen bei allgemeiner FVK-Freigabe nach <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> (gültig seit 06.08.2026). Die Deckel gelten <b>relativ zur Flugplatzhöhe</b> bzw. über Grund — je nachdem, welcher Wert je Zone maßgeblich ist.`,
+      scaleLbl:"Max. Flughöhe über Grund",
+      note:`<b>Freigabe:</b> In den <b>Zonen 2–4</b> gilt die <b>allgemeine FVK-Freigabe automatisch</b>, sofern alle Auflagen der <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> eingehalten werden. Die <b>Zone 1</b> erfordert immer eine <b>individuelle FVK-Freigabe</b> (Antrag über <span class="mono">ais.dfs.de</span>, i.d.R. ~14 Tage Vorlauf). Werden die Höhen überschritten oder Auflagen nicht erfüllt, ist ebenfalls eine individuelle Freigabe nötig.<div class="fvk"><span><i class="dot" style="background:var(--a100)"></i>Allgemeine FVK-Freigabe (automatisch)</span><span><i class="dot" style="background:var(--z1)"></i>Individuelle FVK-Freigabe erforderlich</span><span><i class="dot" style="background:var(--a25)"></i>Höhe stark geländeabhängig</span></div>`,
+      h2a:"So funktioniert das Live-Höhengitter",
+      leada:`In <span class="brand">Sky<span class="k">Check</span></span> lässt sich die obige Regel als <b>Farbraster über die reale Karte</b> legen: Jede Zelle zeigt die an dieser Stelle maximal zulässige Flughöhe — automatisch aus Zonendeckel, Flugplatzhöhe und Geländehöhe berechnet.`,
+      annotAlt:"SkyCheck-Höhengitter über der Kontrollzone Stuttgart (EDDS): Farbraster der maximal erlaubten Drohnen-Flughöhen mit Bedienelementen, Legende, Tooltip und Status-Overlay.",
+      annotCap:"Beispiel: Kontrollzone Stuttgart (EDDS) — über den Höhenzügen (rot) sinkt die erlaubte Flughöhe, in den Tälern (grün) steigt sie.",
+      stepsHtml:`<li><b>Höhengitter aktivieren</b>Der Button „Höhengitter" in der Kartenleiste blendet das Farbraster für die aktuelle CTR ein.</li><li><b>Farbe = erlaubte Flughöhe</b>Jede Rasterzelle ist nach der maximalen Flughöhe über Grund eingefärbt — Rot ≈ 0 m, Grün bis 100 m.</li><li><b>Legende mit Höhen-Ticks</b>Die Skala unten links ordnet den Farben feste Höhen zu: 0 · 25 · 45 · ≥ 65 · 100 m.</li><li><b>Tooltip am Cursor</b>Über einer Zelle erscheinen Zone, max. Flughöhe (m AGL) und die Geländehöhe am Punkt (DHHN2016).</li><li><b>Status-Overlay</b>Oben rechts steht die CTR-Zone am Punkt; aufgeklappt zeigt es Wetter, Geländehöhe (m MSL, DEM/EGM96), Koordinaten und einen DiPUL-Direktlink.</li>`,
+      hcH3:"Warum dasselbe Zonenband unterschiedlich rot ist",
+      hcP1:`Die Deckel der Zonen 2–4 gelten <b>relativ zur Flugplatzhöhe</b>. Steigt das Gelände über die Flugplatzhöhe, „frisst" es den Deckel auf — die verbleibende Höhe über Grund sinkt, die Zelle wird röter. Über tieferem Gelände bleibt mehr Luft nach oben.`,
+      hcFormula:`max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe ) − <span class="res">Sicherheitsreserve (≈ 5 m)</span>`,
+      hcP2:`Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Die <b class="res" style="color:var(--z1)">Sicherheitsreserve (≈ 5 m)</b> deckt den Höhenfehler des Geländemodells ab — sie ist eine <b>Empfehlung, die das Live-Raster nicht automatisch abzieht</b>; <b class="res" style="color:var(--z1)">plane sie selbst ein</b>. Mehr dazu im Abschnitt <b>„Wie genau sind diese Höhenwerte?"</b> unten. Verbindlich bleiben stets <a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>; das Raster ist eine Näherung zur Orientierung.`,
+      h2g:"Höhengitter deutscher Verkehrsflughäfen",
+      leadg:`Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.`,
+      galAlt:(city,icao)=>`Höhengitter der maximal erlaubten Drohnen-Flughöhen in der Kontrollzone ${city} (${icao})`,
+      h2acc:"Wie genau sind diese Höhenwerte?",
+      leadacc:`Das Höhengitter ist eine <b>Näherung zur Orientierung</b>, keine vermessungsgenaue Freigabehöhe. Drei Dinge bestimmen die Genauigkeit: das Geländemodell, seine Auflösung und wie SkyCheck rundet.`,
+      acc1H3:"1. Geländemodell & Auflösung",
+      acc1P1:`Die Geländehöhe stammt aus dem <b>DEM „Terrarium"</b> (AWS Open Data / Mapzen) als Web-Mercator-Kacheln — in Deutschland überwiegend SRTM-/Copernicus-Erbe. Fällt der Kachelabruf aus, dient <b>Open-Meteo</b> (Copernicus GLO-90, ~90 m) als Punkt-Fallback. Der Zoom wird je Kontrollzone automatisch gewählt (gedeckelt auf 40 Kacheln), die Pixel-Bodenauflösung bei ~50° N:`,
+      tbl1Html:`<table class="acc"><thead><tr><th>Zoom</th><th>Auflösung @ 50° N</th><th>Einsatz</th></tr></thead><tbody><tr><td>z13</td><td class="num">≈ 12 m/px</td><td>kleine Zonen (wenige km)</td></tr><tr class="hl"><td>z12</td><td class="num">≈ 25 m/px</td><td>Normalfall für eine ganze CTR-D</td></tr><tr><td>z11</td><td class="num">≈ 49 m/px</td><td>sehr große CTR</td></tr><tr><td>z10</td><td class="num">≈ 98 m/px</td><td>Extremfall</td></tr></tbody></table>`,
+      acc1P2:`Der <b>Tooltip</b> liest die DEM-Höhe direkt am Cursor (volle Auflösung, ~25 m). Die <b>Farbraster-Zellen</b> sind gröber (~120 m Zielkantenlänge), sampeln die DEM aber je in ihrer Mitte.`,
+      acc2H3:"2. Höhengenauigkeit — nicht dasselbe wie Auflösung",
+      acc2P1:`Die ~25 m sind die <b>Pixelgröße</b>, nicht die Höhengenauigkeit. Die absolute vertikale Genauigkeit liegt bei mehreren Metern:`,
+      tbl2Html:`<table class="acc"><thead><tr><th>Kennwert</th><th>typisch</th></tr></thead><tbody><tr><td>RMSE, flaches/offenes Gelände</td><td class="num">~5–10 m</td></tr><tr><td>LE90 (SRTM-Erbe)</td><td class="num">bis ~16 m</td></tr><tr><td>Copernicus GLO-90 (Fallback)</td><td class="num">~2–4 m</td></tr></tbody></table>`,
+      acc2P2:`In flachem, offenem Gelände ist <b>~5 m realistisch</b> — aber als statistische Streuung, nicht als Zusicherung. Fehlervergrößernde Effekte:`,
+      factHtml:`<li><b>Wald &amp; Bebauung</b>Radar-DEMs messen nahe der Vegetations-/Dachoberfläche, nicht den Boden → oft <b>mehrere Meter zu hoch</b> (im Wald +5–10 m).</li><li><b>Hang- &amp; Steilgelände</b>Systematisch schlechter; der ~25-m-Rasterwert weicht vom exakten Punkt ab (10 % Neigung ~1–2 m, 30 % ~3–4 m je Zelle).</li>`,
+      acc3H3:`3. Rundung — „konservativ" heißt konkret`,
+      acc3P1:`SkyCheck rundet die berechnete Höhe <b>immer ab</b> auf ganze Meter (nie auf): aus 44,8 m wird <b>44 m</b>. Ergäbe die Formel eine negative Höhe (Gelände über der DiPUL-MSL-Grenze), wird <b>0 m AGL</b> ausgegeben und die Zone auf <b>individuelle Freigabe</b> gesetzt. In Zone 4 greift zusätzlich <span class="mono">min(100 m, max(50 m, …))</span>.`,
+      accnoteH3:"Warum die Sicherheitsreserve empfohlen ist",
+      accnoteP1:`Das Abrunden bringt <b>höchstens ~1 m</b> und ist <b>kein Puffer für den DEM-Höhenfehler</b> von mehreren Metern. Liegt die DEM-Höhe z.&nbsp;B. im Wald 7 m zu hoch, rechnet SkyCheck die erlaubte Höhe 7 m zu niedrig — sicherheitsseitig, aber ein Nebeneffekt des Datenfehlers, kein bewusster Zuschlag. Deshalb empfehlen wir eine zusätzliche <b class="res" style="color:var(--z1)">Sicherheitsreserve von ≈ 5 m</b> (siehe Formel oben). Diese Reserve <b>zieht das Live-Raster nicht automatisch ab</b> — <b class="res" style="color:var(--z1)">plane sie selbst ein</b>.`,
+      accnoteP2:`Verbindlich sind stets <a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>. Für eine vermessungsgenaue Geländehöhe an einem konkreten Punkt ist das <b>DGM1 des jeweiligen Landesvermessungsamts</b> maßgeblich (1 m Raster, ~±0,3–0,5 m) — global CORS-frei nicht als Kachel-Layer verfügbar, daher hier das Terrarium-DEM.`,
+      srcH3:"Quellen & Impressum",
+      srcLinksHtml:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL WMS</a><a href="https://utm.dfs.de/" target="_blank" rel="noopener">DFS UTM</a><a href="https://brightsky.dev/" target="_blank" rel="noopener">DWD · Bright Sky</a><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo · Punkthöhe</a><a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles (AWS) · Höhengitter</a><a href="https://kp.gfz.de/" target="_blank" rel="noopener">GFZ Kp-Index</a><a href="https://airplanes.live/" target="_blank" rel="noopener">Airplanes.live</a><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon (komoot)</a><a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" rel="noopener">Impressum</a><a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a><a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>`,
+      footerL:`Verbindlich sind <a href="${DIPUL}" target="_blank" rel="noopener">DiPUL</a> und die <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.`,
+      footerR:`Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a>`,
+      svg:{outside:"außerhalb CTR", zone:"Zone", individual:"individuell", above120:"120 m über Grund", ctrd:"CTR-D · Kontrollzone"},
+      cards:[
+        {c:"var(--z1)",t:"CTR-Innenbereich",z:"Zone 1",h:"individuell",p:"<span class='rule'>Immer individuelle FVK-Freigabe</span> — unabhängig von der Flughöhe. Über dem Flughafen, ±1 km um dessen Grenze und 5 km hinter den Bahnenden."},
+        {c:"var(--a25)",t:"4-km-Kreis um ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
+        {c:"var(--a45)",t:"6-km-Kreis um ARP",z:"Zone 3",h:"45 m",p:"<span class='rule'>45 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
+        {c:"var(--a100)",t:"restliche CTR",z:"Zone 4",h:"100 / 50 m",p:"<span class='rule'>100 m über der Flugplatzhöhe oder 50 m über Grund</span> — die <b>größere</b> Höhe ist maßgeblich (unter Flugplatzhöhe: 100 m über Grund)."},
+        {c:"var(--accent)",t:"hindernisnah",z:"Sonderfall",h:"+15 m",p:"Bis <span class='rule'>Hindernishöhe + 15 m</span> (max. 30 m seitlich) — <b>unabhängig</b> von der sonstigen Höhengrenze."},
+        {c:"#3f9fe0",t:"außerhalb der CTR",z:"Regelfall",h:"120 m",p:"Generell <span class='rule'>120 m über Grund</span> (allgemeine Regel für die offene Kategorie)."},
+      ],
+    },
+    en:{
+      title:"Drone flight heights in the CTR",
+      metaDesc:"Maximum drone flight heights in DFS control zones per NfL 2026-1-3960 — infographic by SkyCheck.",
+      langLabel:"Switch language", themeLabel:"Toggle theme",
+      eyebrow:"DFS control zone · UAS operations",
+      h1:"Drone flight heights in the CTR",
+      sub:`Maximum permitted flight heights under the general ATC clearance per <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> (in force since 6 Aug 2026). The caps apply <b>relative to the aerodrome elevation</b> or above ground — whichever value is decisive per zone.`,
+      scaleLbl:"Max. flight height above ground",
+      note:`<b>Clearance:</b> In <b>zones 2–4</b> the <b>general ATC clearance applies automatically</b>, provided all conditions of <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> are met. <b>Zone 1</b> always requires an <b>individual ATC clearance</b> (application via <span class="mono">ais.dfs.de</span>, usually ~14 days lead time). If the heights are exceeded or conditions are not met, an individual clearance is likewise required.<div class="fvk"><span><i class="dot" style="background:var(--a100)"></i>General ATC clearance (automatic)</span><span><i class="dot" style="background:var(--z1)"></i>Individual ATC clearance required</span><span><i class="dot" style="background:var(--a25)"></i>Height strongly terrain-dependent</span></div>`,
+      h2a:"How the live height grid works",
+      leada:`In <span class="brand">Sky<span class="k">Check</span></span> the rule above can be laid over the real map as a <b>colour grid</b>: each cell shows the maximum permitted flight height at that spot — computed automatically from the zone cap, aerodrome elevation and terrain height.`,
+      annotAlt:"SkyCheck height grid over the Stuttgart control zone (EDDS): colour grid of the maximum permitted drone flight heights with controls, legend, tooltip and status overlay.",
+      annotCap:"Example: Stuttgart control zone (EDDS) — over the ridges (red) the permitted height drops, in the valleys (green) it rises.",
+      stepsHtml:`<li><b>Enable the height grid</b>The “Höhengitter” button in the map bar overlays the colour grid for the current CTR.</li><li><b>Colour = permitted height</b>Every grid cell is coloured by the maximum flight height above ground — red ≈ 0 m, green up to 100 m.</li><li><b>Legend with height ticks</b>The scale at the bottom left maps colours to fixed heights: 0 · 25 · 45 · ≥ 65 · 100 m.</li><li><b>Tooltip at the cursor</b>Hovering a cell shows the zone, max. flight height (m AGL) and the terrain height at that point (DHHN2016).</li><li><b>Status overlay</b>Top right shows the CTR zone at the point; expanded it shows weather, terrain height (m MSL, DEM/EGM96), coordinates and a direct DiPUL link.</li>`,
+      hcH3:"Why the same zone band is redder in places",
+      hcP1:`The caps of zones 2–4 apply <b>relative to the aerodrome elevation</b>. Where the terrain rises above the aerodrome elevation, it “eats into” the cap — the remaining height above ground drops and the cell turns redder. Over lower terrain, more headroom remains.`,
+      hcFormula:`max. flight height (AGL) = min( cap above ground , aerodrome elevation + cap − terrain height ) − <span class="res">safety reserve (≈ 5 m)</span>`,
+      hcP2:`That is why a hill in the middle of <b>Zone 3</b> can drop to 0 m AGL while the valley floor of the same zone still allows 45 m. The <b class="res" style="color:var(--z1)">safety reserve (≈ 5 m)</b> covers the height error of the terrain model — it is a <b>recommendation that the live grid does not subtract automatically</b>; <b class="res" style="color:var(--z1)">plan it in yourself</b>. More on this in the section <b>“How accurate are these height values?”</b> below. <a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> and <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> always remain authoritative; the grid is an approximation for orientation.`,
+      h2g:"Height grids of German airports",
+      leadg:`The same calculation for 18 German airports with a control zone (CTR-D). Clearly visible: the higher and more rugged the terrain relative to the aerodrome elevation, the more fine-grained and red the pattern — flat sites (e.g. Bremen, Münster/Osnabrück) stay largely green.`,
+      galAlt:(city,icao)=>`Height grid of the maximum permitted drone flight heights in the ${city} control zone (${icao})`,
+      h2acc:"How accurate are these height values?",
+      leadacc:`The height grid is an <b>approximation for orientation</b>, not a survey-grade clearance height. Three things determine the accuracy: the terrain model, its resolution and how SkyCheck rounds.`,
+      acc1H3:"1. Terrain model & resolution",
+      acc1P1:`The terrain height comes from the <b>“Terrarium” DEM</b> (AWS Open Data / Mapzen) as Web-Mercator tiles — in Germany mostly SRTM/Copernicus heritage. If the tile fetch fails, <b>Open-Meteo</b> (Copernicus GLO-90, ~90 m) serves as a point fallback. The zoom is chosen automatically per control zone (capped at 40 tiles); the pixel ground resolution at ~50° N:`,
+      tbl1Html:`<table class="acc"><thead><tr><th>Zoom</th><th>Resolution @ 50° N</th><th>Use</th></tr></thead><tbody><tr><td>z13</td><td class="num">≈ 12 m/px</td><td>small zones (a few km)</td></tr><tr class="hl"><td>z12</td><td class="num">≈ 25 m/px</td><td>typical for a whole CTR-D</td></tr><tr><td>z11</td><td class="num">≈ 49 m/px</td><td>very large CTR</td></tr><tr><td>z10</td><td class="num">≈ 98 m/px</td><td>extreme case</td></tr></tbody></table>`,
+      acc1P2:`The <b>tooltip</b> reads the DEM height directly at the cursor (full resolution, ~25 m). The <b>colour grid cells</b> are coarser (~120 m target edge length) but each samples the DEM at its centre.`,
+      acc2H3:"2. Height accuracy — not the same as resolution",
+      acc2P1:`The ~25 m is the <b>pixel size</b>, not the height accuracy. The absolute vertical accuracy is on the order of several metres:`,
+      tbl2Html:`<table class="acc"><thead><tr><th>Metric</th><th>typical</th></tr></thead><tbody><tr><td>RMSE, flat/open terrain</td><td class="num">~5–10 m</td></tr><tr><td>LE90 (SRTM heritage)</td><td class="num">up to ~16 m</td></tr><tr><td>Copernicus GLO-90 (fallback)</td><td class="num">~2–4 m</td></tr></tbody></table>`,
+      acc2P2:`In flat, open terrain <b>~5 m is realistic</b> — but as a statistical spread, not a guarantee. Error-amplifying effects:`,
+      factHtml:`<li><b>Forest &amp; buildings</b>Radar DEMs measure near the vegetation/roof surface, not the ground → often <b>several metres too high</b> (in forest +5–10 m).</li><li><b>Slopes &amp; steep terrain</b>Systematically worse; the ~25 m grid value deviates from the exact point (10% slope ~1–2 m, 30% ~3–4 m per cell).</li>`,
+      acc3H3:`3. Rounding — what “conservative” means concretely`,
+      acc3P1:`SkyCheck <b>always rounds down</b> the computed height to whole metres (never up): 44.8 m becomes <b>44 m</b>. If the formula yields a negative height (terrain above the DiPUL MSL limit), <b>0 m AGL</b> is output and the zone is set to <b>individual clearance</b>. In Zone 4, <span class="mono">min(100 m, max(50 m, …))</span> also applies.`,
+      accnoteH3:"Why the safety reserve is recommended",
+      accnoteP1:`Rounding down yields <b>at most ~1 m</b> and is <b>no buffer for the DEM height error</b> of several metres. If the DEM height is e.g. 7 m too high in forest, SkyCheck computes the permitted height 7 m too low — on the safe side, but a side effect of the data error, not a deliberate margin. We therefore recommend an additional <b class="res" style="color:var(--z1)">safety reserve of ≈ 5 m</b> (see formula above). The live grid <b>does not subtract this reserve automatically</b> — <b class="res" style="color:var(--z1)">plan it in yourself</b>.`,
+      accnoteP2:`<a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> and <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> always remain authoritative. For a survey-grade terrain height at a specific point, the <b>DGM1 of the respective state survey office</b> is decisive (1 m grid, ~±0.3–0.5 m) — not available globally CORS-free as a tile layer, hence the Terrarium DEM here.`,
+      srcH3:"Sources & imprint",
+      srcLinksHtml:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL WMS</a><a href="https://utm.dfs.de/" target="_blank" rel="noopener">DFS UTM</a><a href="https://brightsky.dev/" target="_blank" rel="noopener">DWD · Bright Sky</a><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo · point elevation</a><a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles (AWS) · height grid</a><a href="https://kp.gfz.de/" target="_blank" rel="noopener">GFZ Kp index</a><a href="https://airplanes.live/" target="_blank" rel="noopener">Airplanes.live</a><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon (komoot)</a><a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" rel="noopener">Imprint</a><a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a><a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>`,
+      footerL:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL</a> and <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (original PDF) are authoritative. This graphic is a simplified visualisation.`,
+      footerR:`Live height grid: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a>`,
+      svg:{outside:"outside CTR", zone:"Zone", individual:"individual", above120:"120 m above ground", ctrd:"CTR-D · control zone"},
+      cards:[
+        {c:"var(--z1)",t:"CTR core area",z:"Zone 1",h:"individual",p:"<span class='rule'>Always individual ATC clearance</span> — regardless of height. Over the aerodrome, ±1 km around its boundary and 5 km beyond the runway ends."},
+        {c:"var(--a25)",t:"4 km circle around ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m above aerodrome elevation or above ground</span> — the <b>lower</b> value is decisive."},
+        {c:"var(--a45)",t:"6 km circle around ARP",z:"Zone 3",h:"45 m",p:"<span class='rule'>45 m above aerodrome elevation or above ground</span> — the <b>lower</b> value is decisive."},
+        {c:"var(--a100)",t:"rest of the CTR",z:"Zone 4",h:"100 / 50 m",p:"<span class='rule'>100 m above aerodrome elevation or 50 m above ground</span> — the <b>higher</b> value is decisive (below aerodrome elevation: 100 m above ground)."},
+        {c:"var(--accent)",t:"near obstacles",z:"Special case",h:"+15 m",p:"Up to <span class='rule'>obstacle height + 15 m</span> (max. 30 m laterally) — <b>independent</b> of the other height limit."},
+        {c:"#3f9fe0",t:"outside the CTR",z:"Default",h:"120 m",p:"Generally <span class='rule'>120 m above ground</span> (general rule for the open category)."},
+      ],
+    },
+  };
+
+  // ==== SVG-Szene (neu aufbaubar je Sprache) ================================
   const NS="http://www.w3.org/2000/svg";
-  const svg=document.getElementById("scene");
-  const W=1600,H=800;
-
-  // ---- Geometrie / Maßstab -------------------------------------------------
-  const cx=800;                 // Flughafen-Referenzpunkt (Bildmitte)
-  const PXKM=86;                // Pixel pro km (Horizontaldistanz vom ARP; lässt Flanken für „außerhalb CTR" frei)
-  const R1=1.2,R2=4,R3=6,RCTR=7.6;   // Zonenradien in km
-  const airportElev=452;        // Flugplatzhöhe (m MSL), Beispiel EDDM-nah
-  const groundBottom=H-6;       // untere Kante der Geländefüllung
-  const eDatum=418;             // MSL am unteren Bezug
-  const VS=2.55;                // Pixel pro Höhenmeter
-  const yOf=e=>groundBottom-40-(e-eDatum)*VS;   // MSL-Meter -> y
-
-  // ---- Gelände (natürliche Undulation + zwei markante Hügel) ---------------
+  const W=1600,H=800, cx=800, PXKM=86, R1=1.2,R2=4,R3=6,RCTR=7.6, airportElev=452, groundBottom=H-6, eDatum=418, VS=2.55;
+  const yOf=e=>groundBottom-40-(e-eDatum)*VS;
   function terrain(x){
-    const d=(x-cx);
-    let e=452
-      +16*Math.sin(x/205)
-      +9*Math.sin(x/83+1.1)
-      +5*Math.sin(x/47+0.5);
-    e+=26*Math.exp(-Math.pow((x-360)/120,2));   // Hügel links (Zone 3/4)
-    e+=32*Math.exp(-Math.pow((x-1300)/150,2));  // Höhenzug rechts (Zone 4)
-    e-=10*Math.exp(-Math.pow((x-cx)/260,2));    // flaches Flughafenareal
+    let e=452 +16*Math.sin(x/205) +9*Math.sin(x/83+1.1) +5*Math.sin(x/47+0.5);
+    e+=26*Math.exp(-Math.pow((x-360)/120,2));
+    e+=32*Math.exp(-Math.pow((x-1300)/150,2));
+    e-=10*Math.exp(-Math.pow((x-cx)/260,2));
     return e;
   }
   const zoneOf=x=>{const km=Math.abs(x-cx)/PXKM;
     if(km<=R1)return 1; if(km<=R2)return 2; if(km<=R3)return 3; if(km<=RCTR)return 4; return 0;};
-
-  // Max. Flughöhe über Grund je Regel (NfL 2026-1-3960); null = individuell (Zone 1)
   function maxAgl(x){
     const z=zoneOf(x), t=terrain(x);
-    if(z===0)return 120;                                   // außerhalb CTR
-    if(z===1)return null;                                  // individuell
+    if(z===0)return 120;
+    if(z===1)return null;
     if(z===2)return Math.max(0,Math.min(25,(airportElev+25)-t));
     if(z===3)return Math.max(0,Math.min(45,(airportElev+45)-t));
-    return Math.min(100,Math.max(50,(airportElev+100)-t)); // Zone 4: größere Höhe
+    return Math.min(100,Math.max(50,(airportElev+100)-t));
   }
-
-  // ---- Ampel-Farbe (0..100 m), an DFS-Deckel geeicht -----------------------
   const stops=[[0,[215,25,28]],[15,[244,112,59]],[25,[253,174,97]],[45,[255,227,107]],[65,[166,217,106]],[100,[26,152,80]]];
   function ampel(v){v=Math.max(0,Math.min(100,v));
     for(let i=1;i<stops.length;i++){if(v<=stops[i][0]){const[m0,c0]=stops[i-1],[m1,c1]=stops[i],f=(v-m0)/(m1-m0);
       return`rgb(${Math.round(c0[0]+(c1[0]-c0[0])*f)},${Math.round(c0[1]+(c1[1]-c0[1])*f)},${Math.round(c0[2]+(c1[2]-c0[2])*f)})`;}}
     return"rgb(26,152,80)";}
 
-  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
-  const add=(n,a)=>{const e=el(n,a);svg.appendChild(e);return e;};
+  function buildScene(L){
+    const svg=document.getElementById("scene");
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+    const add=(n,a)=>{const e=el(n,a);svg.appendChild(e);return e;};
 
-  // ---- Defs: Himmel-Verlauf ------------------------------------------------
-  const defs=add("defs",{});
-  const sky=el("linearGradient",{id:"sky",x1:0,y1:0,x2:0,y2:1});
-  sky.appendChild(el("stop",{offset:0,"stop-color":"var(--skyTop)"}));
-  sky.appendChild(el("stop",{offset:1,"stop-color":"var(--skyBot)"}));
-  defs.appendChild(sky);
-  add("rect",{x:0,y:0,width:W,height:H,fill:"url(#sky)"});
+    const defs=add("defs",{});
+    const sky=el("linearGradient",{id:"sky",x1:0,y1:0,x2:0,y2:1});
+    sky.appendChild(el("stop",{offset:0,"stop-color":"var(--skyTop)"}));
+    sky.appendChild(el("stop",{offset:1,"stop-color":"var(--skyBot)"}));
+    defs.appendChild(sky);
+    add("rect",{x:0,y:0,width:W,height:H,fill:"url(#sky)"});
 
-  // ---- Zonen-Hintergrundbänder (dezent) + Trennlinien ----------------------
-  const bnd=[cx-RCTR*PXKM,cx-R3*PXKM,cx-R2*PXKM,cx-R1*PXKM,cx+R1*PXKM,cx+R2*PXKM,cx+R3*PXKM,cx+RCTR*PXKM];
-  function vline(x,lbl){
-    add("line",{x1:x,y1:70,x2:x,y2:groundBottom-30,stroke:"var(--line2)","stroke-width":1.4,"stroke-dasharray":"3 6",opacity:.7});
-  }
-  bnd.forEach(x=>{if(x>4&&x<W-4)vline(x);});
+    const bnd=[cx-RCTR*PXKM,cx-R3*PXKM,cx-R2*PXKM,cx-R1*PXKM,cx+R1*PXKM,cx+R2*PXKM,cx+R3*PXKM,cx+RCTR*PXKM];
+    bnd.forEach(x=>{if(x>4&&x<W-4)add("line",{x1:x,y1:70,x2:x,y2:groundBottom-30,stroke:"var(--line2)","stroke-width":1.4,"stroke-dasharray":"3 6",opacity:.7});});
 
-  // ---- Höhengitter-Bars (der eigentliche „GRID") ---------------------------
-  const OUTSIDE="#3f9fe0";   // himmelsblau: außerhalb der CTR (klar von Zone-4-Grün abgesetzt)
-  const step=13, bw=9;
-  for(let x=6;x<W;x+=step){
-    const t=terrain(x), z=zoneOf(x), v=maxAgl(x);
-    const tTop=yOf(t);
-    if(z===1){ // individuell: rote, gedämpfte Bars
-      const top=yOf(t+ (16+6*Math.sin(x/30)) );
-      add("rect",{x:x-bw/2,y:top,width:bw,height:tTop-top,fill:"var(--z1)",opacity:.30});
-      continue;
+    const OUTSIDE="#3f9fe0", step=13, bw=9;
+    for(let x=6;x<W;x+=step){
+      const t=terrain(x), z=zoneOf(x), v=maxAgl(x), tTop=yOf(t);
+      if(z===1){ const top=yOf(t+(16+6*Math.sin(x/30)));
+        add("rect",{x:x-bw/2,y:top,width:bw,height:tTop-top,fill:"var(--z1)",opacity:.30}); continue; }
+      const top=yOf(t+v);
+      add("rect",{x:x-bw/2,y:top,width:bw,height:Math.max(0,tTop-top),fill:(z===0?OUTSIDE:ampel(v)),opacity:(z===0?.6:.92)});
     }
-    const top=yOf(t+v);
-    add("rect",{x:x-bw/2,y:top,width:bw,height:Math.max(0,tTop-top),fill:(z===0?OUTSIDE:ampel(v)),opacity:(z===0?.6:.92)});
+
+    let dPath="";
+    for(let x=0;x<=W;x+=8){const y=yOf(terrain(x)+120);dPath+=(x===0?"M":"L")+x+" "+y.toFixed(1)+" ";}
+    add("path",{d:dPath,fill:"none",stroke:"var(--ink2)","stroke-width":2,"stroke-dasharray":"9 7",opacity:.65});
+    add("rect",{x:cx-70,y:yOf(terrain(cx)+120)-30,width:140,height:22,rx:6,fill:"var(--surface)",stroke:"var(--line2)"});
+    add("text",{x:cx,y:yOf(terrain(cx)+120)-14,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":13,"font-weight":600,fill:"var(--ink2)"}).textContent=L.above120;
+
+    add("line",{x1:cx-R1*PXKM-8,y1:yOf(airportElev),x2:cx+R1*PXKM+8,y2:yOf(airportElev),
+      stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"2 5",opacity:.8});
+
+    let gp="M0 "+groundBottom+" L0 "+yOf(terrain(0)).toFixed(1)+" ";
+    for(let x=0;x<=W;x+=6)gp+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
+    gp+="L"+W+" "+groundBottom+" Z";
+    add("path",{d:gp,fill:"var(--terrain)"});
+    let ep="M0 "+yOf(terrain(0)).toFixed(1)+" ";
+    for(let x=0;x<=W;x+=6)ep+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
+    add("path",{d:ep,fill:"none",stroke:"var(--terrainEdge)","stroke-width":2.5,opacity:.6});
+
+    (function airport(){
+      const gy=yOf(terrain(cx));
+      add("rect",{x:cx-95,y:gy-4,width:190,height:9,rx:2,fill:"var(--terrain2)"});
+      for(let i=-3;i<=3;i++)add("rect",{x:cx-6+i*24,y:gy-1,width:12,height:3,rx:1.5,fill:"#e9eef4",opacity:.75});
+      const tx=cx+120, base=gy;
+      add("rect",{x:tx-4,y:base-52,width:8,height:52,fill:"var(--terrain2)"});
+      add("path",{d:`M${tx-13} ${base-52} L${tx+13} ${base-52} L${tx+9} ${base-66} L${tx-9} ${base-66} Z`,fill:"var(--accent)"});
+      add("rect",{x:tx-9,y:base-64,width:18,height:8,rx:1.5,fill:"#dff3f8"});
+    })();
+
+    function drone(x,y,col){
+      const g=add("g",{transform:`translate(${x},${y})`});
+      g.appendChild(el("line",{x1:-11,y1:-6,x2:11,y2:6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
+      g.appendChild(el("line",{x1:-11,y1:6,x2:11,y2:-6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
+      [[-11,-6],[11,-6],[-11,6],[11,6]].forEach(p=>g.appendChild(el("circle",{cx:p[0],cy:p[1],r:3.2,fill:col})));
+      g.appendChild(el("rect",{x:-5,y:-3,width:10,height:6,rx:2,fill:col}));
+    }
+    function marker(x,y,kind){
+      const col=kind==="ok"?"var(--a100)":kind==="warn"?"var(--a25)":"var(--z1)";
+      const g=add("g",{transform:`translate(${x},${y})`});
+      g.appendChild(el("rect",{x:-15,y:-15,width:30,height:30,rx:8,fill:"var(--surface)",stroke:col,"stroke-width":2.4}));
+      if(kind==="ok"){g.appendChild(el("path",{d:"M-7 0 L-2 6 L8 -7",fill:"none",stroke:col,"stroke-width":3,"stroke-linecap":"round","stroke-linejoin":"round"}));}
+      else{g.appendChild(el("path",{d:"M0 -8 L9 8 L-9 8 Z",fill:"none",stroke:col,"stroke-width":2.6,"stroke-linejoin":"round"}));
+           g.appendChild(el("line",{x1:0,y1:-2,x2:0,y2:3,stroke:col,"stroke-width":2.6,"stroke-linecap":"round"}));
+           g.appendChild(el("circle",{cx:0,cy:6,r:1.5,fill:col}));}
+    }
+    const droneScenes=[
+      {x:cx-720,m:"legal"},{x:cx-560,m:"legal"},{x:cx-430,m:"over"},{x:cx-215,m:"legal"},
+      {x:cx-40,m:"zone1"},{x:cx+250,m:"legal"},{x:cx+470,m:"over"},{x:cx+610,m:"legal"},{x:cx+740,m:"legal"},
+    ];
+    droneScenes.forEach(s=>{
+      const z=zoneOf(s.x), v=maxAgl(s.x); let agl,kind,col="var(--accent2)";
+      if(s.m==="zone1"||z===1){agl=10;kind="ind";col="var(--z1)";}
+      else if(s.m==="over"){agl=Math.min(130,Math.round((v||100)+32));kind="warn";}
+      else{agl=Math.max(8,Math.round((v||115)*0.55));kind="ok";}
+      const y=yOf(terrain(s.x)+agl)-4; drone(s.x,y,col); marker(s.x+34,y+2,kind);
+    });
+
+    const segs=[
+      [0,cx-RCTR*PXKM,L.outside,false],
+      [cx-RCTR*PXKM,cx-R3*PXKM,L.zone+" 4",false],
+      [cx-R3*PXKM,cx-R2*PXKM,L.zone+" 3",false],
+      [cx-R2*PXKM,cx-R1*PXKM,L.zone+" 2",false],
+      [cx-R1*PXKM,cx+R1*PXKM,L.zone+" 1",true],
+      [cx+R1*PXKM,cx+R2*PXKM,L.zone+" 2",false],
+      [cx+R2*PXKM,cx+R3*PXKM,L.zone+" 3",false],
+      [cx+R3*PXKM,cx+RCTR*PXKM,L.zone+" 4",false],
+      [cx+RCTR*PXKM,W,L.outside,false],
+    ];
+    segs.forEach(s=>{ if(s[1]-s[0]<40)return;
+      add("text",{x:(s[0]+s[1])/2,y:50,"text-anchor":"middle","font-family":"IBM Plex Sans",
+        "font-size":17,"font-weight":700,fill:s[3]?"var(--z1)":"var(--ink)"}).textContent=s[2];
+    });
+    const caps=[[cx-(R2+R3)/2*PXKM,"45 m",false],[cx-(R1+R2)/2*PXKM,"25 m",false],[cx,L.individual,true],
+                [cx+(R1+R2)/2*PXKM,"25 m",false],[cx+(R2+R3)/2*PXKM,"45 m",false],
+                [cx-(R3+RCTR)/2*PXKM,"100 / 50 m",false],[cx+(R3+RCTR)/2*PXKM,"100 / 50 m",false]];
+    caps.forEach(c=>add("text",{x:c[0],y:70,"text-anchor":"middle","font-family":"IBM Plex Mono",
+      "font-size":12.5,"font-weight":600,fill:c[2]?"var(--z1)":"var(--accent)"}).textContent=c[1]);
+
+    (function ctrSpan(){
+      const ctrL=cx-RCTR*PXKM, ctrR=cx+RCTR*PXKM, sy=H-30;
+      const ln={stroke:"#ffffff","stroke-width":2.5,"stroke-linecap":"round",opacity:.92};
+      add("line",Object.assign({x1:ctrL,y1:sy,x2:ctrR,y2:sy},ln));
+      add("line",Object.assign({x1:ctrL,y1:sy-8,x2:ctrL,y2:sy+8},ln));
+      add("line",Object.assign({x1:ctrR,y1:sy-8,x2:ctrR,y2:sy+8},ln));
+      const pw=224,ph=27;
+      add("rect",{x:cx-pw/2,y:sy-ph/2,width:pw,height:ph,rx:13.5,fill:"var(--surface)",stroke:"var(--line2)","stroke-width":1.4});
+      add("text",{x:cx,y:sy+5.5,"text-anchor":"middle","font-family":"IBM Plex Sans","font-size":15,"font-weight":700,fill:"var(--ink)"}).textContent=L.ctrd;
+      [ctrL/2,(ctrR+W)/2].forEach(xm=>{ if(xm<ctrL-30||xm>ctrR+30)
+        add("text",{x:xm,y:sy+5,"text-anchor":"middle","font-family":"IBM Plex Sans","font-size":13,"font-weight":600,fill:"#eef3f8",opacity:.85}).textContent=L.outside;});
+    })();
   }
 
-  // ---- „120 m über Grund"-Linie (folgt dem Gelände, außerhalb CTR betont) --
-  let dPath="";
-  for(let x=0;x<=W;x+=8){const y=yOf(terrain(x)+120);dPath+=(x===0?"M":"L")+x+" "+y.toFixed(1)+" ";}
-  add("path",{d:dPath,fill:"none",stroke:"var(--ink2)","stroke-width":2,"stroke-dasharray":"9 7",opacity:.65});
-  const tag120=add("g",{});
-  tag120.appendChild(el("rect",{x:cx-70,y:yOf(terrain(cx)+120)-30,width:140,height:22,rx:6,fill:"var(--surface)",stroke:"var(--line2)"}));
-  tag120.appendChild(el("text",{x:cx,y:yOf(terrain(cx)+120)-14,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":13,"font-weight":600,fill:"var(--ink2)"})).textContent="120 m über Grund";
-
-  // ---- Flugplatzhöhe-Referenz (horizontale Linie) --------------------------
-  add("line",{x1:cx-R1*PXKM-8,y1:yOf(airportElev),x2:cx+R1*PXKM+8,y2:yOf(airportElev),
-    stroke:"var(--accent)","stroke-width":2,"stroke-dasharray":"2 5",opacity:.8});
-
-  // ---- Gelände-Silhouette (oben drüber, damit Bars auf dem Grund stehen) ---
-  let gp="M0 "+groundBottom+" L0 "+yOf(terrain(0)).toFixed(1)+" ";
-  for(let x=0;x<=W;x+=6)gp+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
-  gp+="L"+W+" "+groundBottom+" Z";
-  add("path",{d:gp,fill:"var(--terrain)"});
-  // dünne Geländekante
-  let ep="M0 "+yOf(terrain(0)).toFixed(1)+" ";
-  for(let x=0;x<=W;x+=6)ep+="L"+x+" "+yOf(terrain(x)).toFixed(1)+" ";
-  add("path",{d:ep,fill:"none",stroke:"var(--terrainEdge)","stroke-width":2.5,opacity:.6});
-
-  // ---- Flughafen (Tower + Bahn) im Zentrum ---------------------------------
-  (function airport(){
-    const gy=yOf(terrain(cx));
-    // Landebahn
-    add("rect",{x:cx-95,y:gy-4,width:190,height:9,rx:2,fill:"var(--terrain2)"});
-    for(let i=-3;i<=3;i++)add("rect",{x:cx-6+i*24,y:gy-1,width:12,height:3,rx:1.5,fill:"#e9eef4",opacity:.75});
-    // Tower
-    const tx=cx+120, base=gy;
-    add("rect",{x:tx-4,y:base-52,width:8,height:52,fill:"var(--terrain2)"});
-    add("path",{d:`M${tx-13} ${base-52} L${tx+13} ${base-52} L${tx+9} ${base-66} L${tx-9} ${base-66} Z`,fill:"var(--accent)"});
-    add("rect",{x:tx-9,y:base-64,width:18,height:8,rx:1.5,fill:"#dff3f8"});
-  })();
-
-  // ---- Drohnen-Icon + Status-Marker ---------------------------------------
-  function drone(x,y,col){
-    const g=add("g",{transform:`translate(${x},${y})`});
-    g.appendChild(el("line",{x1:-11,y1:-6,x2:11,y2:6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
-    g.appendChild(el("line",{x1:-11,y1:6,x2:11,y2:-6,stroke:col,"stroke-width":2.4,"stroke-linecap":"round"}));
-    [[-11,-6],[11,-6],[-11,6],[11,6]].forEach(p=>g.appendChild(el("circle",{cx:p[0],cy:p[1],r:3.2,fill:col})));
-    g.appendChild(el("rect",{x:-5,y:-3,width:10,height:6,rx:2,fill:col}));
-    return g;
+  // ==== Regel-Karten ========================================================
+  function buildCards(lang){
+    const wrap=document.getElementById("cards"); wrap.innerHTML="";
+    T[lang].cards.forEach(o=>{
+      const d=document.createElement("div");d.className="card";d.style.setProperty("--c",o.c);
+      d.innerHTML=`<h3>${o.t}</h3><div class="zname">${o.z} <span class="zh">${o.h}</span></div><p>${o.p}</p>`;
+      wrap.appendChild(d);
+    });
   }
-  function marker(x,y,kind){ // kind: ok | warn | ind
-    const col=kind==="ok"?"var(--a100)":kind==="warn"?"var(--a25)":"var(--z1)";
-    const g=add("g",{transform:`translate(${x},${y})`});
-    g.appendChild(el("rect",{x:-15,y:-15,width:30,height:30,rx:8,fill:"var(--surface)",stroke:col,"stroke-width":2.4}));
-    if(kind==="ok"){g.appendChild(el("path",{d:"M-7 0 L-2 6 L8 -7",fill:"none",stroke:col,"stroke-width":3,"stroke-linecap":"round","stroke-linejoin":"round"}));}
-    else{g.appendChild(el("path",{d:"M0 -8 L9 8 L-9 8 Z",fill:"none",stroke:col,"stroke-width":2.6,"stroke-linejoin":"round"}));
-         g.appendChild(el("line",{x1:0,y1:-2,x2:0,y2:3,stroke:col,"stroke-width":2.6,"stroke-linecap":"round"}));
-         g.appendChild(el("circle",{cx:0,cy:6,r:1.5,fill:col}));}
-    return g;
-  }
-  // Beispiel-Drohnen: mehrheitlich klar im legalen Bereich (grüner Haken, deutlich
-  // UNTER dem Deckel); einige wenige DEUTLICH über dem Deckel (Ausrufezeichen = zu hoch,
-  // individuelle Freigabe nötig); Zone 1 immer individuell (rot). Nicht an der Grenze.
-  const droneScenes=[
-    {x:cx-720, m:"legal"},   // außerhalb CTR – ok
-    {x:cx-560, m:"legal"},   // Zone 4 – ok
-    {x:cx-430, m:"over"},    // Zone 3 – zu hoch
-    {x:cx-215, m:"legal"},   // Zone 2 – ok
-    {x:cx-40,  m:"zone1"},   // Zone 1 – individuell
-    {x:cx+250, m:"legal"},   // Zone 2/3 – ok
-    {x:cx+470, m:"over"},    // Zone 3 – zu hoch
-    {x:cx+610, m:"legal"},   // Zone 4 – ok
-    {x:cx+740, m:"legal"},   // außerhalb CTR – ok
-  ];
-  droneScenes.forEach(s=>{
-    const z=zoneOf(s.x), v=maxAgl(s.x);
-    let agl, kind, col="var(--accent2)";
-    if(s.m==="zone1" || z===1){ agl=10; kind="ind"; col="var(--z1)"; }
-    else if(s.m==="over"){ agl=Math.min(130, Math.round((v||100)+32)); kind="warn"; }  // deutlich über dem Deckel
-    else { agl=Math.max(8, Math.round((v||115)*0.55)); kind="ok"; }                     // klar im legalen Bereich
-    const y=yOf(terrain(s.x)+agl)-4;
-    drone(s.x,y,col);
-    marker(s.x+34,y+2,kind);
-  });
 
-  // ---- Zonen-Beschriftungen (oben) ----------------------------------------
-  const segs=[
-    [0,cx-RCTR*PXKM,"außerhalb CTR"],
-    [cx-RCTR*PXKM,cx-R3*PXKM,"Zone 4"],
-    [cx-R3*PXKM,cx-R2*PXKM,"Zone 3"],
-    [cx-R2*PXKM,cx-R1*PXKM,"Zone 2"],
-    [cx-R1*PXKM,cx+R1*PXKM,"Zone 1"],
-    [cx+R1*PXKM,cx+R2*PXKM,"Zone 2"],
-    [cx+R2*PXKM,cx+R3*PXKM,"Zone 3"],
-    [cx+R3*PXKM,cx+RCTR*PXKM,"Zone 4"],
-    [cx+RCTR*PXKM,W,"außerhalb CTR"],
-  ];
-  segs.forEach(s=>{ if(s[1]-s[0]<40)return;
-    add("text",{x:(s[0]+s[1])/2,y:50,"text-anchor":"middle","font-family":"IBM Plex Sans",
-      "font-size":17,"font-weight":700,fill:s[2]==="Zone 1"?"var(--z1)":"var(--ink)"}).textContent=s[2];
-  });
-  // Höhen-Kürzel je Zone (klein, unter dem Label)
-  const caps=[[cx-(R2+R3)/2*PXKM,"45 m"],[cx-(R1+R2)/2*PXKM,"25 m"],[cx,"individuell"],
-              [cx+(R1+R2)/2*PXKM,"25 m"],[cx+(R2+R3)/2*PXKM,"45 m"],
-              [cx-(R3+RCTR)/2*PXKM,"100 / 50 m"],[cx+(R3+RCTR)/2*PXKM,"100 / 50 m"]];
-  caps.forEach(c=>add("text",{x:c[0],y:70,"text-anchor":"middle","font-family":"IBM Plex Mono",
-    "font-size":12.5,"font-weight":600,fill:c[1]==="individuell"?"var(--z1)":"var(--accent)"}).textContent=c[1]);
-
-  // ---- CTR-D-Ausdehnung markieren (Bodenstreifen) --------------------------
-  (function ctrSpan(){
-    const ctrL=cx-RCTR*PXKM, ctrR=cx+RCTR*PXKM, sy=H-30;
-    // Klammer über die gesamte CTR-D
-    const ln={stroke:"#ffffff","stroke-width":2.5,"stroke-linecap":"round",opacity:.92};
-    add("line",Object.assign({x1:ctrL,y1:sy,x2:ctrR,y2:sy},ln));
-    add("line",Object.assign({x1:ctrL,y1:sy-8,x2:ctrL,y2:sy+8},ln));
-    add("line",Object.assign({x1:ctrR,y1:sy-8,x2:ctrR,y2:sy+8},ln));
-    // Label-Pille „CTR-D"
-    const pw=224,ph=27;
-    add("rect",{x:cx-pw/2,y:sy-ph/2,width:pw,height:ph,rx:13.5,fill:"var(--surface)",stroke:"var(--line2)","stroke-width":1.4});
-    add("text",{x:cx,y:sy+5.5,"text-anchor":"middle","font-family":"IBM Plex Sans",
-      "font-size":15,"font-weight":700,fill:"var(--ink)"}).textContent="CTR-D · Kontrollzone";
-    // „außerhalb"-Beschriftung auf den Flanken
-    [ctrL/2,(ctrR+W)/2].forEach(xm=>{ if(xm<ctrL-30||xm>ctrR+30)
-      add("text",{x:xm,y:sy+5,"text-anchor":"middle","font-family":"IBM Plex Sans",
-        "font-size":13,"font-weight":600,fill:"#eef3f8",opacity:.85}).textContent="außerhalb CTR";});
-  })();
-})();
-
-// ---- Regel-Karten (HTML) ---------------------------------------------------
-(function(){
-  const cards=[
-    {c:"var(--z1)",t:"CTR-Innenbereich",z:"Zone 1",h:"individuell",p:"<span class='rule'>Immer individuelle FVK-Freigabe</span> — unabhängig von der Flughöhe. Über dem Flughafen, ±1 km um dessen Grenze und 5 km hinter den Bahnenden."},
-    {c:"var(--a25)",t:"4-km-Kreis um ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
-    {c:"var(--a45)",t:"6-km-Kreis um ARP",z:"Zone 3",h:"45 m",p:"<span class='rule'>45 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
-    {c:"var(--a100)",t:"restliche CTR",z:"Zone 4",h:"100 / 50 m",p:"<span class='rule'>100 m über der Flugplatzhöhe oder 50 m über Grund</span> — die <b>größere</b> Höhe ist maßgeblich (unter Flugplatzhöhe: 100 m über Grund)."},
-    {c:"var(--accent)",t:"hindernisnah",z:"Sonderfall",h:"+15 m",p:"Bis <span class='rule'>Hindernishöhe + 15 m</span> (max. 30 m seitlich) — <b>unabhängig</b> von der sonstigen Höhengrenze."},
-    {c:"#3f9fe0",t:"außerhalb der CTR",z:"Regelfall",h:"120 m",p:"Generell <span class='rule'>120 m über Grund</span> (allgemeine Regel für die offene Kategorie)."},
-  ];
-  const wrap=document.getElementById("cards");
-  cards.forEach(o=>{
-    const d=document.createElement("div");d.className="card";d.style.setProperty("--c",o.c);
-    d.innerHTML=`<h3>${o.t}</h3><div class="zname">${o.z} <span class="zh">${o.h}</span></div><p>${o.p}</p>`;
-    wrap.appendChild(d);
-  });
-})();
-
-// ---- Flughafen-Galerie (HTML) ---------------------------------------------
-(function(){
-  // Alphabetisch nach Stadt; slug = Dateiname unter img/hoehengrid-flughoehen-drohnen-<slug>.webp
+  // ==== Flughafen-Galerie ===================================================
   const ports=[
     ["berlin-brandenburg","Berlin Brandenburg","EDDB"],
     ["braunschweig-wolfsburg","Braunschweig-Wolfsburg","EDVE"],
@@ -536,15 +621,56 @@
     ["saarbruecken","Saarbrücken","EDDR"],
     ["stuttgart","Stuttgart","EDDS"],
   ];
-  const g=document.getElementById("gallery");
-  ports.forEach(([slug,city,icao])=>{
-    const f=document.createElement("figure");f.className="shot";
-    f.innerHTML=`<img loading="lazy" decoding="async" width="1600" height="900"`+
-      ` src="img/hoehengrid-flughoehen-drohnen-${slug}.webp"`+
-      ` alt="Höhengitter der maximal erlaubten Drohnen-Flughöhen in der Kontrollzone ${city} (${icao})">`+
-      `<figcaption><span class="city">${city}</span><span class="icao">${icao}</span></figcaption>`;
-    g.appendChild(f);
-  });
+  function buildGallery(lang){
+    const g=document.getElementById("gallery"); g.innerHTML="";
+    const altF=T[lang].galAlt;
+    ports.forEach(([slug,city,icao])=>{
+      const f=document.createElement("figure");f.className="shot";
+      f.innerHTML=`<img loading="lazy" decoding="async" width="1600" height="900"`+
+        ` src="img/hoehengrid-flughoehen-drohnen-${slug}.webp"`+
+        ` alt="${altF(city,icao)}">`+
+        `<figcaption><span class="city">${city}</span><span class="icao">${icao}</span></figcaption>`;
+      g.appendChild(f);
+    });
+  }
+
+  // ==== Sprache anwenden ====================================================
+  let LANG="de";
+  function applyLang(lang){
+    if(!T[lang])lang="de"; LANG=lang;
+    try{localStorage.setItem("ctrhr-lang",lang);}catch(e){}
+    const d=T[lang];
+    document.documentElement.lang=lang;
+    document.title=d.title;
+    const md=document.querySelector('meta[name="description"]'); if(md)md.setAttribute("content",d.metaDesc);
+    document.querySelectorAll("[data-i18n]").forEach(elm=>{const k=elm.getAttribute("data-i18n"); if(d[k]!=null)elm.textContent=d[k];});
+    document.querySelectorAll("[data-i18n-html]").forEach(elm=>{const k=elm.getAttribute("data-i18n-html"); if(d[k]!=null)elm.innerHTML=d[k];});
+    const img=document.getElementById("annot-img"); if(img)img.alt=d.annotAlt;
+    buildScene(d.svg); buildCards(lang); buildGallery(lang);
+    const lb=document.getElementById("lang-btn"); if(lb){lb.textContent=(lang==="de"?"EN":"DE");lb.setAttribute("aria-label",d.langLabel);}
+    const tb=document.getElementById("theme-btn"); if(tb)tb.setAttribute("aria-label",d.themeLabel);
+  }
+
+  // ==== Theme ===============================================================
+  function effTheme(){const e=document.documentElement.getAttribute("data-theme"); if(e)return e;
+    return (window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches)?"dark":"light";}
+  function updThemeIcon(){const ic=document.getElementById("theme-ic"); if(ic)ic.textContent=effTheme()==="dark"?"☀️":"🌙";}
+  function applyTheme(t){
+    if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);
+    else document.documentElement.removeAttribute("data-theme");
+    try{localStorage.setItem("ctrhr-theme",t);}catch(e){}
+    updThemeIcon();
+  }
+
+  // ==== Init ================================================================
+  const params=new URLSearchParams(location.search);
+  let lang0=params.get("lang");
+  if(lang0!=="de"&&lang0!=="en"){ try{const s=localStorage.getItem("ctrhr-lang"); if(s==="de"||s==="en")lang0=s;}catch(e){} }
+  if(lang0!=="de"&&lang0!=="en"){ lang0=(navigator.language||"de").toLowerCase().startsWith("en")?"en":"de"; }
+  applyLang(lang0);
+  updThemeIcon();
+  document.getElementById("lang-btn").addEventListener("click",()=>applyLang(LANG==="de"?"en":"de"));
+  document.getElementById("theme-btn").addEventListener("click",()=>applyTheme(effTheme()==="dark"?"light":"dark"));
 })();
 </script>
 
