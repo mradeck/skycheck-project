@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.115.0
+📦 **Current version:** v26.08.115.1
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.115.1 | 🇩🇪 **CTR height-rules page: accuracy chapter, safety reserve, NfL links.** `ctr-hoehenregeln.html`: (a) a "− safety reserve (≈ 5 m)" term in the explainer formula (red, flagged explicitly as a recommendation the live grid does NOT subtract — the calculation in `skycheck.html` is unchanged); (b) a closing chapter "Wie genau sind diese Höhenwerte?" (DEM source & zoom→resolution table, height accuracy RMSE/LE90, forest/slope effects, rounding logic, DGM1 note); (c) bugfix: the two error-effect cards wrongly used the numbered `.steps` class (a blue "1" badge covered the title) → switched to an unnumbered `.factgrid`; (d) NfL 2026-1-3960 now linked at all five visible spots (previously only intro + footer). |
 | v26.08.115.0 | 🇩🇪 **CTR height-rules page: tutorial + airport gallery.** `ctr-hoehenregeln.html` gains (1) an illustrated tutorial "So funktioniert das Live-Höhengitter" — an annotated Stuttgart screenshot with five numbered callouts (grid button, colour raster, legend, tooltip, status overlay), a five-step card list, and an explainer with the formula `max height (AGL) = min(cap over ground, airport elevation + cap − terrain height)`; (2) a gallery of 18 German airports with a CTR-D, as a lazy-loaded WebP grid (`img/hoehengrid-flughoehen-drohnen-<city>.webp`, ~2.5 MB total). All screenshots recompressed to WebP (1600 px). The NfL 2026-1-3960 is now also linked in the intro. |
 | v26.08.114.3 | 🇩🇪 **Height-grid legend + rules infographic.** The height-grid legend now shows altitude ticks below the ramp (`0 · 25 · 45 · ≥65 · 100 m`), an ⓘ button opening a new hosted page **`ctr-hoehenregeln.html`** (a cross-section infographic of the maximum drone flight heights per CTR zone under NfL 2026-1-3960; the official NfL PDF is linked in its footer), and the legend was raised above the fullscreen button so the two no longer overlap. CSP extended with Google Fonts for the new page. |
 | v26.08.114.2 | 🇩🇪 **Height datum labels.** The ground elevation in the zone panel now shows the DEM's vertical datum (“≈ X m MSL (DEM, EGM96)” — Terrarium tiles = EGM96, Open-Meteo fallback = EGM2008), and the height-grid hover popup adds the terrain height at the cursor as **DHHN2016** (“… m AGL · ground ≈ X m DHHN2016”; the DEM's orthometric MSL equals DHHN2016 in Germany to within sub-metre, below the DEM's own accuracy). |

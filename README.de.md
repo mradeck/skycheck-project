@@ -27,7 +27,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.115.0
+📦 **Aktuelle Version:** v26.08.115.1
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.115.1 | 🇩🇪 **CTR-Höhenregeln-Seite: Genauigkeits-Kapitel, Sicherheitsreserve, NfL-Links.** `ctr-hoehenregeln.html`: (a) ein Term „− Sicherheitsreserve (≈ 5 m)" in der Erklär-Formel (rot, ausdrücklich als Empfehlung markiert, die das Live-Raster NICHT abzieht — Berechnung in `skycheck.html` unverändert); (b) ein Schlusskapitel „Wie genau sind diese Höhenwerte?" (DEM-Quelle & Zoom→Auflösung-Tabelle, Höhengenauigkeit RMSE/LE90, Wald-/Hang-Effekte, Rundungslogik, DGM1-Verweis); (c) Bugfix: die zwei Fehler-Effekt-Kacheln nutzten fälschlich die nummerierte `.steps`-Klasse (blaues „1"-Badge verdeckte den Titel) → nummernlose `.factgrid`; (d) NfL 2026-1-3960 an allen fünf sichtbaren Stellen verlinkt (zuvor nur Kopf + Fußzeile). |
 | v26.08.115.0 | 🇩🇪 **CTR-Höhenregeln-Seite: Anleitung + Flughafen-Galerie.** `ctr-hoehenregeln.html` erhält (1) eine bebilderte Anleitung „So funktioniert das Live-Höhengitter" — annotierter Stuttgart-Screenshot mit fünf nummerierten Callouts (Höhengitter-Button, Farbraster, Legende, Tooltip, Status-Overlay), eine 5-Schritt-Karten-Liste und einen Erklärblock mit der Formel `max. Flughöhe (AGL) = min(Deckel über Grund, Flugplatzhöhe + Deckel − Geländehöhe)`; (2) eine Galerie von 18 deutschen Verkehrsflughäfen mit CTR-D als lazy-loadendes WebP-Raster (`img/hoehengrid-flughoehen-drohnen-<stadt>.webp`, ~2,5 MB gesamt). Alle Screenshots nach WebP rekomprimiert (1600 px). Die NfL 2026-1-3960 ist nun auch im Kopftext verlinkt. |
 | v26.08.114.3 | 🇩🇪 **Höhengitter-Legende + Regel-Infografik.** Die Höhengitter-Legende zeigt jetzt Höhen-Ticks unter der Ampel-Skala (`0 · 25 · 45 · ≥65 · 100 m`), ein ⓘ-Button öffnet die neue gehostete Seite **`ctr-hoehenregeln.html`** (Querschnitts-Infografik der maximalen Drohnen-Flughöhen je CTR-Zone nach NfL 2026-1-3960; das amtliche NfL-PDF ist in deren Fußzeile verlinkt), und die Legende wurde über den Vollbild-Button gehoben, sodass sich beide nicht mehr überlappen. CSP um Google Fonts für die neue Seite ergänzt. |
 | v26.08.114.2 | 🇩🇪 **Höhen-Datumsangaben.** Die Geländehöhe im Zonen-Panel zeigt jetzt den vertikalen DEM-Bezug („≈ X m MSL (DEM, EGM96)" — Terrarium-Kacheln = EGM96, Open-Meteo-Fallback = EGM2008), und das Hover-Popup des Höhengitters ergänzt die Geländehöhe am Cursor als **DHHN2016** („… m AGL · Geländehöhe ≈ X m DHHN2016"; die orthometrische DEM-MSL entspricht in DE der DHHN2016 innerhalb Sub-Meter, unter der DEM-Eigengenauigkeit). |
