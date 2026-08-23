@@ -52,8 +52,9 @@
   .eyebrow{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;}
   h1{font-size:clamp(1.55rem,3.6vw,2.5rem);line-height:1.08;margin:.28em 0 .12em;font-weight:700;letter-spacing:-.01em;text-wrap:balance;}
   .sub{color:var(--ink2);font-size:clamp(.95rem,1.5vw,1.06rem);max-width:62ch;}
-  .sub a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
-  .sub a:hover{border-bottom-color:var(--accent);}
+  .sub a,.note a,.howcalc a,.accnote a{color:var(--accent);text-decoration:none;font-weight:inherit;
+    border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+  .sub a:hover,.note a:hover,.howcalc a:hover,.accnote a:hover{border-bottom-color:var(--accent);}
 
   .scene-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:clamp(10px,1.6vw,18px);overflow:hidden;}
@@ -132,6 +133,31 @@
   figure.shot figcaption{padding:10px 13px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   figure.shot .city{font-weight:700;color:var(--ink);font-size:.96rem}
   figure.shot .icao{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--accent);font-size:.84rem}
+
+  /* --- Genauigkeits-Kapitel --- */
+  .formula .res{color:var(--z1);font-weight:600}
+  .acc-sub{margin-top:20px}
+  .factgrid{list-style:none;margin:14px 0 0;padding:0;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+  .factgrid li{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:13px 15px;box-shadow:var(--shadow);font-size:.87rem;color:var(--ink2);}
+  .factgrid li b{color:var(--ink);display:block;margin-bottom:2px;font-size:.92rem}
+  .acc-sub h3{font-size:1.05rem;margin:0 0 8px;color:var(--ink)}
+  .acc-sub p{margin:0 0 8px;font-size:.9rem;color:var(--ink2)}
+  .acc-sub b{color:var(--ink)}
+  .tbl-wrap{overflow-x:auto;margin:10px 0 4px}
+  table.acc{border-collapse:collapse;width:100%;min-width:340px;font-size:.86rem}
+  table.acc th,table.acc td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+  table.acc thead th{color:var(--ink2);font-weight:600;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;
+    border-bottom:1.5px solid var(--line2)}
+  table.acc td:first-child,table.acc th:first-child{font-family:"IBM Plex Mono",monospace}
+  table.acc td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--ink)}
+  table.acc tr.hl td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  table.acc td .tag{font-size:.72rem;color:var(--ink3)}
+  .accnote{margin-top:18px;background:var(--surface2);border:1px solid var(--line);border-left:5px solid var(--z1);
+    border-radius:12px;padding:15px 17px;font-size:.9rem;color:var(--ink2)}
+  .accnote h3{margin:0 0 6px;font-size:1.02rem;color:var(--ink)}
+  .accnote b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -159,7 +185,7 @@
   <div class="cards" id="cards"></div>
 
   <div class="note">
-    <b>Freigabe:</b> In den <b>Zonen 2–4</b> gilt die <b>allgemeine FVK-Freigabe automatisch</b>, sofern alle Auflagen der NfL 2026-1-3960 eingehalten werden. Die <b>Zone 1</b> erfordert immer eine <b>individuelle FVK-Freigabe</b> (Antrag über <span class="mono">ais.dfs.de</span>, i.d.R. ~14 Tage Vorlauf). Werden die Höhen überschritten oder Auflagen nicht erfüllt, ist ebenfalls eine individuelle Freigabe nötig.
+    <b>Freigabe:</b> In den <b>Zonen 2–4</b> gilt die <b>allgemeine FVK-Freigabe automatisch</b>, sofern alle Auflagen der <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> eingehalten werden. Die <b>Zone 1</b> erfordert immer eine <b>individuelle FVK-Freigabe</b> (Antrag über <span class="mono">ais.dfs.de</span>, i.d.R. ~14 Tage Vorlauf). Werden die Höhen überschritten oder Auflagen nicht erfüllt, ist ebenfalls eine individuelle Freigabe nötig.
     <div class="fvk">
       <span><i class="dot" style="background:var(--a100)"></i>Allgemeine FVK-Freigabe (automatisch)</span>
       <span><i class="dot" style="background:var(--z1)"></i>Individuelle FVK-Freigabe erforderlich</span>
@@ -194,8 +220,8 @@
     <div class="howcalc">
       <h3>Warum dasselbe Zonenband unterschiedlich rot ist</h3>
       <p>Die Deckel der Zonen 2–4 gelten <b>relativ zur Flugplatzhöhe</b>. Steigt das Gelände über die Flugplatzhöhe, „frisst" es den Deckel auf — die verbleibende Höhe über Grund sinkt, die Zelle wird röter. Über tieferem Gelände bleibt mehr Luft nach oben.</p>
-      <span class="formula">max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe )</span>
-      <p>Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Verbindlich bleiben stets <b>DiPUL</b> und die <b>NfL&nbsp;2026-1-3960</b>; das Raster ist eine Näherung zur Orientierung.</p>
+      <span class="formula">max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe ) − <span class="res">Sicherheitsreserve (≈ 5 m)</span></span>
+      <p>Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Die <b class="res" style="color:var(--z1)">Sicherheitsreserve (≈ 5 m)</b> deckt den Höhenfehler des Geländemodells ab — sie ist eine <b>Empfehlung, die das Live-Raster nicht automatisch abzieht</b>; <b class="res" style="color:var(--z1)">plane sie selbst ein</b>. Mehr dazu im Abschnitt <b>„Wie genau sind diese Höhenwerte?"</b> unten. Verbindlich bleiben stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>; das Raster ist eine Näherung zur Orientierung.</p>
     </div>
   </section>
 
@@ -204,6 +230,60 @@
     <h2>Höhengitter deutscher Verkehrsflughäfen</h2>
     <p class="lead">Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
     <div class="gallery-grid" id="gallery"></div>
+  </section>
+
+  <!-- ============ GENAUIGKEIT ============ -->
+  <section class="block">
+    <h2>Wie genau sind diese Höhenwerte?</h2>
+    <p class="lead">Das Höhengitter ist eine <b>Näherung zur Orientierung</b>, keine vermessungsgenaue Freigabehöhe. Drei Dinge bestimmen die Genauigkeit: das Geländemodell, seine Auflösung und wie SkyCheck rundet.</p>
+
+    <div class="acc-sub">
+      <h3>1. Geländemodell &amp; Auflösung</h3>
+      <p>Die Geländehöhe stammt aus dem <b>DEM „Terrarium"</b> (AWS Open Data / Mapzen) als Web-Mercator-Kacheln — in Deutschland überwiegend SRTM-/Copernicus-Erbe. Fällt der Kachelabruf aus, dient <b>Open-Meteo</b> (Copernicus GLO-90, ~90 m) als Punkt-Fallback. Der Zoom wird je Kontrollzone automatisch gewählt (gedeckelt auf 40 Kacheln), die Pixel-Bodenauflösung bei ~50° N:</p>
+      <div class="tbl-wrap">
+        <table class="acc">
+          <thead><tr><th>Zoom</th><th>Auflösung @ 50° N</th><th>Einsatz</th></tr></thead>
+          <tbody>
+            <tr><td>z13</td><td class="num">≈ 12 m/px</td><td>kleine Zonen (wenige km)</td></tr>
+            <tr class="hl"><td>z12</td><td class="num">≈ 25 m/px</td><td>Normalfall für eine ganze CTR-D</td></tr>
+            <tr><td>z11</td><td class="num">≈ 49 m/px</td><td>sehr große CTR</td></tr>
+            <tr><td>z10</td><td class="num">≈ 98 m/px</td><td>Extremfall</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Der <b>Tooltip</b> liest die DEM-Höhe direkt am Cursor (volle Auflösung, ~25 m). Die <b>Farbraster-Zellen</b> sind gröber (~120 m Zielkantenlänge), sampeln die DEM aber je in ihrer Mitte.</p>
+    </div>
+
+    <div class="acc-sub">
+      <h3>2. Höhengenauigkeit — nicht dasselbe wie Auflösung</h3>
+      <p>Die ~25 m sind die <b>Pixelgröße</b>, nicht die Höhengenauigkeit. Die absolute vertikale Genauigkeit liegt bei mehreren Metern:</p>
+      <div class="tbl-wrap">
+        <table class="acc">
+          <thead><tr><th>Kennwert</th><th>typisch</th></tr></thead>
+          <tbody>
+            <tr><td>RMSE, flaches/offenes Gelände</td><td class="num">~5–10 m</td></tr>
+            <tr><td>LE90 (SRTM-Erbe)</td><td class="num">bis ~16 m</td></tr>
+            <tr><td>Copernicus GLO-90 (Fallback)</td><td class="num">~2–4 m</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>In flachem, offenem Gelände ist <b>~5 m realistisch</b> — aber als statistische Streuung, nicht als Zusicherung. Fehlervergrößernde Effekte:</p>
+      <ul class="factgrid">
+        <li><b>Wald &amp; Bebauung</b>Radar-DEMs messen nahe der Vegetations-/Dachoberfläche, nicht den Boden → oft <b>mehrere Meter zu hoch</b> (im Wald +5–10 m).</li>
+        <li><b>Hang- &amp; Steilgelände</b>Systematisch schlechter; der ~25-m-Rasterwert weicht vom exakten Punkt ab (10 % Neigung ~1–2 m, 30 % ~3–4 m je Zelle).</li>
+      </ul>
+    </div>
+
+    <div class="acc-sub">
+      <h3>3. Rundung — „konservativ" heißt konkret</h3>
+      <p>SkyCheck rundet die berechnete Höhe <b>immer ab</b> auf ganze Meter (nie auf): aus 44,8 m wird <b>44 m</b>. Ergäbe die Formel eine negative Höhe (Gelände über der DiPUL-MSL-Grenze), wird <b>0 m AGL</b> ausgegeben und die Zone auf <b>individuelle Freigabe</b> gesetzt. In Zone 4 greift zusätzlich <span class="mono">min(100 m, max(50 m, …))</span>.</p>
+    </div>
+
+    <div class="accnote">
+      <h3>Warum die Sicherheitsreserve empfohlen ist</h3>
+      <p>Das Abrunden bringt <b>höchstens ~1 m</b> und ist <b>kein Puffer für den DEM-Höhenfehler</b> von mehreren Metern. Liegt die DEM-Höhe z.&nbsp;B. im Wald 7 m zu hoch, rechnet SkyCheck die erlaubte Höhe 7 m zu niedrig — sicherheitsseitig, aber ein Nebeneffekt des Datenfehlers, kein bewusster Zuschlag. Deshalb empfehlen wir eine zusätzliche <b class="res" style="color:var(--z1)">Sicherheitsreserve von ≈ 5 m</b> (siehe Formel oben). Diese Reserve <b>zieht das Live-Raster nicht automatisch ab</b> — <b class="res" style="color:var(--z1)">plane sie selbst ein</b>.</p>
+      <p>Verbindlich sind stets <a href="https://www.dipul.de/" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a>. Für eine vermessungsgenaue Geländehöhe an einem konkreten Punkt ist das <b>DGM1 des jeweiligen Landesvermessungsamts</b> maßgeblich (1 m Raster, ~±0,3–0,5 m) — global CORS-frei nicht als Kachel-Layer verfügbar, daher hier das Terrarium-DEM.</p>
+    </div>
   </section>
 
   <footer class="foot">
