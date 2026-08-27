@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.116.0
+📦 **Current version:** v26.08.116.1
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.116.1 | 🔧 **CARTO basemap replacement.** CARTO ended anonymous basemap access (tiles now carry an "API KEY REQUIRED" watermark). The 'Dark' style now uses regular OSM tiles inverted via CSS filter (no API key, zoom 19); the redundant 'Hell'/light CARTO style was removed (cycle: Dark → OSM → Satellite). CSP cleaned up. |
 | v26.08.116.0 | 🇩🇪 **CTR height-rules page: dark mode, DE/EN switch, English translation.** `ctr-hoehenregeln.html` gains a top bar with a **theme toggle** (☀️/🌙; sets `data-theme`, persists to `localStorage`, honours `prefers-color-scheme` + `?theme=`; early inline setter against FOUC) and a **DE/EN language toggle** (persists `ctrhr-lang`, honours `?lang=`, defaults to the browser language). A full **i18n system** (`T={de,en}`, `applyLang`) translates every static node (`data-i18n`/`data-i18n-html`) and rebuilds the SVG scene, rule cards and gallery alt text per language. The German text stays in the HTML as a no-JS/SEO fallback. |
 | v26.08.115.1 | 🇩🇪 **CTR height-rules page: accuracy chapter, safety reserve, NfL links.** `ctr-hoehenregeln.html`: (a) a "− safety reserve (≈ 5 m)" term in the explainer formula (red, flagged explicitly as a recommendation the live grid does NOT subtract — the calculation in `skycheck.html` is unchanged); (b) a closing chapter "Wie genau sind diese Höhenwerte?" (DEM source & zoom→resolution table, height accuracy RMSE/LE90, forest/slope effects, rounding logic, DGM1 note); (c) bugfix: the two error-effect cards wrongly used the numbered `.steps` class (a blue "1" badge covered the title) → switched to an unnumbered `.factgrid`; (d) NfL 2026-1-3960 now linked at all five visible spots (previously only intro + footer). |
 | v26.08.115.0 | 🇩🇪 **CTR height-rules page: tutorial + airport gallery.** `ctr-hoehenregeln.html` gains (1) an illustrated tutorial "So funktioniert das Live-Höhengitter" — an annotated Stuttgart screenshot with five numbered callouts (grid button, colour raster, legend, tooltip, status overlay), a five-step card list, and an explainer with the formula `max height (AGL) = min(cap over ground, airport elevation + cap − terrain height)`; (2) a gallery of 18 German airports with a CTR-D, as a lazy-loaded WebP grid (`img/hoehengrid-flughoehen-drohnen-<city>.webp`, ~2.5 MB total). All screenshots recompressed to WebP (1600 px). The NfL 2026-1-3960 is now also linked in the intro. |

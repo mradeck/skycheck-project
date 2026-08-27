@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.116.0
+📦 **Aktualna wersja:** v26.08.116.1
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.116.1 | 🔧 **Zastąpienie map bazowych CARTO.** CARTO zakończyło anonimowy dostęp do swoich map bazowych (kafelki mają teraz znak wodny „API KEY REQUIRED"). Styl „Dark" korzysta teraz ze zwykłych kafelków OSM odwróconych filtrem CSS (bez klucza API, zoom 19); zbędny jasny styl CARTO „Hell" został usunięty (cykl: Dark → OSM → Satelita). CSP oczyszczone. |
 | v26.08.116.0 | 🇩🇪 **Strona reguł wysokości CTR: tryb ciemny, przełącznik DE/EN, tłumaczenie angielskie.** `ctr-hoehenregeln.html` zyskuje górny pasek z **przełącznikiem motywu** (☀️/🌙; ustawia `data-theme`, zapisuje w `localStorage`, respektuje `prefers-color-scheme` + `?theme=`; wczesny inline-setter przeciw FOUC) oraz **przełącznikiem języka DE/EN** (zapisuje `ctrhr-lang`, respektuje `?lang=`, domyślnie wg języka przeglądarki). Pełny **system i18n** (`T={de,en}`, `applyLang`) tłumaczy każdy statyczny węzeł (`data-i18n`/`data-i18n-html`) i przebudowuje scenę SVG, karty reguł oraz teksty alt galerii dla każdego języka. Tekst niemiecki pozostaje w HTML jako zapas bez-JS/SEO. |
 | v26.08.115.1 | 🇩🇪 **Strona reguł wysokości CTR: rozdział o dokładności, rezerwa bezpieczeństwa, linki NfL.** `ctr-hoehenregeln.html`: (a) człon „− rezerwa bezpieczeństwa (≈ 5 m)" we wzorze objaśniającym (na czerwono, wyraźnie oznaczony jako zalecenie, którego siatka na żywo NIE odejmuje — obliczenia w `skycheck.html` bez zmian); (b) końcowy rozdział „Wie genau sind diese Höhenwerte?" (źródło DEM i tabela zoom→rozdzielczość, dokładność wysokości RMSE/LE90, efekty las/stok, logika zaokrąglania, uwaga o DGM1); (c) poprawka: dwie karty efektów błędnie używały numerowanej klasy `.steps` (niebieski znacznik „1" zasłaniał tytuł) → nienumerowana `.factgrid`; (d) NfL 2026-1-3960 teraz podlinkowana we wszystkich pięciu widocznych miejscach (wcześniej tylko wstęp + stopka). |
 | v26.08.115.0 | 🇩🇪 **Strona reguł wysokości CTR: instrukcja + galeria lotnisk.** `ctr-hoehenregeln.html` zyskuje (1) ilustrowaną instrukcję „So funktioniert das Live-Höhengitter" — opatrzony adnotacjami zrzut ekranu Stuttgartu z pięcioma numerowanymi znacznikami (przycisk siatki, raster koloru, legenda, dymek, overlay statusu), listę pięciu kart-kroków oraz blok z wzorem `maks. wysokość (AGL) = min(pułap nad gruntem, wysokość lotniska + pułap − wysokość terenu)`; (2) galerię 18 niemieckich lotnisk z CTR-D jako leniwie ładowaną siatkę WebP (`img/hoehengrid-flughoehen-drohnen-<miasto>.webp`, ~2,5 MB łącznie). Wszystkie zrzuty przekompresowane do WebP (1600 px). NfL 2026-1-3960 jest teraz również podlinkowana we wstępie. |
