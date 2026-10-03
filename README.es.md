@@ -27,7 +27,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 > Los nueve son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v26.08.116.1
+📦 **Versión actual:** v26.08.116.2
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.08.116.2 | 🇩🇪 **Página de reglas de altura CTR: aclaración de la regla de obstáculos + referencia info-procedimiento DFS.** `ctr-hoehenregeln.html` (DE+EN), puramente aditivo: (a) nuevo recuadro «Obstacle rule: no blanket +15 m» (`obstacleNote`) — la proximidad a un obstáculo (≤ 30 m lateralmente, ≤ 15 m por encima) es el único caso para superar los techos de zona, y no otorga derecho a volar ≥ 15 m sobre el suelo en todas partes (el terreno no es un obstáculo); enlaza un documento de análisis jurídico (Google Doc); (b) tarjeta de regla «hindernisnah» precisada; (c) **PDF info-procedimiento de DFS** (dipul.de) añadido como enlace «(DFS-Info)» en los 15 hiperenlaces de la NfL (HTML estático + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **Sustitución de los mapas base de CARTO.** CARTO puso fin al acceso anónimo a sus mapas base (las teselas ahora muestran una marca de agua «API KEY REQUIRED»). El estilo «Dark» usa ahora teselas OSM normales invertidas mediante filtro CSS (sin clave API, zoom 19); el estilo claro «Hell» de CARTO, ya redundante, fue eliminado (ciclo: Dark → OSM → Satélite). CSP depurada. |
 | v26.08.116.0 | 🇩🇪 **Página de reglas de altura CTR: modo oscuro, conmutador DE/EN, traducción al inglés.** `ctr-hoehenregeln.html` gana una barra superior con un **conmutador de tema** (☀️/🌙; fija `data-theme`, persiste en `localStorage`, respeta `prefers-color-scheme` + `?theme=`; setter inline temprano contra el FOUC) y un **conmutador de idioma DE/EN** (persiste `ctrhr-lang`, respeta `?lang=`, por defecto según el idioma del navegador). Un **sistema i18n** completo (`T={de,en}`, `applyLang`) traduce cada nodo estático (`data-i18n`/`data-i18n-html`) y reconstruye la escena SVG, las tarjetas de reglas y los textos alt de la galería por idioma. El texto alemán permanece en el HTML como respaldo sin-JS/SEO. |
 | v26.08.115.1 | 🇩🇪 **Página de reglas de altura CTR: capítulo de precisión, reserva de seguridad, enlaces NfL.** `ctr-hoehenregeln.html`: (a) un término «− reserva de seguridad (≈ 5 m)» en la fórmula explicativa (en rojo, marcado explícitamente como recomendación que la rejilla en vivo NO resta — el cálculo en `skycheck.html` no cambia); (b) un capítulo final «Wie genau sind diese Höhenwerte?» (fuente MDE y tabla zoom→resolución, precisión de altura RMSE/LE90, efectos bosque/pendiente, lógica de redondeo, nota DGM1); (c) corrección: las dos tarjetas de efectos usaban por error la clase numerada `.steps` (un badge azul «1» tapaba el título) → `.factgrid` sin numeración; (d) NfL 2026-1-3960 ahora enlazada en los cinco puntos visibles (antes solo intro + pie de página). |

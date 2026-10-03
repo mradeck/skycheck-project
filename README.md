@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.116.1
+📦 **Current version:** v26.08.116.2
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.116.2 | 🇩🇪 **CTR height-rules page: obstacle-rule clarification + DFS procedure-info reference.** `ctr-hoehenregeln.html` (DE+EN), purely additive: (a) a new note box "Obstacle rule: no blanket +15 m" (`obstacleNote`) — obstacle proximity (≤ 30 m laterally, ≤ 15 m above an obstacle) is the only case for exceeding the zone heights, and it grants no right to fly ≥ 15 m above ground everywhere (terrain is not an obstacle); links a legal analysis document (Google Doc); (b) the "near obstacles" rule card made more precise; (c) the **DFS procedure-info PDF** (dipul.de) appended as a "(DFS-Info)" link at all 15 NfL hyperlinks (static HTML + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **CARTO basemap replacement.** CARTO ended anonymous basemap access (tiles now carry an "API KEY REQUIRED" watermark). The 'Dark' style now uses regular OSM tiles inverted via CSS filter (no API key, zoom 19); the redundant 'Hell'/light CARTO style was removed (cycle: Dark → OSM → Satellite). CSP cleaned up. |
 | v26.08.116.0 | 🇩🇪 **CTR height-rules page: dark mode, DE/EN switch, English translation.** `ctr-hoehenregeln.html` gains a top bar with a **theme toggle** (☀️/🌙; sets `data-theme`, persists to `localStorage`, honours `prefers-color-scheme` + `?theme=`; early inline setter against FOUC) and a **DE/EN language toggle** (persists `ctrhr-lang`, honours `?lang=`, defaults to the browser language). A full **i18n system** (`T={de,en}`, `applyLang`) translates every static node (`data-i18n`/`data-i18n-html`) and rebuilds the SVG scene, rule cards and gallery alt text per language. The German text stays in the HTML as a no-JS/SEO fallback. |
 | v26.08.115.1 | 🇩🇪 **CTR height-rules page: accuracy chapter, safety reserve, NfL links.** `ctr-hoehenregeln.html`: (a) a "− safety reserve (≈ 5 m)" term in the explainer formula (red, flagged explicitly as a recommendation the live grid does NOT subtract — the calculation in `skycheck.html` is unchanged); (b) a closing chapter "Wie genau sind diese Höhenwerte?" (DEM source & zoom→resolution table, height accuracy RMSE/LE90, forest/slope effects, rounding logic, DGM1 note); (c) bugfix: the two error-effect cards wrongly used the numbered `.steps` class (a blue "1" badge covered the title) → switched to an unnumbered `.factgrid`; (d) NfL 2026-1-3960 now linked at all five visible spots (previously only intro + footer). |
