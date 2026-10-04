@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.116.2
+📦 **Aktualna wersja:** v26.08.116.3
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.116.3 | 🇩🇪 **Link do reguł wysokości CTR na stronie startowej.** Rząd źródeł/przycisków na stronie startowej (`.l-sources`) pokazuje teraz jako pierwszy element wyróżniony chip funkcji z akcentowaną ramką **„📐 CTR-Höhenregeln"** (link względny `ctr-hoehenregeln.html`, otwiera nową kartę). Nowa klasa CSS `.l-src-feature` wyróżnia go spośród szarych chipów źródeł. Tylko link, bez zmian logiki. |
 | v26.08.116.2 | 🇩🇪 **Strona reguł wysokości CTR: doprecyzowanie reguły przeszkód + odniesienie do info-procedury DFS.** `ctr-hoehenregeln.html` (DE+EN), wyłącznie dodatki: (a) nowy box „Obstacle rule: no blanket +15 m" (`obstacleNote`) — bliskość przeszkody (≤ 30 m w bok, ≤ 15 m nad przeszkodą) to jedyny przypadek przekroczenia pułapów strefy i nie daje prawa do lotu ≥ 15 m nad gruntem wszędzie (teren nie jest przeszkodą); linkuje dokument analizy prawnej (Google Doc); (b) doprecyzowana karta reguły „hindernisnah"; (c) **PDF info-procedury DFS** (dipul.de) dodany jako link „(DFS-Info)" przy wszystkich 15 hiperłączach NfL (statyczny HTML + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **Zastąpienie map bazowych CARTO.** CARTO zakończyło anonimowy dostęp do swoich map bazowych (kafelki mają teraz znak wodny „API KEY REQUIRED"). Styl „Dark" korzysta teraz ze zwykłych kafelków OSM odwróconych filtrem CSS (bez klucza API, zoom 19); zbędny jasny styl CARTO „Hell" został usunięty (cykl: Dark → OSM → Satelita). CSP oczyszczone. |
 | v26.08.116.0 | 🇩🇪 **Strona reguł wysokości CTR: tryb ciemny, przełącznik DE/EN, tłumaczenie angielskie.** `ctr-hoehenregeln.html` zyskuje górny pasek z **przełącznikiem motywu** (☀️/🌙; ustawia `data-theme`, zapisuje w `localStorage`, respektuje `prefers-color-scheme` + `?theme=`; wczesny inline-setter przeciw FOUC) oraz **przełącznikiem języka DE/EN** (zapisuje `ctrhr-lang`, respektuje `?lang=`, domyślnie wg języka przeglądarki). Pełny **system i18n** (`T={de,en}`, `applyLang`) tłumaczy każdy statyczny węzeł (`data-i18n`/`data-i18n-html`) i przebudowuje scenę SVG, karty reguł oraz teksty alt galerii dla każdego języka. Tekst niemiecki pozostaje w HTML jako zapas bez-JS/SEO. |

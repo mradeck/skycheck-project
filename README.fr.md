@@ -27,7 +27,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 
 > Les neuf sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
-📦 **Version actuelle :** v26.08.116.2
+📦 **Version actuelle :** v26.08.116.3
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v26.08.116.3 | 🇩🇪 **Lien vers les règles d'altitude CTR sur la page d'accueil.** La rangée de sources/boutons de la page d'accueil (`.l-sources`) affiche désormais en premier une puce de fonctionnalité au contour accentué **« 📐 CTR-Höhenregeln »** (lien relatif `ctr-hoehenregeln.html`, ouvre un nouvel onglet). Nouvelle classe CSS `.l-src-feature` qui la distingue des puces de source grises. Lien uniquement, aucun changement de logique. |
 | v26.08.116.2 | 🇩🇪 **Page des règles d'altitude CTR : clarification de la règle d'obstacle + référence info-procédure DFS.** `ctr-hoehenregeln.html` (DE+EN), purement additif : (a) nouvel encadré « Obstacle rule: no blanket +15 m » (`obstacleNote`) — la proximité d'un obstacle (≤ 30 m latéralement, ≤ 15 m au-dessus) est le seul cas permettant de dépasser les plafonds de zone, et ne donne aucun droit de voler ≥ 15 m au-dessus du sol partout (le terrain n'est pas un obstacle) ; lie un document d'analyse juridique (Google Doc) ; (b) carte de règle « hindernisnah » précisée ; (c) **PDF info-procédure DFS** (dipul.de) ajouté comme lien « (DFS-Info) » à l'ensemble des 15 hyperliens NfL (HTML statique + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **Remplacement des fonds de carte CARTO.** CARTO a mis fin à l'accès anonyme à ses fonds de carte (les tuiles affichent désormais un filigrane « API KEY REQUIRED »). Le style « Dark » utilise maintenant des tuiles OSM classiques inversées par filtre CSS (sans clé API, zoom 19) ; le style clair CARTO « Hell », devenu redondant, a été supprimé (cycle : Dark → OSM → Satellite). CSP nettoyée. |
 | v26.08.116.0 | 🇩🇪 **Page des règles d'altitude CTR : mode sombre, bascule DE/EN, traduction anglaise.** `ctr-hoehenregeln.html` gagne une barre supérieure avec une **bascule de thème** (☀️/🌙 ; définit `data-theme`, persiste dans `localStorage`, respecte `prefers-color-scheme` + `?theme=` ; setter inline précoce contre le FOUC) et une **bascule de langue DE/EN** (persiste `ctrhr-lang`, respecte `?lang=`, défaut selon la langue du navigateur). Un **système i18n** complet (`T={de,en}`, `applyLang`) traduit chaque nœud statique (`data-i18n`/`data-i18n-html`) et reconstruit la scène SVG, les cartes de règles et les textes alt de la galerie par langue. Le texte allemand reste dans le HTML comme repli sans-JS/SEO. |

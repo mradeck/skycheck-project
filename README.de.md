@@ -27,7 +27,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.116.2
+📦 **Aktuelle Version:** v26.08.116.3
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.116.3 | 🇩🇪 **CTR-Höhenregeln-Link auf der Startseite.** Die Quellen-/Button-Reihe der Landing-Page (`.l-sources`) zeigt jetzt als erstes Element ein akzentuiert umrandetes Feature-Chip **„📐 CTR-Höhenregeln"** (relativer Link `ctr-hoehenregeln.html`, öffnet im neuen Tab). Neue CSS-Klasse `.l-src-feature` hebt es von den grauen Quellen-Chips ab. Nur Link, keine Logikänderung. |
 | v26.08.116.2 | 🇩🇪 **CTR-Höhenregeln-Seite: Hindernisregel-Klarstellung + DFS-Info-Referenz.** `ctr-hoehenregeln.html` (DE+EN), rein additiv: (a) neue Hinweisbox „Hindernisregel: kein pauschales +15 m" (`obstacleNote`) — Hindernisnähe (≤ 30 m seitlich, ≤ 15 m über dem Hindernis) ist der einzige Fall zum Überschreiten der Zonenhöhen; daraus folgt kein Anspruch auf ≥ 15 m über Grund überall (Gelände ist kein Hindernis); verlinkt ein juristisches Analyse-Dokument (Google Doc); (b) Regel-Karte „hindernisnah" präzisiert; (c) **DFS-Verfahrensinfo-PDF** (dipul.de) als „(DFS-Info)"-Link an allen 15 NfL-Hyperlinks angehängt (statisches HTML + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **CARTO-Basemap-Ersatz.** CARTO hat die anonyme Nutzung seiner Basemaps beendet (Kacheln zeigen jetzt ein „API KEY REQUIRED"-Wasserzeichen). Der Kartenstil „Dark" nutzt jetzt normale OSM-Tiles, per CSS-Filter invertiert (kein API-Key, Zoom 19); der überflüssige helle CARTO-Stil „Hell" wurde entfernt (Zyklus: Dark → OSM → Satellit). CSP bereinigt. |
 | v26.08.116.0 | 🇩🇪 **CTR-Höhenregeln-Seite: Dark-Mode, DE/EN-Umschalter, englische Übersetzung.** `ctr-hoehenregeln.html` bekommt eine Topbar mit **Theme-Toggle** (☀️/🌙; setzt `data-theme`, persistiert in `localStorage`, respektiert `prefers-color-scheme` + `?theme=`; früher Inline-Setter gegen FOUC) und **DE/EN-Sprach-Toggle** (persistiert `ctrhr-lang`, respektiert `?lang=`, Default nach Browsersprache). Vollständiges **i18n-System** (`T={de,en}`, `applyLang`) übersetzt jeden statischen Knoten (`data-i18n`/`data-i18n-html`) und baut SVG-Szene, Regel-Karten und Galerie-Alt-Texte je Sprache neu auf. Der deutsche Text bleibt als No-JS-/SEO-Fallback im HTML. |
