@@ -563,6 +563,19 @@
       border-color: var(--text3);
     }
 
+    /* CTR-Höhenregeln als hervorgehobenes Feature-Chip in der Quellen-/Button-Reihe */
+    .l-src-feature {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      font-weight: 600;
+    }
+    .l-src-feature:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
     /* [S-RESULTS] ===================================================
        RESULTS PAGE
     ============================================================ */
@@ -3004,6 +3017,7 @@
       </div>
 
       <div class="l-sources">
+        <a href="ctr-hoehenregeln.html" target="_blank" rel="noopener" class="l-src l-src-feature">📐 CTR-Höhenregeln</a>
         <span id="l-src-zones-landing" style="display:contents"></span>
         <a href="https://brightsky.dev/" target="_blank" class="l-src">DWD · Bright Sky</a>
         <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="l-src">Open-Meteo · Punkthöhe</a>
@@ -3410,7 +3424,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.08.116.2';
+    const APP_VER = '26.08.116.3';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
