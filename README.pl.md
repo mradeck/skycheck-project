@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.116.3
+📦 **Aktualna wersja:** v26.08.116.4
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.116.4 | 🇩🇪 **Grafika reguł wysokości CTR: reguła przeszkód + lista dokumentów.** `ctr-hoehenregeln.html` (DE+EN). Przekrój SVG wizualizuje teraz regułę przeszkód (zielona otoczka ±30 m / +15 m): turbina wiatrowa (strefa 4, powyżej pułapu), maszt radiowy (strefa 3, lokalnie podwyższony → inaczej 0 m/czerwony), oraz zespół 3 budynków na płaskim plateau w strefie 3, gdzie najwyższy w promieniu 30 m wyznacza odniesienie +15 m — każdy z dronem ✓, plus dron ⚠ tuż poza (>30 m). Nowa sekcja „Weitere Dokumente" (`.reflist`) z 3 nowymi odniesieniami DFS (PDF regulacji DFS, PDF krótkiej informacji DFS-AS, strona WWW DFS-AS) obok istniejących dokumentów podstawowych. |
 | v26.08.116.3 | 🇩🇪 **Link do reguł wysokości CTR na stronie startowej.** Rząd źródeł/przycisków na stronie startowej (`.l-sources`) pokazuje teraz jako pierwszy element wyróżniony chip funkcji z akcentowaną ramką **„📐 CTR-Höhenregeln"** (link względny `ctr-hoehenregeln.html`, otwiera nową kartę). Nowa klasa CSS `.l-src-feature` wyróżnia go spośród szarych chipów źródeł. Tylko link, bez zmian logiki. |
 | v26.08.116.2 | 🇩🇪 **Strona reguł wysokości CTR: doprecyzowanie reguły przeszkód + odniesienie do info-procedury DFS.** `ctr-hoehenregeln.html` (DE+EN), wyłącznie dodatki: (a) nowy box „Obstacle rule: no blanket +15 m" (`obstacleNote`) — bliskość przeszkody (≤ 30 m w bok, ≤ 15 m nad przeszkodą) to jedyny przypadek przekroczenia pułapów strefy i nie daje prawa do lotu ≥ 15 m nad gruntem wszędzie (teren nie jest przeszkodą); linkuje dokument analizy prawnej (Google Doc); (b) doprecyzowana karta reguły „hindernisnah"; (c) **PDF info-procedury DFS** (dipul.de) dodany jako link „(DFS-Info)" przy wszystkich 15 hiperłączach NfL (statyczny HTML + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **Zastąpienie map bazowych CARTO.** CARTO zakończyło anonimowy dostęp do swoich map bazowych (kafelki mają teraz znak wodny „API KEY REQUIRED"). Styl „Dark" korzysta teraz ze zwykłych kafelków OSM odwróconych filtrem CSS (bez klucza API, zoom 19); zbędny jasny styl CARTO „Hell" został usunięty (cykl: Dark → OSM → Satelita). CSP oczyszczone. |

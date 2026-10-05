@@ -27,7 +27,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.116.3
+📦 **Aktuelle Version:** v26.08.116.4
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.116.4 | 🇩🇪 **CTR-Höhenregeln-Grafik: Hindernisregel + Weitere-Dokumente-Liste.** `ctr-hoehenregeln.html` (DE+EN). Die Querschnitts-SVG visualisiert jetzt die Hindernisregel (grüner ±30-m/+15-m-Hüllraum): Windrad (Zone 4, über dem Deckel), Funkmast (Zone 3, lokal erhöht → sonst 0 m/rot, „sonst = 0 m"), Gebäude-Cluster aus 3 Gebäuden auf flachem Zone-3-Plateau (höchstes im 30-m-Umkreis = +15-m-Referenz) — jeweils ✓-Drohne, plus ⚠-Drohne knapp außerhalb (>30 m). Neue Sektion „Weitere Dokumente" (`.reflist`) mit 3 neuen DFS-Referenzen (DFS-Neuregelung-PDF, DFS-AS-Kurzinfo-PDF, DFS-AS-Webseite) neben den bestehenden Kerndokumenten. |
 | v26.08.116.3 | 🇩🇪 **CTR-Höhenregeln-Link auf der Startseite.** Die Quellen-/Button-Reihe der Landing-Page (`.l-sources`) zeigt jetzt als erstes Element ein akzentuiert umrandetes Feature-Chip **„📐 CTR-Höhenregeln"** (relativer Link `ctr-hoehenregeln.html`, öffnet im neuen Tab). Neue CSS-Klasse `.l-src-feature` hebt es von den grauen Quellen-Chips ab. Nur Link, keine Logikänderung. |
 | v26.08.116.2 | 🇩🇪 **CTR-Höhenregeln-Seite: Hindernisregel-Klarstellung + DFS-Info-Referenz.** `ctr-hoehenregeln.html` (DE+EN), rein additiv: (a) neue Hinweisbox „Hindernisregel: kein pauschales +15 m" (`obstacleNote`) — Hindernisnähe (≤ 30 m seitlich, ≤ 15 m über dem Hindernis) ist der einzige Fall zum Überschreiten der Zonenhöhen; daraus folgt kein Anspruch auf ≥ 15 m über Grund überall (Gelände ist kein Hindernis); verlinkt ein juristisches Analyse-Dokument (Google Doc); (b) Regel-Karte „hindernisnah" präzisiert; (c) **DFS-Verfahrensinfo-PDF** (dipul.de) als „(DFS-Info)"-Link an allen 15 NfL-Hyperlinks angehängt (statisches HTML + i18n DE/EN). |
 | v26.08.116.1 | 🔧 **CARTO-Basemap-Ersatz.** CARTO hat die anonyme Nutzung seiner Basemaps beendet (Kacheln zeigen jetzt ein „API KEY REQUIRED"-Wasserzeichen). Der Kartenstil „Dark" nutzt jetzt normale OSM-Tiles, per CSS-Filter invertiert (kein API-Key, Zoom 19); der überflüssige helle CARTO-Stil „Hell" wurde entfernt (Zyklus: Dark → OSM → Satellit). CSP bereinigt. |
