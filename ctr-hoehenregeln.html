@@ -180,6 +180,13 @@
   .srcbar a{display:inline-flex;align-items:center;font-size:.82rem;color:var(--ink2);text-decoration:none;
     background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;transition:border-color .12s,color .12s;}
   .srcbar a:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* --- Weitere Dokumente / Referenzliste --- */
+  .reflist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:9px;}
+  .reflist li{position:relative;padding-left:22px;font-size:.92rem;color:var(--ink2);line-height:1.4;}
+  .reflist li::before{content:"📄";position:absolute;left:0;top:1px;font-size:.82rem;}
+  .reflist a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+  .reflist a:hover{border-bottom-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -208,6 +215,8 @@
     <span class="scale-bar" aria-hidden="true"></span>
   </div>
   <div class="scale-ticks mono"><span>0 m</span><span>25 m</span><span>45 m</span><span>≥ 65 m</span><span>100 m</span></div>
+
+  <p class="annot-cap" data-i18n-html="obstacleCaption" style="text-align:center;margin:12px auto 0;max-width:72ch;">🟢 <b>Hindernisregel:</b> Ein Hindernis (Funkmast, Windrad) öffnet lokal einen grünen Hüllraum bis <b>Hindernishöhe + 15 m</b> (±&nbsp;30&nbsp;m seitlich, schematisch) — auch dort, wo der Zonendeckel sonst 0&nbsp;m wäre. Bei mehreren Hindernissen im Umkreis von 30&nbsp;m zählt das <b>höchste</b> als Referenz. Nur in dieser Blase ist mehr erlaubt.</p>
 
   <div class="cards" id="cards"></div>
 
@@ -335,6 +344,18 @@
     </div>
   </section>
 
+  <section class="block">
+    <h2 data-i18n="refsH2">Weitere Dokumente</h2>
+    <ul class="reflist" data-i18n-html="refsHtml">
+      <li><a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960 — Allgemeinverfügung (Original-PDF, DFS)</a></li>
+      <li><a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">Information der DFS über neue Verfahren für UAS-Flüge in Kontrollzonen (PDF)</a></li>
+      <li><a href="https://www.dfs.de/homepage/de/drohnenflug/antraege-und-genehmigungen/2026-7-neuregelung-uas-in-ctr.pdf?cid=jld" target="_blank" rel="noopener">DFS — Neuregelung UAS-Flüge in CTR (PDF)</a></li>
+      <li><a href="https://dfs-as.aero/wp-content/uploads/dlm_uploads/2026/08/202607_dfs-aviation-services_kurzinfo-neue-uas-verfahren_1.pdf" target="_blank" rel="noopener">DFS Aviation Services — Kurzinfo: neue UAS-Verfahren (PDF)</a></li>
+      <li><a href="https://dfs-as.aero/neue-regelungen-fuer-drohnenfluege-in-kontrollzonen/" target="_blank" rel="noopener">DFS Aviation Services — Neue Regelungen für Drohnenflüge in Kontrollzonen (Webseite)</a></li>
+      <li><a href="https://docs.google.com/document/d/1_DQ6HctI-8QcpKGp43nBg02j8pceynQj_b_KZgN0O_4/edit?usp=sharing" target="_blank" rel="noopener">Juristische Einordnung der Hindernisklausel (Analyse)</a></li>
+    </ul>
+  </section>
+
   <footer class="foot">
     <div data-i18n-html="footerL">Verbindlich sind <a href="https://www.dipul.de/" target="_blank" rel="noopener">DiPUL</a> und die <a href="https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (<a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">DFS-Info</a>) (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.</div>
     <div data-i18n-html="footerR">Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a></div>
@@ -346,6 +367,10 @@
   const NFL='https://dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/allgemeinverfuegung-uas-in-ctr-flugplatzkontrolle-der-dfs-deutsche-flugsicherung-gmbh-nfl-2026-1-3960.pdf';
   const DIPUL='https://www.dipul.de/';
   const DOC_OBST='https://docs.google.com/document/d/1_DQ6HctI-8QcpKGp43nBg02j8pceynQj_b_KZgN0O_4/edit?usp=sharing';
+  const DFS_INFO='https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6';
+  const DFS_KURZ='https://dfs-as.aero/wp-content/uploads/dlm_uploads/2026/08/202607_dfs-aviation-services_kurzinfo-neue-uas-verfahren_1.pdf';
+  const DFS_NEUREG='https://www.dfs.de/homepage/de/drohnenflug/antraege-und-genehmigungen/2026-7-neuregelung-uas-in-ctr.pdf?cid=jld';
+  const DFSAS_WEB='https://dfs-as.aero/neue-regelungen-fuer-drohnenfluege-in-kontrollzonen/';
 
   // ==== I18N =================================================================
   const T={
@@ -391,7 +416,10 @@
       srcLinksHtml:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL WMS</a><a href="https://utm.dfs.de/" target="_blank" rel="noopener">DFS UTM</a><a href="https://brightsky.dev/" target="_blank" rel="noopener">DWD · Bright Sky</a><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo · Punkthöhe</a><a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles (AWS) · Höhengitter</a><a href="https://kp.gfz.de/" target="_blank" rel="noopener">GFZ Kp-Index</a><a href="https://airplanes.live/" target="_blank" rel="noopener">Airplanes.live</a><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon (komoot)</a><a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" rel="noopener">Impressum</a><a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a><a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>`,
       footerL:`Verbindlich sind <a href="${DIPUL}" target="_blank" rel="noopener">DiPUL</a> und die <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (<a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">DFS-Info</a>) (Original-PDF). Diese Grafik ist eine vereinfachte Visualisierung.`,
       footerR:`Live-Höhengitter: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a>`,
-      svg:{outside:"außerhalb CTR", zone:"Zone", individual:"individuell", above120:"120 m über Grund", ctrd:"CTR-D · Kontrollzone"},
+      svg:{outside:"außerhalb CTR", zone:"Zone", individual:"individuell", above120:"120 m über Grund", ctrd:"CTR-D · Kontrollzone", obstacleElse:"sonst ≈ 0 m"},
+      obstacleCaption:`🟢 <b>Hindernisregel:</b> Ein Hindernis (Funkmast, Windrad, Gebäude) öffnet lokal einen grünen Hüllraum bis <b>Hindernishöhe + 15 m</b> (±&nbsp;30&nbsp;m seitlich, schematisch) — auch dort, wo der Zonendeckel sonst 0&nbsp;m wäre. Bei mehreren Hindernissen im Umkreis von 30&nbsp;m zählt das <b>höchste</b> als Referenz. Nur in dieser Blase ist mehr erlaubt.`,
+      refsH2:"Weitere Dokumente",
+      refsHtml:`<li><a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960 — Allgemeinverfügung (Original-PDF, DFS)</a></li><li><a href="${DFS_INFO}" target="_blank" rel="noopener">Information der DFS über neue Verfahren für UAS-Flüge in Kontrollzonen (PDF)</a></li><li><a href="${DFS_NEUREG}" target="_blank" rel="noopener">DFS — Neuregelung UAS-Flüge in CTR (PDF)</a></li><li><a href="${DFS_KURZ}" target="_blank" rel="noopener">DFS Aviation Services — Kurzinfo: neue UAS-Verfahren (PDF)</a></li><li><a href="${DFSAS_WEB}" target="_blank" rel="noopener">DFS Aviation Services — Neue Regelungen für Drohnenflüge in Kontrollzonen (Webseite)</a></li><li><a href="${DOC_OBST}" target="_blank" rel="noopener">Juristische Einordnung der Hindernisklausel (Analyse)</a></li>`,
       cards:[
         {c:"var(--z1)",t:"CTR-Innenbereich",z:"Zone 1",h:"individuell",p:"<span class='rule'>Immer individuelle FVK-Freigabe</span> — unabhängig von der Flughöhe. Über dem Flughafen, ±1 km um dessen Grenze und 5 km hinter den Bahnenden."},
         {c:"var(--a25)",t:"4-km-Kreis um ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m über der Flugplatzhöhe oder über Grund</span> — die <b>kleinere</b> Höhe ist maßgeblich."},
@@ -443,7 +471,10 @@
       srcLinksHtml:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL WMS</a><a href="https://utm.dfs.de/" target="_blank" rel="noopener">DFS UTM</a><a href="https://brightsky.dev/" target="_blank" rel="noopener">DWD · Bright Sky</a><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo · point elevation</a><a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles (AWS) · height grid</a><a href="https://kp.gfz.de/" target="_blank" rel="noopener">GFZ Kp index</a><a href="https://airplanes.live/" target="_blank" rel="noopener">Airplanes.live</a><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon (komoot)</a><a href="https://www.multikopterschule.de/Kontakt-Impressum/IMPRESSUM/" target="_blank" rel="noopener">Imprint</a><a href="https://www.michael-radeck.de" target="_blank" rel="noopener">michael-radeck.de</a><a href="https://ko-fi.com/mradeck/tip" target="_blank" rel="noopener">☕ Ko-fi</a>`,
       footerL:`<a href="${DIPUL}" target="_blank" rel="noopener">DiPUL</a> and <a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960</a> (<a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">DFS-Info</a>) (original PDF) are authoritative. This graphic is a simplified visualisation.`,
       footerR:`Live height grid: <a href="https://skycheck-de.netlify.app/" target="_blank" rel="noopener"><span class="brand">Sky<span class="k">Check</span></span></a>`,
-      svg:{outside:"outside CTR", zone:"Zone", individual:"individual", above120:"120 m above ground", ctrd:"CTR-D · control zone"},
+      svg:{outside:"outside CTR", zone:"Zone", individual:"individual", above120:"120 m above ground", ctrd:"CTR-D · control zone", obstacleElse:"else ≈ 0 m"},
+      obstacleCaption:`🟢 <b>Obstacle rule:</b> An obstacle (mast, wind turbine, building) locally opens a green envelope up to <b>obstacle height + 15 m</b> (±&nbsp;30&nbsp;m laterally, schematic) — even where the zone cap would otherwise be 0&nbsp;m. With several obstacles within 30&nbsp;m, the <b>tallest</b> one is the reference. Only inside this bubble is more allowed.`,
+      refsH2:"Further documents",
+      refsHtml:`<li><a href="${NFL}" target="_blank" rel="noopener">NfL&nbsp;2026-1-3960 — General ruling (original PDF, DFS)</a></li><li><a href="${DFS_INFO}" target="_blank" rel="noopener">DFS information on new procedures for UAS flights in control zones (PDF)</a></li><li><a href="${DFS_NEUREG}" target="_blank" rel="noopener">DFS — New rules for UAS flights in the CTR (PDF)</a></li><li><a href="${DFS_KURZ}" target="_blank" rel="noopener">DFS Aviation Services — Brief info: new UAS procedures (PDF)</a></li><li><a href="${DFSAS_WEB}" target="_blank" rel="noopener">DFS Aviation Services — New rules for drone flights in control zones (web page)</a></li><li><a href="${DOC_OBST}" target="_blank" rel="noopener">Legal analysis of the obstacle clause</a></li>`,
       cards:[
         {c:"var(--z1)",t:"CTR core area",z:"Zone 1",h:"individual",p:"<span class='rule'>Always individual ATC clearance</span> — regardless of height. Over the aerodrome, ±1 km around its boundary and 5 km beyond the runway ends."},
         {c:"var(--a25)",t:"4 km circle around ARP",z:"Zone 2",h:"25 m",p:"<span class='rule'>25 m above aerodrome elevation or above ground</span> — the <b>lower</b> value is decisive."},
@@ -462,8 +493,12 @@
   function terrain(x){
     let e=452 +16*Math.sin(x/205) +9*Math.sin(x/83+1.1) +5*Math.sin(x/47+0.5);
     e+=26*Math.exp(-Math.pow((x-360)/120,2));
-    e+=32*Math.exp(-Math.pow((x-1300)/150,2));
+    e+=12*Math.exp(-Math.pow((x-360)/52,2));   // scharfe lokale Kuppe am Funkmast → Zone-3-Deckel fällt auf 0 m (rot)
+    e+=32*Math.exp(-Math.pow((x-1390)/140,2));  // rechter Höhenzug in Zone 4
     e-=10*Math.exp(-Math.pow((x-cx)/260,2));
+    // flaches Plateau in Zone 3 rechts (Super-Gauß) — ebener Baugrund für das Gebäude-Cluster
+    const flat=Math.exp(-Math.pow((x-1200)/115,6));
+    e=e*(1-flat)+455*flat;
     return e;
   }
   const zoneOf=x=>{const km=Math.abs(x-cx)/PXKM;
@@ -551,7 +586,7 @@
            g.appendChild(el("circle",{cx:0,cy:6,r:1.5,fill:col}));}
     }
     const droneScenes=[
-      {x:cx-720,m:"legal"},{x:cx-560,m:"legal"},{x:cx-430,m:"over"},{x:cx-215,m:"legal"},
+      {x:cx-720,m:"legal"},{x:cx-215,m:"legal"},
       {x:cx-40,m:"zone1"},{x:cx+250,m:"legal"},{x:cx+470,m:"over"},{x:cx+610,m:"legal"},{x:cx+740,m:"legal"},
     ];
     droneScenes.forEach(s=>{
@@ -561,6 +596,72 @@
       else{agl=Math.max(8,Math.round((v||115)*0.55));kind="ok";}
       const y=yOf(terrain(s.x)+agl)-4; drone(s.x,y,col); marker(s.x+34,y+2,kind);
     });
+
+    // ---- Hindernisregel: ein Hindernis öffnet lokal einen Hüllraum bis Hindernis + 15 m (±30 m) ----
+    function drawObstacle(x0, objH, kind, half, note){
+      const G="#1a9850";
+      const t=terrain(x0), yBase=yOf(t), yTopObj=yOf(t+objH), yTopEnv=yOf(t+objH+15);
+      // Hüllraum (grün, schematisch) über die sonst roten Balken
+      add("rect",{x:x0-half,y:yTopEnv,width:half*2,height:yBase-yTopEnv,rx:10,fill:G,opacity:.14});
+      add("rect",{x:x0-half,y:yTopEnv,width:half*2,height:yBase-yTopEnv,rx:10,fill:"none",stroke:G,"stroke-width":2,"stroke-dasharray":"6 4",opacity:.92});
+      // ±30 m (horizontal, oben) — schematisch, da horizontal stark gestaucht
+      add("line",{x1:x0-half,y1:yTopEnv-9,x2:x0+half,y2:yTopEnv-9,stroke:G,"stroke-width":1.3,opacity:.85});
+      [x0-half,x0+half].forEach(xx=>add("line",{x1:xx,y1:yTopEnv-13,x2:xx,y2:yTopEnv-5,stroke:G,"stroke-width":1.3,opacity:.85}));
+      add("text",{x:x0,y:yTopEnv-17,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":10.5,"font-weight":600,fill:G}).textContent="±30 m";
+      // +15 m (vertikal, links)
+      const dx=x0-half-9;
+      add("line",{x1:dx,y1:yTopObj,x2:dx,y2:yTopEnv,stroke:G,"stroke-width":1.5});
+      [yTopObj,yTopEnv].forEach(yy=>add("line",{x1:dx-4,y1:yy,x2:dx+4,y2:yy,stroke:G,"stroke-width":1.5}));
+      add("text",{x:dx-6,y:(yTopObj+yTopEnv)/2+4,"text-anchor":"end","font-family":"IBM Plex Mono","font-size":10.5,"font-weight":600,fill:G}).textContent="+15 m";
+      // Objekt
+      if(kind==="turbine"){ // Windrad (Mast + 3 Rotorblätter)
+        add("rect",{x:x0-3,y:yTopObj,width:6,height:yBase-yTopObj,fill:"var(--terrain2)"});
+        add("circle",{cx:x0,cy:yTopObj,r:4,fill:"var(--terrain2)"});
+        [[0,-1],[0.87,0.5],[-0.87,0.5]].forEach(d=>add("line",{x1:x0,y1:yTopObj,x2:x0+d[0]*32,y2:yTopObj+d[1]*32,stroke:"var(--terrainEdge)","stroke-width":3,"stroke-linecap":"round"}));
+      } else { // Funkmast (mit rotem Blinklicht)
+        add("rect",{x:x0-4,y:yTopObj,width:8,height:yBase-yTopObj,rx:1,fill:"var(--terrain2)"});
+        add("line",{x1:x0,y1:yTopObj,x2:x0,y2:yTopObj-11,stroke:"var(--terrainEdge)","stroke-width":2});
+        add("circle",{cx:x0,cy:yTopObj-11,r:2.6,fill:"var(--z1)"});
+      }
+      // optionaler Kontrast-Hinweis am Fuß (z. B. „sonst 0 m")
+      if(note){ add("text",{x:x0,y:yBase+16,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":10,"font-weight":600,fill:"var(--z1)"}).textContent=note; }
+      // ✓-Drohne im Hüllraum (knapp unter der Spitze, grün erlaubt)
+      const dy=yOf(t+objH+8)-2;
+      drone(x0,dy,"var(--accent2)");
+      marker(x0+half+18,dy+2,"ok");
+    }
+    drawObstacle(cx-600, 120, "turbine", 48, null);              // Windrad in Zone 4 (über dem Zonendeckel)
+    drawObstacle(cx-440, 35,  "mast",    26, L.obstacleElse);    // Funkmast in rotem Zone-3-Bereich
+
+    // ---- Gebäude-Cluster in flachem Zone-3-Gelände (rechts): höchstes Gebäude im ±30-m-Umkreis = +15-m-Referenz ----
+    function drawBuildingCluster(xc, heights){
+      const G="#1a9850";
+      const t=terrain(xc), yBase=yOf(t), maxH=Math.max(...heights);
+      const yTopObj=yOf(t+maxH), yTopEnv=yOf(t+maxH+15), half=34;
+      add("rect",{x:xc-half,y:yTopEnv,width:half*2,height:yBase-yTopEnv,rx:10,fill:G,opacity:.14});
+      add("rect",{x:xc-half,y:yTopEnv,width:half*2,height:yBase-yTopEnv,rx:10,fill:"none",stroke:G,"stroke-width":2,"stroke-dasharray":"6 4",opacity:.92});
+      add("line",{x1:xc-half,y1:yTopEnv-9,x2:xc+half,y2:yTopEnv-9,stroke:G,"stroke-width":1.3,opacity:.85});
+      [xc-half,xc+half].forEach(xx=>add("line",{x1:xx,y1:yTopEnv-13,x2:xx,y2:yTopEnv-5,stroke:G,"stroke-width":1.3,opacity:.85}));
+      add("text",{x:xc,y:yTopEnv-17,"text-anchor":"middle","font-family":"IBM Plex Mono","font-size":10.5,"font-weight":600,fill:G}).textContent="±30 m";
+      // +15 m — gemessen vom höchsten Gebäude (rechts)
+      const dx=xc+half+9;
+      add("line",{x1:dx,y1:yTopObj,x2:dx,y2:yTopEnv,stroke:G,"stroke-width":1.5});
+      [yTopObj,yTopEnv].forEach(yy=>add("line",{x1:dx-4,y1:yy,x2:dx+4,y2:yy,stroke:G,"stroke-width":1.5}));
+      add("text",{x:dx+6,y:(yTopObj+yTopEnv)/2+4,"font-family":"IBM Plex Mono","font-size":10.5,"font-weight":600,fill:G}).textContent="+15 m";
+      // Gebäude (nebeneinander, unterschiedlich hoch) auf flachem Grund
+      const bw=14, gap=2, n=heights.length, totalW=n*bw+(n-1)*gap;
+      let bx=xc-totalW/2;
+      heights.forEach(h=>{
+        const yt=yOf(t+h);
+        add("rect",{x:bx,y:yt,width:bw,height:yBase-yt,fill:"var(--terrain2)",stroke:"var(--terrainEdge)","stroke-width":0.8});
+        for(let wy=yt+6; wy<yBase-5; wy+=8){ for(let wx=bx+3; wx<bx+bw-3; wx+=5){ add("rect",{x:wx,y:wy,width:2,height:3,fill:"#cfe0ee",opacity:.65}); } }
+        if(h===maxH){ add("circle",{cx:bx+bw/2,cy:yt,r:2.8,fill:G}); }   // Referenz: höchstes Gebäude
+        bx+=bw+gap;
+      });
+      // ✓-Drohne im Hüllraum (über dem höchsten Gebäude)
+      const dy=yOf(t+maxH+8)-2; drone(xc-8,dy,"var(--accent2)"); marker(xc+18,dy+2,"ok");
+    }
+    drawBuildingCluster(cx+400, [46,58,50]);   // 3 Gebäude in flacher Zone 3 (rechts); höchstes (58 m) = +15-m-Referenz
 
     const segs=[
       [0,cx-RCTR*PXKM,L.outside,false],
