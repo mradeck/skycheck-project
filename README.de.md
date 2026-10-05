@@ -27,7 +27,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.116.5
+📦 **Aktuelle Version:** v26.08.116.6
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.08.116.6 | 🇩🇪 **CTR-Höhenregeln-Seite: Galerie auf alle 24 CTR-D erweitert, nach DFS/DAS gruppiert + selbst-dokumentierendes Dateischema.** `ctr-hoehenregeln.html`. Die Höhengitter-Galerie deckt jetzt **alle 24 deutschen CTR-D** ab — die 6 fehlenden Flughäfen ergänzt: **Erfurt-Weimar (EDDE), München (EDDM)** (DFS) sowie **Dortmund (EDLW), Paderborn-Lippstadt (EDLP), Niederrhein/Weeze (EDLV), Mönchengladbach (EDLN)** (DAS). Die Galerie ist in zwei beschriftete Gruppen geteilt — **DFS-Flugplatzkontrolle · NfL 2026-1-3960 · 15 CTR-D** und **DAS-Flugplatzkontrolle · NfL 2026-1-3981 · 9 CTR-D**. Alle Galerie-Bilder auf ein selbst-dokumentierendes Schema umbenannt `hoehengrid_<nfl>_<dfs\|das>_<slug>_<icao>.webp` (18 bestehende per `git mv`, 6 neue konvertiert); `ports`-Array um NfL- + Behörden-Feld erweitert; Lead-Text 18 → 24. |
 | v26.08.116.5 | 🇩🇪 **CTR-Höhenregeln-Seite: zweite Allgemeinverfügung NfL 2026-1-3981 (DAS) + beide NfLs gemeinsam genannt.** `ctr-hoehenregeln.html` (DE+EN). Ergänzt **NfL 2026-1-3981** (CTRs mit DAS-Flugplatzkontrolle, DFS Aviation Services) als Gegenstück zur bestehenden **NfL 2026-1-3960** (DFS). Beide NfLs werden nun an jeder maßgeblichen Stelle **gemeinsam** zitiert (Eyebrow, Subtitle, Freigabe-Box, Genauigkeits-Hinweise, Footer, Meta-Description, Hindernis-Analyse-Link, Referenzliste). Neuer Subtitle-Satz macht den Gesamtumfang explizit: **dieselben Höhen gelten in allen 24 CTR-D — 15 mit DFS-, 9 mit DAS-Flugplatzkontrolle**; plus Lead-Satz zur Unterscheidung DFS/DAS (gleiche Regeln, andere zuständige Flugsicherungsstelle). Nur `ctr-hoehenregeln.html`; APP_VER-Bump. |
 | v26.08.116.4 | 🇩🇪 **CTR-Höhenregeln-Grafik: Hindernisregel + Weitere-Dokumente-Liste.** `ctr-hoehenregeln.html` (DE+EN). Die Querschnitts-SVG visualisiert jetzt die Hindernisregel (grüner ±30-m/+15-m-Hüllraum): Windrad (Zone 4, über dem Deckel), Funkmast (Zone 3, lokal erhöht → sonst 0 m/rot, „sonst = 0 m"), Gebäude-Cluster aus 3 Gebäuden auf flachem Zone-3-Plateau (höchstes im 30-m-Umkreis = +15-m-Referenz) — jeweils ✓-Drohne, plus ⚠-Drohne knapp außerhalb (>30 m). Neue Sektion „Weitere Dokumente" (`.reflist`) mit 3 neuen DFS-Referenzen (DFS-Neuregelung-PDF, DFS-AS-Kurzinfo-PDF, DFS-AS-Webseite) neben den bestehenden Kerndokumenten. |
 | v26.08.116.3 | 🇩🇪 **CTR-Höhenregeln-Link auf der Startseite.** Die Quellen-/Button-Reihe der Landing-Page (`.l-sources`) zeigt jetzt als erstes Element ein akzentuiert umrandetes Feature-Chip **„📐 CTR-Höhenregeln"** (relativer Link `ctr-hoehenregeln.html`, öffnet im neuen Tab). Neue CSS-Klasse `.l-src-feature` hebt es von den grauen Quellen-Chips ab. Nur Link, keine Logikänderung. |

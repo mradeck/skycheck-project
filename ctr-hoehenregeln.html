@@ -142,6 +142,8 @@
 
   /* --- Flughafen-Galerie --- */
   .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:6px}
+  .gal-grp{font-size:1.02rem;font-weight:700;margin:26px 0 2px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--accent)}
+  .gal-grp:first-of-type{margin-top:14px}
   figure.shot{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;
     overflow:hidden;box-shadow:var(--shadow);}
   figure.shot img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#0c141d}
@@ -268,8 +270,11 @@
   <!-- ============ GALERIE: Verkehrsflughäfen ============ -->
   <section class="block">
     <h2 data-i18n="h2g">Höhengitter deutscher Verkehrsflughäfen</h2>
-    <p class="lead" data-i18n-html="leadg">Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
-    <div class="gallery-grid" id="gallery"></div>
+    <p class="lead" data-i18n-html="leadg">Dieselbe Berechnung für alle <b>24 deutschen Verkehrsflughäfen mit Kontrollzone (CTR-D)</b> — 15 mit DFS-, 9 mit DAS-Flugplatzkontrolle. Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.</p>
+    <h3 class="gal-grp" data-i18n-html="galGrpDfs">DFS-Flugplatzkontrolle · NfL&nbsp;2026-1-3960 · 15 CTR-D</h3>
+    <div class="gallery-grid" id="gallery-dfs"></div>
+    <h3 class="gal-grp" data-i18n-html="galGrpDas">DAS-Flugplatzkontrolle · NfL&nbsp;2026-1-3981 · 9 CTR-D</h3>
+    <div class="gallery-grid" id="gallery-das"></div>
   </section>
 
   <!-- ============ GENAUIGKEIT ============ -->
@@ -397,7 +402,9 @@
       hcFormula:`max. Flughöhe (AGL) = min( Deckel über Grund , Flugplatzhöhe + Deckel − Geländehöhe ) − <span class="res">Sicherheitsreserve (≈ 5 m)</span>`,
       hcP2:`Deshalb kann ein Hügel mitten in <b>Zone 3</b> auf 0 m AGL fallen, während der Talgrund derselben Zone noch 45 m erlaubt. Die <b class="res" style="color:var(--z1)">Sicherheitsreserve (≈ 5 m)</b> deckt den Höhenfehler des Geländemodells ab — sie ist eine <b>Empfehlung, die das Live-Raster nicht automatisch abzieht</b>; <b class="res" style="color:var(--z1)">plane sie selbst ein</b>. Mehr dazu im Abschnitt <b>„Wie genau sind diese Höhenwerte?"</b> unten. Verbindlich bleiben stets <a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> und die <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> / <a href="${NFL_DAS}" target="_blank" rel="noopener"><b>2026-1-3981</b></a> (<a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">DFS-Info</a>); das Raster ist eine Näherung zur Orientierung.`,
       h2g:"Höhengitter deutscher Verkehrsflughäfen",
-      leadg:`Dieselbe Berechnung für 18 deutsche Verkehrsflughäfen mit Kontrollzone (CTR-D). Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.`,
+      leadg:`Dieselbe Berechnung für alle <b>24 deutschen Verkehrsflughäfen mit Kontrollzone (CTR-D)</b> — 15 mit DFS-, 9 mit DAS-Flugplatzkontrolle. Gut erkennbar: Je höher und bewegter das Gelände relativ zur Flugplatzhöhe, desto kleinräumiger und röter das Muster — flache Standorte (z.&nbsp;B. Bremen, Münster/Osnabrück) bleiben großflächig grün.`,
+      galGrpDfs:`DFS-Flugplatzkontrolle · NfL&nbsp;2026-1-3960 · 15 CTR-D`,
+      galGrpDas:`DAS-Flugplatzkontrolle (DFS Aviation Services) · NfL&nbsp;2026-1-3981 · 9 CTR-D`,
       galAlt:(city,icao)=>`Höhengitter der maximal erlaubten Drohnen-Flughöhen in der Kontrollzone ${city} (${icao})`,
       h2acc:"Wie genau sind diese Höhenwerte?",
       leadacc:`Das Höhengitter ist eine <b>Näherung zur Orientierung</b>, keine vermessungsgenaue Freigabehöhe. Drei Dinge bestimmen die Genauigkeit: das Geländemodell, seine Auflösung und wie SkyCheck rundet.`,
@@ -453,7 +460,9 @@
       hcFormula:`max. flight height (AGL) = min( cap above ground , aerodrome elevation + cap − terrain height ) − <span class="res">safety reserve (≈ 5 m)</span>`,
       hcP2:`That is why a hill in the middle of <b>Zone 3</b> can drop to 0 m AGL while the valley floor of the same zone still allows 45 m. The <b class="res" style="color:var(--z1)">safety reserve (≈ 5 m)</b> covers the height error of the terrain model — it is a <b>recommendation that the live grid does not subtract automatically</b>; <b class="res" style="color:var(--z1)">plan it in yourself</b>. More on this in the section <b>“How accurate are these height values?”</b> below. <a href="${DIPUL}" target="_blank" rel="noopener"><b>DiPUL</b></a> and <a href="${NFL}" target="_blank" rel="noopener"><b>NfL&nbsp;2026-1-3960</b></a> / <a href="${NFL_DAS}" target="_blank" rel="noopener"><b>2026-1-3981</b></a> (<a href="https://www.dipul.de/homepage/de/antraege-behoerdendienste/flugverkehrskontrollfreigabe/information-der-dfs-ueber-neue-verfahren-fuer-uas-fluege-in-kontrollzonen.pdf?cid=6s6" target="_blank" rel="noopener">DFS-Info</a>) always remain authoritative; the grid is an approximation for orientation.`,
       h2g:"Height grids of German airports",
-      leadg:`The same calculation for 18 German airports with a control zone (CTR-D). Clearly visible: the higher and more rugged the terrain relative to the aerodrome elevation, the more fine-grained and red the pattern — flat sites (e.g. Bremen, Münster/Osnabrück) stay largely green.`,
+      leadg:`The same calculation for all <b>24 German airports with a control zone (CTR-D)</b> — 15 under DFS, 9 under DAS aerodrome control. Clearly visible: the higher and more rugged the terrain relative to the aerodrome elevation, the more fine-grained and red the pattern — flat sites (e.g. Bremen, Münster/Osnabrück) stay largely green.`,
+      galGrpDfs:`DFS aerodrome control · NfL&nbsp;2026-1-3960 · 15 CTR-D`,
+      galGrpDas:`DAS aerodrome control (DFS Aviation Services) · NfL&nbsp;2026-1-3981 · 9 CTR-D`,
       galAlt:(city,icao)=>`Height grid of the maximum permitted drone flight heights in the ${city} control zone (${icao})`,
       h2acc:"How accurate are these height values?",
       leadacc:`The height grid is an <b>approximation for orientation</b>, not a survey-grade clearance height. Three things determine the accuracy: the terrain model, its resolution and how SkyCheck rounds.`,
@@ -714,36 +723,47 @@
   }
 
   // ==== Flughafen-Galerie ===================================================
+  // [slug, Stadt, ICAO, NfL, Behörde] — Dateischema: img/hoehengrid_<nfl>_<auth>_<slug>_<icao>.webp
   const ports=[
-    ["berlin-brandenburg","Berlin Brandenburg","EDDB"],
-    ["braunschweig-wolfsburg","Braunschweig-Wolfsburg","EDVE"],
-    ["bremen","Bremen","EDDW"],
-    ["dresden","Dresden","EDDC"],
-    ["duesseldorf","Düsseldorf","EDDL"],
-    ["frankfurt","Frankfurt Main","EDDF"],
-    ["friedrichshafen","Friedrichshafen","EDNY"],
-    ["hamburg","Hamburg","EDDH"],
-    ["hannover","Hannover","EDDV"],
-    ["karlsruhe-baden-baden","Karlsruhe/Baden-Baden","EDSB"],
-    ["koeln-bonn","Köln/Bonn","EDDK"],
-    ["lahr","Lahr","EDTL"],
-    ["leipzig-halle","Leipzig/Halle","EDDP"],
-    ["memmingen","Memmingen","EDJA"],
-    ["muenster-osnabrueck","Münster/Osnabrück","EDDG"],
-    ["nuernberg","Nürnberg","EDDN"],
-    ["saarbruecken","Saarbrücken","EDDR"],
-    ["stuttgart","Stuttgart","EDDS"],
+    // DFS-Flugplatzkontrolle — NfL 2026-1-3960 (15)
+    ["berlin-brandenburg","Berlin Brandenburg","EDDB","3960","dfs"],
+    ["bremen","Bremen","EDDW","3960","dfs"],
+    ["dresden","Dresden","EDDC","3960","dfs"],
+    ["duesseldorf","Düsseldorf","EDDL","3960","dfs"],
+    ["erfurt-weimar","Erfurt-Weimar","EDDE","3960","dfs"],
+    ["frankfurt","Frankfurt Main","EDDF","3960","dfs"],
+    ["hamburg","Hamburg","EDDH","3960","dfs"],
+    ["hannover","Hannover","EDDV","3960","dfs"],
+    ["koeln-bonn","Köln/Bonn","EDDK","3960","dfs"],
+    ["leipzig-halle","Leipzig/Halle","EDDP","3960","dfs"],
+    ["muenchen","München","EDDM","3960","dfs"],
+    ["muenster-osnabrueck","Münster/Osnabrück","EDDG","3960","dfs"],
+    ["nuernberg","Nürnberg","EDDN","3960","dfs"],
+    ["saarbruecken","Saarbrücken","EDDR","3960","dfs"],
+    ["stuttgart","Stuttgart","EDDS","3960","dfs"],
+    // DAS-Flugplatzkontrolle (DFS Aviation Services) — NfL 2026-1-3981 (9)
+    ["braunschweig-wolfsburg","Braunschweig-Wolfsburg","EDVE","3981","das"],
+    ["dortmund","Dortmund","EDLW","3981","das"],
+    ["friedrichshafen","Friedrichshafen","EDNY","3981","das"],
+    ["karlsruhe-baden-baden","Karlsruhe/Baden-Baden","EDSB","3981","das"],
+    ["lahr","Lahr","EDTL","3981","das"],
+    ["memmingen","Memmingen","EDJA","3981","das"],
+    ["moenchengladbach","Mönchengladbach","EDLN","3981","das"],
+    ["niederrhein-weeze","Niederrhein/Weeze","EDLV","3981","das"],
+    ["paderborn-lippstadt","Paderborn-Lippstadt","EDLP","3981","das"],
   ];
   function buildGallery(lang){
-    const g=document.getElementById("gallery"); g.innerHTML="";
     const altF=T[lang].galAlt;
-    ports.forEach(([slug,city,icao])=>{
-      const f=document.createElement("figure");f.className="shot";
-      f.innerHTML=`<img loading="lazy" decoding="async" width="1600" height="900"`+
-        ` src="img/hoehengrid-flughoehen-drohnen-${slug}.webp"`+
-        ` alt="${altF(city,icao)}">`+
-        `<figcaption><span class="city">${city}</span><span class="icao">${icao}</span></figcaption>`;
-      g.appendChild(f);
+    ["dfs","das"].forEach(auth=>{
+      const g=document.getElementById("gallery-"+auth); if(!g)return; g.innerHTML="";
+      ports.filter(p=>p[4]===auth).forEach(([slug,city,icao,nfl,au])=>{
+        const f=document.createElement("figure");f.className="shot";
+        f.innerHTML=`<img loading="lazy" decoding="async" width="1600" height="900"`+
+          ` src="img/hoehengrid_${nfl}_${au}_${slug}_${icao.toLowerCase()}.webp"`+
+          ` alt="${altF(city,icao)}">`+
+          `<figcaption><span class="city">${city}</span><span class="icao">${icao}</span></figcaption>`;
+        g.appendChild(f);
+      });
     });
   }
 

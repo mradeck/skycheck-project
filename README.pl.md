@@ -27,7 +27,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.116.5
+📦 **Aktualna wersja:** v26.08.116.6
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.08.116.6 | 🇩🇪 **Strona reguł wysokości CTR: galeria rozszerzona do wszystkich 24 CTR-D, pogrupowana wg DFS/DAS + samoopisujący się schemat nazw.** `ctr-hoehenregeln.html`. Galeria siatek wysokości obejmuje teraz **wszystkie 24 niemieckie CTR-D** — dodano 6 brakujących lotnisk: **Erfurt-Weimar (EDDE), München (EDDM)** (DFS) oraz **Dortmund (EDLW), Paderborn-Lippstadt (EDLP), Niederrhein/Weeze (EDLV), Mönchengladbach (EDLN)** (DAS). Galeria podzielona na dwie opisane grupy — **kontrola DFS · NfL 2026-1-3960 · 15 CTR-D** i **kontrola DAS · NfL 2026-1-3981 · 9 CTR-D**. Wszystkie obrazy przemianowane na samoopisujący się schemat `hoehengrid_<nfl>_<dfs\|das>_<slug>_<icao>.webp` (18 istniejących przez `git mv`, 6 nowych skonwertowanych); tablica `ports` otrzymała pola NfL + organ; tekst wprowadzający 18 → 24. |
 | v26.08.116.5 | 🇩🇪 **Strona reguł wysokości CTR: druga decyzja ogólna NfL 2026-1-3981 (DAS) + obie NfL podawane razem.** `ctr-hoehenregeln.html` (DE+EN). Dodaje **NfL 2026-1-3981** (CTR z kontrolą lotniska DAS / DFS Aviation Services) jako odpowiednik istniejącej **NfL 2026-1-3960** (DFS). Obie NfL są teraz podawane **razem** w każdym miejscu normatywnym (eyebrow, podtytuł, ramka zezwolenia, uwagi o dokładności, stopka, meta, link analizy przeszkód, lista odniesień). Nowy wiersz podtytułu: **te same wysokości obowiązują we wszystkich 24 CTR-D — 15 z kontrolą DFS, 9 z kontrolą DAS**; plus zdanie wyjaśniające DFS vs DAS (te same zasady, inna odpowiedzialna jednostka ATC). Tylko `ctr-hoehenregeln.html`; podbicie APP_VER. |
 | v26.08.116.4 | 🇩🇪 **Grafika reguł wysokości CTR: reguła przeszkód + lista dokumentów.** `ctr-hoehenregeln.html` (DE+EN). Przekrój SVG wizualizuje teraz regułę przeszkód (zielona otoczka ±30 m / +15 m): turbina wiatrowa (strefa 4, powyżej pułapu), maszt radiowy (strefa 3, lokalnie podwyższony → inaczej 0 m/czerwony), oraz zespół 3 budynków na płaskim plateau w strefie 3, gdzie najwyższy w promieniu 30 m wyznacza odniesienie +15 m — każdy z dronem ✓, plus dron ⚠ tuż poza (>30 m). Nowa sekcja „Weitere Dokumente" (`.reflist`) z 3 nowymi odniesieniami DFS (PDF regulacji DFS, PDF krótkiej informacji DFS-AS, strona WWW DFS-AS) obok istniejących dokumentów podstawowych. |
 | v26.08.116.3 | 🇩🇪 **Link do reguł wysokości CTR na stronie startowej.** Rząd źródeł/przycisków na stronie startowej (`.l-sources`) pokazuje teraz jako pierwszy element wyróżniony chip funkcji z akcentowaną ramką **„📐 CTR-Höhenregeln"** (link względny `ctr-hoehenregeln.html`, otwiera nową kartę). Nowa klasa CSS `.l-src-feature` wyróżnia go spośród szarych chipów źródeł. Tylko link, bez zmian logiki. |
