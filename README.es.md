@@ -27,7 +27,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 > Los nueve son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v26.08.116.4
+📦 **Versión actual:** v26.08.116.5
 
 ---
 
@@ -206,6 +206,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.08.116.5 | 🇩🇪 **Página de reglas de altura CTR: segunda disposición general NfL 2026-1-3981 (DAS) + ambas NfL citadas juntas.** `ctr-hoehenregeln.html` (DE+EN). Añade **NfL 2026-1-3981** (CTR con control de aeródromo DAS / DFS Aviation Services) como contrapartida de la **NfL 2026-1-3960** (DFS) existente. Ambas NfL se citan ahora **juntas** en cada punto normativo (eyebrow, subtítulo, caja de autorización, notas de precisión, pie, meta, enlace de análisis de obstáculos, lista de referencias). Nueva línea del subtítulo: **las mismas alturas rigen en los 24 CTR-D — 15 con control DFS, 9 con control DAS**; más una frase que explica DFS frente a DAS (mismas reglas, distinta dependencia ATC). Solo `ctr-hoehenregeln.html`; subida de APP_VER. |
 | v26.08.116.4 | 🇩🇪 **Gráfico de reglas de altura CTR: regla de obstáculos + lista de documentos.** `ctr-hoehenregeln.html` (DE+EN). La sección transversal SVG visualiza ahora la regla de obstáculos (envolvente verde ±30 m / +15 m): aerogenerador (zona 4, por encima del techo), mástil de radio (zona 3, elevado localmente → de lo contrario 0 m/rojo), y un grupo de 3 edificios sobre una meseta plana en zona 3 donde el más alto en un radio de 30 m fija la referencia +15 m — cada uno con un dron ✓, más un dron ⚠ justo fuera (>30 m). Nueva sección «Weitere Dokumente» (`.reflist`) con 3 nuevas referencias de DFS (PDF de normativa DFS, PDF de info breve DFS-AS, página web DFS-AS) junto a los documentos principales existentes. |
 | v26.08.116.3 | 🇩🇪 **Enlace a las reglas de altura CTR en la página de inicio.** La fila de fuentes/botones de la página de inicio (`.l-sources`) muestra ahora como primer elemento un chip de función con borde de acento **«📐 CTR-Höhenregeln»** (enlace relativo `ctr-hoehenregeln.html`, abre en pestaña nueva). Nueva clase CSS `.l-src-feature` que lo distingue de los chips de fuente grises. Solo enlace, sin cambios de lógica. |
 | v26.08.116.2 | 🇩🇪 **Página de reglas de altura CTR: aclaración de la regla de obstáculos + referencia info-procedimiento DFS.** `ctr-hoehenregeln.html` (DE+EN), puramente aditivo: (a) nuevo recuadro «Obstacle rule: no blanket +15 m» (`obstacleNote`) — la proximidad a un obstáculo (≤ 30 m lateralmente, ≤ 15 m por encima) es el único caso para superar los techos de zona, y no otorga derecho a volar ≥ 15 m sobre el suelo en todas partes (el terreno no es un obstáculo); enlaza un documento de análisis jurídico (Google Doc); (b) tarjeta de regla «hindernisnah» precisada; (c) **PDF info-procedimiento de DFS** (dipul.de) añadido como enlace «(DFS-Info)» en los 15 hiperenlaces de la NfL (HTML estático + i18n DE/EN). |

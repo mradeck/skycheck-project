@@ -27,7 +27,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.116.4
+📦 **Current version:** v26.08.116.5
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -221,6 +221,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.08.116.5 | 🇩🇪 **CTR height-rules page: second general ruling NfL 2026-1-3981 (DAS) + both rulings cited together.** `ctr-hoehenregeln.html` (DE+EN). Adds **NfL 2026-1-3981** (CTRs under DFS Aviation Services / DAS aerodrome control) as the counterpart to the existing **NfL 2026-1-3960** (DFS). Both rulings are now cited **together** at every authoritative point (eyebrow, subtitle, clearance box, accuracy notes, footer, meta description, obstacle-analysis link, references list). New subtitle line makes the full scope explicit: **the same heights apply across all 24 CTR-D — 15 under DFS, 9 under DAS aerodrome control**; plus a lead sentence explaining DFS vs DAS (same rules, different responsible ATC unit). Only `ctr-hoehenregeln.html`; APP_VER bump. |
 | v26.08.116.4 | 🇩🇪 **CTR height-rules graphic: obstacle rule + further-documents list.** `ctr-hoehenregeln.html` (DE+EN). The cross-section SVG now visualises the obstacle rule (±30 m / +15 m green envelope): a wind turbine (Zone 4, above the cap), a radio mast (Zone 3, in a locally raised spot that would otherwise be 0 m / red → "sonst = 0 m"), and a cluster of 3 buildings on a flat Zone-3 plateau where the tallest within 30 m sets the +15 m reference — each with a ✓ drone, plus a ⚠ drone just outside (>30 m). New "Further documents" section (`.reflist`) with 3 new DFS references (DFS rule PDF, DFS-AS brief-info PDF, DFS-AS web page) alongside the existing core documents. |
 | v26.08.116.3 | 🇩🇪 **CTR height-rules link on the start page.** The landing-page source/button row (`.l-sources`) now shows an accent-outlined feature chip **"📐 CTR-Höhenregeln"** as its first item (relative link `ctr-hoehenregeln.html`, opens in a new tab). New `.l-src-feature` CSS class sets it apart from the grey source chips. Link only, no logic change. |
 | v26.08.116.2 | 🇩🇪 **CTR height-rules page: obstacle-rule clarification + DFS procedure-info reference.** `ctr-hoehenregeln.html` (DE+EN), purely additive: (a) a new note box "Obstacle rule: no blanket +15 m" (`obstacleNote`) — obstacle proximity (≤ 30 m laterally, ≤ 15 m above an obstacle) is the only case for exceeding the zone heights, and it grants no right to fly ≥ 15 m above ground everywhere (terrain is not an obstacle); links a legal analysis document (Google Doc); (b) the "near obstacles" rule card made more precise; (c) the **DFS procedure-info PDF** (dipul.de) appended as a "(DFS-Info)" link at all 15 NfL hyperlinks (static HTML + i18n DE/EN). |
