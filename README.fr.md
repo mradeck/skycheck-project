@@ -30,7 +30,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 
 > Les douze sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
-📦 **Version actuelle :** v26.10.117.0
+📦 **Version actuelle :** v26.10.117.1
 
 ---
 
@@ -92,7 +92,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 ## Architecture
 
 ```
-skycheck.html               ← application complète (HTML + CSS + JS, ~5,2k lignes)
+skycheck.html               ← application complète (HTML + CSS + JS, ~9,4k lignes)
 manifest.json               ← manifeste Web App PWA
 sw.js                       ← Service Worker (mise en cache)
 icon-192x192.png            ← icône de l'app (petite)
@@ -105,15 +105,24 @@ netlify/
     gfz.js                  ← proxy GFZ Potsdam pour Kp/Hp30
     zones-fr.js             ← zones UAS France (lit des tuiles spatiales de 2°, filtré par bbox)
     zones-at.js             ← zones UAS Autriche (lit data/uas-zones-at.json ; ?all=1 = overlay complet)
+    zones-ed269.js          ← zones UAS LU/NO/EE (lit data/uas-zones-<cc>.json ; test de surface exact ; ?all=1 = overlay complet)
+    notam-no.js             ← Norvège : proxy en direct des zones NOTAM temporaires (dronesoner.no, uniquement au clic)
 data/
   uas-zones-fr.json         ← zones UAS France ED-269 (snapshot mensuel, remplaçable)
   fr-zones-tiles/           ← index spatial généré pour la fonction Netlify
   context/fr/               ← tuiles viewport groupées des quatre couches de contexte France
   uas-zones-at.json         ← zones UAS Autriche ED-269 (286 zones, mise à jour automatique)
   uas-zones-at.version      ← marqueur de la dernière version Austro Control importée (idempotence)
+  uas-zones-{lu,no,ee}.json ← zones UAS ED-269 Luxembourg / Norvège / Estonie (snapshots hebdomadaires)
+  dipul-airac/              ← couches AIRAC de trafic aérien DiPUL extraites (contrôle hebdomadaire)
+scripts/
+  build-eu-zones.mjs        ← génère les snapshots ED-269 LU/NO/EE à partir des sources officielles
+tests/                      ← tests Node (`node --test "tests/*.test.mjs"`)
 .github/
   workflows/
     update-at-zones.yml     ← tâche mensuelle : récupère le dernier ED-269 Austro Control → commit du fichier de données
+    update-eu-zones.yml     ← tâche hebdomadaire (lundi) : met à jour les snapshots ED-269 LU/NO/EE → commit des fichiers de données
+    update-de-airac.yml     ← tâche hebdomadaire : contrôle l'offre AIRAC de Mobilithek → extrait les couches de trafic aérien DiPUL
 redirect.html               ← page de redirection optionnelle
 ```
 
@@ -132,8 +141,13 @@ SkyCheck utilise un **pattern d'adaptateur** pour les sources de géozones par p
 | 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | Tuiles WMS | API REST **Identify** ArcGIS | service en direct (CORS ouvert) — **aucune fonction, aucun fichier, aucun workflow** |
 | 🇩🇰 **DK** | Trafikstyrelsen ArcGIS FeatureServer | polygones vectoriels côté client (~870, codés par couleur) | requête ArcGIS (bbox) | service en direct (CORS ouvert) — **aucune fonction, aucun fichier, aucun workflow** |
 | 🇮🇪 **IE** | EASA Common Repository `ie_geozones` | polygones vectoriels côté client (76) | requête ArcGIS (bbox) | service en direct (CORS ouvert, données EASA **préliminaires**) |
+| 🇳🇱 **NL** | EASA Common Repository `Netherlands_ED318` | polygones vectoriels côté client (~162) | requête ArcGIS (bbox) | service en direct (CORS ouvert) — **aucune fonction, aucun fichier, aucun workflow** |
+| 🇵🇹 **PT** | EASA Common Repository / ANAC `Portugal_Geo_Zones_Polygons` | polygones vectoriels côté client (~314) | requête ArcGIS (bbox) | service en direct (CORS ouvert) — **aucune fonction, aucun fichier, aucun workflow** |
+| 🇱🇺 **LU** | DAC Luxembourg ED-269 | toutes les zones dessinées côté client (43) | `zones-ed269.js` (test de surface exact) | `data/uas-zones-lu.json` — **mise à jour hebdomadaire automatique** via GitHub Actions (`update-eu-zones.yml`) |
+| 🇳🇴 **NO** | Luftfartstilsynet / dronesoner.no ED-269 | toutes les zones dessinées côté client (1390) | `zones-ed269.js` (test de surface exact) | `data/uas-zones-no.json` — **mise à jour hebdomadaire automatique** via GitHub Actions (`update-eu-zones.yml`) ; zones NOTAM en direct au clic (`notam-no.js`) |
+| 🇪🇪 **EE** | EANS ED-269 | toutes les zones dessinées côté client (241) | `zones-ed269.js` (test de surface exact) | `data/uas-zones-ee.json` — **mise à jour hebdomadaire automatique** via GitHub Actions (`update-eu-zones.yml`) ; les zones à court terme peuvent dater de 7 jours |
 
-Trois styles d'intégration : **WMS + requête ponctuelle** (DE, CH, ES — les services officiels en direct rendent l'ensemble du pays et répondent directement aux requêtes ponctuelles), **vecteur ArcGIS côté client** (DK, IE — GeoJSON récupéré en direct depuis un ArcGIS FeatureServer, dessiné en polygones codés par couleur) et **fichier ED-269 hébergé + fonction Netlify** (FR, AT — un jeu de données JSON dans le dépôt, filtré par bbox côté serveur ; l'AT se met à jour lui-même chaque mois).
+Trois styles d'intégration : **WMS + requête ponctuelle** (DE, CH, ES — les services officiels en direct rendent l'ensemble du pays et répondent directement aux requêtes ponctuelles), **vecteur ArcGIS côté client** (DK, IE, NL, PT — GeoJSON récupéré en direct depuis un ArcGIS FeatureServer, dessiné en polygones codés par couleur) et **fichier ED-269 hébergé + fonction Netlify** (FR, AT, LU, NO, EE — un jeu de données JSON dans le dépôt, filtré côté serveur ; l'AT se met à jour lui-même chaque mois, LU/NO/EE chaque semaine).
 
 ### Combien de géozones par pays ?
 
@@ -212,6 +226,7 @@ netlify dev
 
 | Version | Changement |
 |---|---|
+| v26.10.117.1 | 🛟 **Panne des données de zones désormais visible.** Si la recherche de géozones échoue (erreur HTTP, délai dépassé, hors ligne), SkyCheck affiche maintenant **« Données de zones indisponibles »** avec un feu **jaune** au lieu de « aucune restriction » en vert — dans les douze pays. La liste des zones affiche un encadré avec un lien vers la source officielle ; le panneau de la carte affiche une entrée grise. Une requête réussie sans résultat reste verte ; les solutions de repli par fichiers locaux sont conservées. Non couvert : la superposition cartographique de tout le pays. 96 tests Node. |
 | v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxembourg, Norvège et Estonie.** Trois nouvelles variantes pays (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) avec les géozones officielles ED-269 sous forme d'instantanés actualisés chaque semaine (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 zones ; sources : DAC Luxembourg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). Nouvelle fonction Netlify `zones-ed269` avec test de surface exact (point dans le polygone ou arête dans le rayon de recherche). Les zones dont toutes les fenêtres d'activation sont terminées restent visibles comme « actuellement inactives » (jaune au lieu de rouge). **Norvège :** les zones de restriction temporaires NOTAM sont chargées en direct au clic via la nouvelle fonction `notam-no`, tracées en rouge pointillé et prises en compte pour le feu tricolore pendant 5 minutes. **Estonie :** une indication fixe précise que les zones à court terme peuvent avoir jusqu'à 7 jours. Les noms de zones sont désormais échappés en HTML dans la bannière d'état et le panneau de carte. **L'interface démarre désormais par défaut en mode clair** (un choix mémorisé, y compris le mode sombre, est respecté). 39 tests Node. |
 | v26.08.116.8 | 🌍 **Page des règles d'altitude CTR : 5 langues de plus (FR/ES/IT/NL/PL), sélecteur de langue à drapeaux SVG + refonte du graphique.** `ctr-hoehenregeln.html`. **(1) Langues :** désormais en **7 langues** — allemand, anglais et les nouveaux **français, espagnol, italien, néerlandais, polonais** (i18n complète de tous les textes, blocs HTML, tableaux, libellés du graphique SVG et cartes). **(2) Sélecteur :** le bouton texte DE/EN a été remplacé par un **menu déroulant à drapeaux SVG** — affiche le drapeau actif, clic pour choisir ; drapeaux SVG robustes ; détection via `?lang=`, localStorage et `navigator.language`. **(3) Graphique :** la coupe a été retravaillée — la colline de la zone 2 devient un plateau plat de faible hauteur, l'aérodrome repose désormais sur sa propre altitude de référence, **barres de hauteur de la zone 1 supprimées** (pas de clairance générale → pas de règle de hauteur), ligne de référence flottante déroutante supprimée, ligne de plafond « plafond = alt. aérodrome + 25 m » ajoutée, groupe de bâtiments redessiné en silhouette urbaine plus large à cheval sur la limite zone 2/3, et mention « à l'échelle » trompeuse du repère 800 m retirée. |
 | v26.08.116.7 | 🇩🇪 **Page des règles d'altitude CTR : ajout de la NfL 2026-1-3959 (principes du BMV) — conditions générales + annotation 800 m de visibilité.** `ctr-hoehenregeln.html` (DE+EN). Ajoute la NfL **2026-1-3959** supérieure (principes du BMV pour UAS en espace aérien classe D, base de 3960/3981) comme première référence. Nouvelle **encadré « Autres conditions »** reprenant les conditions générales de la 3959, en tête un **avertissement see-and-avoid** mis en évidence : l'ATC **n'assure aucune séparation** (ni séparation de turbulence de sillage) ni **information de trafic** — l'évitement des collisions incombe uniquement au télépilote. En outre : **visibilité minimale ≥ 800 m** (sauf à proximité d'obstacles / sous autorisation individuelle), vols autonomes interdits, BVLOS et essaim autorisés. La coupe SVG reçoit une **annotation à l'échelle « Visibilité ≥ 800 m »** (ciel en haut à gauche, à l'écart des scènes d'obstacles). Uniquement `ctr-hoehenregeln.html` ; incrément d'APP_VER. |
