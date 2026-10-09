@@ -351,9 +351,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 ---
 
-## 8. Luftraumzonen Luxemburg, Norwegen, Estland — `zones-ed269` (SkyCheck-Netlify-Function)
+## 8. Luftraumzonen Luxemburg, Norwegen, Estland, Schweden, Belgien — `zones-ed269` (SkyCheck-Netlify-Function)
 
-**Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`) und **Estland** (`ee`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS).
+**Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`), **Estland** (`ee`), **Schweden** (`se`) und **Belgien** (`be`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS, LFV / Transportstyrelsen CC BY 4.0, BCAA / skeyes Droneguide ohne vom Herausgeber angegebene Lizenz). Snapshot-Größen Stand 2026-10-09: LU 43, NO 1390, EE 241, SE 390, BE 582 Zonen.
+
+**Schweden:** sieben LFV-WFS-Layer (`mais:RSTA`, `DAIM_TOPO:RWY5K`, `mais:CTR`, `mais:ATZ`, `mais:TIZ`, `DAIM_TOPO:HKP1K`, `mais:DNGA`) plus die ED-318-Zonendatei der Transportstyrelsen (68 UAS-Zonen mit ihren Gültigkeitsfenstern). Einstufung: Restriktionsgebiete (ab Boden) und 5-km-Flughafenbereiche = `REQ_AUTHORISATION`; Kontrollzonen, Verkehrs(informations)zonen, 1-km-Heliport-Bereiche und Gefahrengebiete = `CONDITIONAL`; die UAS-Zonen wie in der Datei angegeben.
+
+**Belgien:** Droneguide-WFS (skeyes, im Auftrag der BCAA). Der Snapshot enthält weder Welt-Zeitzonen-Polygone noch NOTAM- und temporäre Flugverbotszonen (die kommen live über `notam-be`) und lässt Zonen weg, deren Untergrenze über 120 m AGL liegt (wie die Standardansicht der amtlichen Karte). Fehlt der Text der Quelle, dient der lesbare Zonenart-Code (z. B. `CIV HELISTRIP`) als Beschreibung. Die Weiterverwendung stützt sich auf die dokumentierte Auskunft der BCAA (Az. G26-187 vom 2026-09-16, wiedergegeben in github.com/CallMarcus/dji-drone-metadata-embedder/issues/562); die BCAA empfiehlt vier Hinweise, die die App dauerhaft unter der Zonenliste zeigt.
 
 **Basis-URL:** `/.netlify/functions/zones-ed269` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *` bei HTTP 200)
 
@@ -362,15 +366,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 ### Endpunkt
 
 ```
-GET /.netlify/functions/zones-ed269?country={lu|no|ee}&lat={lat}&lon={lon}&radius={m}&lang={xx}
-GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
+GET /.netlify/functions/zones-ed269?country={lu|no|ee|se|be}&lat={lat}&lon={lon}&radius={m}&lang={xx}
+GET /.netlify/functions/zones-ed269?country={lu|no|ee|se|be}&all=1
 ```
 
 **Parameter:**
 
 | Parameter | Pflicht | Beschreibung |
 |-----------|---------|--------------|
-| `country` | ja      | `lu`, `no` oder `ee`; alles andere → HTTP 400 |
+| `country` | ja      | `lu`, `no`, `ee`, `se` oder `be`; alles andere → HTTP 400 |
 | `lat`     | ja (Punktabfrage) | Breitengrad, −90 … 90 |
 | `lon`     | ja (Punktabfrage) | Längengrad, −180 … 180 |
 | `radius`  | nein    | Suchradius in Metern, auf 1 … 5000 begrenzt; Standard 100 (auch bei ungültigem Wert) |
@@ -413,7 +417,7 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
 | `desc`     | Beschreibung in der angeforderten Sprache |
 | `color`    | Anzeigefarbe: `PROHIBITED` `#ef4444`, `REQ_AUTHORISATION` `#f59e0b`, `CONDITIONAL` `#f97316`, `NO_RESTRICTION` `#3b82f6` (blau), sonst `#64748b` |
 | `geometry` | Array aus `{type:"Polygon", coordinates}` oder `{type:"Circle", center:[lon,lat], radius}` (Meter); Koordinaten immer `[lon, lat]` |
-| `inactive` | Nur vorhanden, wenn `true`: Alle Aktivierungsfenster der Zone sind abgelaufen. Die Zone bleibt sichtbar, `desc` beginnt dann mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“ und die Ampel wird gelb statt rot; Banner und Karten-Panel kennzeichnen die Zone als „derzeit inaktiv“ |
+| `inactive` | Nur vorhanden, wenn `true`: Jedes Aktivierungsfenster der Zone ist abgelaufen oder hat noch nicht begonnen. Die Zone bleibt sichtbar; `desc` beginnt bei abgelaufenen Fenstern mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“, bei künftigen mit „Not yet active — starts <YYYY-MM-DD>. May change — check the official source.“ Die Ampel wird gelb statt rot; Banner und Karten-Panel kennzeichnen die Zone als „derzeit inaktiv“. Ein laufendes Fenster, eines ohne Grenzen oder mit unlesbaren Daten macht die Zone aktiv |
 
 **Antwort mit `all=1`:** `{ "country": "LU", "all": true, "zones": [...] }`. Jede Zone enthält hier nur `name`, `type`, `color`, `geometry` sowie ggf. `inactive`.
 
@@ -423,7 +427,7 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
 
 | HTTP | Body (Text) | Ursache |
 |------|-------------|---------|
-| 400  | `Unknown country` | `country` fehlt oder ist nicht `lu`/`no`/`ee` |
+| 400  | `Unknown country` | `country` fehlt oder ist nicht `lu`/`no`/`ee`/`se`/`be` |
 | 400  | `Missing or invalid lat/lon` | Punktabfrage ohne gültige Koordinaten |
 | 500  | `Data file unavailable` | Snapshot `data/uas-zones-<cc>.json` fehlt oder ist nicht lesbar |
 
@@ -489,6 +493,135 @@ GET /.netlify/functions/notam-no
 
 ---
 
+## 10. Schwedische NOTAM- und SUP-Gebiete — `notam-se` (SkyCheck-Netlify-Function)
+
+**Zweck:** Befristete Restriktionsgebiete für Schweden als Live-Proxy für den LFV-GeoServer (`daim.lfv.se`). Diese Gebiete sind **nicht** im Snapshot enthalten. Der Upstream sendet keinen CORS-Header; die Function wird nur auf **Nutzerklick** aufgerufen („NOTAM-Sperrgebiete laden“).
+
+**Upstream (zwei WFS-Abrufe, parallel):**
+- `dynais:NOTAM` mit dem Filter der amtlichen Drönarkartan `(CODE23 ilike 'R%' OR CODE23 ilike 'W%') AND CODE45 <> 'TT'`; zusätzlich werden nur Gebiete ab Boden (`LOWER = 0`) übernommen.
+- `DAIM_TOPO:SUP` (AIP SUP): nur aktuell gültige Gebiete (`FROM` ≤ jetzt ≤ `TO`, unlesbare Grenzen blenden nicht aus), deren Untergrenze am Boden oder höchstens bei 120 m (400 ft) liegt; Flugflächen und höhere Untergrenzen entfallen.
+
+Lizenz der Daten: LFV / Transportstyrelsen, CC BY 4.0. **Basis-URL:** `/.netlify/functions/notam-se` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *`)
+
+**Kein API-Key erforderlich · kostenlos**
+
+### Endpunkt
+
+```
+GET /.netlify/functions/notam-se
+```
+
+**Keine Parameter.** Der Upstream-Abruf hat einen Timeout von 12 s. Erfolgreiche Antworten werden 300 s gecacht, Fehlerantworten nicht (`no-store`).
+
+**Antwort (gekürzt):**
+
+```json
+{
+  "country": "SE",
+  "fetchedAt": "2026-10-09T10:00:00.000Z",
+  "zones": [
+    {
+      "name": "NOTAM A1234/26",
+      "type": "PROHIBITED",
+      "lower": "GND",
+      "upper": "FL100",
+      "legal": "NOTAM",
+      "legalUrl": "https://dronechart.lfv.se/",
+      "desc": "Valid 2026-10-09 06:00 – 2026-10-09 18:00 UTC. Beispieltext",
+      "color": "#ef4444",
+      "geometry": [
+        { "type": "Polygon", "coordinates": [[[17.90, 59.60], [17.95, 59.60], [17.95, 59.65], [17.90, 59.60]]] }
+      ],
+      "notam": true
+    }
+  ]
+}
+```
+
+**Hinweise:**
+- Jede Zone trägt `notam: true`. Name der NOTAM-Gebiete: `NOTAM <SERIES><NO>/<YEAR>`; Name der SUP-Gebiete: `<DESIG> <NAME>` (`legal`: `AIP SUP`).
+- Einstufung der NOTAM-Gebiete nach `CODE23`: `RP`/`RR`/`RT` = `PROHIBITED` (rot `#ef4444`); `RD`, `W…` und sonstige `R…` = `CONDITIONAL` (orange `#f97316`). SUP-Gebiete sind `PROHIBITED`.
+- `desc` beginnt mit der Gültigkeit („Valid <von> – <bis> UTC.“, ggf. „Schedule: <Zeitplan>.“), danach folgt der Beschreibungstext. Der Text wird **nicht** ausgewertet: Ein NOTAM, das eine Aufhebung ankündigt, erscheint weiter als aktiv; Zeitpläne innerhalb des Gültigkeitsfensters (Wochentage, Uhrzeiten) werden nicht geprüft.
+- NOTAM-Gebiete, deren Gültigkeit noch nicht begonnen hat, kommen als `type: "TEMPORARY_INACTIVE"` (grau `#64748b`) mit `inactive: true`; `desc` beginnt mit „Not yet active — starts <YYYY-MM-DD>.“ Abgelaufene Gebiete entfallen.
+- Nur `Polygon` und `MultiPolygon` werden übernommen (MultiPolygon wird zu mehreren Polygonen).
+- `fetchedAt` ist der Abrufzeitpunkt (ISO 8601, UTC); die Client-App wertet geladene Daten 5 Minuten lang für die Ampel aus.
+- Scheitert einer der beiden Abrufe, gibt es **kein Teilergebnis**, sondern HTTP 502.
+
+**Fehlercodes:** Alle Fehler kommen als **HTTP 502** mit JSON `{ "error": "…" }`:
+
+| `error` | Ursache |
+|---------|---------|
+| `Upstream HTTP <Status>` | daim.lfv.se antwortet mit Fehlercode |
+| `Upstream body unreadable` | Antwortkörper nicht lesbar |
+| `Upstream timeout` | Keine vollständige Antwort innerhalb von 12 s |
+| `Upstream unreachable` | Verbindungsfehler |
+| `Upstream returned invalid JSON` | Upstream-Antwort ist kein gültiges JSON |
+| `Upstream returned no feature list` | JSON ohne `features`-Liste |
+
+---
+
+## 11. Belgische NOTAM-Zonen und temporäre Flugverbotszonen — `notam-be` (SkyCheck-Netlify-Function)
+
+**Zweck:** Befristete Gebiete für Belgien als Live-Proxy für den Droneguide-WFS (`map.droneguide.be`, skeyes im Auftrag der BCAA). Diese Zonen sind **nicht** im Snapshot enthalten. Der Upstream sendet keinen CORS-Header; die Function wird nur auf **Nutzerklick** aufgerufen.
+
+**Upstream:** `https://map.droneguide.be/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=geo_zone_fast&srsName=EPSG:4326&outputFormat=application/json&cql_filter=type_code IN ('NOTAM','TEMPORARY-NO-FLY-ZONE')`. **Jede** Abfrage an diesen Layer muss einen `cql_filter` tragen: Ungefiltert enthält er rund 149 MB Welt-Zeitzonen-Polygone. Zonen, deren Untergrenze über 120 m AGL liegt, entfallen (wie in der Standardansicht der amtlichen Karte). Lizenz: vom Herausgeber nicht angegeben (Weiterverwendung laut BCAA-Auskunft Az. G26-187).
+
+**Basis-URL:** `/.netlify/functions/notam-be` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *`)
+
+**Kein API-Key erforderlich · kostenlos**
+
+### Endpunkt
+
+```
+GET /.netlify/functions/notam-be
+```
+
+**Keine Parameter.** Der Upstream-Abruf hat einen Timeout von 12 s. Erfolgreiche Antworten werden 300 s gecacht, Fehlerantworten nicht (`no-store`).
+
+**Antwort (gekürzt):**
+
+```json
+{
+  "country": "BE",
+  "fetchedAt": "2026-10-09T10:00:00.000Z",
+  "zones": [
+    {
+      "name": "Beispielzone",
+      "type": "PROHIBITED",
+      "lower": "GND",
+      "upper": "120 m AGL",
+      "legal": "BCAA / skeyes (Droneguide)",
+      "legalUrl": "https://map.droneguide.be/",
+      "desc": "Beispielbeschreibung",
+      "color": "#ef4444",
+      "geometry": [
+        { "type": "Polygon", "coordinates": [[[4.48, 50.90], [4.50, 50.90], [4.50, 50.92], [4.48, 50.90]]] }
+      ],
+      "notam": true
+    }
+  ]
+}
+```
+
+**Hinweise:**
+- Jede Zone trägt `notam: true`. `type` ist der Wert `restriction` der Quelle (`PROHIBITED`, `REQ_AUTHORISATION` oder `CONDITIONAL`); fehlt er oder ist unbekannt, gilt `PROHIBITED`. Die Farbe folgt dem Typ (rot, bernstein, orange).
+- Name und Beschreibung stehen in der Quelle teils als JSON-Text mit Sprachen; gewählt wird `en`, sonst `nl`, `fr`, sonst der erste Wert, sonst der Klartext.
+- Höhen kommen aus den Feldern `lower_limit_altitude_meter_agl` / `upper_limit_altitude_meter_agl` (gerundet, `GND` bei 0, fehlende Untergrenze zählt als 0).
+- Nur `Polygon` und `MultiPolygon` werden übernommen. `fetchedAt` ist der Abrufzeitpunkt (ISO 8601, UTC); die Client-App wertet geladene Daten 5 Minuten lang für die Ampel aus.
+
+**Fehlercodes:** Alle Fehler kommen als **HTTP 502** mit JSON `{ "error": "…" }`:
+
+| `error` | Ursache |
+|---------|---------|
+| `Upstream HTTP <Status>` | map.droneguide.be antwortet mit Fehlercode |
+| `Upstream body unreadable` | Antwortkörper nicht lesbar |
+| `Upstream timeout` | Keine Antwort innerhalb von 12 s |
+| `Upstream unreachable` | Verbindungsfehler |
+| `Upstream returned invalid JSON` | Upstream-Antwort ist kein gültiges JSON |
+| `Upstream returned no feature list` | JSON ohne `features`-Liste |
+
+---
+
 ## Gesamtübersicht
 
 | Dienst          | URL-Basis                              | CORS | Auth | Limit     |
@@ -505,8 +638,12 @@ GET /.netlify/functions/notam-no
 | Open-Meteo Höhe | `api.open-meteo.com/v1/elevation`      | ✅   | –    | kostenlos |
 | Terrain-Kacheln (AWS) | `s3.amazonaws.com/elevation-tiles-prod/terrarium` | ✅   | –    | kostenlos |
 | DiPUL WFS       | `uas-betrieb.de/geoservices/dipul/wfs` | ✅   | –    | kostenlos |
-| zones-ed269 (LU/NO/EE) | `/.netlify/functions/zones-ed269` | ✅   | –    | eigene Function |
+| zones-ed269 (LU/NO/EE/SE/BE) | `/.netlify/functions/zones-ed269` | ✅   | –    | eigene Function |
 | notam-no (NO)  | `/.netlify/functions/notam-no`         | ✅   | –    | eigene Function, nur auf Klick |
+| notam-se (SE)  | `/.netlify/functions/notam-se`         | ✅   | –    | eigene Function, nur auf Klick |
+| notam-be (BE)  | `/.netlify/functions/notam-be`         | ✅   | –    | eigene Function, nur auf Klick |
+| LFV GeoServer (SE) | `daim.lfv.se/geoserver/wfs` (nur über `notam-se` und den Wochen-Workflow), Zonendatei `dronechart.lfv.se/data/uas_zones_ED318.json` (nur Workflow) | ❌ | – | CC BY 4.0; Referenzkarte `dronechart.lfv.se` |
+| Droneguide (BE) | `map.droneguide.be/ows` (WFS; nur über `notam-be` und den Wochen-Workflow) | ❌ | – | Lizenz vom Herausgeber nicht angegeben; immer mit `cql_filter` |
 | geo.admin.ch (CH) | `api3.geo.admin.ch/rest/services/all/MapServer/identify` (Punktabfrage), `wms.geo.admin.ch` (Karten-Overlay) | ✅ | – | kostenlos |
 | ENAIRE servAIS (ES) | `servais.enaire.es/insignia/…/SRV_UAS_ZG_V0/MapServer` (Identify + WMS) | ✅ | – | kostenlos |
 | EASA Common Repository (DK/IE/NL/PT/ES-EASA) | `services-eu1.arcgis.com` (ArcGIS FeatureServer) | ✅ | – | kostenlos |
@@ -527,4 +664,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.117.2 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.118.0 · Oktober 2026*
