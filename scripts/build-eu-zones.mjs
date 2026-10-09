@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
-// Schutz gegen abgeschnittene Downloads (echte Größen 2026-10: LU 43, NO 1390, EE 243).
+// Schutz gegen abgeschnittene Downloads (echte Größen 2026-10: LU 43, NO 1390, EE 241).
 const MIN_ZONES = { lu: 20, no: 500, ee: 100 };
 // Reine Darstellungs-/Doppelfelder der EANS-Karte, die SkyCheck nicht braucht.
 const EE_DROP = ['strokeColor', 'fillColor', 'hidden', 'metaData', 'lower', 'lowerMeters',

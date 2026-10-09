@@ -70,7 +70,7 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
         dronesoner.no"). Tagesaktuelle Dateien mit Datum im Namen:
         `https://dronesoner.no/Downloads/NOR_ED269_compliant_geozones_<YYYY-MM-DD>.json` (~2,9 MB,
         1394 Zonen) und `NOR_ED318_compliant_geozones_<YYYY-MM-DD>.json`. Enthält auch die zum
-        Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln; wegen Größe wie FR kacheln — **umgesetzt in v26.10.117.0**
+        Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln. Wegen Größe wäre Kacheln wie bei FR denkbar — **umgesetzt in v26.10.117.0 als ungekachelter Snapshot (1390 dauerhafte Zonen)**
   - [ ] **Estland (skycheck-ee).** EANS: `https://utm.eans.ee/avm/utm/uas.geojson`
         (GeoJSON-FeatureCollection, ohne Key). Offen: Lizenz/Nutzungsbedingungen und CORS — **technisch umgesetzt in v26.10.117.0, Veröffentlichung wartet auf Lizenzklärung**
   - [ ] **Schweden (skycheck-se).** LFV-GeoServer `https://daim.lfv.se/geoserver/ows` (offener WFS).

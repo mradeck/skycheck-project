@@ -27,7 +27,7 @@ Météo, trafic aérien, METAR/TAF, indice Kp et géocodage sont identiques part
 | 🇱🇺 **Luxembourg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxembourg — instantané ED-269 (mis à jour chaque semaine) |
 | 🇳🇴 **Norvège** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — instantané ED-269 (mis à jour chaque semaine) ; zones NOTAM sur clic |
 
-> Les onze sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
+> Les onze sont le **même** déploiement de `skycheck.html` issu de ce dépôt, chacun servi sur son propre site Netlify. Détection du pays : nom d'hôte (`skycheck-<xx>.netlify.app`) ou paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Défaut : `de`. Chaque variante de pays prédéfinit aussi la **langue de l'interface**, un **indice de recherche de point de repère de la capitale** et une **recherche d'adresse restreinte au pays**.
 
 📦 **Version actuelle :** v26.10.117.0
 
@@ -119,7 +119,7 @@ redirect.html               ← page de redirection optionnelle
 
 ### Support multi-pays (depuis v0.73)
 
-SkyCheck utilise un **pattern d'adaptateur** pour les sources de géozones par pays. Le pays est détecté via le nom d'hôte (ex. `skycheck-ch.netlify.app`) ou le paramètre URL `?country=de|fr|at|ch|es|dk|ie`. Défaut : `de`. Météo, ADS-B, METAR/TAF et indice Kp sont mondiaux ; la **langue de l'interface, le point de repère de l'indice de recherche et la bounding box de géocodage** sont définis par pays.
+SkyCheck utilise un **pattern d'adaptateur** pour les sources de géozones par pays. Le pays est détecté via le nom d'hôte (ex. `skycheck-ch.netlify.app`) ou le paramètre URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Défaut : `de`. Météo, ADS-B, METAR/TAF et indice Kp sont mondiaux ; la **langue de l'interface, le point de repère de l'indice de recherche et la bounding box de géocodage** sont définis par pays.
 
 | Pays | Source des géozones | Overlay | Liste de détail / statut | Données et mises à jour |
 |---|---|---|---|---|

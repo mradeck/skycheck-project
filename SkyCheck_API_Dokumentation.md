@@ -354,7 +354,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 
 **Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`) und **Estland** (`ee`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS).
 
-**Basis-URL:** `/.netlify/functions/zones-ed269` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *`)
+**Basis-URL:** `/.netlify/functions/zones-ed269` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *` bei HTTP 200)
 
 **Kein API-Key erforderlich · kostenlos · Antwort im JSON-Format**
 
@@ -376,7 +376,7 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
 | `lang`    | nein    | Zweibuchstabiges Sprachkürzel für die Beschreibung (`desc`); Standard `en`, Rückfall auf Englisch bzw. Originaltext |
 | `all`     | nein    | `1` oder `true`: alle Zonen des Landes statt Punktabfrage (für das Kartenoverlay); `lat`/`lon` entfallen |
 
-**Trefferlogik:** Eine Zone trifft, wenn der Punkt in einem ihrer Polygone liegt oder ein Polygonrand bzw. kreisförmiger Bereich innerhalb des Suchradius liegt (exakter Flächentest, kein reiner Bounding-Box-Filter). Es werden höchstens **50 Treffer** zurückgegeben. Die Sortierung ist: einschränkende Zonen zuerst, dann inaktive (`inactive: true`), dann Info-Zonen (`info: true`).
+**Trefferlogik:** Eine Zone trifft, wenn der Punkt in einem ihrer Polygone liegt oder ein Polygonrand bzw. kreisförmiger Bereich innerhalb des Suchradius liegt (exakter Flächentest, kein reiner Bounding-Box-Filter). Es werden höchstens **50 Treffer** zurückgegeben. Die Sortierung ist: einschränkende Zonen zuerst (auch `NO_RESTRICTION`), dann inaktive (`inactive: true`).
 
 **Antwort (Punktabfrage, gekürzt):**
 
@@ -406,16 +406,15 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
 | Feld       | Bedeutung |
 |------------|-----------|
 | `name`     | Zonenname |
-| `type`     | Einschränkungsart: `PROHIBITED`, `REQ_AUTHORISATION`, `CONDITIONAL`, `NO_RESTRICTION`, `TEMPORARY_INACTIVE` (inaktive Zone) oder `UAS_ZONE` (unbekannte Art) |
+| `type`     | Einschränkungsart: `PROHIBITED`, `REQ_AUTHORISATION`, `CONDITIONAL`, `NO_RESTRICTION`, `TEMPORARY_INACTIVE` (inaktive Zone) oder `UAS_ZONE` (unbekannte Art). `NO_RESTRICTION`-Zonen sind gewöhnliche Zonen (blau, gelbe Ampel), weil z. B. Estland den Wert auch für genehmigungspflichtige Gebiete verwendet |
 | `lower`, `upper` | Untere/obere Grenze, z. B. `GND` oder `120 m AGL` |
 | `legal`, `legalUrl` | Zuständige Behörde und Link (leer, wenn kein gültiger `http(s)`-Link vorliegt) |
 | `desc`     | Beschreibung in der angeforderten Sprache |
-| `color`    | Anzeigefarbe: `PROHIBITED` `#ef4444`, `REQ_AUTHORISATION` `#f59e0b`, `CONDITIONAL` `#f97316`, `NO_RESTRICTION` `#22c55e`, sonst `#64748b` |
+| `color`    | Anzeigefarbe: `PROHIBITED` `#ef4444`, `REQ_AUTHORISATION` `#f59e0b`, `CONDITIONAL` `#f97316`, `NO_RESTRICTION` `#3b82f6` (blau), sonst `#64748b` |
 | `geometry` | Array aus `{type:"Polygon", coordinates}` oder `{type:"Circle", center:[lon,lat], radius}` (Meter); Koordinaten immer `[lon, lat]` |
-| `info`     | Nur vorhanden, wenn `true`: `NO_RESTRICTION`-Zone. Sie erscheint in der Liste, verändert die Ampel aber nicht |
-| `inactive` | Nur vorhanden, wenn `true`: Alle Aktivierungsfenster der Zone sind abgelaufen. Die Zone bleibt sichtbar, `desc` beginnt dann mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“ und die Ampel wird gelb statt rot |
+| `inactive` | Nur vorhanden, wenn `true`: Alle Aktivierungsfenster der Zone sind abgelaufen. Die Zone bleibt sichtbar, `desc` beginnt dann mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“ und die Ampel wird gelb statt rot; Banner und Karten-Panel kennzeichnen die Zone als „derzeit inaktiv“ |
 
-**Antwort mit `all=1`:** `{ "country": "LU", "all": true, "zones": [...] }`. Jede Zone enthält hier nur `name`, `type`, `color`, `geometry` sowie ggf. `info` und `inactive`.
+**Antwort mit `all=1`:** `{ "country": "LU", "all": true, "zones": [...] }`. Jede Zone enthält hier nur `name`, `type`, `color`, `geometry` sowie ggf. `inactive`.
 
 **Caching:** Punktabfrage 300 s (`Cache-Control: public, max-age=300`), `all=1` 3600 s.
 
@@ -431,7 +430,7 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
 
 ## 9. Norwegische NOTAM-Sperrgebiete — `notam-no` (SkyCheck-Netlify-Function)
 
-**Zweck:** Befristete NOTAM-Sperrgebiete für Norwegen als Live-Proxy für `dronesoner.no`. Diese Zonen sind **nicht** im Snapshot enthalten. Die Function wird nur auf **Nutzerklick** aufgerufen („NOTAM-Sperrgebiete laden“), weil der Upstream keinen CORS-Header sendet.
+**Zweck:** Befristete NOTAM-Sperrgebiete für Norwegen als Live-Proxy für `dronesoner.no`. Diese Zonen sind **nicht** im Snapshot enthalten. Der Proxy existiert, weil der Upstream keinen CORS-Header sendet. Die Function wird bewusst nur auf **Nutzerklick** aufgerufen („NOTAM-Sperrgebiete laden“).
 
 **Upstream:** `https://dronesoner.no/data/forbud_notam.geojson` (Luftfartstilsynet, NLOD 2.0)
 

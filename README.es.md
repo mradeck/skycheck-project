@@ -27,7 +27,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 | 🇱🇺 **Luxemburgo** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxemburgo — snapshot ED-269 (actualizado semanalmente) |
 | 🇳🇴 **Noruega** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — snapshot ED-269 (actualizado semanalmente); zonas NOTAM al pulsar |
 
-> Los once son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
+> Los once son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
 📦 **Versión actual:** v26.10.117.0
 
@@ -119,7 +119,7 @@ redirect.html               ← página de redirección opcional
 
 ### Soporte multi-país (desde v0.73)
 
-SkyCheck usa un **patrón de adaptador** para las fuentes de geozonas específicas de cada país. El país se detecta a través del nombre de host (p. ej. `skycheck-ch.netlify.app`) o del parámetro URL `?country=de|fr|at|ch|es|dk|ie`. Por defecto: `de`. La meteorología, ADS-B, METAR/TAF y el índice Kp son globales; el **idioma de la interfaz, el monumento de la sugerencia de búsqueda y el bounding box de geocodificación** se ajustan por país.
+SkyCheck usa un **patrón de adaptador** para las fuentes de geozonas específicas de cada país. El país se detecta a través del nombre de host (p. ej. `skycheck-ch.netlify.app`) o del parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Por defecto: `de`. La meteorología, ADS-B, METAR/TAF y el índice Kp son globales; el **idioma de la interfaz, el monumento de la sugerencia de búsqueda y el bounding box de geocodificación** se ajustan por país.
 
 | País | Fuente de geozonas | Superposición | Lista de detalle / estado | Datos y actualizaciones |
 |---|---|---|---|---|

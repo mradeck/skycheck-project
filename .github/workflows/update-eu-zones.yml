@@ -16,7 +16,7 @@ on:
         description: 'Welches Land aktualisieren'
         type: choice
         default: all
-        options: [all, lu, no, ee]
+        options: [all, lu, 'no', ee]
 
 permissions:
   contents: write
@@ -51,6 +51,7 @@ jobs:
             no)  no=true ;;
             ee)  ee=true ;;
             scheduled) lu=true; no=true; ee=true ;;
+            *) echo "::error::Unbekanntes Land: $want"; exit 1 ;;
           esac
           echo "lu=$lu" >> "$GITHUB_OUTPUT"
           echo "no=$no" >> "$GITHUB_OUTPUT"
