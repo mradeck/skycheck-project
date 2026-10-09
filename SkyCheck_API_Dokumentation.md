@@ -527,4 +527,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.117.1 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.117.2 · Oktober 2026*

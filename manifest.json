@@ -5,8 +5,8 @@
   "start_url": "/skycheck.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0a1628",
-  "theme_color": "#0a1628",
+  "background_color": "#eef4fb",
+  "theme_color": "#eef4fb",
   "orientation": "portrait-primary",
   "lang": "de",
   "icons": [
