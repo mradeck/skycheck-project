@@ -77,14 +77,23 @@ const SE_RESTRICTION = { RSTA: 'REQ_AUTHORISATION', RWY5K: 'REQ_AUTHORISATION',
   DNGA: 'CONDITIONAL', CTR: 'CONDITIONAL', ATZ: 'CONDITIONAL', TIZ: 'CONDITIONAL', HKP1K: 'CONDITIONAL' };
 
 // Höhe aus den LFV-Textfeldern: 'GND' → 0 AGL; Zahl → Fuß AMSL; 'FL nnn' → nnn×100 Fuß, Bezug STD;
-// 'UNL'/leer/unbekannt → kein Wert.
+// 'UNL'/leer → kein Wert; jede andere Form → Abbruch (nie stillschweigend „keine Grenze").
 function parseSeAlt(v) {
   const t = String(v == null ? '' : v).trim();
+  if (t === '' || /^UNL$/i.test(t)) return null;
   if (/^GND$/i.test(t)) return { value: 0, ref: 'AGL' };
   if (/^\d+(\.\d+)?$/.test(t)) return { value: Number(t), ref: 'AMSL' };
   const fl = /^FL\s*(\d+)$/i.exec(t);
   if (fl) return { value: Number(fl[1]) * 100, ref: 'STD' };
-  return null;
+  throw new Error(`se: unbekannte Höhenangabe "${t}"`);
+}
+
+// Einstufung prüfen: US-Schreibweise normalisieren, alles Unbekannte (auch null/leer) bricht ab.
+const RESTRICTIONS = ['PROHIBITED', 'REQ_AUTHORISATION', 'CONDITIONAL', 'NO_RESTRICTION'];
+function normRestriction(country, value, what) {
+  const r = value === 'REQ_AUTHORIZATION' ? 'REQ_AUTHORISATION' : value;
+  if (!RESTRICTIONS.includes(r)) throw new Error(`${country}: unbekannte Einstufung ${JSON.stringify(value)} bei ${what}`);
+  return r;
 }
 
 // GeoJSON-Geometrie → Liste horizontaler Projektionen (MultiPolygon: je Teilpolygon eine).
@@ -97,7 +106,7 @@ function projectionsOf(geom) {
   return [];
 }
 
-function seVolumes(geom, limits) {
+function polygonVolumes(geom, limits) {
   return projectionsOf(geom).map(hp => ({ ...limits, horizontalProjection: hp }));
 }
 
@@ -115,8 +124,11 @@ function seZone(layer, key, name, message, geometry, restriction) {
     typeCode: layer, message, zoneAuthority: SE_AUTHORITY, geometry };
 }
 
+// Kompakter, stabiler Kennungsteil: Leerraum/Sonderzeichen → '_'; leer bleibt leer (finish() bricht ab).
+const idPart = v => (v == null ? '' : String(v)).trim().replace(/[^\p{L}\p{N}._-]+/gu, '_').replace(/^_+|_+$/g, '');
+
 const seFeatures = (text, file) => {
-  const d = JSON.parse(String(text).replace(/^﻿/, ''));
+  const d = JSON.parse(String(text).replace(/^\uFEFF/, ''));
   if (!d || !Array.isArray(d.features) || !d.features.length) throw new Error(`${file}: keine Features`);
   return d.features.filter(f => f && f.properties && f.geometry);
 };
@@ -126,6 +138,19 @@ const enText = arr => {
   const en = a.find(x => String(x.lang || '').toLowerCase().startsWith('en'));
   return { a, best: (en || a[0] || {}).text || '' };
 };
+
+// limitedApplicability → applicability: je Fenster permanent 'NO' (mit Ende) bzw. 'YES' (offen).
+function seApplicability(windows) {
+  if (!Array.isArray(windows) || !windows.length) return null;
+  const out = windows.filter(w => w && w.startDateTime).map(w => {
+    const a = { startDateTime: w.startDateTime };
+    if (w.endDateTime) a.endDateTime = w.endDateTime;
+    a.permanent = w.endDateTime ? 'NO' : 'YES';
+    if (w.schedule !== undefined) a.schedule = w.schedule;
+    return a;
+  });
+  return out.length ? out : null;
+}
 
 function seEd318(f) {
   const p = f.properties, g = f.geometry, L = g.layer || {};
@@ -137,16 +162,15 @@ function seEd318(f) {
   if (g.type === 'Point' && g.extent && g.extent.subType === 'Circle' && Number.isFinite(g.extent.radius)) {
     geometry = [{ ...limits, horizontalProjection: { type: 'Circle', center: g.coordinates, radius: g.extent.radius } }];
   } else {
-    geometry = seVolumes(g, limits);
+    geometry = polygonVolumes(g, limits);
   }
-  const restriction = p.type === 'REQ_AUTHORIZATION' ? 'REQ_AUTHORISATION' : p.type;
-  if (!['REQ_AUTHORISATION', 'CONDITIONAL', 'PROHIBITED'].includes(restriction)) {
-    throw new Error(`ED-318 ${p.identifier}: unbekannte Einstufung ${p.type}`);
-  }
+  const restriction = normRestriction('se', p.type, `ED-318 ${p.identifier}`);
   const name = enText(p.name).best || p.identifier;
   const msgs = enText(p.message);
-  const z = seZone('ED318', p.identifier, name, msgs.best, geometry, restriction);
+  const z = seZone('ED318', idPart(p.identifier), name, msgs.best, geometry, restriction);
   if (Array.isArray(p.reason)) z.reason = p.reason;
+  const app = seApplicability(p.limitedApplicability);
+  if (app) z.applicability = app;
   if (msgs.a.length > 1) {
     z.extendedProperties = { localizedMessages: msgs.a.map(m => ({ language: m.lang, message: m.text })) };
   }
@@ -160,18 +184,19 @@ export function buildSeZones(files, opts = {}) {
       const p = f.properties;
       if (!keep(p)) continue;
       out.push(seZone(layer, keyOf(p), nameOf(p), msgOf(p),
-        seVolumes(f.geometry, seLfvLimits(p, withHeights)), SE_RESTRICTION[layer]));
+        polygonVolumes(f.geometry, seLfvLimits(p, withHeights)), SE_RESTRICTION[layer]));
     }
   };
   const loc = p => p.LOCATION || p.NAMEOFAREA;
-  const idnr = p => p.IDNR;
-  lfv('RSTA', idnr, loc, p => p.COMMENT_2 || '', { keep: p => p.LOWER === 'GND' });
-  lfv('DNGA', idnr, loc, p => p.COMMENT_2 || '');
-  lfv('CTR', idnr, loc, () => SE_TEXT.CTR, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });
-  lfv('ATZ', idnr, loc, () => SE_TEXT.ATZ, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });
-  lfv('TIZ', idnr, loc, () => SE_TEXT.TIZ);
-  lfv('RWY5K', p => p.POSITIONIN, p => `Airport 5 km: ${p.NAMEOFAREA}`, () => SE_TEXT.RWY5K, { withHeights: false });
-  lfv('HKP1K', p => p.POSITIONIN, p => `Heliport 1 km: ${p.LOCATION}`, () => SE_TEXT.HKP1K, { withHeights: false });
+  const byName = p => idPart(p.NAMEOFAREA);
+  const byMsid = p => idPart(p.MSID);
+  lfv('RSTA', byName, loc, p => p.COMMENT_2 || '', { keep: p => /^GND$/i.test(String(p.LOWER).trim()) });
+  lfv('DNGA', byName, loc, p => p.COMMENT_2 || '');
+  lfv('CTR', byMsid, loc, () => SE_TEXT.CTR, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });
+  lfv('ATZ', byName, loc, () => SE_TEXT.ATZ, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });
+  lfv('TIZ', byName, loc, () => SE_TEXT.TIZ);
+  lfv('RWY5K', p => idPart(p.POSITIONIN), p => `Airport 5 km: ${p.NAMEOFAREA}`, () => SE_TEXT.RWY5K, { withHeights: false });
+  lfv('HKP1K', p => idPart(p.POSITIONIN), p => `Heliport 1 km: ${p.LOCATION}`, () => SE_TEXT.HKP1K, { withHeights: false });
   for (const f of seFeatures(files.ED318, 'uas_zones_ED318')) out.push(seEd318(f));
   return finish('se', out, opts);
 }
@@ -226,9 +251,9 @@ function buildBeZones(data, opts) {
     }
     const id = p.unique_identifier || p.code;
     const desc = beText(p.description);
-    const z = { identifier: String(id), country: 'BEL', name: beText(p.name).best || String(p.code || id),
-      type: 'COMMON', restriction: p.restriction, typeCode: p.type_code,
-      message: desc.best, zoneAuthority: BE_AUTHORITY, geometry: seVolumes(f.geometry, limits) };
+    const z = { identifier: id == null ? '' : String(id), country: 'BEL', name: beText(p.name).best || String(p.code || id || ''),
+      type: 'COMMON', restriction: normRestriction('be', p.restriction, `Zone ${id}`), typeCode: p.type_code,
+      message: desc.best, zoneAuthority: BE_AUTHORITY, geometry: polygonVolumes(f.geometry, limits) };
     if (desc.all) {
       z.extendedProperties = { localizedMessages: Object.entries(desc.all).map(([language, message]) => ({ language, message })) };
     }
@@ -238,6 +263,14 @@ function buildBeZones(data, opts) {
 }
 
 function finish(country, zones, opts = {}) {
+  const seen = new Set();
+  for (const z of zones) {
+    const id = z && z.identifier, name = z && z.name;
+    if (typeof id !== 'string' || !id || /undefined|NaN/.test(id) || /-$/.test(id)) throw new Error(`${country}: leere oder ungültige Kennung bei "${name}"`);
+    if (typeof name !== 'string' || !name.trim() || /undefined|NaN/.test(name)) throw new Error(`${country}: leerer oder ungültiger Name bei Kennung ${id}`);
+    if (seen.has(id)) throw new Error(`${country}: Kennung nicht eindeutig: ${id}`);
+    seen.add(id);
+  }
   zones = zones
     .map(z => ({ ...z, geometry: (Array.isArray(z.geometry) ? z.geometry : []).map(cleanVolume).filter(Boolean) }))
     .filter(z => z.geometry.length > 0);

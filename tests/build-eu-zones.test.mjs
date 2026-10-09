@@ -112,7 +112,7 @@ test('SE RSTA: nur LOWER === GND, REQ_AUTHORISATION, Name = LOCATION, Beschreibu
   assert.equal(r[0].restriction, 'REQ_AUTHORISATION');
   assert.equal(r[0].name, 'ES R107 FORSMARK');
   assert.match(r[0].message, /^Kärnkraftverk\./);
-  assert.equal(r[0].identifier, 'SE-RSTA-30109');
+  assert.equal(r[0].identifier, 'SE-RSTA-ES_R107');
 });
 
 test('SE Höhen: GND → 0 AGL; Zahl → Fuß AMSL', () => {
@@ -314,4 +314,110 @@ test('BE CLI: Datei → Ausgabe; LU/NO/EE-Aufruf unverändert', () => {
   writeFileSync(inp, NO_RAW);
   execFileSync('node', [SCRIPT, 'no', inp, out, '--min', '1']);
   assert.equal(JSON.parse(readFileSync(out)).length, 2);
+});
+
+// ───────────────────────── Fix round 1 ─────────────────────────
+const seEd = (mut) => {
+  const d = JSON.parse(SE_RAW.ED318);
+  mut(d.features);
+  return JSON.stringify(d);
+};
+const buildSe = (over) => buildZonesFromDir('se', seDir(over), { min: 1 });
+
+test('SE ED-318: limitedApplicability → applicability (Start+Ende → permanent NO, schedule unverändert)', () => {
+  const sched = [{ day: ['MON'], startTime: '07:00:00Z', endTime: '16:00:00Z' }];
+  const z = buildSe({ ED318: seEd(f => {
+    f[0].properties.limitedApplicability = [{ startDateTime: '2025-11-10T00:00:00Z', endDateTime: '2027-05-31T23:59:00Z', schedule: sched }];
+  }) });
+  assert.deepEqual(byId(z, 'SE-ED318-ESU200').applicability,
+    [{ startDateTime: '2025-11-10T00:00:00Z', endDateTime: '2027-05-31T23:59:00Z', permanent: 'NO', schedule: sched }]);
+});
+
+test('SE ED-318: nur Start → permanent YES ohne endDateTime-Schlüssel; mehrere Fenster je ein Eintrag', () => {
+  const z = buildSe({ ED318: seEd(f => {
+    f[0].properties.limitedApplicability = [{ startDateTime: '2025-10-27T00:00:00Z' },
+      { startDateTime: '2026-01-01T00:00:00Z', endDateTime: '2026-02-01T00:00:00Z' }];
+  }) });
+  const a = byId(z, 'SE-ED318-ESU200').applicability;
+  assert.equal(a.length, 2);
+  assert.deepEqual(a[0], { startDateTime: '2025-10-27T00:00:00Z', permanent: 'YES' });
+  assert.ok(!('endDateTime' in a[0]) && !('schedule' in a[0]));
+  assert.equal(a[1].permanent, 'NO');
+});
+
+test('SE ED-318: ohne limitedApplicability kein applicability-Schlüssel; abgelaufene Zone wird nicht verworfen', () => {
+  const z = buildSe({ ED318: seEd(f => {
+    delete f[0].properties.limitedApplicability;
+    f[1].properties.limitedApplicability = [{ startDateTime: '2020-01-01T00:00:00Z', endDateTime: '2020-02-01T00:00:00Z' }];
+  }) });
+  assert.ok(!('applicability' in byId(z, 'SE-ED318-ESU200')));
+  assert.ok(byId(z, 'SE-ED318-ESU202'), 'abgelaufene Zone bleibt');
+  assert.ok(layerOf(z, 'RSTA').every(x => !('applicability' in x)), 'nur ED-318 trägt applicability');
+});
+
+test('Einstufung: REQ_AUTHORIZATION wird zu REQ_AUTHORISATION, NO_RESTRICTION ist für SE erlaubt', () => {
+  const z = buildSe({ ED318: seEd(f => { f[1].properties.type = 'NO_RESTRICTION'; }) });
+  assert.equal(byId(z, 'SE-ED318-ESU200').restriction, 'REQ_AUTHORISATION');
+  assert.equal(byId(z, 'SE-ED318-ESU202').restriction, 'NO_RESTRICTION');
+});
+
+const beWith = (mut) => {
+  const d = JSON.parse(BE_RAW);
+  mut(d.features);
+  return JSON.stringify(d);
+};
+const beNormal = f => f.find(x => x.properties.unique_identifier && x.properties.type_code === 'CIV_HELISTRIP');
+
+test('BE: US-Schreibweise wird normalisiert; null, leer und unbekannte Einstufung brechen mit Land+Wert ab', () => {
+  const ok = buildZones('be', beWith(f => { beNormal(f).properties.restriction = 'REQ_AUTHORIZATION'; }), { min: 1 });
+  assert.ok(ok.some(x => x.typeCode === 'CIV_HELISTRIP' && x.restriction === 'REQ_AUTHORISATION'));
+  assert.equal(buildZones('be', beWith(f => { beNormal(f).properties.restriction = 'NO_RESTRICTION'; }), { min: 1 })
+    .find(x => x.typeCode === 'CIV_HELISTRIP').restriction, 'NO_RESTRICTION');
+  assert.throws(() => buildZones('be', beWith(f => { beNormal(f).properties.restriction = null; }), { min: 1 }), /be.*null/);
+  assert.throws(() => buildZones('be', beWith(f => { beNormal(f).properties.restriction = ''; }), { min: 1 }), /be/);
+  assert.throws(() => buildZones('be', beWith(f => { beNormal(f).properties.restriction = 'MAYBE'; }), { min: 1 }), /be.*MAYBE/);
+});
+
+test('SE ED-318: unbekannte Einstufung nennt Land und Wert', () => {
+  assert.throws(() => buildSe({ ED318: seEd(f => { f[0].properties.type = 'WHATEVER'; }) }), /se.*WHATEVER/);
+});
+
+test('mais-Kennungen hängen nicht an IDNR: Name (RSTA/DNGA/ATZ/TIZ), MSID (CTR), kompakt ohne Leerzeichen', () => {
+  const mod = (k, over) => { const d = JSON.parse(SE_RAW[k]); Object.assign(d.features[0].properties, over); return JSON.stringify(d); };
+  const a = buildSe({ RSTA: mod('RSTA', { IDNR: 1 }), TIZ: mod('TIZ', { IDNR: 2 }) });
+  const b = buildSe({ RSTA: mod('RSTA', { IDNR: 77777 }), TIZ: mod('TIZ', { IDNR: 88888 }) });
+  assert.deepEqual(a.map(x => x.identifier), b.map(x => x.identifier));
+  assert.ok(byId(a, 'SE-RSTA-ES_R107'));
+  assert.ok(byId(a, 'SE-TIZ-HAGFORS_TIZ_RMZ'));
+  assert.ok(byId(a, 'SE-ATZ-SKÅ-EDEBY_ATZ'));
+  assert.ok(byId(a, 'SE-CTR-4065'));                           // MSID von ROENNE CTR
+  assert.ok(a.every(x => !/\s/.test(x.identifier)));
+});
+
+test('gemeinsamer Schluss: leerer/undefinierter Name oder Kennung und doppelte Kennungen brechen ab', () => {
+  const lfvDup = JSON.parse(SE_RAW.TIZ);
+  lfvDup.features[1].properties.NAMEOFAREA = lfvDup.features[0].properties.NAMEOFAREA;
+  lfvDup.features[1].properties.LOCATION = 'X';
+  assert.throws(() => buildSe({ TIZ: JSON.stringify(lfvDup) }), /nicht eindeutig/);
+  const noName = JSON.parse(SE_RAW.TIZ);
+  noName.features[0].properties.LOCATION = ''; noName.features[0].properties.NAMEOFAREA = '';
+  assert.throws(() => buildSe({ TIZ: JSON.stringify(noName) }), /Name|Kennung/);
+  const noId = JSON.parse(SE_RAW.CTR);
+  delete noId.features[0].properties.MSID;
+  assert.throws(() => buildSe({ CTR: JSON.stringify(noId) }), /Kennung/);
+  assert.throws(() => buildZones('be', beWith(f => { f[0].properties.unique_identifier = null; f[0].properties.code = null; }), { min: 1 }), /Kennung/);
+  const dupBe = beWith(f => { const k = f.filter(x => x.properties.type_code === 'CIV_PORT'); k[1].properties.unique_identifier = k[0].properties.unique_identifier; });
+  assert.throws(() => buildZones('be', dupBe, { min: 1 }), /nicht eindeutig/);
+});
+
+test('SE Höhen: unbekannte Form bricht ab; gnd/unl/fl sind nicht case-sensitiv', () => {
+  const mod = (k, i, over) => { const d = JSON.parse(SE_RAW[k]); Object.assign(d.features[i].properties, over); return JSON.stringify(d); };
+  assert.throws(() => buildSe({ DNGA: mod('DNGA', 0, { UPPER: '1500 FT AMSL' }) }), /1500 FT AMSL/);
+  assert.throws(() => buildSe({ TIZ: mod('TIZ', 0, { LOWER: 'SFC' }) }), /SFC/);
+  const z = buildSe({ RSTA: mod('RSTA', 1, { LOWER: 'gnd' }), DNGA: mod('DNGA', 0, { UPPER: 'unl' }),
+    TIZ: mod('TIZ', 0, { UPPER: 'fl 95' }) });
+  assert.ok(layerOf(z, 'RSTA').some(x => x.identifier === 'SE-RSTA-ES_R129'), 'LOWER "gnd" bleibt im RSTA-Filter');
+  assert.ok(!('upperLimit' in layerOf(z, 'DNGA').find(x => x.name === 'ES D182 SATTAVAARA').geometry[0]));
+  assert.equal(layerOf(z, 'TIZ')[0].geometry[0].upperLimit, 9500);
+  assert.equal(layerOf(z, 'TIZ')[0].geometry[0].upperVerticalReference, 'STD');
 });
