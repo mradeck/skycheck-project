@@ -11,6 +11,7 @@ const NOTAM_URL = `${WFS}dynais:NOTAM&CQL_FILTER=${encodeURIComponent(NOTAM_FILT
 const SUP_URL = `${WFS}DAIM_TOPO:SUP`;
 const CHART_URL = 'https://dronechart.lfv.se/';
 const DEFAULT_TIMEOUT_MS = 12000;
+const SOON_MS = 24 * 60 * 60 * 1000;                    // beginnt es binnen 24 h, gilt es schon als aktiv
 const INACTIVE_COLOR = '#64748b';
 const COLORS = { PROHIBITED: '#ef4444', REQ_AUTHORISATION: '#f59e0b', CONDITIONAL: '#f97316' };
 
@@ -59,23 +60,27 @@ function describeValidity(from, to, schedule, body) {
   return parts.join(' ');
 }
 
-// Einstufung nach Code: RP/RR/RT gesperrt; RD, W… und sonstige R… bedingt.
-const notamType = code => (/^R[PRT]/i.test(text(code)) ? 'PROHIBITED' : 'CONDITIONAL');
+// Einstufung nach Code: RD und W… bedingt; jedes andere R… (RP, RR, RT, RA, RM, RO, …) gesperrt.
+const notamType = code => {
+  const c = text(code).toUpperCase();
+  if (c === 'RD' || c.startsWith('W')) return 'CONDITIONAL';
+  return c.startsWith('R') ? 'PROHIBITED' : 'CONDITIONAL';
+};
 
 function notamZone(feature) {
   const p = (feature && feature.properties) || {};
-  if (p.LOWER !== 0) return null;                       // nur Gebiete ab Boden
+  if (p.LOWER === null || p.LOWER === undefined || text(p.LOWER) === '' || Number(p.LOWER) !== 0) return null;  // nur Gebiete ab Boden (0 oder "0")
   const geometry = polygonsOf(feature && feature.geometry);
   if (!geometry.length) return null;
   const t = now();
   const start = Date.parse(p.STARTVALIDITY), end = Date.parse(p.ENDVALIDITY);
   if (isFinite(end) && end < t) return null;            // abgelaufen
-  const notYet = isFinite(start) && start > t;
+  const notYet = isFinite(start) && start > t + SOON_MS;
   let type = notamType(p.CODE23), color = COLORS[type], desc = describeValidity(p.STARTVALIDITY, p.ENDVALIDITY, p.ITEM_D, p.ITEM_E);
   if (notYet) {
     type = 'TEMPORARY_INACTIVE';
     color = INACTIVE_COLOR;
-    desc = `Not yet active — starts ${new Date(start).toISOString().slice(0, 10)}. ${desc}`;
+    desc = `Not yet active — starts ${stamp(p.STARTVALIDITY)} UTC. ${desc}`;
   }
   const z = {
     name: `NOTAM ${text(p.SERIES)}${text(p.NO)}/${text(p.YEAR)}`,
@@ -124,6 +129,14 @@ const withUnit = (value, uom) => {
   return text(uom) ? `${v} ${text(uom)}` : v;
 };
 
+// Der Client schreibt legalUrl mit encodeURI; die Rohwerte enthalten schon %20 → einmal dekodieren,
+// damit encodeURI wieder das Original ergibt. Nur http(s); sonst Karten-URL.
+function supLegalUrl(raw) {
+  const u = text(raw);
+  if (!/^https?:\/\//i.test(u)) return CHART_URL;
+  try { return decodeURI(u); } catch (_) { return CHART_URL; }
+}
+
 function supZone(feature) {
   const p = (feature && feature.properties) || {};
   if (!supIsValid(p)) return null;
@@ -136,7 +149,7 @@ function supZone(feature) {
     lower: withUnit(p.LOWER, p.LOW_UOM),
     upper: withUnit(p.UPPER, p.UP_UOM),
     legal: 'AIP SUP',
-    legalUrl: /^https?:\/\//i.test(text(p.URL)) ? text(p.URL) : CHART_URL,
+    legalUrl: supLegalUrl(p.URL),
     desc: describeValidity(p.FROM, p.TO, p.SCHEDULE, text(p.COM_EN) || text(p.COM_SE)),
     color: COLORS.PROHIBITED,
     geometry,

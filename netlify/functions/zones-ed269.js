@@ -150,9 +150,12 @@ function localizedMessage(f, lang) {
   return pick(lang) || pick('en') || f.message || '';
 }
 
+// Fenster, die innerhalb der nächsten 24 Stunden beginnen, gelten schon als laufend.
+const SOON_MS = 24 * 60 * 60 * 1000;
+
 // Befristete Zonen bleiben sichtbar, gelten aber nicht als aktuell gesperrt, solange JEDES
 // Aktivierungsfenster entweder vorbei (Ende lesbar und vor jetzt) oder noch nicht begonnen
-// ist (Start lesbar und nach jetzt). Ein laufendes Fenster, eines ohne Grenzen oder mit
+// ist (Start lesbar und mehr als 24 Stunden nach jetzt). Ein laufendes Fenster, eines ohne Grenzen oder mit
 // unlesbaren Daten macht die Zone aktiv. Liefert null (aktiv) oder
 // { endedAt: spätestes Ende in ms | null, startsAt: frühester künftiger Start in ms | null }.
 function inactivity(f) {
@@ -165,7 +168,7 @@ function inactivity(f) {
     const start = Date.parse(w && w.startDateTime);
     if (isFinite(end) && end < t) {
       if (endedAt === null || end > endedAt) endedAt = end;
-    } else if (isFinite(start) && start > t) {
+    } else if (isFinite(start) && start > t + SOON_MS) {
       if (startsAt === null || start < startsAt) startsAt = start;
     } else {
       return null;
@@ -202,8 +205,9 @@ function describe(f, state, lang) {
   if (!state) return text;
   const { startsAt, endedAt } = state;
   const day = ms => new Date(ms).toISOString().slice(0, 10);
+  const stamp = ms => `${day(ms)} ${new Date(ms).toISOString().slice(11, 16)} UTC`;
   const note = startsAt !== null
-    ? `Not yet active — starts ${day(startsAt)}. May change — check the official source.`
+    ? `Not yet active — starts ${stamp(startsAt)}. May change — check the official source.`
     : `Activation window ended ${day(endedAt)}. May be reactivated — check the official source.`;
   return text ? `${note} ${text}` : note;
 }

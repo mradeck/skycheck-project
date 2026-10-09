@@ -178,7 +178,7 @@ test('A: noch nicht begonnenes NOTAM → inactive, grau, beide Texte', async () 
   assert.equal(z.type, 'TEMPORARY_INACTIVE');
   assert.equal(z.color, '#64748b');
   assert.equal(z.notam, true);
-  assert.equal(z.desc, 'Not yet active — starts 2026-10-15. Valid 2026-10-15 09:00 – 2026-10-18 12:00 UTC. Text E.');
+  assert.equal(z.desc, 'Not yet active — starts 2026-10-15 09:00 UTC. Valid 2026-10-15 09:00 – 2026-10-18 12:00 UTC. Text E.');
 });
 
 test('A: laufendes NOTAM → aktiv mit Gültigkeitszeile', async () => {
@@ -208,11 +208,12 @@ test('A: SUP trägt Gültigkeitszeile und Schedule vor dem Text', async () => {
   assert.equal(r.body.zones[0].desc, 'Valid 2025-11-10 06:00 – 2027-08-31 21:00 UTC. Schedule: MON – FRI 0600 – 2100. English.');
 });
 
-test('B: Einstufung nach CODE23 (RP/RR/RT gesperrt; RD, W…, sonstige R… bedingt)', async () => {
+test('B: Einstufung nach CODE23 (RD und W… bedingt; jedes andere R… gesperrt)', async () => {
+  const codes = ['RP', 'RR', 'RT', 'RD', 'WO', 'WE', 'RA', 'RM', 'RO'];
   const types = {};
-  const zs = await runNotams(['RP', 'RR', 'RT', 'RD', 'WO', 'WE', 'RA'].map((c, i) => nf({ NO: i, CODE23: c })));
-  zs.forEach((z, i) => { types[['RP', 'RR', 'RT', 'RD', 'WO', 'WE', 'RA'][i]] = z.type; });
-  assert.deepEqual(types, { RP: 'PROHIBITED', RR: 'PROHIBITED', RT: 'PROHIBITED', RD: 'CONDITIONAL', WO: 'CONDITIONAL', WE: 'CONDITIONAL', RA: 'CONDITIONAL' });
+  const zs = await runNotams(codes.map((c, i) => nf({ NO: i, CODE23: c })));
+  zs.forEach((z, i) => { types[codes[i]] = z.type; });
+  assert.deepEqual(types, { RP: 'PROHIBITED', RR: 'PROHIBITED', RT: 'PROHIBITED', RD: 'CONDITIONAL', WO: 'CONDITIONAL', WE: 'CONDITIONAL', RA: 'PROHIBITED', RM: 'PROHIBITED', RO: 'PROHIBITED' });
   assert.equal(zs[3].color, '#f97316');
 });
 
@@ -254,4 +255,34 @@ test('D2: Timeout beim Lesen des Bodys wird als Timeout gemeldet', async () => {
   const r = await run();
   assert.equal(r.status, 502);
   assert.match(r.body.error, /timeout/i);
+});
+
+test('F4: LOWER als Zahl 0 oder Zeichenkette "0" bleibt; null, "" und 2 entfallen', async () => {
+  const zs = await runNotams([nf({ NO: 1, LOWER: '0' }), nf({ NO: 2, LOWER: 0 }), nf({ NO: 3, LOWER: null }),
+    nf({ NO: 4, LOWER: 2 }), nf({ NO: 5, LOWER: '' })]);
+  assert.deepEqual(zs.map(z => z.name), ['NOTAM A1/26', 'NOTAM A2/26']);
+});
+
+test('F5: NOTAM-Start in 23 h → aktiv, in 25 h → inaktiv mit Uhrzeit, Start in 2 h → aktiv', async () => {
+  const at12 = '2026-10-15T12:00:00Z';
+  const [a] = await runNotams([nf({ STARTVALIDITY: '2026-10-16T11:00:00Z' })], at12);
+  assert.ok(!('inactive' in a));
+  assert.equal(a.type, 'PROHIBITED');
+  const [b] = await runNotams([nf({ STARTVALIDITY: '2026-10-16T13:00:00Z' })], at12);
+  assert.equal(b.inactive, true);
+  assert.ok(b.desc.startsWith('Not yet active — starts 2026-10-16 13:00 UTC. Valid'));
+  const [c] = await runNotams([nf({ STARTVALIDITY: '2026-10-15T14:00:00Z' })], at12);
+  assert.ok(!('inactive' in c));
+});
+
+test('F1: SUP-URL mit %20 wird einmal dekodiert (encodeURI des Clients ergibt das Original); kaputt oder nicht-http → Karten-URL', async () => {
+  const raw = 'https://aro.lfv.se/content/eaip/eSUP/ES%20SUP%202026.pdf#x';
+  const r = await runSup([sf({ DESIG: 'A', URL: raw }), sf({ DESIG: 'B', URL: 'https://aro.lfv.se/100%/x' }),
+    sf({ DESIG: 'C', URL: 'javascript:alert(1)' }), sf({ DESIG: 'D', URL: 'https://aro.lfv.se/plain' })]);
+  const [a, b, c, d] = r.body.zones;
+  assert.equal(a.legalUrl, 'https://aro.lfv.se/content/eaip/eSUP/ES SUP 2026.pdf#x');
+  assert.equal(encodeURI(a.legalUrl), raw);
+  assert.equal(b.legalUrl, 'https://dronechart.lfv.se/');
+  assert.equal(c.legalUrl, 'https://dronechart.lfv.se/');
+  assert.equal(d.legalUrl, 'https://aro.lfv.se/plain');
 });

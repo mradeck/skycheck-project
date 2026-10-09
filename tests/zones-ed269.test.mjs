@@ -351,7 +351,7 @@ test('nur ein künftiges Fenster → inactive mit „Not yet active"-Hinweis und
     assert.equal(z.inactive, true);
     assert.equal(z.type, 'TEMPORARY_INACTIVE');
     assert.equal(z.color, '#64748b');
-    assert.equal(z.desc, 'Not yet active — starts 2026-11-01. May change — check the official source. Drone ban.');
+    assert.equal(z.desc, 'Not yet active — starts 2026-11-01 00:00 UTC. May change — check the official source. Drone ban.');
   } finally { fn._test.setNow(null); }
 });
 
@@ -359,7 +359,7 @@ test('künftiges Fenster ohne Beschreibung → Hinweis ohne Anhang', async () =>
   try {
     useEeZones([mkZone('F1', 'PROHIBITED', [FUTURE])]);
     at('2026-10-09T12:00:00Z');
-    assert.equal((await call(Q)).body.zones[0].desc, 'Not yet active — starts 2026-11-01. May change — check the official source.');
+    assert.equal((await call(Q)).body.zones[0].desc, 'Not yet active — starts 2026-11-01 00:00 UTC. May change — check the official source.');
   } finally { fn._test.setNow(null); }
 });
 
@@ -369,7 +369,7 @@ test('ein beendetes und ein künftiges Fenster → inactive mit dem Zukunftshinw
     at('2026-10-09T12:00:00Z');
     const z = (await call(Q)).body.zones[0];
     assert.equal(z.inactive, true);
-    assert.ok(z.desc.startsWith('Not yet active — starts 2026-11-01.'));
+    assert.ok(z.desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.'));
   } finally { fn._test.setNow(null); }
 });
 
@@ -378,7 +378,32 @@ test('mehrere künftige Fenster → frühester Start gewinnt', async () => {
     const later = { startDateTime: '2026-12-01T00:00:00Z', permanent: 'NO' };
     useEeZones([mkZone('F1', 'PROHIBITED', [later, FUTURE])]);
     at('2026-10-09T12:00:00Z');
-    assert.ok((await call(Q)).body.zones[0].desc.startsWith('Not yet active — starts 2026-11-01.'));
+    assert.ok((await call(Q)).body.zones[0].desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.'));
+  } finally { fn._test.setNow(null); }
+});
+
+// ── 24-Stunden-Regel (SOON_MS): bald beginnende Fenster gelten als laufend ──
+test('Start in 23 h → aktiv; Start in 25 h → inaktiv mit Uhrzeit im Hinweis', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    useEeZones([mkZone('S1', 'PROHIBITED', [{ startDateTime: '2026-10-10T11:00:00Z', endDateTime: '2026-10-11T00:00:00Z' }]),
+      mkZone('S2', 'PROHIBITED', [{ startDateTime: '2026-10-10T13:00:00Z', endDateTime: '2026-10-11T00:00:00Z' }])]);
+    const zs = (await call(Q)).body.zones;
+    const a = zs.find(z => z.name === 'S1'), b = zs.find(z => z.name === 'S2');
+    assert.ok(!('inactive' in a));
+    assert.equal(a.type, 'PROHIBITED');
+    assert.equal(b.inactive, true);
+    assert.ok(b.desc.startsWith('Not yet active — starts 2026-10-10 13:00 UTC. May change'));
+  } finally { fn._test.setNow(null); }
+});
+
+test('beendetes Fenster + Start in 2 h → aktiv', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    useEeZones([mkZone('S1', 'PROHIBITED', [WINDOW, { startDateTime: '2026-10-09T14:00:00Z', endDateTime: '2026-10-09T18:00:00Z' }])]);
+    const z = (await call(Q)).body.zones[0];
+    assert.ok(!('inactive' in z));
+    assert.equal(z.type, 'PROHIBITED');
   } finally { fn._test.setNow(null); }
 });
 
@@ -399,7 +424,7 @@ test('Start in der Zukunft, Ende unlesbar oder fehlend → inactive (der Start e
     at('2026-10-09T12:00:00Z');
     const zs = (await call(Q)).body.zones;
     assert.equal(zs.length, 2);
-    assert.ok(zs.every(z => z.inactive === true && z.desc.startsWith('Not yet active — starts 2026-11-01.')));
+    assert.ok(zs.every(z => z.inactive === true && z.desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.')));
   } finally { fn._test.setNow(null); }
 });
 
