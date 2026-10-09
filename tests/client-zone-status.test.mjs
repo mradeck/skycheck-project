@@ -284,6 +284,25 @@ test('renderZones: nur Platzhalter → "!" ohne ok, Hinweiskasten mit Quelle, ke
   assert.ok(body.includes('https://example.test/quelle'));
   assert.ok(!body.includes('zonesNone'));
   assert.ok(!els['zones-hdr-text'].innerHTML.includes('zonesNone'));
+  assert.ok(body.includes('DiPUL-Quelle'));                 // Quellenbeschriftung
+  assert.ok(body.includes('T:zoneDataUnavailable'));        // Ausfalltitel
+});
+test('renderZones: leere Liste → "0" mit ok, Kopf zonesNone, Körper leer', () => {
+  const els = zonesRender([]);
+  assert.equal(els['z-count'].textContent, 0);
+  assert.ok(/\bok\b/.test(els['z-count'].className));
+  assert.equal(els['zones-hdr-text'].innerHTML, 'T:zonesNone');
+  assert.equal(els['zones-body'].innerHTML, '');
+});
+test('renderZones: Farbwert mit Injektion wird verworfen, Fallback #64748b', () => {
+  const z = { name: 'X', type: 'T', color: 'red;background:url(x)', lower: '', upper: '', legal: 'L', legalUrl: '', desc: '' };
+  const body = zonesRender([z])['zones-body'].innerHTML;
+  assert.ok(!body.includes('url(x)'));
+  assert.ok(body.includes('background:#64748b'));
+});
+test('renderZones: gültige Hex-Farbe bleibt erhalten', () => {
+  const z = { name: 'X', type: 'T', color: '#ef4444', lower: '', upper: '', legal: 'L', legalUrl: '', desc: '' };
+  assert.ok(zonesRender([z])['zones-body'].innerHTML.includes('background:#ef4444'));
 });
 test('renderZones: NOTAM-Zone + Platzhalter → "!" und Kasten plus Zonenname', () => {
   const notam = { name: 'ENR412', type: 'PROHIBITED', notam: true, color: '#ef4444', lower: 'GND', upper: '100 m', legal: 'NOTAM', legalUrl: '', desc: '' };

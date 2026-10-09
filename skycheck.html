@@ -4599,7 +4599,7 @@
         // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
         // auch die per innerHTML/_t erzeugten Inhalte (Taupunkt, Wolkenbasis, METAR, Vorhersage,
         // Vereisung, Zeitstempel) erfasst — nicht nur die statischen [data-i18n]-Labels.
-        renderStatus(lastStatus, lastZoneStatus);
+        renderStatus(lastStatus, evalZoneStatus(lastZones));
         renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
         renderWindProfile(lastWeather);
         renderFreezingRain(lastWeather);
@@ -8115,7 +8115,7 @@
         ? ''
         : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-          <div style="background:${z.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+          <div style="background:${/^#[0-9a-f]{3,8}$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
         </div>
 
