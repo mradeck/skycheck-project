@@ -241,6 +241,36 @@ test('DE F1: Wartungsseite nur bei der exakten CTR-Abfrage → Hauptergebnis ble
   assert.equal((await result).length, 1);
 });
 
+// ── F4: Teilergebnis plus Platzhalter (Deutschland) ──────────────────────────
+test('DE F4: ein Layer ServiceException, einer transient defekt, einer nutzbar → Zonen + genau ein Platzhalter', async () => {
+  const { result, bad } = de(L => (L === 'a,b,c' || L === 'a' ? txt('ServiceException') : (L === 'b' ? txt('', false) : gs('HIT'))));
+  const z = await result;
+  assert.equal(z.length, 2);
+  assert.equal(z[0].name, 'ZHIT');
+  assert.deepEqual(z[1], PLACEHOLDER);
+  assert.deepEqual([...bad], ['a']);
+});
+test('DE F4: transiente Probe als Wartungsseite mit Status 200 → ebenfalls Platzhalter', async () => {
+  const { result } = de(L => (L === 'a,b,c' || L === 'a' ? txt('ServiceException') : (L === 'b' ? txt('<html>Maintenance</html>') : gs('HIT'))));
+  const z = await result;
+  assert.equal(z.filter(x => x.unavailable).length, 1);
+});
+test('DE F4: ein Layer ServiceException, alle anderen nutzbar → KEIN Platzhalter', async () => {
+  const { result } = de(L => (L === 'a,b,c' || L === 'a' ? txt('ServiceException') : (L === 'b' ? gs('HIT') : gs())));
+  const z = await result;
+  assert.equal(z.length, 1);
+  assert.ok(!z.some(x => x.unavailable));
+});
+test('DE F4: abgelehnte Probe (fetch wirft) bei nutzbarem Layer → Platzhalter', async () => {
+  const { result } = de(L => {
+    if (L === 'a,b,c' || L === 'a') return txt('ServiceException');
+    if (L === 'b') throw new Error('Netzwerk');
+    return gs('HIT');
+  });
+  const z = await result;
+  assert.equal(z.filter(x => x.unavailable).length, 1);
+});
+
 // ---- Task 2: strikte ArcGIS-Anbindung der Punkt-Adapter ----
 function arcgisStrict(fetchImpl, call) {
   return new Function('fetch', `
@@ -379,6 +409,40 @@ for (const [fn, local, setup] of [
     assert.deepEqual(await call(async () => jsonResp({}), true), [{ name: 'LOKAL' }]);
   });
 }
+
+// ── F4: Dänemark — Teilergebnis plus Platzhalter ─────────────────────────────
+function dk(layerAnswers) {
+  const call = fetchImpl => new Function('fetch', `
+    const console = { warn() {} };
+    const DK_LAYERS = [{ url: 'u1', color: '#111' }, { url: 'u2', color: '#222' }, { url: 'u3', color: '#333' }];
+    const _mapDK = f => ({ name: f.name });
+    ${grab('zoneDataUnavailable')}
+    ${grab('_arcgisQuery')}
+    ${grab('_envParams')}
+    ${grab('fetchZonesDK')}
+    return fetchZonesDK(55, 10, 100);`)(fetchImpl);
+  return call(async url => {
+    const a = layerAnswers[url.split('/query')[0]];
+    return a === 'fail' ? { ok: false, status: 500, json: async () => ({}) }
+      : { ok: true, status: 200, json: async () => ({ features: a }) };
+  });
+}
+test('DK F4: eine von drei Ebenen fällt aus → Treffer der gesunden Ebenen plus genau ein Platzhalter', async () => {
+  const z = await dk({ u1: [{ name: 'A' }], u2: 'fail', u3: [{ name: 'C' }] });
+  assert.deepEqual(z.map(x => x.name), ['A', 'C', '']);
+  assert.equal(z.filter(x => x.unavailable).length, 1);
+  assert.deepEqual(z[2], PLACEHOLDER);
+});
+test('DK F4: alle drei Ebenen fallen aus → wirft', async () => {
+  await assert.rejects(dk({ u1: 'fail', u2: 'fail', u3: 'fail' }));
+});
+test('DK F4: alle gesund → keine Platzhalter', async () => {
+  const z = await dk({ u1: [{ name: 'A' }], u2: [], u3: [] });
+  assert.deepEqual(z, [{ name: 'A' }]);
+});
+test('DK F4: alle gesund ohne Treffer → []', async () => {
+  assert.deepEqual(await dk({ u1: [], u2: [], u3: [] }), []);
+});
 
 // ── F5: Null-Sicherheit und Farbwächter ──────────────────────────────────────
 test('F5: evalZoneStatus verträgt null-Einträge in der Liste', () => {

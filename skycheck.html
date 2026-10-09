@@ -6513,9 +6513,14 @@
     async function fetchZonesDK(lat, lon, radiusM = 100) {
       try {
         const env = _envParams(lat, lon, radiusM);
-        const res = await Promise.all(DK_LAYERS.map(l =>
+        const res = await Promise.allSettled(DK_LAYERS.map(l =>
           _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env), true).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
-        return res.flat();
+        const ok = res.filter(r => r.status === 'fulfilled');
+        if (!ok.length) throw res[0].reason;   // keine Ebene erreichbar → Verteiler setzt den Platzhalter
+        const zones = ok.flatMap(r => r.value);
+        // Teilausfall: Treffer der gesunden Ebenen bleiben sichtbar, der Ausfall wird zusätzlich gemeldet.
+        if (ok.length < res.length) zones.push(zoneDataUnavailable());
+        return zones;
       } catch (e) { console.warn('Zones DK fetch error', e); throw e; }
     }
     async function fetchAllZonesDK() {
@@ -7304,6 +7309,7 @@
       const activeL = getActiveDipulLayers();
       const exactCtrPromise = gfi('kontrollzonen', 5);
       let params = [];
+      let partialLayers = false;   // Recovery: ein Layer war vorübergehend nicht auswertbar → Teilergebnis
 
       // Schnellpfad: kombinierte Abfrage aller aktiven Layer.
       const combined = await gfi(activeL);
@@ -7316,13 +7322,15 @@
         // für die Session aussortieren, Treffer der intakten Layer zusammenführen.
         const layers = activeL.split(',');
         const probes = await Promise.allSettled(layers.map(l => gfi(l)));
-        let newlyBad = false, anyUsable = false;
+        let newlyBad = false, anyUsable = false, anyTransient = false;
         probes.forEach((p, i) => {
-          if (p.status !== 'fulfilled') return;          // transient → nicht aussortieren
+          if (p.status !== 'fulfilled') { anyTransient = true; return; }   // transient → nicht aussortieren
           const { ok, failed, text } = p.value;
           if (ok && !failed) { anyUsable = true; params.push(...parseFeatureInfo(text)); }
           else if (ok && failed) { dipulBadLayers.add(layers[i]); newlyBad = true; }
+          else anyTransient = true;                      // ok:false → Layer unbekannt, nicht „leer"
         });
+        partialLayers = anyUsable && anyTransient;
 
         // Karten-Overlays (GetMap) auf die bereinigte Layerliste umstellen, damit
         // auch die Kacheln nicht länger am defekten Layer scheitern.
@@ -7356,12 +7364,15 @@
       }
 
       const seen = new Set();
-      return params.filter(z => {
+      const out = params.filter(z => {
         const key = z.fid || `${z.name}|${z.type}|${z.lower}|${z.upper}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       }).sort((a, b) => Number(isCtrZone(b)) - Number(isCtrZone(a)));
+      // Teilergebnis: gefundene Zonen bleiben sichtbar, der Ausfall eines Layers wird zusätzlich gemeldet.
+      if (partialLayers) out.push(zoneDataUnavailable());
+      return out;
     }
 
     // Parst eine GeoServer-GetFeatureInfo-HTML-Antwort in Zonen-Objekte.
