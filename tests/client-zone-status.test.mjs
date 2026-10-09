@@ -72,6 +72,7 @@ function dispatcher(country, adapters, extra = '') {
     const _t = k => 'T:' + k;
     const COUNTRY = ${JSON.stringify(country)};
     const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    const ZONE_LOOKUP_TIMEOUT_MS = 20000;
     const esEasa = () => false;
     const console = { warn() {}, info() {}, log() {} };
     ${extra || 'const notamNoHits = () => [];'}
@@ -90,7 +91,7 @@ for (const [country, adapter] of [['de', 'fetchZonesDE'], ['fr', 'fetchZonesFR']
     const result = country === 'es'
       ? await new Function(`
           const _t = k => 'T:' + k; const COUNTRY = 'es'; const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
-          const esEasa = () => true; const console = { warn() {} }; const notamNoHits = () => [];
+          const esEasa = () => true; const console = { warn() {} }; const notamNoHits = () => []; const ZONE_LOOKUP_TIMEOUT_MS = 20000;
           const fetchZonesESEasa = async () => { throw new Error('HTTP 500'); };
           const fetchZonesES = async () => { throw new Error('nicht erwartet'); };
           ${grab('zoneDataUnavailable')}
@@ -188,9 +189,10 @@ function de(responder, layers = 'a,b,c') {
   const result = new Function('fetch', 'dipulBadLayers', `
     const DIPUL_WMS_URL = 'http://x';
     const getActiveDipulLayers = () => '${layers}';
-    const parseFeatureInfo = t => (t === 'HIT' ? [{ name: 'Z', type: 'T', lower: '', upper: '' }] : []);
+    const parseFeatureInfo = t => (t.includes('HIT') ? [{ name: 'Z' + (t.match(/HIT\\w*/) || [''])[0], type: 'T', lower: '', upper: '' }] : []);
     const isCtrZone = () => false;
     const console = { warn() {} };
+    ${grab('zoneDataUnavailable')}
     ${grab('fetchZonesDE')}
     return fetchZonesDE(1, 2, 100);`)(async url => {
       const L = new URL(url).searchParams.get('LAYERS');
@@ -199,9 +201,11 @@ function de(responder, layers = 'a,b,c') {
   return { result, bad };
 }
 const txt = (t, ok = true) => ({ ok, text: async () => t });
+// Echte GeoServer-Antwort (gekürzt): Titel + CSS; Treffer stehen als Marker 'HIT…' im Rumpf.
+const gs = (body = '') => txt(`<html><head><title>Geoserver GetFeatureInfo output</title></head><style>table.featureInfo{}</style><body>${body}</body></html>`);
 
 test('DE: kombinierte Abfrage ok → Zonen', async () => {
-  const { result } = de(L => txt(L === 'a,b,c' ? 'HIT' : 'x'));
+  const { result } = de(L => (L === 'a,b,c' ? gs('HIT') : gs()));
   assert.equal((await result).length, 1);
 });
 test('DE: kombinierte Abfrage HTTP-Fehler → wirft', async () => {
@@ -209,7 +213,7 @@ test('DE: kombinierte Abfrage HTTP-Fehler → wirft', async () => {
   await assert.rejects(result);
 });
 test('DE: ServiceException, ein Layer defekt, andere nutzbar → kein Wurf, Layer gesperrt', async () => {
-  const { result, bad } = de(L => txt(L === 'a,b,c' || L === 'a' ? 'ServiceException' : (L === 'b' ? 'HIT' : 'ok')));
+  const { result, bad } = de(L => (L === 'a,b,c' || L === 'a' ? txt('ServiceException') : (L === 'b' ? gs('HIT') : gs())));
   assert.equal((await result).length, 1);
   assert.deepEqual([...bad], ['a']);
 });
@@ -217,6 +221,24 @@ test('DE: ServiceException, ein Layer defekt, alle anderen nicht erreichbar → 
   const { result, bad } = de(L => (L === 'a,b,c' || L === 'a') ? txt('ServiceException') : txt('', false));
   await assert.rejects(result);
   assert.deepEqual([...bad], ['a']);
+});
+
+// ── F1: HTTP 200 ohne GeoServer-Antwort ist kein „keine Zonen" ───────────────
+test('DE F1: 200 mit Wartungsseite (kein GeoServer) → wirft', async () => {
+  const { result } = de(() => txt('<html><body>Maintenance</body></html>'));
+  await assert.rejects(result);
+});
+test('DE F1: 200 mit leerem Rumpf → wirft', async () => {
+  const { result } = de(() => txt(''));
+  await assert.rejects(result);
+});
+test('DE F1: 200 mit GeoServer-Seite ohne Tabellen → [] (echtes „keine Zonen")', async () => {
+  const { result } = de(() => gs());
+  assert.deepEqual(await result, []);
+});
+test('DE F1: Wartungsseite nur bei der exakten CTR-Abfrage → Hauptergebnis bleibt, kein Wurf', async () => {
+  const { result } = de(L => (L === 'kontrollzonen' ? txt('<html>Maintenance</html>') : (L === 'a,b,c' ? gs('HIT') : gs())));
+  assert.equal((await result).length, 1);
 });
 
 // ---- Task 2: strikte ArcGIS-Anbindung der Punkt-Adapter ----
@@ -312,4 +334,210 @@ test('renderZones: NOTAM-Zone + Platzhalter → "!" und Kasten plus Zonenname', 
   assert.ok(body.includes('z-unavailable'));
   assert.ok(body.includes('ENR412'));
   assert.ok(els['zones-hdr-text'].innerHTML.includes('T:zonesCount:1'));   // Platzhalter zählt nicht mit
+});
+
+// ── F3: 200 mit falscher Form ────────────────────────────────────────────────
+for (const [fn, pre] of [['fetchZonesES', 'ENAIRE_IDENTIFY_URL'], ['fetchZonesCH', 'GEOADMIN_IDENTIFY_URL']]) {
+  const call = fetchImpl => new Function('fetch', `
+    const ${pre} = 'http://x'; const CH_ZONE_LAYER = 'l'; const LANG = 'de';
+    const _esVal = v => (v == null || v === 'Nulo') ? '' : String(v);
+    const _esAlt = () => '—', _chAlt = () => '—', _esZoneColor = () => '#000', _chZoneColor = () => '#000';
+    const _stripHtml = s => String(s ?? ''); const console = { warn() {} };
+    ${grab(fn)}
+    return ${fn}(1, 2, 100);`)(fetchImpl);
+  test(`${fn} F3: 200 {} (kein results-Array) wirft`, async () => {
+    await assert.rejects(call(async () => jsonResp({})));
+  });
+  test(`${fn} F3: 200 {results: "x"} wirft`, async () => {
+    await assert.rejects(call(async () => jsonResp({ results: 'x' })));
+  });
+}
+
+for (const [fn, local, setup] of [
+  ['fetchZonesFR', 'fetchZonesFRLocal', ''],
+  ['fetchZonesAT', 'fetchZonesATLocal', 'const LANG = "de";'],
+  ['fetchZonesEd269', null, 'const LANG = "de"; const COUNTRY = "lu";'],
+]) {
+  const call = (fetchImpl, local_ = false) => new Function('fetch', `
+    const console = { warn() {} }; const IS_LOCAL_PREVIEW = ${local_};
+    const fetchZonesFRLocal = async () => [{ name: 'LOKAL' }];
+    const fetchZonesATLocal = async () => [{ name: 'LOKAL' }];
+    const loadLocalEd269Entries = async () => [];
+    ${setup}
+    ${grab(fn)}
+    return ${fn}(50, 8, 100);`)(fetchImpl);
+  test(`${fn} F3: 200 {} (zones kein Array) wirft (Produktion)`, async () => {
+    await assert.rejects(call(async () => jsonResp({})));
+  });
+  test(`${fn} F3: 200 {zones: "x"} wirft (Produktion)`, async () => {
+    await assert.rejects(call(async () => jsonResp({ zones: 'x' })));
+  });
+  test(`${fn} F3: 200 {zones: []} → []`, async () => {
+    assert.deepEqual(await call(async () => jsonResp({ zones: [] })), []);
+  });
+  if (local) test(`${fn} F3: 200 {} in der lokalen Vorschau → Datei-Fallback (wie bei non-2xx)`, async () => {
+    assert.deepEqual(await call(async () => jsonResp({}), true), [{ name: 'LOKAL' }]);
+  });
+}
+
+// ── F5: Null-Sicherheit und Farbwächter ──────────────────────────────────────
+test('F5: evalZoneStatus verträgt null-Einträge in der Liste', () => {
+  const r = run(`return evalZoneStatus([null, { name: 'EEGZ1', type: 'REQ_AUTHORISATION' }]);`);
+  assert.equal(r.lvl, 'warn');
+  assert.deepEqual(r.reasons, ['EEGZ1']);
+});
+for (const [color, ok] of [['#abc', true], ['#abcd', true], ['#aabbcc', true], ['#aabbccdd', true],
+  ['#abcde', false], ['#aabbccd', false], ['#ab', false], ['#aabbccddee', false]]) {
+  test(`F5: Zonenkarte Farbwächter ${color} → ${ok ? 'übernommen' : 'verworfen'}`, () => {
+    const z = { name: 'X', type: 'T', color, lower: '', upper: '', legal: 'L', legalUrl: '', desc: '' };
+    const body = zonesRender([z])['zones-body'].innerHTML;
+    assert.equal(body.includes(`background:${color}`), ok);
+    if (!ok) assert.ok(body.includes('background:#64748b'));
+  });
+}
+
+// ── F2(a): Zeitlimit im Verteiler ────────────────────────────────────────────
+// Der Verteiler liest ZONE_LOOKUP_TIMEOUT_MS aus dem Seitenkontext; hier injizierbar.
+// Timer-Buchführung: jeder gesetzte Timer, der nicht gelöscht wurde, bleibt in `open`.
+function dispatcherTimed(country, adapterSrc, timeoutMs, notamSrc = '() => []') {
+  return new Function(`
+    const _t = k => 'T:' + k;
+    const COUNTRY = ${JSON.stringify(country)};
+    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    const esEasa = () => false;
+    const console = { warn() {}, info() {}, log() {} };
+    const notamNoHits = ${notamSrc};
+    const ZONE_LOOKUP_TIMEOUT_MS = ${timeoutMs};
+    const open = new Set();
+    const setTimeout = (f, ms) => { const t = globalThis.setTimeout(f, ms); open.add(t); return t; };
+    const clearTimeout = t => { open.delete(t); globalThis.clearTimeout(t); };
+    const fetchZonesAT = ${adapterSrc};
+    const fetchZonesEd269 = ${adapterSrc};
+    ${grab('zoneDataUnavailable')}
+    ${grab('fetchZones')}
+    return fetchZones(60, 10, 100).then(zones => ({ zones, openTimers: open.size }));
+  `)();
+}
+test('Konstante: Zeitlimit des Zonenabrufs beträgt 20 Sekunden', () => {
+  assert.match(html, /const ZONE_LOOKUP_TIMEOUT_MS = 20000;/);
+});
+test('F2a: hängender Adapter → nach Zeitlimit [Platzhalter]', async () => {
+  const t0 = Date.now();
+  const { zones } = await dispatcherTimed('at', '() => new Promise(() => {})', 30);
+  assert.deepEqual(zones, [PLACEHOLDER]);
+  assert.ok(Date.now() - t0 < 2000);
+});
+test('F2a: schneller Adapter → seine Zonen, Timer ist gelöscht', async () => {
+  const { zones, openTimers } = await dispatcherTimed('at', 'async () => [{ name: "A", type: "X" }]', 600000);
+  assert.deepEqual(zones, [{ name: 'A', type: 'X' }]);
+  assert.equal(openTimers, 0);
+});
+test('F2a: werfender Adapter → Platzhalter, Timer ist gelöscht', async () => {
+  const { zones, openTimers } = await dispatcherTimed('at', 'async () => { throw new Error("x"); }', 600000);
+  assert.deepEqual(zones, [PLACEHOLDER]);
+  assert.equal(openTimers, 0);
+});
+test('F2a: Adapter scheitert NACH dem Zeitlimit → keine unbehandelte Ablehnung, weiter [Platzhalter]', async () => {
+  let unhandled = null;
+  const h = e => { unhandled = e; };
+  process.on('unhandledRejection', h);
+  const { zones } = await dispatcherTimed('at', '() => new Promise((_, rej) => globalThis.setTimeout(() => rej(new Error("spät")), 80))', 20);
+  await new Promise(r => setTimeout(r, 150));
+  process.off('unhandledRejection', h);
+  assert.deepEqual(zones, [PLACEHOLDER]);
+  assert.equal(unhandled, null);
+});
+test('F2a Norwegen: hängender Adapter + NOTAM-Treffer → NOTAM zuerst, dann Platzhalter', async () => {
+  const { zones } = await dispatcherTimed('no', '() => new Promise(() => {})', 30,
+    '() => [{ name: "ENR412", type: "PROHIBITED", notam: true }]');
+  assert.equal(zones.length, 2);
+  assert.equal(zones[0].notam, true);
+  assert.deepEqual(zones[1], PLACEHOLDER);
+});
+
+// ── F2(b): Prüf-Status im Banner ─────────────────────────────────────────────
+function bannerHarness() {
+  const els = {};
+  const $ = id => (els[id] ||= { className: '', textContent: '', innerHTML: '' });
+  const api = new Function('$', `
+    const _t = k => 'T:' + k;
+    const escapeHtml = s => String(s ?? '');
+    const isCtrZone = () => false;
+    let lastStatus = { lvl: 'go', reasons: [] }, lastZoneStatus = null, lastZones = [];
+    ${grab('zoneDataUnavailable')}
+    ${grab('pendingZoneStatus')}
+    ${grab('currentZoneStatus')}
+    ${grab('evalZoneStatus')}
+    ${grab('renderStatus')}
+    return {
+      renderStatus, pendingZoneStatus, currentZoneStatus, evalZoneStatus, zoneDataUnavailable,
+      setPending() { lastZoneStatus = pendingZoneStatus(); },
+      setZones(z) { lastZones = z; },
+      get zoneStatus() { return lastZoneStatus; },
+    };`)($);
+  return { els, api };
+}
+test('F2b: Pending-Status ist ein go-Status mit pending-Marke und zonesChecking-Text', () => {
+  const { api } = bannerHarness();
+  assert.deepEqual(api.pendingZoneStatus(), { lvl: 'go', reasons: ['T:zonesChecking'], pending: true });
+});
+test('F2b: Banner während Pending zeigt zonesChecking, nie zoneOk; Ampel nur vom Wetter bestimmt', () => {
+  const { els, api } = bannerHarness();
+  api.setPending();
+  api.renderStatus({ lvl: 'go', reasons: [] });
+  assert.ok(els['status-desc'].innerHTML.includes('T:zonesChecking'));
+  assert.ok(!els['status-desc'].innerHTML.includes('T:zoneOk'));
+  assert.equal(els['status-banner'].className, 'status-banner go');
+  api.renderStatus({ lvl: 'warn', reasons: ['Wind'] });   // METAR-/Wetter-Update während Pending
+  assert.ok(els['status-desc'].innerHTML.includes('T:zonesChecking'));
+  assert.equal(els['status-banner'].className, 'status-banner warn');
+});
+test('F2b: fertiger Check ersetzt Pending — leeres Ergebnis zeigt zoneOk', () => {
+  const { els, api } = bannerHarness();
+  api.setPending();
+  api.renderStatus({ lvl: 'go', reasons: [] });
+  api.renderStatus({ lvl: 'go', reasons: [] }, api.evalZoneStatus([]));
+  assert.ok(els['status-desc'].innerHTML.includes('T:zoneOk'));
+  assert.ok(!els['status-desc'].innerHTML.includes('T:zonesChecking'));
+  assert.ok(!api.zoneStatus.pending);
+});
+test('F2b: fertiger Check mit Platzhalter ersetzt Pending → gelb, zoneDataUnavailable', () => {
+  const { els, api } = bannerHarness();
+  api.setPending();
+  api.renderStatus({ lvl: 'go', reasons: [] });
+  api.renderStatus({ lvl: 'go', reasons: [] }, api.evalZoneStatus([api.zoneDataUnavailable()]));
+  assert.ok(els['status-desc'].innerHTML.includes('T:zoneDataUnavailable'));
+  assert.ok(!els['status-desc'].innerHTML.includes('T:zonesChecking'));
+  assert.equal(els['status-banner'].className, 'status-banner warn');
+  assert.ok(!api.zoneStatus.pending);
+});
+test('F2b: Sprachwechsel während Pending bleibt Pending (nie zoneOk), danach echter Status', () => {
+  const { api } = bannerHarness();
+  api.setPending();
+  api.setZones([]);                                   // lastZones stammt vom vorigen Punkt
+  assert.deepEqual(api.currentZoneStatus(), { lvl: 'go', reasons: ['T:zonesChecking'], pending: true });
+  api.setZones([api.zoneDataUnavailable()]);
+  api.renderStatus({ lvl: 'go', reasons: [] }, api.evalZoneStatus([api.zoneDataUnavailable()]));
+  assert.equal(api.currentZoneStatus().lvl, 'warn');  // nach Abschluss: aus lastZones berechnet
+});
+test('F2b: runCheck setzt den Pending-Status vor dem ersten renderStatus', () => {
+  const body = grab('runCheck');
+  const iPending = body.indexOf('pendingZoneStatus()');
+  assert.ok(iPending > 0);
+  assert.ok(iPending < body.indexOf('renderStatus('));
+  assert.ok(iPending < body.indexOf('fetchZones('));
+});
+test('F2b: switchLang nutzt currentZoneStatus() statt evalZoneStatus(lastZones)', () => {
+  const body = grab('switchLang');
+  assert.ok(body.includes('currentZoneStatus()'));
+  assert.ok(!body.includes('evalZoneStatus(lastZones)'));
+});
+test('F2b: zonesChecking existiert in allen fünf Sprachblöcken', () => {
+  assert.equal((html.match(/^\s+zonesChecking: '/gm) || []).length, 5);
+});
+test('F2b: abgebrochener Check (catch in runCheck) ersetzt den Pending-Status durch „nicht geprüft"', () => {
+  const body = grab('runCheck');
+  const c = body.slice(body.indexOf('} catch (e) {'));
+  assert.ok(c.includes('lastZoneStatus = evalZoneStatus(lastZones)'));
+  assert.ok(c.includes('lastZones = [zoneDataUnavailable()]'));
 });

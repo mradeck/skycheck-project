@@ -3605,6 +3605,7 @@
         zoneDataUnavailable: 'Zonendaten nicht verfügbar — Luftraum nicht geprüft',
         zonesUnavailable: 'Zonendaten konnten nicht geladen werden.',
         zonesUnavailableHint: 'Der Luftraum an diesem Standort wurde nicht geprüft. Bitte erneut laden oder die amtliche Quelle prüfen:',
+        zonesChecking: 'Luftraum wird geprüft …',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3793,6 +3794,7 @@
         zoneDataUnavailable: 'Zone data unavailable — airspace not checked',
         zonesUnavailable: 'Zone data could not be loaded.',
         zonesUnavailableHint: 'The airspace at this location was not checked. Please reload or check the official source:',
+        zonesChecking: 'Checking airspace …',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3973,6 +3975,7 @@
         zoneDataUnavailable: 'Données de zones indisponibles — espace aérien non vérifié',
         zonesUnavailable: 'Les données de zones n\'ont pas pu être chargées.',
         zonesUnavailableHint: 'L\'espace aérien à cet endroit n\'a pas été vérifié. Rechargez ou consultez la source officielle :',
+        zonesChecking: 'Vérification de l\'espace aérien …',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -4161,6 +4164,7 @@
         zoneDataUnavailable: 'Datos de zonas no disponibles — espacio aéreo no comprobado',
         zonesUnavailable: 'No se pudieron cargar los datos de zonas.',
         zonesUnavailableHint: 'El espacio aéreo en esta ubicación no se ha comprobado. Recargue o consulte la fuente oficial:',
+        zonesChecking: 'Comprobando el espacio aéreo …',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -4349,6 +4353,7 @@
         zoneDataUnavailable: 'Dane stref niedostępne — przestrzeń nie została sprawdzona',
         zonesUnavailable: 'Nie udało się wczytać danych stref.',
         zonesUnavailableHint: 'Przestrzeń w tym miejscu nie została sprawdzona. Odśwież lub sprawdź oficjalne źródło:',
+        zonesChecking: 'Sprawdzanie przestrzeni …',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -4599,7 +4604,7 @@
         // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
         // auch die per innerHTML/_t erzeugten Inhalte (Taupunkt, Wolkenbasis, METAR, Vorhersage,
         // Vereisung, Zeitstempel) erfasst — nicht nur die statischen [data-i18n]-Labels.
-        renderStatus(lastStatus, evalZoneStatus(lastZones));
+        renderStatus(lastStatus, currentZoneStatus());
         renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
         renderWindProfile(lastWeather);
         renderFreezingRain(lastWeather);
@@ -5443,6 +5448,9 @@
       const checkLat = S.lat;
       const checkLon = S.lon;
       const blocking = options.blocking !== false;
+      // Bis die Zonen dieses Checks da sind, kein „keine Einschränkungen" (und nicht das Urteil des
+      // vorigen Punkts) im Banner zeigen. Der fertige Check ersetzt diesen Status durch das echte Zonenurteil.
+      lastZoneStatus = pendingZoneStatus();
       S.inDfsCtr = false;
       if (blocking) showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
@@ -5579,6 +5587,10 @@
         if (checkId !== S.checkSequence) return;
         if (blocking) hideLoad();
         console.error(e);
+        // Abgebrochener Check: der Prüf-Status darf nicht stehen bleiben (und bei Sprachwechsel
+        // nicht wieder aufleben) — der Luftraum dieses Punkts gilt als nicht geprüft.
+        lastZones = [zoneDataUnavailable()];
+        lastZoneStatus = evalZoneStatus(lastZones);
         setStatus('warn', '⚠️', _t('errLoad'), e.message);
       }
     }
@@ -6402,6 +6414,9 @@
       return { unavailable: true, name: '', type: 'DATA_UNAVAILABLE', color: '#64748b',
         lower: '—', upper: '—', legal: '—', legalUrl: '', desc: '' };
     }
+    // Zeitlimit für den Zonenabruf: ein hängender Dienst wird nach dieser Zeit wie ein Ausfall behandelt
+    // (Platzhalter), damit das Banner nicht endlos auf „Luftraum wird geprüft …" stehen bleibt.
+    const ZONE_LOOKUP_TIMEOUT_MS = 20000;
     async function fetchZones(lat, lon, radiusM = 100) {
       // Länderauswahl; jeder Adapter WIRFT bei fehlgeschlagenem Abruf (nie [] als Fehlerersatz).
       const adapter = async () => {
@@ -6416,14 +6431,21 @@
         if (ED269_COUNTRIES[COUNTRY]) return fetchZonesEd269(lat, lon, radiusM);
         return fetchZonesDE(lat, lon, radiusM);
       };
-      let zones;
+      let zones, timer;
       try {
-        zones = await adapter();
+        // Adapter gegen das Zeitlimit laufen lassen; ein später scheiternder Adapter bleibt durch
+        // Promise.race behandelt (keine unbehandelte Ablehnung). Der Timer wird immer gelöscht.
+        const timeout = new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Zeitlimit für den Zonenabruf überschritten')), ZONE_LOOKUP_TIMEOUT_MS);
+        });
+        zones = await Promise.race([adapter(), timeout]);
         if (!Array.isArray(zones)) throw new Error('Zonen-Adapter lieferte keine Liste');
       } catch (error) {
         // Ein Ausfall darf nie wie „keine Zonen" aussehen → Platzhalter statt leerer Liste.
         console.warn('Zonendaten nicht verfügbar (' + COUNTRY + ')', error);
         zones = [zoneDataUnavailable()];
+      } finally {
+        clearTimeout(timer);
       }
       // Norwegen: geladene NOTAM-Treffer voranstellen (auch vor dem Platzhalter).
       if (!ED269_COUNTRIES[COUNTRY]) return zones;
@@ -6666,8 +6688,9 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
         if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
+        if (!d || !Array.isArray(d.results)) throw new Error('Antwort ohne results-Liste');   // Nulltreffer = {"results":[]}
         const seen = new Set(), out = [];
-        for (const res of (d.results || [])) {
+        for (const res of d.results) {
           const a = res.attributes || {};
           const ident = _esVal(a.identifier);
           const name = _esVal(a.name) || ident || '—';
@@ -6724,8 +6747,9 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
         if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
+        if (!d || !Array.isArray(d.results)) throw new Error('Antwort ohne results-Liste');   // Nulltreffer = {"results":[]}
         const seen = new Set(), out = [];
-        for (const res of (d.results || [])) {
+        for (const res of d.results) {
           const a = res.attributes || {};
           const rid = a.zone_restriction_id || '';
           const name = a['zone_name_' + L] || a.zone_name_de || a.zone_name_en || '—';
@@ -6820,7 +6844,8 @@
         const r = await fetch(`/.netlify/functions/zones-fr?lat=${lat}&lon=${lon}&radius=${radiusM}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones FR: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
       } catch (e) {
         console.warn('Zones FR fetch error', e);
@@ -6955,7 +6980,8 @@
         const r = await fetch(`/.netlify/functions/zones-at?lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones AT: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
       } catch (e) {
         console.warn('Zones AT fetch error', e);
@@ -7076,7 +7102,8 @@
         const r = await fetch(`/.netlify/functions/zones-ed269?country=${COUNTRY}&lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones ED-269: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
       } catch (e) {
         console.warn('Zones ED-269 fetch error', e);
@@ -7257,14 +7284,18 @@
         + `&CRS=EPSG:4326&BBOX=${bboxForRadius(queryRadiusM)}&WIDTH=101&HEIGHT=101&I=50&J=50`
         + `&INFO_FORMAT=text/html&FEATURE_COUNT=50`;
 
-      // Einzel-Request. ok = HTTP-2xx; failed = GeoServer-ServiceException
-      // (defekter Layer). Netzwerk-/HTTP-Fehler → ok:false, NICHT als defekt werten.
+      // Einzel-Request. ok = HTTP-2xx UND erkennbare GeoServer-Antwort; failed = GeoServer-
+      // ServiceException (defekter Layer). Netzwerk-/HTTP-Fehler sowie 2xx ohne GeoServer-Ausgabe
+      // (Wartungsseite, leerer Rumpf) → ok:false, NICHT als defekt werten und nie als „keine Zonen".
+      // Auch eine echte leere Antwort trägt den Titel „Geoserver GetFeatureInfo output" samt featureInfo-CSS.
       async function gfi(layers, queryRadiusM = radiusM) {
         try {
           const r = await fetch(gfiUrl(layers, queryRadiusM));
           if (!r.ok) return { ok: false, failed: false, text: '' };
           const text = await r.text();
-          return { ok: true, failed: /ServiceException/i.test(text), text };
+          const failed = /ServiceException/i.test(text);
+          if (!failed && !/GetFeatureInfo output|featureInfo/i.test(text)) return { ok: false, failed: false, text: '' };
+          return { ok: true, failed, text };
         } catch (e) {
           return { ok: false, failed: false, text: '' };
         }
@@ -7507,6 +7538,16 @@
       return { lvl, reasons };
     }
 
+    // Platzhalter-Zonenstatus, solange der Zonenabruf eines Checks läuft: nie „keine Einschränkungen".
+    // lvl bleibt 'go', damit die Ampel in dieser Zeit allein vom Wetter bestimmt wird.
+    function pendingZoneStatus() {
+      return { lvl: 'go', reasons: [_t('zonesChecking')], pending: true };
+    }
+    // Zonenstatus für Neu-Rendern (Sprachwechsel): Pending bleibt Pending (neuer Text), sonst aus lastZones.
+    function currentZoneStatus() {
+      return lastZoneStatus?.pending ? pendingZoneStatus() : evalZoneStatus(lastZones);
+    }
+
     function evalZoneStatus(zones) {
       if (!zones || zones.length === 0) return { lvl: 'go', reasons: [] };
       const reasons = []; let lvl = 'go';
@@ -7518,7 +7559,7 @@
         seen.add(msg); reasons.push(msg);
       }
       for (const z of zones) {
-        if (z.unavailable) continue;
+        if (!z || z.unavailable) continue;
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
         if (z.inactive) {
@@ -8115,7 +8156,7 @@
         ? ''
         : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-          <div style="background:${/^#[0-9a-f]{3,8}$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+          <div style="background:${/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
         </div>
 
@@ -8477,7 +8518,7 @@
         zoneHtml += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
       } else {
         items.forEach(it => {
-          const dot = /^#[0-9a-f]{3,8}$/i.test(it.color || '') ? it.color : '#64748b';
+          const dot = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(it.color || '') ? it.color : '#64748b';
           zoneHtml += `<div class="ms-zone-item">
         <span class="ms-zone-dot" style="background:${dot}"></span>
         <span>${it.label}</span>
