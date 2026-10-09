@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Drohnenflugprüfung (DE · FR · AT · CH · ES · DK · IE · NL · PT)
+# SkyCheck — Drohnenflugprüfung (DE · FR · AT · CH · ES · DK · IE · NL · PT · LU · NO · EE)
 
 **SkyCheck** ist eine kostenlose Single-Page Web-App zur schnellen Vorabprüfung von Drohnenflügen. Die App aggregiert Echtzeit-Daten aus mehreren offiziellen Quellen und gibt eine sofortige Flugempfehlung. Unser Verwendungszweck: Vermessung, Inspektion, Imagefilm, TV- & Filmproduktionen sowie Schulungen für den Drohnenführerschein A2/STS bei [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -24,10 +24,13 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | 🇮🇪 **Irland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, vorläufig) |
 | 🇳🇱 **Niederlande** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, ED-318) |
 | 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (Vektor) |
+| 🇱🇺 **Luxemburg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxemburg — ED-269-Snapshot (wöchentlich aktualisiert) |
+| 🇳🇴 **Norwegen** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — ED-269-Snapshot (wöchentlich aktualisiert); NOTAM-Sperrgebiete auf Klick |
+| 🇪🇪 **Estland** | [skycheck-ee.netlify.app](https://skycheck-ee.netlify.app/) | EANS (utm.eans.ee) — ED-269-Snapshot (wöchentlich aktualisiert); Kurzzeitzonen können bis zu 7 Tage alt sein |
 
-> Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
+> Alle zwölf sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.116.8
+📦 **Aktuelle Version:** v26.10.117.0
 
 ---
 
@@ -80,6 +83,9 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | **Geozonen 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irische UAS-Zonen `ie_geozones` (ArcGIS, ED-318, vorläufig) | ✅ |
 | **Geozonen 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Niederländische UAS-Zonen `Netherlands_ED318` (ArcGIS-Vektor, ED-318, ~162 Zonen) | ✅ |
 | **Geozonen 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Portugiesische UAS-Zonen `Portugal_Geo_Zones_Polygons` (ArcGIS-Vektor, ~314 Zonen; KML-abgeleitetes Schema) | ✅ |
+| **Geozonen 🇱🇺** [DAC Luxemburg](https://drones.geoportail.lu/) | Luxemburgische UAS-Zonen, ED-269-Snapshot (`data/uas-zones-lu.json`, 43 Zonen; Lizenz CC0) | via `zones-ed269.js` |
+| **Geozonen 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norwegische UAS-Zonen, ED-269-Snapshot (`data/uas-zones-no.json`, 1390 Zonen; Lizenz NLOD 2.0); befristete NOTAM-Sperrgebiete auf Klick (`notam-no.js`) | via `zones-ed269.js` |
+| **Geozonen 🇪🇪** [EANS](https://utm.eans.ee/) | Estnische UAS-Zonen, ED-269-Snapshot (`data/uas-zones-ee.json`, 241 Zonen; Lizenz: vom Herausgeber nicht angegeben); Kurzzeitzonen können bis zu 7 Tage alt sein | via `zones-ed269.js` |
 
 ---
 
@@ -115,7 +121,7 @@ redirect.html               ← optionale Weiterleitungsseite
 
 ### Multi-Country-Support (seit v0.73)
 
-SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen. Das Land wird aus dem Hostname (z. B. `skycheck-ch.netlify.app`) oder dem URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt` erkannt. Default: `de`. Wetter, ADS-B, METAR/TAF und Kp-Index sind global; die **UI-Sprache, das Suchhinweis-Wahrzeichen und die Geocoding-Bounding-Box** werden pro Land gesetzt.
+SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen. Das Land wird aus dem Hostname (z. B. `skycheck-ch.netlify.app`) oder dem URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee` erkannt. Default: `de`. Wetter, ADS-B, METAR/TAF und Kp-Index sind global; die **UI-Sprache, das Suchhinweis-Wahrzeichen und die Geocoding-Bounding-Box** werden pro Land gesetzt.
 
 | Land | Geozonen-Quelle | Overlay | Detailliste / Status | Daten & Updates |
 |---|---|---|---|---|
@@ -206,6 +212,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxemburg, Norwegen und Estland.** Drei neue Länder-Varianten (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) mit offiziellen ED-269-Geozonen als wöchentlich aktualisierte Snapshots (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 Zonen; Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). Neue Netlify-Funktion `zones-ed269` mit exaktem Flächentest (Punkt im Polygon bzw. Kante innerhalb des Suchradius). Zonen, deren Aktivierungsfenster alle abgelaufen sind, bleiben als „aktuell inaktiv" sichtbar (gelb statt rot). **Norwegen:** temporäre NOTAM-Sperrgebiete werden per Klick live über die neue Funktion `notam-no` geladen, gestrichelt rot gezeichnet und 5 Minuten lang in die Ampel einbezogen. **Estland:** ein fester Hinweis, dass Kurzzeitzonen bis zu 7 Tage alt sein können. Zonennamen werden im Statusbanner und im Kartenpanel HTML-escaped. **Die Oberfläche startet jetzt standardmäßig im hellen Modus** (eine gespeicherte Wahl, auch Dunkel, wird respektiert). 39 Node-Tests. |
 | v26.08.116.8 | 🌍 **CTR-Höhenregeln-Seite: 5 weitere Sprachen (FR/ES/IT/NL/PL), SVG-Flaggen-Sprachumschalter + Grafik-Überarbeitung.** `ctr-hoehenregeln.html`. **(1) Sprachen:** jetzt in **7 Sprachen** — Deutsch, Englisch und neu **Französisch, Spanisch, Italienisch, Niederländisch, Polnisch** (vollständige i18n aller Texte, HTML-Blöcke, Tabellen, SVG-Grafik-Labels und Karten; aviatische Fachterminologie). **(2) Sprachumschalter:** der DE/EN-Text-Button wurde durch ein **SVG-Flaggen-Dropdown** ersetzt — zeigt die aktive Flagge, Klick zur Auswahl; robuste Inline-SVG-Flaggen (kein Emoji-Fallback-Problem); Erkennung über `?lang=`, localStorage und `navigator.language`. **(3) Grafik:** der Querschnitt wurde für Klarheit überarbeitet — Zone-2-Hügel → flaches Plateau geringer Flughöhe, Flughafen liegt jetzt auf seiner eigenen Bezugshöhe (flach), **Zone-1-Höhenbalken entfernt** (keine generelle Freigabe → keine Höhenregel), verwirrende schwebende Flugplatzhöhen-Bezugslinie entfernt, flache Deckel-Linie „Deckel = Flugplatzhöhe + 25 m" ergänzt, Gebäude-Cluster als breitere Skyline über die Zone-2/3-Grenze neu gezeichnet, irreführender „maßstabsgetreu"-Hinweis am 800-m-Marker entfernt. |
 | v26.08.116.7 | 🇩🇪 **CTR-Höhenregeln-Seite: NfL 2026-1-3959 (BMV-Grundsätze) ergänzt — allgemeine Betriebsbedingungen + 800-m-Sicht-Annotation.** `ctr-hoehenregeln.html` (DE+EN). Ergänzt das übergeordnete **NfL 2026-1-3959** (BMV-Grundsätze für UAS in Lufträumen der Klasse D, Basis für 3960/3981) als erste Referenz. Neue **„Weitere Bedingungen"-Box** mit den allgemeinen 3959-Bedingungen, angeführt von einem hervorgehobenen **See-and-Avoid-Warnhinweis**: Die Flugsicherung stellt **keine Staffelung** her (auch keine Wirbelschleppenstaffelung) und gibt **keine Verkehrsinformationen** — die Kollisionsvermeidung liegt allein beim Fernpiloten. Außerdem: **Mindestsicht ≥ 800 m** (außer bei Hindernisnähe / individueller Freigabe), autonome Flüge verboten, BVLOS & Schwarm zulässig. Die Querschnitts-SVG erhält eine **maßstabsgetreue „Sicht ≥ 800 m"-Annotation** (oben links im Himmel, bewusst weg von den Hindernis-Szenen, um die Ausnahme nicht fehlzudeuten). Nur `ctr-hoehenregeln.html`; APP_VER-Bump. |
 | v26.08.116.6 | 🇩🇪 **CTR-Höhenregeln-Seite: Galerie auf alle 24 CTR-D erweitert, nach DFS/DAS gruppiert + selbst-dokumentierendes Dateischema.** `ctr-hoehenregeln.html`. Die Höhengitter-Galerie deckt jetzt **alle 24 deutschen CTR-D** ab — die 6 fehlenden Flughäfen ergänzt: **Erfurt-Weimar (EDDE), München (EDDM)** (DFS) sowie **Dortmund (EDLW), Paderborn-Lippstadt (EDLP), Niederrhein/Weeze (EDLV), Mönchengladbach (EDLN)** (DAS). Die Galerie ist in zwei beschriftete Gruppen geteilt — **DFS-Flugplatzkontrolle · NfL 2026-1-3960 · 15 CTR-D** und **DAS-Flugplatzkontrolle · NfL 2026-1-3981 · 9 CTR-D**. Alle Galerie-Bilder auf ein selbst-dokumentierendes Schema umbenannt `hoehengrid_<nfl>_<dfs\|das>_<slug>_<icao>.webp` (18 bestehende per `git mv`, 6 neue konvertiert); `ports`-Array um NfL- + Behörden-Feld erweitert; Lead-Text 18 → 24. |

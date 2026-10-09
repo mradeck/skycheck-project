@@ -4,6 +4,9 @@
 [functions."zones-at"]
   included_files = ["data/uas-zones-at.json"]
 
+[functions."zones-ed269"]
+  included_files = ["data/uas-zones-lu.json", "data/uas-zones-no.json", "data/uas-zones-ee.json"]
+
 # Root-URL liefert die App ohne /skycheck.html-Suffix.
 # Rewrite (Status 200) — die URL in der Adresszeile bleibt "/".
 # Hostname-basierte COUNTRY-Detection in skycheck.html funktioniert weiter.
