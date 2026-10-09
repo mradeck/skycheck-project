@@ -133,13 +133,20 @@ test('all=1 liefert alle Zonen in schlanker Form', async () => {
   assert.match(r.headers['Cache-Control'], /max-age=3600/);
 });
 
-test('fehlende Datendatei → 500', async () => {
+test('unlesbare/korrupte Datendatei → 500', async () => {
   const keep = process.env.SKYCHECK_DATA_DIR;
-  process.env.SKYCHECK_DATA_DIR = mkdtempSync(join(tmpdir(), 'empty-'));
-  fn._test.resetCache();
-  // Achtung: die Function sucht danach auch im Repo-data/-Ordner. Der Test prüft daher
-  // nur, dass kein Absturz passiert und ein gültiger Status zurückkommt.
-  const r = await call({ country: 'lu', lat: '49.6', lon: '6.1' });
+  try {
+    const bad = mkdtempSync(join(tmpdir(), 'corrupt-'));
+    writeFileSync(join(bad, 'uas-zones-lu.json'), '{not json');
+    process.env.SKYCHECK_DATA_DIR = bad;
+    fn._test.resetCache();
+    const r = await call({ country: 'lu', lat: '49.6', lon: '6.1' });
+    assert.equal(r.status, 500);
+  } finally {
+    process.env.SKYCHECK_DATA_DIR = keep;
+    fn._test.resetCache();
+  }
+});
   assert.ok(r.status === 200 || r.status === 500);
   process.env.SKYCHECK_DATA_DIR = keep;
   fn._test.resetCache();
