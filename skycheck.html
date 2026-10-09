@@ -3444,6 +3444,9 @@
         if (host.includes('skycheck-ie') || host.endsWith('skycheck.ie')) return 'ie';
         if (host.includes('skycheck-nl') || host.endsWith('skycheck.nl')) return 'nl';
         if (host.includes('skycheck-pt') || host.endsWith('skycheck.pt')) return 'pt';
+        if (host.includes('skycheck-lu') || host.endsWith('skycheck.lu')) return 'lu';
+        if (host.includes('skycheck-no') || host.endsWith('skycheck.no')) return 'no';
+        if (host.includes('skycheck-ee') || host.endsWith('skycheck.ee')) return 'ee';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -4368,7 +4371,7 @@
       }
     };
     // Standard-UI-Sprache pro Land (nur beim Erstbesuch; eine gespeicherte Wahl hat Vorrang).
-    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en', nl: 'en', pt: 'en' };
+    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en', nl: 'en', pt: 'en', lu: 'en', no: 'en', ee: 'en' };
     // Adressvorschlag: bekanntes Wahrzeichen der jeweiligen Hauptstadt (sprachneutrale Eigennamen).
     const COUNTRY_LANDMARK = {
       de: 'Brandenburger Tor, Berlin',
@@ -4380,6 +4383,9 @@
       ie: "O'Connell Street, Dublin",
       nl: 'Dam, Amsterdam',
       pt: 'Praça do Comércio, Lisboa',
+      lu: 'Place Guillaume II, Luxembourg',
+      no: 'Rådhuset, Oslo',
+      ee: 'Raekoja plats, Tallinn',
     };
     // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
     const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
@@ -4395,12 +4401,15 @@
       ie: '-10.8,51.2,-5.3,55.5',
       nl: '3.2,50.7,7.3,53.6',
       pt: '-31.4,32.3,-6.1,42.2',
+      lu: '5.7,49.4,6.6,50.2',
+      no: '4.0,57.8,31.5,71.4',
+      ee: '21.5,57.4,28.3,59.8',
     };
     // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
     const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
     // ISO-Ländercode pro Land — für exakten Photon-`countrycode`-Filter (die Bbox überlappt
     // an Grenzen leicht mit Nachbarländern; der Code entfernt diese Fremdtreffer).
-    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE', nl: 'NL', pt: 'PT' };
+    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE', nl: 'NL', pt: 'PT', lu: 'LU', no: 'NO', ee: 'EE' };
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -4422,6 +4431,9 @@
       ie: { de: 'Irland',      en: 'Ireland',     fr: 'Irlande', es: 'Irlanda', pl: 'Irlandia' },
       nl: { de: 'Niederlande', en: 'Netherlands', fr: 'Pays-Bas', es: 'Países Bajos', pl: 'Holandia' },
       pt: { de: 'Portugal',    en: 'Portugal',    fr: 'Portugal', es: 'Portugal', pl: 'Portugalia' },
+      lu: { de: 'Luxemburg',   en: 'Luxembourg',  fr: 'Luxembourg', es: 'Luxemburgo', pl: 'Luksemburg' },
+      no: { de: 'Norwegen',    en: 'Norway',      fr: 'Norvège',  es: 'Noruega',  pl: 'Norwegia' },
+      ee: { de: 'Estland',     en: 'Estonia',     fr: 'Estonie',  es: 'Estonia',  pl: 'Estonia' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -4443,12 +4455,16 @@
       ie: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }],
       nl: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }],
       pt: [{ label: 'EASA Common Repository', url: 'https://www.easa.europa.eu/' }, { label: 'ANAC', url: 'https://www.voanaeuropa.eu/' }],
+      lu: [{ label: 'DAC Luxembourg (CC0)', url: 'https://data.public.lu/fr/datasets/uas-geographical-zones-grand-duchy-of-luxembourg-zones-geographiques-uas-grand-duche-de-luxembourg/' }],
+      no: [{ label: 'Luftfartstilsynet / dronesoner.no (NLOD)', url: 'https://dronesoner.no/' }],
+      ee: [{ label: 'EANS', url: 'https://utm.eans.ee/' }],
     };
     // Reihenfolge der Länder-Varianten in der Landing-Kachel „SkyCheck in anderen Ländern".
     const COUNTRY_VARIANTS = [
       { c: 'de', flag: '🇩🇪' }, { c: 'fr', flag: '🇫🇷' }, { c: 'at', flag: '🇦🇹' },
       { c: 'ch', flag: '🇨🇭' }, { c: 'es', flag: '🇪🇸' }, { c: 'dk', flag: '🇩🇰' }, { c: 'ie', flag: '🇮🇪' },
       { c: 'nl', flag: '🇳🇱' }, { c: 'pt', flag: '🇵🇹' },
+      { c: 'lu', flag: '🇱🇺' }, { c: 'no', flag: '🇳🇴' },
     ];
     function renderZoneSources() {
       const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
@@ -6325,6 +6341,8 @@
        FR → Netlify-Function zones-fr (räumliche ED-269-Kacheln aus data/fr-zones-tiles)
        AT → Netlify-Function zones-at (data/uas-zones-at.json, Austro Control ED-269;
             monatliches Auto-Update via .github/workflows/update-at-zones.yml)
+       LU/NO/EE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
+            .github/workflows/update-eu-zones.yml)
     ================================================================ */
     async function fetchZones(lat, lon, radiusM = 100) {
       if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
@@ -6335,6 +6353,7 @@
       if (COUNTRY === 'nl') return fetchZonesNL(lat, lon, radiusM);
       if (COUNTRY === 'pt') return fetchZonesPT(lat, lon, radiusM);
       if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
+      if (ED269_COUNTRIES[COUNTRY]) return fetchZonesEd269(lat, lon, radiusM);
       return fetchZonesDE(lat, lon, radiusM);
     }
 
@@ -6862,12 +6881,144 @@
       catch (error) { console.warn('Zones AT local fallback error', error); return []; }
     }
 
+    // Luxemburg / Norwegen / Estland: gemeinsamer ED-269-Adapter (Netlify-Function zones-ed269,
+    // Snapshots data/uas-zones-<cc>.json). Gleiche Zonenform wie AT; Name kommt aus `name`
+    // (message ist hier ein Langtext), NO_RESTRICTION-Zonen tragen info:true und zählen nicht
+    // für die Ampel. Lokale Vorschau ohne Function liest die Datei direkt.
+    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    let ed269LocalEntriesPromise = null;
+
+    function _pointInRing(lat, lon, ring) {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function _distToRingM(lat, lon, ring) {
+      const kx = Math.cos(lat * Math.PI / 180) * 111320;
+      let best = Infinity;
+      for (let i = 0; i < ring.length - 1; i++) {
+        const ax = (ring[i][0] - lon) * kx, ay = (ring[i][1] - lat) * 111320;
+        const bx = (ring[i + 1][0] - lon) * kx, by = (ring[i + 1][1] - lat) * 111320;
+        const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+        const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+        best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+      }
+      return best;
+    }
+    // Exakter Flächentest (identisch zur Function): Punkt in der Fläche oder Rand im Suchradius.
+    function zoneHitsPoint(zone, lat, lon, radiusM) {
+      return (zone?.geometry || []).some(g => {
+        if (g.type === 'Polygon') {
+          const rings = g.coordinates || [];
+          if (!rings[0]) return false;
+          const inside = _pointInRing(lat, lon, rings[0]) && !rings.slice(1).some(h => _pointInRing(lat, lon, h));
+          return inside || rings.some(r => _distToRingM(lat, lon, r) <= radiusM);
+        }
+        if (g.type === 'Circle' && Array.isArray(g.center)) {
+          const kx = Math.cos(lat * Math.PI / 180) * 111320;
+          return Math.hypot((g.center[0] - lon) * kx, (g.center[1] - lat) * 111320) <= (g.radius || 0) + radiusM;
+        }
+        return false;
+      });
+    }
+
+    // Inaktiv = jedes Aktivierungsfenster (applicability[].endDateTime) ist vorbei (wie in der Function).
+    // Liefert das Datum des spätesten Endes (YYYY-MM-DD) oder null.
+    function ed269InactiveSince(feature) {
+      const windows = feature.applicability;
+      if (!Array.isArray(windows) || !windows.length) return null;
+      let latest = -Infinity;
+      for (const w of windows) {
+        const ms = Date.parse(w?.endDateTime);
+        if (!Number.isFinite(ms) || ms >= Date.now()) return null;
+        latest = Math.max(latest, ms);
+      }
+      return new Date(latest).toISOString().slice(0, 10);
+    }
+
+    function normalizeLocalEd269Zone(feature, light = false) {
+      const zone = normalizeLocalAtZone(feature, light);
+      zone.name = feature.name || feature.identifier || '—';
+      const inactiveSince = ed269InactiveSince(feature);
+      if (inactiveSince) {
+        zone.inactive = true;
+        zone.type = 'TEMPORARY_INACTIVE';
+        zone.color = '#64748b';
+        delete zone.info;
+      } else if (feature.restriction === 'NO_RESTRICTION') zone.info = true;
+      if (light) return zone;
+      const authority = (Array.isArray(feature.zoneAuthority) && feature.zoneAuthority[0]) || {};
+      const messages = feature.extendedProperties?.localizedMessages || [];
+      const find = code => messages.find(item => String(item.language || '').toLowerCase().startsWith(code))?.message;
+      zone.legal = authority.name || '—';
+      zone.legalUrl = /^https?:\/\//i.test(authority.siteURL || '') ? authority.siteURL : '';
+      zone.desc = find(LANG) || find('en') || feature.message || '';
+      if (inactiveSince) {
+        zone.desc = `Activation window ended ${inactiveSince}. May be reactivated — check the official source.` + (zone.desc ? ` ${zone.desc}` : '');
+      }
+      return zone;
+    }
+
+    function loadLocalEd269Entries() {
+      if (!ed269LocalEntriesPromise) {
+        ed269LocalEntriesPromise = fetch(`data/uas-zones-${COUNTRY}.json`)
+          .then(response => {
+            if (!response.ok) throw new Error(`ED-269 local zones HTTP ${response.status}`);
+            return response.json();
+          })
+          .then(data => (Array.isArray(data) ? data : (data.features || []))
+            .map(feature => ({ feature, bbox: atLocalFeatureBBox(feature) })).filter(entry => entry.bbox))
+          .catch(error => { ed269LocalEntriesPromise = null; throw error; });
+      }
+      return ed269LocalEntriesPromise;
+    }
+
+    async function fetchAllZonesEd269() {
+      try {
+        const response = await fetch(`/.netlify/functions/zones-ed269?country=${COUNTRY}&all=1`);
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data.zones) ? data.zones : [];
+        }
+      } catch (_) { /* lokale Vorschau fällt auf die statische Datei zurück */ }
+      if (!IS_LOCAL_PREVIEW) return [];
+      const entries = await loadLocalEd269Entries();
+      return entries.map(({ feature }) => normalizeLocalEd269Zone(feature, true));
+    }
+
+    async function fetchZonesEd269(lat, lon, radiusM = 100) {
+      try {
+        const r = await fetch(`/.netlify/functions/zones-ed269?country=${COUNTRY}&lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
+        if (r.ok) {
+          const data = await r.json();
+          return Array.isArray(data.zones) ? data.zones : [];
+        }
+      } catch (e) {
+        console.warn('Zones ED-269 fetch error', e);
+      }
+      if (!IS_LOCAL_PREVIEW) return [];
+      try {
+        const entries = await loadLocalEd269Entries();
+        const dLat = radiusM / 111320, dLon = dLat / Math.max(0.01, Math.cos(lat * Math.PI / 180));
+        const rank = zone => (zone.info ? 2 : zone.inactive ? 1 : 0);
+        return entries
+          .filter(({ bbox }) => bbox.minLat <= lat + dLat && bbox.maxLat >= lat - dLat && bbox.minLon <= lon + dLon && bbox.maxLon >= lon - dLon)
+          .map(({ feature }) => normalizeLocalEd269Zone(feature))
+          .filter(zone => zoneHitsPoint(zone, lat, lon, radiusM))
+          .sort((a, b) => rank(a) - rank(b))
+          .slice(0, 50);
+      } catch (error) { console.warn('Zones ED-269 local fallback error', error); return []; }
+    }
+
     // Flächiges AT-Karten-Overlay: ALLE Zonen (286) einmalig laden und zeichnen — analog
     // zum DE-WMS, das ganz Deutschland zeigt. Die punktbasierten Zonen (fetchZonesAT) speisen
     // weiterhin nur Detailliste + Flugstatus. Promise wird gecacht (kein Doppel-Fetch).
     // Flächiges „alle Zonen"-Overlay (AT-Datei, DK/IE-ArcGIS) — einmal geladen, Promise gecacht.
     const _overlayPromise = {};
-    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1, nl: 1, pt: 1 };   // Länder mit flächigem Client-Vektor-Overlay
+    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1, nl: 1, pt: 1, lu: 1, no: 1, ee: 1 };   // Länder mit flächigem Client-Vektor-Overlay
     function ensureAllZones() {
       if (_overlayPromise[COUNTRY]) return _overlayPromise[COUNTRY];
       let p;
@@ -6876,6 +7027,7 @@
       else if (COUNTRY === 'ie') p = fetchAllZonesIE();
       else if (COUNTRY === 'nl') p = fetchAllZonesNL();
       else if (COUNTRY === 'pt') p = fetchAllZonesPT();
+      else if (ED269_COUNTRIES[COUNTRY]) p = fetchAllZonesEd269();
       else p = Promise.resolve([]);
       _overlayPromise[COUNTRY] = p.catch(e => { console.warn('Overlay-Zonen Fehler', e); return []; });
       return _overlayPromise[COUNTRY];
@@ -6909,6 +7061,23 @@
         return;
       }
       drawZoneOverlay(pointZones, S.layers.dipul);
+    }
+
+    // Zonen am aktuellen Standort neu holen und alles Abhängige neu rendern (Liste, Overlay,
+    // Ampel, Kartenstatus). Genutzt vom Radius-Umschalter und vom NOTAM-Knopf (Norwegen).
+    function refreshZonesAtCurrentPoint() {
+      if (!S.lat || !S.lon) return;
+      fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
+        zones = applyCtrFlightInfo(zones, S.groundElevationMsl, S.groundElevationProfile);
+        renderZones(zones);
+        updateZoneOverlay(zones);
+        const zoneStatus = evalZoneStatus(zones);
+        renderStatus(lastStatus || { lvl: 'go', reasons: [] }, zoneStatus);
+        renderMapStatus(lastWeather, zones);
+        if (document.getElementById('alarm-view').classList.contains('av-open')) {
+          renderMapStatus(lastWeather, zones, document.getElementById('av-map-status'));
+        }
+      }).catch(() => {});
     }
 
     /* [J-API-DIPUL] =====================================================
@@ -7178,6 +7347,7 @@
       const reasons = []; let lvl = 'go';
       const seen = new Set();
       for (const z of zones) {
+        if (z.info) continue;   // rein informative Zone (ED-269 NO_RESTRICTION): keine Ampelwirkung
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
         if (isCtrZone(z)) {
@@ -8858,19 +9028,7 @@
         if (S.layers.radius) S.layers.radius.setRadius(S.searchRadius);
         if (AV.searchCirc) AV.searchCirc.setRadius(S.searchRadius);
         // Re-fetch zones with new radius
-        if (S.lat && S.lon) {
-          fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
-            zones = applyCtrFlightInfo(zones, S.groundElevationMsl, S.groundElevationProfile);
-            renderZones(zones);
-            updateZoneOverlay(zones);
-            const zoneStatus = evalZoneStatus(zones);
-            renderStatus(lastStatus || { lvl: 'go', reasons: [] }, zoneStatus);
-            renderMapStatus(lastWeather, zones);
-            if (document.getElementById('alarm-view').classList.contains('av-open')) {
-              renderMapStatus(lastWeather, zones, document.getElementById('av-map-status'));
-            }
-          }).catch(() => {});
-        }
+        refreshZonesAtCurrentPoint();
       });
     });
     // Zone-Mode-Buttons werden oben verdrahtet: DE steuert die DiPUL-Auswahl,
