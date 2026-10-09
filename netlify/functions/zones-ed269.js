@@ -1,4 +1,4 @@
-// SkyCheck — generischer ED-269-Zonenprovider für Luxemburg, Norwegen, Estland.
+// SkyCheck — generischer ED-269-Zonenprovider für Luxemburg, Norwegen, Estland, Schweden, Belgien.
 // Liest data/uas-zones-<cc>.json (reines Array, erzeugt von scripts/build-eu-zones.mjs)
 // einmal pro warmer Instanz und liefert dieselbe Zonenform wie zones-at.js:
 //   { name, type, lower, upper, legal, legalUrl, color, desc, geometry }
@@ -6,12 +6,12 @@
 // Flächentest statt reinem Bounding-Box-Filter; NO_RESTRICTION ist eine gewöhnliche (blaue) Zone,
 // weil z. B. Estland den Wert auch für genehmigungspflichtige Gebiete verwendet.
 // Quellen: LU Direction de l'Aviation Civile (CC0) · NO Luftfartstilsynet/dronesoner.no
-// (NLOD 2.0) · EE EANS. Auto-Update: .github/workflows/update-eu-zones.yml
+// (NLOD 2.0) · EE EANS · SE LFV/Transportstyrelsen (CC BY 4.0) · BE BCAA/skeyes (Droneguide). Auto-Update: .github/workflows/update-eu-zones.yml
 
 const fs = require('fs');
 const path = require('path');
 
-const COUNTRIES = { lu: 'LU', no: 'NO', ee: 'EE' };
+const COUNTRIES = { lu: 'LU', no: 'NO', ee: 'EE', se: 'SE', be: 'BE' };
 const M_PER_DEG = 111320;
 const cache = {};
 const INACTIVE_COLOR = '#64748b';
@@ -150,19 +150,28 @@ function localizedMessage(f, lang) {
   return pick(lang) || pick('en') || f.message || '';
 }
 
-// Befristete Zonen, deren Aktivierungsfenster alle vorbei sind, bleiben sichtbar, gelten aber
-// nicht als aktuell gesperrt. Liefert das späteste Fensterende (ms) oder null, wenn die Zone
-// nicht inaktiv ist (keine Fenster, ein Fenster ohne lesbares Ende, oder ein Ende in der Zukunft).
-function inactiveSince(f) {
+// Befristete Zonen bleiben sichtbar, gelten aber nicht als aktuell gesperrt, solange JEDES
+// Aktivierungsfenster entweder vorbei (Ende lesbar und vor jetzt) oder noch nicht begonnen
+// ist (Start lesbar und nach jetzt). Ein laufendes Fenster, eines ohne Grenzen oder mit
+// unlesbaren Daten macht die Zone aktiv. Liefert null (aktiv) oder
+// { endedAt: spätestes Ende in ms | null, startsAt: frühester künftiger Start in ms | null }.
+function inactivity(f) {
   const windows = f.applicability;
   if (!Array.isArray(windows) || !windows.length) return null;
-  let latest = -Infinity;
+  const t = now();
+  let endedAt = null, startsAt = null;
   for (const w of windows) {
     const end = Date.parse(w && w.endDateTime);
-    if (!isFinite(end) || end >= now()) return null;
-    if (end > latest) latest = end;
+    const start = Date.parse(w && w.startDateTime);
+    if (isFinite(end) && end < t) {
+      if (endedAt === null || end > endedAt) endedAt = end;
+    } else if (isFinite(start) && start > t) {
+      if (startsAt === null || start < startsAt) startsAt = start;
+    } else {
+      return null;
+    }
   }
-  return latest;
+  return { endedAt, startsAt };
 }
 
 function normalizeLight(f) {
@@ -173,8 +182,7 @@ function normalizeLight(f) {
     color: zoneColor(restriction),
     geometry: geometryOf(f),
   };
-  const endedAt = inactiveSince(f);
-  if (endedAt !== null) {
+  if (inactivity(f)) {
     z.inactive = true;
     z.type = 'TEMPORARY_INACTIVE';
     z.color = INACTIVE_COLOR;
@@ -182,11 +190,21 @@ function normalizeLight(f) {
   return z;
 }
 
-function describe(f, light, lang) {
+// Beschreibung: Text der Quelle; fehlt er, dient der lesbare Zonenart-Code (Belgien: CIV_HELISTRIP → CIV HELISTRIP).
+function baseDescription(f, lang) {
   const text = localizedMessage(f, lang);
+  if (text) return text;
+  return f.typeCode ? String(f.typeCode).replace(/_/g, ' ') : '';
+}
+
+function describe(f, light, lang) {
+  const text = baseDescription(f, lang);
   if (!light.inactive) return text;
-  const ended = new Date(inactiveSince(f)).toISOString().slice(0, 10);
-  const note = `Activation window ended ${ended}. May be reactivated — check the official source.`;
+  const { startsAt, endedAt } = inactivity(f);
+  const day = ms => new Date(ms).toISOString().slice(0, 10);
+  const note = startsAt !== null
+    ? `Not yet active — starts ${day(startsAt)}. May change — check the official source.`
+    : `Activation window ended ${day(endedAt)}. May be reactivated — check the official source.`;
   return text ? `${note} ${text}` : note;
 }
 
