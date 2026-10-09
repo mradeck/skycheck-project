@@ -5443,7 +5443,7 @@
         if (blocking) $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
         // Die standortkritischen Geozonen sofort starten. Bisher begann diese
         // Abfrage erst nach Wetter/Kp/ADS-B und verlängerte jeden Punktwechsel.
-        const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => []);
+        const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => [zoneDataUnavailable()]);
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
         // Wetter/Kp/Luftverkehr sind je EINZELN nicht-fatal: fällt eine Quelle (z. B. BrightSky
@@ -6414,7 +6414,11 @@
         zones = [zoneDataUnavailable()];
       }
       // Norwegen: geladene NOTAM-Treffer voranstellen (auch vor dem Platzhalter).
-      return ED269_COUNTRIES[COUNTRY] ? notamNoHits(lat, lon, radiusM).concat(zones) : zones;
+      if (!ED269_COUNTRIES[COUNTRY]) return zones;
+      let notam = [];
+      try { notam = notamNoHits(lat, lon, radiusM); }
+      catch (error) { console.warn('NOTAM-Treffer nicht auswertbar', error); }   // fetchZones darf nie werfen
+      return notam.concat(zones);
     }
 
     /* [J-API-ARCGIS] ====================================================
@@ -6422,13 +6426,23 @@
        Clientseitige Vektor-Darstellung (drawZoneOverlay), farbcodiert. Punktabfrage per Bbox
        für Detailliste/Status, „alle Zonen" für das flächige Overlay.
     ================================================================ */
-    async function _arcgisQuery(layerUrl, extra) {
+    // strict=true nur für die Punkt-Adapter (Ausfall muss werfen); Standard (lenient) für die
+    // Overlay-Lader: fehlgeschlagene Abfrage → [] wie vor v117.1.
+    async function _arcgisQuery(layerUrl, extra, strict = false) {
       const qs = new URLSearchParams(Object.assign(
         { where: '1=1', outFields: '*', outSR: '4326', f: 'geojson' }, extra || {}));
       const r = await fetch(`${layerUrl}/query?${qs}`);
-      if (!r.ok) throw new Error('ArcGIS HTTP ' + r.status);
+      if (!r.ok) {
+        if (strict) throw new Error('ArcGIS HTTP ' + r.status);
+        return [];
+      }
       const d = await r.json();
-      return Array.isArray(d.features) ? d.features : [];
+      if (strict) {
+        // ArcGIS meldet Fehler oft als HTTP 200 mit {"error":{…}} → kein Treffer-Ersatz.
+        if (d && d.error) throw new Error('ArcGIS-Fehler ' + (d.error.code || ''));
+        if (!d || !Array.isArray(d.features)) throw new Error('ArcGIS-Antwort ohne features-Liste');
+      }
+      return Array.isArray(d && d.features) ? d.features : [];
     }
     // GeoJSON-Geometrie → drawZoneOverlay-Form ([{type:'Polygon',coordinates}]); MultiPolygon aufteilen.
     function _geoToOverlay(g) {
@@ -6466,7 +6480,7 @@
       try {
         const env = _envParams(lat, lon, radiusM);
         const res = await Promise.all(DK_LAYERS.map(l =>
-          _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env)).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
+          _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env), true).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
         return res.flat();
       } catch (e) { console.warn('Zones DK fetch error', e); throw e; }
     }
@@ -6496,7 +6510,7 @@
     }
     async function fetchZonesIE(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(IE_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(IE_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapIE(f, false));
       } catch (e) { console.warn('Zones IE fetch error', e); throw e; }
     }
@@ -6522,7 +6536,7 @@
     }
     async function fetchZonesNL(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(NL_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(NL_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapNL(f, false));
       } catch (e) { console.warn('Zones NL fetch error', e); throw e; }
     }
@@ -6560,7 +6574,7 @@
     }
     async function fetchZonesPT(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(PT_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(PT_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapPT(f, false));
       } catch (e) { console.warn('Zones PT fetch error', e); throw e; }
     }
@@ -6591,7 +6605,7 @@
       try {
         const fs = await _arcgisQuery(ES_EASA_LAYER, Object.assign(
           { returnGeometry: 'false', outFields: 'name,identifier,type,reason,message,restrictionConditions,zoneAuthority,provider,siteURL' },
-          _envParams(lat, lon, radiusM)));
+          _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapESEasa(f, false));
       } catch (e) { console.warn('Zones ES-EASA fetch error', e); throw e; }
     }
@@ -6639,6 +6653,7 @@
         const r = await fetch(url);
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
+        if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
         const seen = new Set(), out = [];
         for (const res of (d.results || [])) {
           const a = res.attributes || {};
@@ -6696,6 +6711,7 @@
         const r = await fetch(url);
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
+        if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
         const seen = new Set(), out = [];
         for (const res of (d.results || [])) {
           const a = res.attributes || {};
@@ -7264,8 +7280,6 @@
           if (ok && !failed) { anyUsable = true; params.push(...parseFeatureInfo(text)); }
           else if (ok && failed) { dipulBadLayers.add(layers[i]); newlyBad = true; }
         });
-        // Kein Layer antwortete verwertbar und keiner wurde als defekt erkannt → Abruf gescheitert.
-        if (!anyUsable && !newlyBad) throw new Error('DiPUL GetFeatureInfo: kein Layer erreichbar');
 
         // Karten-Overlays (GetMap) auf die bereinigte Layerliste umstellen, damit
         // auch die Kacheln nicht länger am defekten Layer scheitern.
@@ -7277,6 +7291,9 @@
           if (typeof AV !== 'undefined' && AV.dipulL && typeof AV.dipulL.setParams === 'function')
             AV.dipulL.setParams({ layers: goodL });
         }
+        // Kein einziger Layer lieferte eine verwertbare Antwort → Abruf gescheitert (auch wenn
+        // dabei Layer aussortiert wurden; Sperre und setParams oben bleiben davon unberührt).
+        if (!anyUsable) throw new Error('DiPUL GetFeatureInfo: kein Layer verwertbar');
       } else {
         // Kombinierte Abfrage nicht erreichbar (HTTP-/Netzwerkfehler): kein „keine Zonen".
         throw new Error('DiPUL GetFeatureInfo nicht erreichbar');
