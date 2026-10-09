@@ -58,7 +58,7 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
       Anlass: web.hoverpoint.info bindet 13 Länder an (DE, CH/LI, LU, NL, BE, FR, ES, DK, SE, NO,
       EE, IE; FI gelistet, aber inaktiv), jeweils direkt bei der nationalen Stelle (Quellenliste
       auf `web.hoverpoint.info/status`; die Abfragen laufen dort serverseitig, die konkreten URLs
-      sind nicht einsehbar). SkyCheck hat 9 (DE, FR, AT, CH, ES, DK, IE, NL, PT). Das EASA Common
+      sind nicht einsehbar). SkyCheck hat 9 (DE, FR, AT, CH, ES, DK, IE, NL, PT) (Stand vor v26.10.117.0; seitdem hat SkyCheck zwölf). Das EASA Common
       Repository (`services-eu1.arcgis.com/71Lfb7umh2boMcWI`) enthält nur PT, NL, DK, IE, ES —
       für die fünf Lücken hilft es nicht. Stand je Land (Endpunkte per HTTP-Abruf geprüft):
   - [x] **Luxemburg (skycheck-lu).** Direction de l'Aviation Civile, Datensatz „UAS Geographical

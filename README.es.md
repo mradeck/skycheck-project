@@ -93,6 +93,10 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 ```
 skycheck.html               ← app completa (HTML + CSS + JS, ~9,4k líneas)
+coordinates.html            ← página de coordenadas GPS2UTM: GPS → ETRS89/UTM, Gauss-Krüger, DHHN2016
+coordinate-tools.js         ← núcleo de cálculo asociado (UTM, aproximación Gauss-Krüger, geoide GCG2016)
+ctr-hoehenregeln.html       ← página informativa: reglas de altura de las CTR de DFS/DAS (NfL 2026-1-3960/-3981), sección y galería de aeropuertos
+img/                        ← imágenes WebP de esa página (guía de la cuadrícula de alturas + galería de aeropuertos)
 manifest.json               ← manifiesto Web App PWA
 sw.js                       ← Service Worker (caché)
 icon-192x192.png            ← icono de la app (pequeño)
@@ -111,12 +115,24 @@ data/
   uas-zones-fr.json         ← zonas UAS Francia ED-269 (snapshot mensual, sustituible)
   fr-zones-tiles/           ← índice espacial generado para la función Netlify
   context/fr/               ← teselas de viewport agrupadas de las cuatro capas de contexto de Francia
-  uas-zones-at.json         ← zonas UAS Austria ED-269 (286 zonas, actualizado automáticamente)
+  uas-zones-at.json         ← zonas UAS Austria ED-269 (unas 290 zonas, actualizado automáticamente)
   uas-zones-at.version      ← marcador de la última release de Austro Control importada (idempotencia)
   uas-zones-{lu,no,ee}.json ← zonas UAS ED-269 Luxemburgo / Noruega / Estonia (snapshots semanales)
+  uas-zones-{lu,no,ee}.version ← marcadores del último snapshot importado por país (idempotencia)
   dipul-airac/              ← capas AIRAC de tráfico aéreo de DiPUL extraídas (comprobación semanal)
+  <cc>-protected.json       ← contexto: áreas protegidas (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr
+  <cc>-motorways.json       ← contexto: autopistas (OSM, ODbL)
+  <cc>-powerlines.json      ← contexto: líneas eléctricas de alta tensión (OSM, ODbL)
+  <cc>-rail.json            ← contexto: líneas ferroviarias principales (OSM, ODbL)
+  gcg2016v2023-cm.i16       ← malla compacta del cuasigeoide GCG2016 (Int16, cm) para la página de coordenadas
 scripts/
   build-eu-zones.mjs        ← genera los snapshots ED-269 de LU/NO/EE a partir de las fuentes oficiales
+  gen-context.mjs           ← generador reutilizable: Overpass → GeoJSON simplificado (líneas + polígonos)
+  fetch-context.sh          ← controlador robusto: descarga con curl (reintento) + gen-context por capa, idempotente
+  build-fr-spatial-data.mjs ← genera las teselas espaciales de 2° para Francia (índice de zonas + capas de contexto)
+  build-gcg-web-grid.mjs    ← convierte el GeoTIFF oficial GCG2016 en la malla web compacta
+  README.md                 ← cómo añadir capas de contexto para un país nuevo
+  test-coordinate-tools.cjs ← comprobación Node para coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← tests de Node (`node --test "tests/*.test.mjs"`)
 .github/
   workflows/
@@ -136,7 +152,7 @@ SkyCheck usa un **patrón de adaptador** para las fuentes de geozonas específic
 |---|---|---|---|---|
 | 🇩🇪 **DE** (por defecto) | DiPUL WMS (`uas-betrieb.de`) | teselas WMS | WMS GetFeatureInfo | servicio en vivo (oficial, siempre actual) |
 | 🇫🇷 **FR** | Conjunto de datos ED-269 | polígonos/círculos en el cliente | `zones-fr.js` (filtro bbox) | `data/uas-zones-fr.json` (~3,6k zonas, sustituible) |
-| 🇦🇹 **AT** | Austro Control ED-269 | todas las zonas dibujadas en el cliente (286) | `zones-at.js` (filtro bbox) | `data/uas-zones-at.json` — **actualizado automáticamente cada mes** vía GitHub Actions (`update-at-zones.yml`) |
+| 🇦🇹 **AT** | Austro Control ED-269 | todas las zonas dibujadas en el cliente (unas 290) | `zones-at.js` (filtro bbox) | `data/uas-zones-at.json` — **actualizado automáticamente cada mes** vía GitHub Actions (`update-at-zones.yml`) |
 | 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | teselas WMS | API REST **Identify** de geo.admin.ch | servicio en vivo (CORS abierto) — **sin función, sin fichero, sin workflow** |
 | 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | teselas WMS | API REST **Identify** de ArcGIS | servicio en vivo (CORS abierto) — **sin función, sin fichero, sin workflow** |
 | 🇩🇰 **DK** | ArcGIS FeatureServer de Trafikstyrelsen | polígonos vectoriales en el cliente (~870, codificados por color) | consulta ArcGIS (bbox) | servicio en vivo (CORS abierto) — **sin función, sin fichero, sin workflow** |
@@ -160,7 +176,7 @@ Recuentos de zonas obtenidos directamente de la fuente en vivo de cada país (DE
 | 🇨🇭 Suiza | 1 232 | 41 285 | ≈ 30 |
 | 🇩🇰 Dinamarca | 870 | 42 952 | ≈ 20 |
 | 🇫🇷 Francia | 3 642 | 551 695 | ≈ 6,6 |
-| 🇦🇹 Austria | 286 | 83 879 | ≈ 3,4 |
+| 🇦🇹 Austria | unas 290 | 83 879 | ≈ 3,4 |
 | 🇮🇪 Irlanda\* | 76 | 70 273 | ≈ 1,1 |
 
 \* La cifra de Irlanda procede del EASA Common Repository, que aún es **preliminar** (el conjunto de datos nacional del IAA registra ~87), por lo que su recuento es indicativo, no completo.
@@ -226,7 +242,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
-| v26.10.117.1 | 🛟 **El fallo de datos de zonas ahora es visible.** Si falla la consulta de geozonas (error HTTP, tiempo de espera, sin conexión), SkyCheck muestra ahora **«Datos de zonas no disponibles»** con semáforo **amarillo** en lugar de «sin restricciones» en verde — en los doce países. La lista de zonas muestra un recuadro de aviso con enlace a la fuente oficial; el panel del mapa, una entrada gris. Una consulta correcta sin resultados sigue en verde; los respaldos con ficheros locales se mantienen. No cubierto: la superposición del mapa de todo el país. 96 tests de Node. |
+| v26.10.117.1 | 🛟 **El fallo de datos de zonas ahora es visible.** Si falla la consulta de geozonas (error HTTP, tiempo de espera, sin conexión), SkyCheck muestra ahora **«Datos de zonas no disponibles»** con semáforo **amarillo** en lugar de «sin restricciones» en verde — en los doce países. La lista de zonas muestra un recuadro de aviso con enlace a la fuente oficial; el panel del mapa, una entrada gris. Una consulta correcta sin resultados sigue en verde; los respaldos con ficheros locales se mantienen. Un servicio que no responde pasa al aviso de fallo tras **20 segundos**; mientras dura la consulta, el banner muestra **«Comprobando el espacio aéreo …»** en lugar de «sin restricciones». Alemania: una respuesta 200 que no es salida de GeoServer cuenta como fallo; Dinamarca y Alemania muestran resultados parciales junto con el aviso de fallo. No cubierto: (1) la superposición del mapa de todo el país; (2) Alemania: una capa DiPUL que responde con un error del servidor se omite el resto de la sesión y sus zonas faltan entonces sin aviso; (3) mientras se ejecuta una consulta, la lista de zonas y el panel del mapa pueden seguir mostrando las entradas del punto anterior; (4) la línea meteorológica del banner conserva el idioma anterior tras un cambio de idioma hasta la siguiente comprobación. 147 tests de Node. |
 | v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxemburgo, Noruega y Estonia.** Tres nuevas variantes por país (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) con geozonas oficiales ED-269 como instantáneas actualizadas semanalmente (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 zonas; fuentes: DAC Luxemburgo CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). Nueva función de Netlify `zones-ed269` con prueba de área exacta (punto en polígono o borde dentro del radio de búsqueda). Las zonas cuyas ventanas de activación han terminado por completo siguen visibles como «actualmente inactiva» (amarillo en lugar de rojo). **Noruega:** las áreas de restricción temporal NOTAM se cargan en directo al hacer clic mediante la nueva función `notam-no`, se dibujan en rojo discontinuo y cuentan para el semáforo durante 5 minutos. **Estonia:** una nota fija indica que las zonas de corto plazo pueden tener hasta 7 días de antigüedad. Los nombres de zona ahora se escapan como HTML en el banner de estado y en el panel del mapa. **La interfaz ahora arranca en modo claro por defecto** (una elección guardada, incluido el oscuro, se respeta). 39 tests de Node. |
 | v26.08.116.8 | 🌍 **Página de reglas de altura CTR: 5 idiomas más (FR/ES/IT/NL/PL), selector de idioma con banderas SVG + rediseño del gráfico.** `ctr-hoehenregeln.html`. **(1) Idiomas:** ahora en **7 idiomas** — alemán, inglés y los nuevos **francés, español, italiano, neerlandés, polaco** (i18n completa de todos los textos, bloques HTML, tablas, etiquetas del gráfico SVG y tarjetas). **(2) Selector:** el botón de texto DE/EN se sustituyó por un **desplegable con banderas SVG** — muestra la bandera activa, clic para elegir; banderas SVG robustas; detección por `?lang=`, localStorage y `navigator.language`. **(3) Gráfico:** la sección transversal se rediseñó — la colina de la zona 2 pasó a meseta plana de baja altura, el aeródromo ahora se sitúa en su propia elevación de referencia, **barras de altura de la zona 1 eliminadas** (sin autorización general → sin regla de altura), línea de referencia flotante confusa eliminada, línea de techo «tope = elev. aeródromo + 25 m» añadida, grupo de edificios redibujado como un perfil urbano más ancho sobre el límite zona 2/3, y nota «a escala» engañosa del marcador de 800 m eliminada. |
 | v26.08.116.7 | 🇩🇪 **Página de reglas de altura CTR: añadida NfL 2026-1-3959 (principios del BMV) — condiciones generales + anotación de 800 m de visibilidad.** `ctr-hoehenregeln.html` (DE+EN). Añade la NfL **2026-1-3959** superior (principios del BMV para UAS en espacio aéreo clase D, base de 3960/3981) como primera referencia. Nueva **caja «Otras condiciones»** con las condiciones generales de la 3959, encabezada por un **aviso see-and-avoid** destacado: el ATC **no establece separación** (tampoco de estela turbulenta) ni da **información de tráfico** — la evitación de colisiones es responsabilidad exclusiva del piloto remoto. Además: **visibilidad mínima ≥ 800 m** (salvo cerca de obstáculos / con autorización individual), vuelos autónomos prohibidos, BVLOS y enjambre permitidos. La sección transversal SVG gana una **anotación a escala «Visibilidad ≥ 800 m»** (cielo superior izquierdo, apartada de las escenas de obstáculos). Solo `ctr-hoehenregeln.html`; subida de APP_VER. |

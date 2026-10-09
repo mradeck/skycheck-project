@@ -93,6 +93,10 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 ```
 skycheck.html               ← gesamte App (HTML + CSS + JS, ~9.4k Zeilen)
+coordinates.html            ← GPS2UTM-Koordinatenseite: GPS → ETRS89/UTM, Gauß-Krüger, DHHN2016
+coordinate-tools.js         ← Rechenkern dazu (UTM, Gauß-Krüger-Näherung, GCG2016-Geoid)
+ctr-hoehenregeln.html       ← Infoseite: DFS-/DAS-CTR-Höhenregeln (NfL 2026-1-3960/-3981), Querschnittsgrafik und Flughafen-Galerie
+img/                        ← WebP-Bilder dafür (Höhengitter-Anleitung + Flughafen-Galerie)
 manifest.json               ← PWA Web App Manifest
 sw.js                       ← Service Worker (Caching)
 icon-192x192.png            ← App-Icon (klein)
@@ -111,12 +115,24 @@ data/
   uas-zones-fr.json         ← ED-269 Frankreich UAS-Zonen (monatlicher Snapshot, austauschbar)
   fr-zones-tiles/           ← daraus erzeugter räumlicher Index für die Netlify-Function
   context/fr/               ← gebündelte Viewport-Kacheln der vier Frankreich-Kontextlayer
-  uas-zones-at.json         ← ED-269 Österreich UAS-Zonen (286 Zonen, automatisch aktualisiert)
+  uas-zones-at.json         ← ED-269 Österreich UAS-Zonen (ca. 290 Zonen, automatisch aktualisiert)
   uas-zones-at.version      ← Marker des zuletzt importierten Austro-Control-Release (Idempotenz)
   uas-zones-{lu,no,ee}.json ← ED-269 UAS-Zonen Luxemburg / Norwegen / Estland (wöchentliche Snapshots)
+  uas-zones-{lu,no,ee}.version ← Marker des zuletzt importierten Snapshots je Land (Idempotenz)
   dipul-airac/              ← extrahierte DiPUL-AIRAC-Luftverkehrslayer (wöchentliche Prüfung)
+  <cc>-protected.json       ← Kontext: Schutzgebiete (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr
+  <cc>-motorways.json       ← Kontext: Autobahnen (OSM, ODbL)
+  <cc>-powerlines.json      ← Kontext: Hochspannungsleitungen (OSM, ODbL)
+  <cc>-rail.json            ← Kontext: Hauptbahnstrecken (OSM, ODbL)
+  gcg2016v2023-cm.i16       ← kompaktes GCG2016-Quasigeoid-Raster (Int16, cm) für die Koordinatenseite
 scripts/
   build-eu-zones.mjs        ← erzeugt die ED-269-Snapshots für LU/NO/EE aus den amtlichen Quellen
+  gen-context.mjs           ← wiederverwendbarer Generator: Overpass → vereinfachtes GeoJSON (Linien + Polygone)
+  fetch-context.sh          ← robuster Treiber: curl-Abruf (Retry) + gen-context je Layer, idempotent
+  build-fr-spatial-data.mjs ← erzeugt die räumlichen 2°-Kacheln für Frankreich (Zonenindex + Kontextlayer)
+  build-gcg-web-grid.mjs    ← wandelt das amtliche GCG2016-GeoTIFF in das kompakte Web-Raster um
+  README.md                 ← Anleitung: Kontextlayer für ein neues Land ergänzen
+  test-coordinate-tools.cjs ← Node-Prüfung für coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← Node-Tests (`node --test "tests/*.test.mjs"`)
 .github/
   workflows/
@@ -136,7 +152,7 @@ SkyCheck nutzt ein **Adapter-Pattern** für länderspezifische Geozonen-Quellen.
 |---|---|---|---|---|
 | 🇩🇪 **DE** (Default) | DiPUL WMS (`uas-betrieb.de`) | WMS-Kacheln | WMS GetFeatureInfo | Live-Dienst (offiziell, stets aktuell) |
 | 🇫🇷 **FR** | ED-269-Datensatz | client-seitige Polygone/Kreise | `zones-fr.js` (bbox-Filter) | `data/uas-zones-fr.json` (~3,6k Zonen, austauschbar) |
-| 🇦🇹 **AT** | Austro Control ED-269 | alle Zonen client-seitig gezeichnet (286) | `zones-at.js` (bbox-Filter) | `data/uas-zones-at.json` — **monatlich automatisch aktualisiert** via GitHub Actions (`update-at-zones.yml`) |
+| 🇦🇹 **AT** | Austro Control ED-269 | alle Zonen client-seitig gezeichnet (ca. 290) | `zones-at.js` (bbox-Filter) | `data/uas-zones-at.json` — **monatlich automatisch aktualisiert** via GitHub Actions (`update-at-zones.yml`) |
 | 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | WMS-Kacheln | geo.admin.ch **Identify** REST-API | Live-Dienst (CORS-offen) — **keine Function, keine Datei, kein Workflow** |
 | 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | WMS-Kacheln | ArcGIS **Identify** REST-API | Live-Dienst (CORS-offen) — **keine Function, keine Datei, kein Workflow** |
 | 🇩🇰 **DK** | Trafikstyrelsen ArcGIS FeatureServer | client-seitige Vektor-Polygone (~870, farbkodiert) | ArcGIS-Abfrage (bbox) | Live-Dienst (CORS-offen) — **keine Function, keine Datei, kein Workflow** |
@@ -160,7 +176,7 @@ Zonen-Anzahlen direkt aus der jeweiligen Live-Quelle des Landes gezogen (DE via 
 | 🇨🇭 Schweiz | 1 232 | 41 285 | ≈ 30 |
 | 🇩🇰 Dänemark | 870 | 42 952 | ≈ 20 |
 | 🇫🇷 Frankreich | 3 642 | 551 695 | ≈ 6,6 |
-| 🇦🇹 Österreich | 286 | 83 879 | ≈ 3,4 |
+| 🇦🇹 Österreich | ca. 290 | 83 879 | ≈ 3,4 |
 | 🇮🇪 Irland\* | 76 | 70 273 | ≈ 1,1 |
 
 \* Irlands Zahl stammt aus dem EASA Common Repository, das noch **vorläufig** ist (der nationale IAA-Datensatz nennt ~87) — die Angabe ist also indikativ, nicht vollständig.
@@ -226,7 +242,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
-| v26.10.117.1 | 🛟 **Zonendaten-Ausfall wird sichtbar.** Schlägt der Geozonen-Abruf fehl (HTTP-Fehler, Timeout, offline), zeigt SkyCheck jetzt **„Zonendaten nicht verfügbar“** mit **gelber** Ampel statt „keine Einschränkungen“ in Grün — in allen zwölf Ländern. Die Zonenliste zeigt einen Hinweiskasten mit Link zur amtlichen Quelle, das Kartenpanel einen grauen Eintrag. Ein erfolgreicher Abruf ohne Treffer bleibt grün; lokale Datei-Fallbacks bleiben erhalten. Nicht abgedeckt: das flächige Karten-Overlay. 96 Node-Tests. |
+| v26.10.117.1 | 🛟 **Zonendaten-Ausfall wird sichtbar.** Schlägt der Geozonen-Abruf fehl (HTTP-Fehler, Timeout, offline), zeigt SkyCheck jetzt **„Zonendaten nicht verfügbar“** mit **gelber** Ampel statt „keine Einschränkungen“ in Grün — in allen zwölf Ländern. Die Zonenliste zeigt einen Hinweiskasten mit Link zur amtlichen Quelle, das Kartenpanel einen grauen Eintrag. Ein erfolgreicher Abruf ohne Treffer bleibt grün; lokale Datei-Fallbacks bleiben erhalten. Ein hängender Dienst läuft nach **20 Sekunden** in den Ausfall-Hinweis; solange der Abruf läuft, zeigt das Banner **„Luftraum wird geprüft …“** statt „keine Einschränkungen“. Deutschland: eine 200-Antwort, die keine GeoServer-Ausgabe ist, gilt als Ausfall; Dänemark und Deutschland zeigen Teilergebnisse zusammen mit dem Ausfall-Hinweis. Nicht abgedeckt: (1) das flächige Karten-Overlay; (2) Deutschland: ein DiPUL-Layer, der mit einem Serverfehler antwortet, wird für den Rest der Sitzung übersprungen, seine Zonen fehlen dann ohne Hinweis; (3) während eines laufenden Abrufs zeigen Zonenliste und Kartenpanel noch die Einträge des vorigen Punkts; (4) die Wetterzeile des Banners behält nach einem Sprachwechsel bis zur nächsten Prüfung die alte Sprache. 147 Node-Tests. |
 | v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxemburg, Norwegen und Estland.** Drei neue Länder-Varianten (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) mit offiziellen ED-269-Geozonen als wöchentlich aktualisierte Snapshots (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 Zonen; Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). Neue Netlify-Funktion `zones-ed269` mit exaktem Flächentest (Punkt im Polygon bzw. Kante innerhalb des Suchradius). Zonen, deren Aktivierungsfenster alle abgelaufen sind, bleiben als „aktuell inaktiv" sichtbar (gelb statt rot). **Norwegen:** temporäre NOTAM-Sperrgebiete werden per Klick live über die neue Funktion `notam-no` geladen, gestrichelt rot gezeichnet und 5 Minuten lang in die Ampel einbezogen. **Estland:** ein fester Hinweis, dass Kurzzeitzonen bis zu 7 Tage alt sein können. Zonennamen werden im Statusbanner und im Kartenpanel HTML-escaped. **Die Oberfläche startet jetzt standardmäßig im hellen Modus** (eine gespeicherte Wahl, auch Dunkel, wird respektiert). 39 Node-Tests. |
 | v26.08.116.8 | 🌍 **CTR-Höhenregeln-Seite: 5 weitere Sprachen (FR/ES/IT/NL/PL), SVG-Flaggen-Sprachumschalter + Grafik-Überarbeitung.** `ctr-hoehenregeln.html`. **(1) Sprachen:** jetzt in **7 Sprachen** — Deutsch, Englisch und neu **Französisch, Spanisch, Italienisch, Niederländisch, Polnisch** (vollständige i18n aller Texte, HTML-Blöcke, Tabellen, SVG-Grafik-Labels und Karten; aviatische Fachterminologie). **(2) Sprachumschalter:** der DE/EN-Text-Button wurde durch ein **SVG-Flaggen-Dropdown** ersetzt — zeigt die aktive Flagge, Klick zur Auswahl; robuste Inline-SVG-Flaggen (kein Emoji-Fallback-Problem); Erkennung über `?lang=`, localStorage und `navigator.language`. **(3) Grafik:** der Querschnitt wurde für Klarheit überarbeitet — Zone-2-Hügel → flaches Plateau geringer Flughöhe, Flughafen liegt jetzt auf seiner eigenen Bezugshöhe (flach), **Zone-1-Höhenbalken entfernt** (keine generelle Freigabe → keine Höhenregel), verwirrende schwebende Flugplatzhöhen-Bezugslinie entfernt, flache Deckel-Linie „Deckel = Flugplatzhöhe + 25 m" ergänzt, Gebäude-Cluster als breitere Skyline über die Zone-2/3-Grenze neu gezeichnet, irreführender „maßstabsgetreu"-Hinweis am 800-m-Marker entfernt. |
 | v26.08.116.7 | 🇩🇪 **CTR-Höhenregeln-Seite: NfL 2026-1-3959 (BMV-Grundsätze) ergänzt — allgemeine Betriebsbedingungen + 800-m-Sicht-Annotation.** `ctr-hoehenregeln.html` (DE+EN). Ergänzt das übergeordnete **NfL 2026-1-3959** (BMV-Grundsätze für UAS in Lufträumen der Klasse D, Basis für 3960/3981) als erste Referenz. Neue **„Weitere Bedingungen"-Box** mit den allgemeinen 3959-Bedingungen, angeführt von einem hervorgehobenen **See-and-Avoid-Warnhinweis**: Die Flugsicherung stellt **keine Staffelung** her (auch keine Wirbelschleppenstaffelung) und gibt **keine Verkehrsinformationen** — die Kollisionsvermeidung liegt allein beim Fernpiloten. Außerdem: **Mindestsicht ≥ 800 m** (außer bei Hindernisnähe / individueller Freigabe), autonome Flüge verboten, BVLOS & Schwarm zulässig. Die Querschnitts-SVG erhält eine **maßstabsgetreue „Sicht ≥ 800 m"-Annotation** (oben links im Himmel, bewusst weg von den Hindernis-Szenen, um die Ausnahme nicht fehlzudeuten). Nur `ctr-hoehenregeln.html`; APP_VER-Bump. |

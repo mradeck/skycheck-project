@@ -100,6 +100,10 @@ the app header.
 
 ```
 skycheck.html               ← entire app (HTML + CSS + JS, ~9.4k lines)
+coordinates.html            ← GPS2UTM coordinate page: GPS → ETRS89/UTM, Gauss-Krüger, DHHN2016
+coordinate-tools.js         ← coordinate maths for that page (UTM, Gauss-Krüger approximation, GCG2016 geoid)
+ctr-hoehenregeln.html       ← info page: DFS/DAS control-zone height rules (NfL 2026-1-3960/-3981), cross-section graphic and airport gallery
+img/                        ← WebP images for that page (height-grid guide + airport gallery)
 manifest.json               ← PWA web app manifest
 sw.js                       ← service worker (caching)
 icon-192x192.png            ← app icon (small)
@@ -118,19 +122,24 @@ data/
   uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
   fr-zones-tiles/           ← generated spatial index for the Netlify function
   context/fr/               ← bundled viewport tiles for the four France context layers
-  uas-zones-at.json         ← ED-269 Austria UAS zones (286 zones, auto-updated)
+  uas-zones-at.json         ← ED-269 Austria UAS zones (about 290 zones, auto-updated)
   uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
   uas-zones-{lu,no,ee}.json ← ED-269 Luxembourg / Norway / Estonia UAS zones (weekly snapshots)
+  uas-zones-{lu,no,ee}.version ← markers of the last imported snapshot per country (idempotency)
   dipul-airac/              ← extracted DiPUL AIRAC air-traffic layers (weekly check)
   <cc>-protected.json       ← context: protected areas (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr
   <cc>-motorways.json       ← context: motorways (OSM, ODbL)
   <cc>-powerlines.json      ← context: high-voltage power lines (OSM, ODbL)
   <cc>-rail.json            ← context: main railway lines (OSM, ODbL)
+  gcg2016v2023-cm.i16       ← compact GCG2016 quasi-geoid grid (Int16, cm) for the coordinate page
 scripts/
   build-eu-zones.mjs        ← builds the LU/NO/EE ED-269 snapshots from the official sources
   gen-context.mjs           ← reusable generator: Overpass → simplified GeoJSON (lines + polygons)
   fetch-context.sh          ← robust driver: curl-fetch (retry) + gen-context per layer, idempotent
+  build-fr-spatial-data.mjs ← builds the 2° spatial tiles for France (zones index + context layers)
+  build-gcg-web-grid.mjs    ← converts the official GCG2016 GeoTIFF into the compact web grid
   README.md                 ← how to add context layers for a new country
+  test-coordinate-tools.cjs ← Node check for coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← Node tests (`node --test "tests/*.test.mjs"`)
 .github/
   workflows/
@@ -150,7 +159,7 @@ SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Coun
 |---|---|---|---|---|
 | 🇩🇪 **DE** (default) | DiPUL WMS (`uas-betrieb.de`) | WMS tiles | WMS GetFeatureInfo | live service (official, always current) |
 | 🇫🇷 **FR** | ED-269 dataset | client-side polygons/circles | `zones-fr.js` (bbox filter) | `data/uas-zones-fr.json` (~3.6k zones, replaceable) |
-| 🇦🇹 **AT** | Austro Control ED-269 | all zones drawn client-side (286) | `zones-at.js` (bbox filter) | `data/uas-zones-at.json` — **auto-updated monthly** via GitHub Actions (`update-at-zones.yml`) |
+| 🇦🇹 **AT** | Austro Control ED-269 | all zones drawn client-side (about 290) | `zones-at.js` (bbox filter) | `data/uas-zones-at.json` — **auto-updated monthly** via GitHub Actions (`update-at-zones.yml`) |
 | 🇨🇭 **CH** | BAZL / geo.admin.ch `ch.bazl.einschraenkungen-drohnen` | WMS tiles | geo.admin.ch **Identify** REST API | live service (CORS-open) — **no function, no file, no workflow** |
 | 🇪🇸 **ES** | ENAIRE servAIS `SRV_UAS_ZG_V0` | WMS tiles | ArcGIS **Identify** REST API | live service (CORS-open) — **no function, no file, no workflow** |
 | 🇩🇰 **DK** | Trafikstyrelsen ArcGIS FeatureServer | client-side vector polygons (~870, colour-coded) | ArcGIS query (bbox) | live service (CORS-open) — **no function, no file, no workflow** |
@@ -174,7 +183,7 @@ Zone counts pulled directly from each country's live source (DE via DiPUL WFS ac
 | 🇨🇭 Switzerland | 1 232 | 41 285 | ≈ 30 |
 | 🇩🇰 Denmark | 870 | 42 952 | ≈ 20 |
 | 🇫🇷 France | 3 642 | 551 695 | ≈ 6.6 |
-| 🇦🇹 Austria | 286 | 83 879 | ≈ 3.4 |
+| 🇦🇹 Austria | about 290 | 83 879 | ≈ 3.4 |
 | 🇮🇪 Ireland\* | 76 | 70 273 | ≈ 1.1 |
 
 \* Ireland's figure is from the EASA Common Repository, which is still **preliminary** (the national IAA dataset lists ~87) — so its count is indicative, not complete.
@@ -240,7 +249,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
-| v26.10.117.1 | 🛟 **Zone data outage is now visible.** If the geo-zone lookup fails (HTTP error, timeout, offline), SkyCheck now shows **"Zone data unavailable"** with a **yellow** traffic light instead of "no restrictions" in green — in all twelve countries. The zone list shows a notice box with a link to the official source; the map panel shows a grey entry. A successful lookup with no hits stays green; local file fallbacks stay in place. Not covered: the full-country map overlay. 96 Node tests. |
+| v26.10.117.1 | 🛟 **Zone data outage is now visible.** If the geo-zone lookup fails (HTTP error, timeout, offline), SkyCheck now shows **"Zone data unavailable"** with a **yellow** traffic light instead of "no restrictions" in green — in all twelve countries. The zone list shows a notice box with a link to the official source; the map panel shows a grey entry. A successful lookup with no hits stays green; local file fallbacks stay in place. A hanging service runs into the outage notice after **20 seconds**; while the lookup runs, the banner shows **"Checking airspace …"** instead of "no restrictions". Germany: a 200 answer that is not GeoServer output counts as a failure; Denmark and Germany show partial results together with the outage notice. Not covered: (1) the full-country map overlay; (2) Germany: a DiPUL layer that answers with a server error is skipped for the rest of the session, and its zones are then missing without a notice; (3) while a lookup is running, the zone list and map panel may still show the previous point's entries; (4) the banner's weather line keeps the old language after a language switch until the next check. 147 Node tests. |
 | v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxembourg, Norway and Estonia.** Three new country variants (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) with official ED-269 geozones as weekly refreshed snapshots (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 zones; sources: DAC Luxembourg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). New Netlify function `zones-ed269` with an exact area test (point in polygon or edge within the search radius). Zones whose activation windows have all ended stay visible as "currently inactive" (yellow instead of red). **Norway:** temporary NOTAM restriction areas are loaded live on click via the new function `notam-no`, drawn dashed red and counted for the traffic light for 5 minutes. **Estonia:** a fixed hint says short-term areas may be up to 7 days old. Zone names are now HTML-escaped in the status banner and map panel. **The interface now starts in light mode by default** (a stored choice, including dark, is respected). 39 Node tests. |
 | v26.08.116.8 | 🌍 **CTR height-rules page: 5 more languages (FR/ES/IT/NL/PL), SVG-flag language switcher + cross-section graphic rework.** `ctr-hoehenregeln.html`. **(1) Languages:** now available in **7 languages** — German, English and new **French, Spanish, Italian, Dutch, Polish** (full i18n of all text, HTML blocks, tables, SVG graphic labels and cards; aviation terminology). **(2) Language switcher:** replaced the DE/EN text toggle with an **SVG-flag dropdown** — shows the active language's flag, click to pick another; robust inline SVG flags (no emoji-flag fallback issues); detection via `?lang=`, localStorage and `navigator.language`. **(3) Graphic:** the cross-section was reworked for clarity — the Zone-2 hill became a flat low-height plateau, the aerodrome now sits on its own reference elevation (flat), **Zone-1 height bars removed** (no general clearance → no height rule), the confusing floating aerodrome-elevation reference line removed, a labelled flat "cap = aerodrome elev. + 25 m" ceiling line added, the building cluster redrawn as a wider skyline spanning the Zone-2/3 boundary, and the misleading "to scale" note on the 800 m visibility marker dropped. |
 | v26.08.116.7 | 🇩🇪 **CTR height-rules page: NfL 2026-1-3959 (BMV principles) added — general operating conditions + 800 m visibility annotation.** `ctr-hoehenregeln.html` (DE+EN). Adds the overarching **NfL 2026-1-3959** (BMV principles for UAS in Class D airspace, the basis for 3960/3981) as the first reference. New **"Further conditions" box** summarising the general NfL-3959 conditions, led by a highlighted **see-and-avoid warning**: ATC provides **no separation** (incl. no wake-turbulence separation) and **no traffic information** — collision avoidance is solely the remote pilot's responsibility. Further: **minimum visibility ≥ 800 m** (except near obstacles / under individual clearance), autonomous flights prohibited, BVLOS & swarm permitted. The cross-section SVG gains a **to-scale "Visibility ≥ 800 m"** annotation (top-left sky, kept away from the obstacle scenes to avoid misreading the exception). Only `ctr-hoehenregeln.html`; APP_VER bump. |

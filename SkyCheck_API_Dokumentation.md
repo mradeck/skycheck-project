@@ -507,6 +507,12 @@ GET /.netlify/functions/notam-no
 | DiPUL WFS       | `uas-betrieb.de/geoservices/dipul/wfs` | ✅   | –    | kostenlos |
 | zones-ed269 (LU/NO/EE) | `/.netlify/functions/zones-ed269` | ✅   | –    | eigene Function |
 | notam-no (NO)  | `/.netlify/functions/notam-no`         | ✅   | –    | eigene Function, nur auf Klick |
+| geo.admin.ch (CH) | `api3.geo.admin.ch/rest/services/all/MapServer/identify` (Punktabfrage), `wms.geo.admin.ch` (Karten-Overlay) | ✅ | – | kostenlos |
+| ENAIRE servAIS (ES) | `servais.enaire.es/insignia/…/SRV_UAS_ZG_V0/MapServer` (Identify + WMS) | ✅ | – | kostenlos |
+| EASA Common Repository (DK/IE/NL/PT/ES-EASA) | `services-eu1.arcgis.com` (ArcGIS FeatureServer) | ✅ | – | kostenlos |
+| DFS UTM Wetter | `utm-service.dfs.de/api/weather/v1/weather` (POST, Höhenwetter; Best-Effort) | ✅ (direkter Browser-Aufruf) | – | kostenlos |
+| zones-fr (FR)  | `/.netlify/functions/zones-fr`         | ✅   | –    | eigene Function |
+| zones-at (AT)  | `/.netlify/functions/zones-at`         | ✅   | –    | eigene Function |
 
 ---
 
