@@ -353,7 +353,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 ## 8. Luftraumzonen Luxemburg, Norwegen, Estland, Schweden, Belgien — `zones-ed269` (SkyCheck-Netlify-Function)
 
-**Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`), **Estland** (`ee`), **Schweden** (`se`) und **Belgien** (`be`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS, LFV / Transportstyrelsen CC BY 4.0, BCAA / skeyes Droneguide ohne vom Herausgeber angegebene Lizenz). Snapshot-Größen Stand 2026-10-09: LU 43, NO 1390, EE 241, SE 390, BE 582 Zonen.
+**Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`), **Estland** (`ee`), **Schweden** (`se`) und **Belgien** (`be`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS, LFV / Transportstyrelsen CC BY 4.0, BCAA / skeyes Droneguide ohne vom Herausgeber angegebene Lizenz). Snapshot-Größen Stand 2026-10-09: LU 43, NO 1390, EE 241, SE 390, BE 582 Zonen. Die Client-App nennt die Quelle des jeweiligen Landes in der Leaflet-Attribution der Haupt- und der Alarmkarte (`ZONE_ATTRIBUTION`); bei Schweden mit Link auf CC BY 4.0 und dem Vermerk „adapted“.
 
 **Schweden:** sieben LFV-WFS-Layer (`mais:RSTA`, `DAIM_TOPO:RWY5K`, `mais:CTR`, `mais:ATZ`, `mais:TIZ`, `DAIM_TOPO:HKP1K`, `mais:DNGA`) plus die ED-318-Zonendatei der Transportstyrelsen (68 UAS-Zonen mit ihren Gültigkeitsfenstern). Einstufung: Restriktionsgebiete (ab Boden) und 5-km-Flughafenbereiche = `REQ_AUTHORISATION`; Kontrollzonen, Verkehrs(informations)zonen, 1-km-Heliport-Bereiche und Gefahrengebiete = `CONDITIONAL`; die UAS-Zonen wie in der Datei angegeben.
 
@@ -417,7 +417,7 @@ GET /.netlify/functions/zones-ed269?country={lu|no|ee|se|be}&all=1
 | `desc`     | Beschreibung in der angeforderten Sprache |
 | `color`    | Anzeigefarbe: `PROHIBITED` `#ef4444`, `REQ_AUTHORISATION` `#f59e0b`, `CONDITIONAL` `#f97316`, `NO_RESTRICTION` `#3b82f6` (blau), sonst `#64748b` |
 | `geometry` | Array aus `{type:"Polygon", coordinates}` oder `{type:"Circle", center:[lon,lat], radius}` (Meter); Koordinaten immer `[lon, lat]` |
-| `inactive` | Nur vorhanden, wenn `true`: Jedes Aktivierungsfenster der Zone ist abgelaufen oder hat noch nicht begonnen. Die Zone bleibt sichtbar; `desc` beginnt bei abgelaufenen Fenstern mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“, bei künftigen mit „Not yet active — starts <YYYY-MM-DD>. May change — check the official source.“ Die Ampel wird gelb statt rot; Banner und Karten-Panel kennzeichnen die Zone als „derzeit inaktiv“. Ein laufendes Fenster, eines ohne Grenzen oder mit unlesbaren Daten macht die Zone aktiv |
+| `inactive` | Nur vorhanden, wenn `true`: Jedes Aktivierungsfenster der Zone ist abgelaufen oder beginnt erst in mehr als 24 Stunden; ein Fenster, das binnen 24 Stunden beginnt, gilt schon als laufend (die Zone ist dann nicht inaktiv). Die Zone bleibt sichtbar; `desc` beginnt bei abgelaufenen Fenstern mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“, bei künftigen mit „Not yet active — starts <YYYY-MM-DD HH:mm> UTC. May change — check the official source.“ Die Ampel wird gelb statt rot; Banner und Karten-Panel kennzeichnen die Zone als „derzeit inaktiv“. Ein laufendes Fenster, eines ohne Grenzen oder mit unlesbaren Daten macht die Zone aktiv |
 
 **Antwort mit `all=1`:** `{ "country": "LU", "all": true, "zones": [...] }`. Jede Zone enthält hier nur `name`, `type`, `color`, `geometry` sowie ggf. `inactive`.
 
@@ -540,9 +540,9 @@ GET /.netlify/functions/notam-se
 
 **Hinweise:**
 - Jede Zone trägt `notam: true`. Name der NOTAM-Gebiete: `NOTAM <SERIES><NO>/<YEAR>`; Name der SUP-Gebiete: `<DESIG> <NAME>` (`legal`: `AIP SUP`).
-- Einstufung der NOTAM-Gebiete nach `CODE23`: `RP`/`RR`/`RT` = `PROHIBITED` (rot `#ef4444`); `RD`, `W…` und sonstige `R…` = `CONDITIONAL` (orange `#f97316`). SUP-Gebiete sind `PROHIBITED`.
+- Einstufung der NOTAM-Gebiete nach `CODE23`: `RD` und `W…` = `CONDITIONAL` (orange `#f97316`); jedes andere `R…` (`RP`, `RR`, `RT`, `RA`, `RM`, `RO`, …) = `PROHIBITED` (rot `#ef4444`). SUP-Gebiete sind `PROHIBITED`; ihr `legalUrl` ist die einmal dekodierte SUP-URL (der Client wendet `encodeURI` an), bei fehlender, kaputter oder nicht-`http(s)`-URL die Karten-URL `https://dronechart.lfv.se/`.
 - `desc` beginnt mit der Gültigkeit („Valid <von> – <bis> UTC.“, ggf. „Schedule: <Zeitplan>.“), danach folgt der Beschreibungstext. Der Text wird **nicht** ausgewertet: Ein NOTAM, das eine Aufhebung ankündigt, erscheint weiter als aktiv; Zeitpläne innerhalb des Gültigkeitsfensters (Wochentage, Uhrzeiten) werden nicht geprüft.
-- NOTAM-Gebiete, deren Gültigkeit noch nicht begonnen hat, kommen als `type: "TEMPORARY_INACTIVE"` (grau `#64748b`) mit `inactive: true`; `desc` beginnt mit „Not yet active — starts <YYYY-MM-DD>.“ Abgelaufene Gebiete entfallen.
+- NOTAM-Gebiete, deren Gültigkeit erst in mehr als 24 Stunden beginnt, kommen als `type: "TEMPORARY_INACTIVE"` (grau `#64748b`) mit `inactive: true`; `desc` beginnt mit „Not yet active — starts <YYYY-MM-DD HH:mm> UTC.“ Beginnt die Gültigkeit binnen 24 Stunden, gilt das Gebiet als aktiv. Abgelaufene Gebiete entfallen. Nur Gebiete mit `LOWER` gleich 0 (Zahl oder Zeichenkette `"0"`) werden übernommen.
 - Nur `Polygon` und `MultiPolygon` werden übernommen (MultiPolygon wird zu mehreren Polygonen).
 - `fetchedAt` ist der Abrufzeitpunkt (ISO 8601, UTC); die Client-App wertet geladene Daten 5 Minuten lang für die Ampel aus.
 - Scheitert einer der beiden Abrufe, gibt es **kein Teilergebnis**, sondern HTTP 502.

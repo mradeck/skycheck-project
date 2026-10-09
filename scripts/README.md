@@ -68,7 +68,7 @@ node scripts/build-eu-zones.mjs se <eingabeverzeichnis> <ausgabe.json> [--min N]
 
 **Norwegischer Dateiname:** Der Dateiname trägt das Tagesdatum. Ältere Dateien liefern 404. Der Workflow liest deshalb den aktuellen Link von der Startseite `https://dronesoner.no/`, statt eine feste URL zu verwenden.
 
-**Automatisches Update:** `.github/workflows/update-eu-zones.yml` läuft jeden Montag um 04:00 UTC für alle fünf Länder und lässt sich manuell per „Run workflow“ für ein Land oder alle starten. Committet wird nur bei inhaltlicher Änderung; Artefakte und Cache werden bewusst nicht verwendet. Schlägt ein Land fehl, bleibt sein bisheriger Snapshot erhalten, und der Workflow endet mit Fehler.
+**Automatisches Update:** `.github/workflows/update-eu-zones.yml` läuft jeden Montag um 04:00 UTC für alle fünf Länder und lässt sich manuell per „Run workflow“ für ein Land oder alle starten. Committet wird nur bei inhaltlicher Änderung; Artefakte und Cache werden bewusst nicht verwendet. Jeder Länder-Schritt hat ein Zeitlimit von 4 Minuten, der Job eines von 25 Minuten, damit ein langsamer Host den Commit-Schritt nicht verhindert. Schlägt ein Land fehl, bleibt sein bisheriger Snapshot erhalten, und der Workflow endet mit Fehler.
 
 ---
 

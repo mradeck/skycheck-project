@@ -1,7 +1,7 @@
 name: Update EU UAS zones (LU, NO, EE, SE, BE)
 
 # Holt die amtlichen UAS-Geozonen von Luxemburg (DAC), Norwegen (Luftfartstilsynet /
-# dronesoner.no), Estland (EANS), Schweden (LFV / DIMAS-WFS) und Belgien (droneguide.be)
+# dronesoner.no), Estland (EANS), Schweden (LFV / DAIM, daim.lfv.se) und Belgien (droneguide.be)
 # wandelt sie mit scripts/build-eu-zones.mjs in das gemeinsame ED-269-Array und committet
 # nach data/uas-zones-<cc>.json — nur bei inhaltlicher Änderung. Netlify deployt anschließend
 # automatisch.
@@ -17,7 +17,7 @@ on:
         description: 'Welches Land aktualisieren'
         type: choice
         default: all
-        options: [all, lu, 'no', ee, se, be]
+        options: ['all', 'lu', 'no', 'ee', 'se', 'be']
 
 permissions:
   contents: write
@@ -32,7 +32,7 @@ env:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -67,6 +67,7 @@ jobs:
         id: lu
         if: steps.plan.outputs.lu == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           curl -fsSL --max-time 60 -A "$UA" -o "$RUNNER_TEMP/lu.json" "https://drones.geoportail.lu/zones"
@@ -76,6 +77,7 @@ jobs:
         id: "no"
         if: steps.plan.outputs.no == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           # Der Dateiname trägt das Tagesdatum; ältere Dateien liefern 404. Aktuellen Namen
@@ -91,6 +93,7 @@ jobs:
         id: ee
         if: steps.plan.outputs.ee == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           curl -fsSL --max-time 120 -A "$UA" -o "$RUNNER_TEMP/ee.json" "https://utm.eans.ee/avm/utm/uas.geojson"
@@ -100,6 +103,7 @@ jobs:
         id: se
         if: steps.plan.outputs.se == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           d="$RUNNER_TEMP/se"
@@ -127,6 +131,7 @@ jobs:
         id: be
         if: steps.plan.outputs.be == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           # Der cql_filter ist zwingend: Der Layer geo_zone_fast enthält ungefiltert 420
