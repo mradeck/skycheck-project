@@ -155,7 +155,7 @@ Da die GFZ-API keine CORS-Header sendet, schlägt `fetch()` direkt aus dem Brows
 3. https://api.allorigins.win/raw?url={encoded_url}  (öffentlicher CORS-Proxy, instabil)
 ```
 
-**Netlify Serverless Function** (`netlify/functions/gfz.js`):
+**Netlify Serverless Function** (`netlify/functions/gfz.js`; der folgende Ausschnitt ist vereinfacht, die echte Function enthält zusätzlich Validierung, Fehlerbehandlung und Caching):
 ```javascript
 exports.handler = async (event) => {
   const { start, end, index } = event.queryStringParameters;
@@ -334,19 +334,20 @@ GET https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json
 
 ---
 
-## 7. Kartenhintergrund — CartoDB (Leaflet)
+## 7. Kartenhintergrund — OpenStreetMap-Kacheln (Leaflet)
 
-**Zweck:** Dunkler Kartenhintergrund für die Drohnen-Karte
+**Zweck:** Kartenhintergrund für die Drohnen-Karte. Der Stil „Dark“ nutzt dieselben OSM-Kacheln, die per CSS-Filter invertiert werden (Klasse `.tiles-dark`); CARTO (`basemaps.cartocdn.com`) wurde in v26.08.116.1 entfernt, weil es ohne API-Key nur noch Kacheln mit Wasserzeichen lieferte. Der dritte Stil „Satellit“ nutzt Esri World Imagery.
 
 ```javascript
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© CartoDB',
-  subdomains: 'abcd',
-  maxZoom: 19
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  subdomains: 'abc',
+  maxZoom: 19,
+  className: 'tiles-dark'   // nur beim Stil „Dark“: CSS-Filter invertiert die Kacheln
 })
 ```
 
-**Kein API-Key erforderlich · kostenlos bis 75.000 Aufrufe/Monat**
+**Kein API-Key erforderlich · es gilt die [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) von OpenStreetMap (Fair Use)**
 
 ---
 
@@ -498,9 +499,20 @@ GET /.netlify/functions/notam-no
 | NOAA SWPC       | `services.swpc.noaa.gov`               | ✅   | –    | kostenlos |
 | Airplanes.live  | `api.airplanes.live/v2/point`          | ✅   | –    | kostenlos |
 | DiPUL WMS       | `uas-betrieb.de/geoservices/dipul/wms` | ✅   | –    | kostenlos |
-| CartoDB Tiles   | `basemaps.cartocdn.com`                | ✅   | –    | 75k/Monat |
+| OSM-Kacheln     | `{s}.tile.openstreetmap.org`           | ✅   | –    | Fair Use (Tile Usage Policy) |
+| Esri Satellit   | `server.arcgisonline.com`              | ✅   | –    | kostenlos (Attribution) |
+| AWC (METAR/TAF) | `aviationweather.gov/api/data` — über die Function `/.netlify/functions/awc` | ✅ (über die Function) | – | kostenlos; Function mit 10 s Timeout, 90 s Cache |
+| Open-Meteo Höhe | `api.open-meteo.com/v1/elevation`      | ✅   | –    | kostenlos |
+| Terrain-Kacheln (AWS) | `s3.amazonaws.com/elevation-tiles-prod/terrarium` | ✅   | –    | kostenlos |
+| DiPUL WFS       | `uas-betrieb.de/geoservices/dipul/wfs` | ✅   | –    | kostenlos |
 | zones-ed269 (LU/NO/EE) | `/.netlify/functions/zones-ed269` | ✅   | –    | eigene Function |
 | notam-no (NO)  | `/.netlify/functions/notam-no`         | ✅   | –    | eigene Function, nur auf Klick |
+| geo.admin.ch (CH) | `api3.geo.admin.ch/rest/services/all/MapServer/identify` (Punktabfrage), `wms.geo.admin.ch` (Karten-Overlay) | ✅ | – | kostenlos |
+| ENAIRE servAIS (ES) | `servais.enaire.es/insignia/…/SRV_UAS_ZG_V0/MapServer` (Identify + WMS) | ✅ | – | kostenlos |
+| EASA Common Repository (DK/IE/NL/PT/ES-EASA) | `services-eu1.arcgis.com` (ArcGIS FeatureServer) | ✅ | – | kostenlos |
+| DFS UTM Wetter | `utm-service.dfs.de/api/weather/v1/weather` (POST, Höhenwetter; Best-Effort) | ✅ (direkter Browser-Aufruf) | – | kostenlos |
+| zones-fr (FR)  | `/.netlify/functions/zones-fr`         | ✅   | –    | eigene Function |
+| zones-at (AT)  | `/.netlify/functions/zones-at`         | ✅   | –    | eigene Function |
 
 ---
 
@@ -515,4 +527,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v0.15 Quellcode · April 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.117.1 · Oktober 2026*

@@ -2403,6 +2403,8 @@
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em;
       color: #fff; background: #ef4444; border-radius: 4px; vertical-align: middle;
     }
+    .z-unavailable { border-left: 3px solid #f59e0b; }
+    .z-unavailable .z-details { display: block; font-size: 0.85rem; line-height: 1.45; }
 
     .ms-coordinates {
       margin-top: 0.3rem;
@@ -3444,7 +3446,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.117.0';
+    const APP_VER = '26.10.117.1';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3600,6 +3602,10 @@
         notamLoad: 'NOTAM-Sperrgebiete laden', notamLoading: 'NOTAM werden geladen …', notamAsOf: t => `NOTAM · Stand ${t}`, notamError: 'NOTAM-Daten nicht verfügbar', notamHint: 'Befristete NOTAM-Sperrgebiete sind erst nach dem Laden sichtbar.', notamBadge: 'NOTAM',
         zoneInactive: 'derzeit inaktiv',
         eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
+        zoneDataUnavailable: 'Zonendaten nicht verfügbar — Luftraum nicht geprüft',
+        zonesUnavailable: 'Zonendaten konnten nicht geladen werden.',
+        zonesUnavailableHint: 'Der Luftraum an diesem Standort wurde nicht geprüft. Bitte erneut laden oder die amtliche Quelle prüfen:',
+        zonesChecking: 'Luftraum wird geprüft …',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3785,6 +3791,10 @@
         notamLoad: 'Load NOTAM restrictions', notamLoading: 'Loading NOTAM …', notamAsOf: t => `NOTAM · as of ${t}`, notamError: 'NOTAM data unavailable', notamHint: 'Temporary NOTAM restrictions are only shown after loading.', notamBadge: 'NOTAM',
         zoneInactive: 'currently inactive',
         eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
+        zoneDataUnavailable: 'Zone data unavailable — airspace not checked',
+        zonesUnavailable: 'Zone data could not be loaded.',
+        zonesUnavailableHint: 'The airspace at this location was not checked. Please reload or check the official source:',
+        zonesChecking: 'Checking airspace …',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3962,6 +3972,10 @@
         notamLoad: 'Charger les restrictions NOTAM', notamLoading: 'Chargement des NOTAM …', notamAsOf: t => `NOTAM · état ${t}`, notamError: 'Données NOTAM indisponibles', notamHint: 'Les restrictions NOTAM temporaires ne sont visibles qu’après chargement.', notamBadge: 'NOTAM',
         zoneInactive: 'actuellement inactive',
         eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
+        zoneDataUnavailable: 'Données de zones indisponibles — espace aérien non vérifié',
+        zonesUnavailable: 'Les données de zones n\'ont pas pu être chargées.',
+        zonesUnavailableHint: 'L\'espace aérien à cet endroit n\'a pas été vérifié. Rechargez ou consultez la source officielle :',
+        zonesChecking: 'Vérification de l\'espace aérien …',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -4147,6 +4161,10 @@
         notamLoad: 'Cargar restricciones NOTAM', notamLoading: 'Cargando NOTAM …', notamAsOf: t => `NOTAM · a las ${t}`, notamError: 'Datos NOTAM no disponibles', notamHint: 'Las restricciones NOTAM temporales solo se muestran tras cargarlas.', notamBadge: 'NOTAM',
         zoneInactive: 'actualmente inactiva',
         eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
+        zoneDataUnavailable: 'Datos de zonas no disponibles — espacio aéreo no comprobado',
+        zonesUnavailable: 'No se pudieron cargar los datos de zonas.',
+        zonesUnavailableHint: 'El espacio aéreo en esta ubicación no se ha comprobado. Recargue o consulte la fuente oficial:',
+        zonesChecking: 'Comprobando el espacio aéreo …',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -4332,6 +4350,10 @@
         notamLoad: 'Wczytaj ograniczenia NOTAM', notamLoading: 'Wczytywanie NOTAM …', notamAsOf: t => `NOTAM · stan ${t}`, notamError: 'Dane NOTAM niedostępne', notamHint: 'Tymczasowe ograniczenia NOTAM są widoczne dopiero po wczytaniu.', notamBadge: 'NOTAM',
         zoneInactive: 'obecnie nieaktywna',
         eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
+        zoneDataUnavailable: 'Dane stref niedostępne — przestrzeń nie została sprawdzona',
+        zonesUnavailable: 'Nie udało się wczytać danych stref.',
+        zonesUnavailableHint: 'Przestrzeń w tym miejscu nie została sprawdzona. Odśwież lub sprawdź oficjalne źródło:',
+        zonesChecking: 'Sprawdzanie przestrzeni …',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -4582,7 +4604,7 @@
         // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
         // auch die per innerHTML/_t erzeugten Inhalte (Taupunkt, Wolkenbasis, METAR, Vorhersage,
         // Vereisung, Zeitstempel) erfasst — nicht nur die statischen [data-i18n]-Labels.
-        renderStatus(lastStatus, lastZoneStatus);
+        renderStatus(lastStatus, currentZoneStatus());
         renderMetrics(lastWeather, lastKp, lastAircraft, lastKpGfz);
         renderWindProfile(lastWeather);
         renderFreezingRain(lastWeather);
@@ -5426,6 +5448,9 @@
       const checkLat = S.lat;
       const checkLon = S.lon;
       const blocking = options.blocking !== false;
+      // Bis die Zonen dieses Checks da sind, kein „keine Einschränkungen" (und nicht das Urteil des
+      // vorigen Punkts) im Banner zeigen. Der fertige Check ersetzt diesen Status durch das echte Zonenurteil.
+      lastZoneStatus = pendingZoneStatus();
       S.inDfsCtr = false;
       if (blocking) showLoad(_t('loadingWeather'));
       $land.style.display = 'none';
@@ -5438,7 +5463,7 @@
         if (blocking) $loadMsg.textContent = 'Wetter, Kp-Index und Luftverkehr…';
         // Die standortkritischen Geozonen sofort starten. Bisher begann diese
         // Abfrage erst nach Wetter/Kp/ADS-B und verlängerte jeden Punktwechsel.
-        const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => []);
+        const zonesPromise = fetchZones(checkLat, checkLon, S.searchRadius).catch(() => [zoneDataUnavailable()]);
         // GFZ wird async geladen - blockiert nicht die Hauptanzeige
         let kpGfz = null;
         // Wetter/Kp/Luftverkehr sind je EINZELN nicht-fatal: fällt eine Quelle (z. B. BrightSky
@@ -5543,7 +5568,7 @@
             if (ceil && ceil.m < 300 && ceil.m !== Infinity) {
               const ms = evalStatus(now, kpVal);
               if (ceil.m < 150) ms.lvl = 'nogo'; else if (ms.lvl !== 'nogo') ms.lvl = 'warn';
-              const msg = _t('metarCeilingMsg')(sorted[0].icaoId, ceil.text);
+              const msg = _t('metarCeilingMsg')(escapeHtml(sorted[0].icaoId), escapeHtml(ceil.text));
               if (!ms.reasons.some(r => r.includes('METAR'))) ms.reasons.push(msg);
               renderStatus(ms, lastZoneStatus);
             }
@@ -5562,6 +5587,10 @@
         if (checkId !== S.checkSequence) return;
         if (blocking) hideLoad();
         console.error(e);
+        // Abgebrochener Check: der Prüf-Status darf nicht stehen bleiben (und bei Sprachwechsel
+        // nicht wieder aufleben) — der Luftraum dieses Punkts gilt als nicht geprüft.
+        lastZones = [zoneDataUnavailable()];
+        lastZoneStatus = evalZoneStatus(lastZones);
         setStatus('warn', '⚠️', _t('errLoad'), e.message);
       }
     }
@@ -6379,20 +6408,51 @@
        LU/NO/EE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
             .github/workflows/update-eu-zones.yml)
     ================================================================ */
+    // Platzhalter für einen fehlgeschlagenen Zonenabruf. Läuft wie eine Zone durch Liste,
+    // Kartenpanel und Ampel; Texte werden erst beim Rendern über _t() gesetzt (Sprachwechsel).
+    function zoneDataUnavailable() {
+      return { unavailable: true, name: '', type: 'DATA_UNAVAILABLE', color: '#64748b',
+        lower: '—', upper: '—', legal: '—', legalUrl: '', desc: '' };
+    }
+    // Zeitlimit für den Zonenabruf: ein hängender Dienst wird nach dieser Zeit wie ein Ausfall behandelt
+    // (Platzhalter), damit das Banner nicht endlos auf „Luftraum wird geprüft …" stehen bleibt.
+    const ZONE_LOOKUP_TIMEOUT_MS = 20000;
     async function fetchZones(lat, lon, radiusM = 100) {
-      if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
-      if (COUNTRY === 'es') return esEasa() ? fetchZonesESEasa(lat, lon, radiusM) : fetchZonesES(lat, lon, radiusM);
-      if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
-      if (COUNTRY === 'dk') return fetchZonesDK(lat, lon, radiusM);
-      if (COUNTRY === 'ie') return fetchZonesIE(lat, lon, radiusM);
-      if (COUNTRY === 'nl') return fetchZonesNL(lat, lon, radiusM);
-      if (COUNTRY === 'pt') return fetchZonesPT(lat, lon, radiusM);
-      if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
-      if (ED269_COUNTRIES[COUNTRY]) {
-        const zones = await fetchZonesEd269(lat, lon, radiusM);
-        return notamNoHits(lat, lon, radiusM).concat(zones);   // NOTAM (nur NO, nur wenn geladen) zuerst
+      // Länderauswahl; jeder Adapter WIRFT bei fehlgeschlagenem Abruf (nie [] als Fehlerersatz).
+      const adapter = async () => {
+        if (COUNTRY === 'ch') return fetchZonesCH(lat, lon, radiusM);
+        if (COUNTRY === 'es') return esEasa() ? fetchZonesESEasa(lat, lon, radiusM) : fetchZonesES(lat, lon, radiusM);
+        if (COUNTRY === 'at') return fetchZonesAT(lat, lon, radiusM);
+        if (COUNTRY === 'dk') return fetchZonesDK(lat, lon, radiusM);
+        if (COUNTRY === 'ie') return fetchZonesIE(lat, lon, radiusM);
+        if (COUNTRY === 'nl') return fetchZonesNL(lat, lon, radiusM);
+        if (COUNTRY === 'pt') return fetchZonesPT(lat, lon, radiusM);
+        if (COUNTRY === 'fr') return fetchZonesFR(lat, lon, radiusM);
+        if (ED269_COUNTRIES[COUNTRY]) return fetchZonesEd269(lat, lon, radiusM);
+        return fetchZonesDE(lat, lon, radiusM);
+      };
+      let zones, timer;
+      try {
+        // Adapter gegen das Zeitlimit laufen lassen; ein später scheiternder Adapter bleibt durch
+        // Promise.race behandelt (keine unbehandelte Ablehnung). Der Timer wird immer gelöscht.
+        const timeout = new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Zeitlimit für den Zonenabruf überschritten')), ZONE_LOOKUP_TIMEOUT_MS);
+        });
+        zones = await Promise.race([adapter(), timeout]);
+        if (!Array.isArray(zones)) throw new Error('Zonen-Adapter lieferte keine Liste');
+      } catch (error) {
+        // Ein Ausfall darf nie wie „keine Zonen" aussehen → Platzhalter statt leerer Liste.
+        console.warn('Zonendaten nicht verfügbar (' + COUNTRY + ')', error);
+        zones = [zoneDataUnavailable()];
+      } finally {
+        clearTimeout(timer);
       }
-      return fetchZonesDE(lat, lon, radiusM);
+      // Norwegen: geladene NOTAM-Treffer voranstellen (auch vor dem Platzhalter).
+      if (!ED269_COUNTRIES[COUNTRY]) return zones;
+      let notam = [];
+      try { notam = notamNoHits(lat, lon, radiusM); }
+      catch (error) { console.warn('NOTAM-Treffer nicht auswertbar', error); }   // fetchZones darf nie werfen
+      return notam.concat(zones);
     }
 
     /* [J-API-ARCGIS] ====================================================
@@ -6400,13 +6460,23 @@
        Clientseitige Vektor-Darstellung (drawZoneOverlay), farbcodiert. Punktabfrage per Bbox
        für Detailliste/Status, „alle Zonen" für das flächige Overlay.
     ================================================================ */
-    async function _arcgisQuery(layerUrl, extra) {
+    // strict=true nur für die Punkt-Adapter (Ausfall muss werfen); Standard (lenient) für die
+    // Overlay-Lader: fehlgeschlagene Abfrage → [] wie vor v117.1.
+    async function _arcgisQuery(layerUrl, extra, strict = false) {
       const qs = new URLSearchParams(Object.assign(
         { where: '1=1', outFields: '*', outSR: '4326', f: 'geojson' }, extra || {}));
       const r = await fetch(`${layerUrl}/query?${qs}`);
-      if (!r.ok) return [];
+      if (!r.ok) {
+        if (strict) throw new Error('ArcGIS HTTP ' + r.status);
+        return [];
+      }
       const d = await r.json();
-      return Array.isArray(d.features) ? d.features : [];
+      if (strict) {
+        // ArcGIS meldet Fehler oft als HTTP 200 mit {"error":{…}} → kein Treffer-Ersatz.
+        if (d && d.error) throw new Error('ArcGIS-Fehler ' + (d.error.code || ''));
+        if (!d || !Array.isArray(d.features)) throw new Error('ArcGIS-Antwort ohne features-Liste');
+      }
+      return Array.isArray(d && d.features) ? d.features : [];
     }
     // GeoJSON-Geometrie → drawZoneOverlay-Form ([{type:'Polygon',coordinates}]); MultiPolygon aufteilen.
     function _geoToOverlay(g) {
@@ -6443,10 +6513,15 @@
     async function fetchZonesDK(lat, lon, radiusM = 100) {
       try {
         const env = _envParams(lat, lon, radiusM);
-        const res = await Promise.all(DK_LAYERS.map(l =>
-          _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env)).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
-        return res.flat();
-      } catch (e) { console.warn('Zones DK fetch error', e); return []; }
+        const res = await Promise.allSettled(DK_LAYERS.map(l =>
+          _arcgisQuery(l.url, Object.assign({ returnGeometry: 'false' }, env), true).then(fs => fs.map(f => _mapDK(f, l.color, false)))));
+        const ok = res.filter(r => r.status === 'fulfilled');
+        if (!ok.length) throw res[0].reason;   // keine Ebene erreichbar → Verteiler setzt den Platzhalter
+        const zones = ok.flatMap(r => r.value);
+        // Teilausfall: Treffer der gesunden Ebenen bleiben sichtbar, der Ausfall wird zusätzlich gemeldet.
+        if (ok.length < res.length) zones.push(zoneDataUnavailable());
+        return zones;
+      } catch (e) { console.warn('Zones DK fetch error', e); throw e; }
     }
     async function fetchAllZonesDK() {
       const res = await Promise.all(DK_LAYERS.map(l =>
@@ -6474,9 +6549,9 @@
     }
     async function fetchZonesIE(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(IE_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(IE_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapIE(f, false));
-      } catch (e) { console.warn('Zones IE fetch error', e); return []; }
+      } catch (e) { console.warn('Zones IE fetch error', e); throw e; }
     }
     async function fetchAllZonesIE() {
       const fs = await _arcgisQuery(IE_LAYER, { outFields: 'name,identifier,type' });
@@ -6500,9 +6575,9 @@
     }
     async function fetchZonesNL(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(NL_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(NL_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapNL(f, false));
-      } catch (e) { console.warn('Zones NL fetch error', e); return []; }
+      } catch (e) { console.warn('Zones NL fetch error', e); throw e; }
     }
     async function fetchAllZonesNL() {
       const fs = await _arcgisQuery(NL_LAYER, { outFields: 'name,identifier,type,restriction' });
@@ -6538,9 +6613,9 @@
     }
     async function fetchZonesPT(lat, lon, radiusM = 100) {
       try {
-        const fs = await _arcgisQuery(PT_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)));
+        const fs = await _arcgisQuery(PT_LAYER, Object.assign({ returnGeometry: 'false' }, _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapPT(f, false));
-      } catch (e) { console.warn('Zones PT fetch error', e); return []; }
+      } catch (e) { console.warn('Zones PT fetch error', e); throw e; }
     }
     async function fetchAllZonesPT() {
       const fs = await _arcgisQuery(PT_LAYER, { outFields: 'Name,FolderPath,Restriction' });
@@ -6569,9 +6644,9 @@
       try {
         const fs = await _arcgisQuery(ES_EASA_LAYER, Object.assign(
           { returnGeometry: 'false', outFields: 'name,identifier,type,reason,message,restrictionConditions,zoneAuthority,provider,siteURL' },
-          _envParams(lat, lon, radiusM)));
+          _envParams(lat, lon, radiusM)), true);
         return fs.map(f => _mapESEasa(f, false));
-      } catch (e) { console.warn('Zones ES-EASA fetch error', e); return []; }
+      } catch (e) { console.warn('Zones ES-EASA fetch error', e); throw e; }
     }
     // Flächiges EASA-Overlay: nur der aktuelle Kartenausschnitt (nicht ganz Spanien — 15.800
     // Zonen). Envelope-Abfrage liefert Sichtbares mit Geometrie, gedeckelt auf maxRecordCount 2000.
@@ -6615,10 +6690,12 @@
         const url = `${ENAIRE_IDENTIFY_URL}?geometry=${env}&geometryType=esriGeometryEnvelope&sr=4326`
           + `&layers=all&tolerance=0&mapExtent=${env}&imageDisplay=100,100,96&returnGeometry=false&f=json`;
         const r = await fetch(url);
-        if (!r.ok) return [];
+        if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
+        if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
+        if (!d || !Array.isArray(d.results)) throw new Error('Antwort ohne results-Liste');   // Nulltreffer = {"results":[]}
         const seen = new Set(), out = [];
-        for (const res of (d.results || [])) {
+        for (const res of d.results) {
           const a = res.attributes || {};
           const ident = _esVal(a.identifier);
           const name = _esVal(a.name) || ident || '—';
@@ -6639,7 +6716,7 @@
         return out;
       } catch (e) {
         console.warn('Zones ES fetch error', e);
-        return [];
+        throw e;
       }
     }
 
@@ -6672,10 +6749,12 @@
         const url = `${GEOADMIN_IDENTIFY_URL}?geometry=${env}&geometryType=esriGeometryEnvelope&sr=4326`
           + `&layers=all:${CH_ZONE_LAYER}&tolerance=0&mapExtent=${env}&imageDisplay=100,100,96&returnGeometry=false&lang=${L}`;
         const r = await fetch(url);
-        if (!r.ok) return [];
+        if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
+        if (d && d.error) throw new Error('Antwort mit error-Feld');   // HTTP 200 + {"error":…} ist ein Ausfall
+        if (!d || !Array.isArray(d.results)) throw new Error('Antwort ohne results-Liste');   // Nulltreffer = {"results":[]}
         const seen = new Set(), out = [];
-        for (const res of (d.results || [])) {
+        for (const res of d.results) {
           const a = res.attributes || {};
           const rid = a.zone_restriction_id || '';
           const name = a['zone_name_' + L] || a.zone_name_de || a.zone_name_en || '—';
@@ -6696,7 +6775,7 @@
         return out;
       } catch (e) {
         console.warn('Zones CH fetch error', e);
-        return [];
+        throw e;
       }
     }
 
@@ -6770,18 +6849,15 @@
         const r = await fetch(`/.netlify/functions/zones-fr?lat=${lat}&lon=${lon}&radius=${radiusM}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones FR: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
-        if (IS_LOCAL_PREVIEW) return fetchZonesFRLocal(lat, lon, radiusM);
-        return [];
       } catch (e) {
-        if (IS_LOCAL_PREVIEW) {
-          try { return await fetchZonesFRLocal(lat, lon, radiusM); }
-          catch (fallbackError) { console.warn('Zones FR local fallback error', fallbackError); }
-        }
         console.warn('Zones FR fetch error', e);
-        return [];
       }
+      // Abruf fehlgeschlagen: nur die lokale Vorschau hat einen Datei-Fallback; dessen Fehler wird weitergereicht.
+      if (!IS_LOCAL_PREVIEW) throw new Error('Zonen FR: HTTP/Netzwerk');
+      return fetchZonesFRLocal(lat, lon, radiusM);
     }
 
     // Österreich: Austro Control ED-269 via Netlify-Function zones-at (data/uas-zones-at.json).
@@ -6909,14 +6985,14 @@
         const r = await fetch(`/.netlify/functions/zones-at?lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones AT: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
       } catch (e) {
         console.warn('Zones AT fetch error', e);
       }
-      if (!IS_LOCAL_PREVIEW) return [];
-      try { return await fetchZonesATLocal(lat, lon, radiusM); }
-      catch (error) { console.warn('Zones AT local fallback error', error); return []; }
+      if (!IS_LOCAL_PREVIEW) throw new Error('Zonen AT: HTTP/Netzwerk');
+      return fetchZonesATLocal(lat, lon, radiusM);   // Fehler des Datei-Fallbacks wird weitergereicht
     }
 
     // Luxemburg / Norwegen / Estland: gemeinsamer ED-269-Adapter (Netlify-Function zones-ed269,
@@ -7031,12 +7107,13 @@
         const r = await fetch(`/.netlify/functions/zones-ed269?country=${COUNTRY}&lat=${lat}&lon=${lon}&radius=${radiusM}&lang=${LANG}`);
         if (r.ok) {
           const data = await r.json();
-          return Array.isArray(data.zones) ? data.zones : [];
+          if (Array.isArray(data?.zones)) return data.zones;
+          console.warn('Zones ED-269: Antwort ohne zones-Liste');   // 200 mit falscher Form = Ausfall, kein „keine Zonen"
         }
       } catch (e) {
         console.warn('Zones ED-269 fetch error', e);
       }
-      if (!IS_LOCAL_PREVIEW) return [];
+      if (!IS_LOCAL_PREVIEW) throw new Error('Zonen ED-269: HTTP/Netzwerk');
       try {
         const entries = await loadLocalEd269Entries();
         const dLat = radiusM / 111320, dLon = dLat / Math.max(0.01, Math.cos(lat * Math.PI / 180));
@@ -7047,7 +7124,7 @@
           .filter(zone => zoneHitsPoint(zone, lat, lon, radiusM))
           .sort((a, b) => rank(a) - rank(b))
           .slice(0, 50);
-      } catch (error) { console.warn('Zones ED-269 local fallback error', error); return []; }
+      } catch (error) { console.warn('Zones ED-269 local fallback error', error); throw error; }
     }
 
     // Flächiges AT-Karten-Overlay: ALLE Zonen (286) einmalig laden und zeichnen — analog
@@ -7212,14 +7289,18 @@
         + `&CRS=EPSG:4326&BBOX=${bboxForRadius(queryRadiusM)}&WIDTH=101&HEIGHT=101&I=50&J=50`
         + `&INFO_FORMAT=text/html&FEATURE_COUNT=50`;
 
-      // Einzel-Request. ok = HTTP-2xx; failed = GeoServer-ServiceException
-      // (defekter Layer). Netzwerk-/HTTP-Fehler → ok:false, NICHT als defekt werten.
+      // Einzel-Request. ok = HTTP-2xx UND erkennbare GeoServer-Antwort; failed = GeoServer-
+      // ServiceException (defekter Layer). Netzwerk-/HTTP-Fehler sowie 2xx ohne GeoServer-Ausgabe
+      // (Wartungsseite, leerer Rumpf) → ok:false, NICHT als defekt werten und nie als „keine Zonen".
+      // Auch eine echte leere Antwort trägt den Titel „Geoserver GetFeatureInfo output" samt featureInfo-CSS.
       async function gfi(layers, queryRadiusM = radiusM) {
         try {
           const r = await fetch(gfiUrl(layers, queryRadiusM));
           if (!r.ok) return { ok: false, failed: false, text: '' };
           const text = await r.text();
-          return { ok: true, failed: /ServiceException/i.test(text), text };
+          const failed = /ServiceException/i.test(text);
+          if (!failed && !/GetFeatureInfo output|featureInfo/i.test(text)) return { ok: false, failed: false, text: '' };
+          return { ok: true, failed, text };
         } catch (e) {
           return { ok: false, failed: false, text: '' };
         }
@@ -7228,6 +7309,7 @@
       const activeL = getActiveDipulLayers();
       const exactCtrPromise = gfi('kontrollzonen', 5);
       let params = [];
+      let partialLayers = false;   // Recovery: ein Layer war vorübergehend nicht auswertbar → Teilergebnis
 
       // Schnellpfad: kombinierte Abfrage aller aktiven Layer.
       const combined = await gfi(activeL);
@@ -7240,13 +7322,15 @@
         // für die Session aussortieren, Treffer der intakten Layer zusammenführen.
         const layers = activeL.split(',');
         const probes = await Promise.allSettled(layers.map(l => gfi(l)));
-        let newlyBad = false;
+        let newlyBad = false, anyUsable = false, anyTransient = false;
         probes.forEach((p, i) => {
-          if (p.status !== 'fulfilled') return;          // transient → nicht aussortieren
+          if (p.status !== 'fulfilled') { anyTransient = true; return; }   // transient → nicht aussortieren
           const { ok, failed, text } = p.value;
-          if (ok && !failed) params.push(...parseFeatureInfo(text));
+          if (ok && !failed) { anyUsable = true; params.push(...parseFeatureInfo(text)); }
           else if (ok && failed) { dipulBadLayers.add(layers[i]); newlyBad = true; }
+          else anyTransient = true;                      // ok:false → Layer unbekannt, nicht „leer"
         });
+        partialLayers = anyUsable && anyTransient;
 
         // Karten-Overlays (GetMap) auf die bereinigte Layerliste umstellen, damit
         // auch die Kacheln nicht länger am defekten Layer scheitern.
@@ -7258,6 +7342,12 @@
           if (typeof AV !== 'undefined' && AV.dipulL && typeof AV.dipulL.setParams === 'function')
             AV.dipulL.setParams({ layers: goodL });
         }
+        // Kein einziger Layer lieferte eine verwertbare Antwort → Abruf gescheitert (auch wenn
+        // dabei Layer aussortiert wurden; Sperre und setParams oben bleiben davon unberührt).
+        if (!anyUsable) throw new Error('DiPUL GetFeatureInfo: kein Layer verwertbar');
+      } else {
+        // Kombinierte Abfrage nicht erreichbar (HTTP-/Netzwerkfehler): kein „keine Zonen".
+        throw new Error('DiPUL GetFeatureInfo nicht erreichbar');
       }
 
       // Breite CTR-Treffer aus der Umgebungsabfrage durch die punktgenaue
@@ -7274,12 +7364,15 @@
       }
 
       const seen = new Set();
-      return params.filter(z => {
+      const out = params.filter(z => {
         const key = z.fid || `${z.name}|${z.type}|${z.lower}|${z.upper}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       }).sort((a, b) => Number(isCtrZone(b)) - Number(isCtrZone(a)));
+      // Teilergebnis: gefundene Zonen bleiben sichtbar, der Ausfall eines Layers wird zusätzlich gemeldet.
+      if (partialLayers) out.push(zoneDataUnavailable());
+      return out;
     }
 
     // Parst eine GeoServer-GetFeatureInfo-HTML-Antwort in Zonen-Objekte.
@@ -7456,11 +7549,28 @@
       return { lvl, reasons };
     }
 
+    // Platzhalter-Zonenstatus, solange der Zonenabruf eines Checks läuft: nie „keine Einschränkungen".
+    // lvl bleibt 'go', damit die Ampel in dieser Zeit allein vom Wetter bestimmt wird.
+    function pendingZoneStatus() {
+      return { lvl: 'go', reasons: [_t('zonesChecking')], pending: true };
+    }
+    // Zonenstatus für Neu-Rendern (Sprachwechsel): Pending bleibt Pending (neuer Text), sonst aus lastZones.
+    function currentZoneStatus() {
+      return lastZoneStatus?.pending ? pendingZoneStatus() : evalZoneStatus(lastZones);
+    }
+
     function evalZoneStatus(zones) {
       if (!zones || zones.length === 0) return { lvl: 'go', reasons: [] };
       const reasons = []; let lvl = 'go';
       const seen = new Set();
+      // Fehlgeschlagener Zonenabruf: mindestens Gelb, Grund an erster Stelle (Banner zeigt nur zwei).
+      if (zones.some(z => z && z.unavailable)) {
+        lvl = 'warn';
+        const msg = _t('zoneDataUnavailable');
+        seen.add(msg); reasons.push(msg);
+      }
       for (const z of zones) {
+        if (!z || z.unavailable) continue;
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
         if (z.inactive) {
@@ -8030,21 +8140,34 @@
     }
 
     function renderZones(zones) {
-      const cnt = zones.length;
+      const unavailable = zones.some(z => z && z.unavailable);
+      const real = zones.filter(z => !(z && z.unavailable));
+      const cnt = real.length;
       const $zc = $('z-count');
-      $zc.textContent = cnt;
-      $zc.className = 'z-count' + (cnt === 0 ? ' ok' : '');
+      $zc.textContent = unavailable ? '!' : cnt;
+      $zc.className = 'z-count' + (!unavailable && cnt === 0 ? ' ok' : '');
 
-      lastZones = zones;
-      $('zones-hdr-text').innerHTML = cnt > 0
-        ? _t('zonesCount')(cnt)
-        : _t('zonesNone');
+      lastZones = zones;   // vollständige Liste inkl. Platzhalter (Sprachwechsel/Re-Render lesen sie)
+      $('zones-hdr-text').innerHTML = unavailable
+        ? escapeHtml(_t('zonesUnavailable')) + (cnt > 0 ? ' ' + _t('zonesCount')(cnt) : '')
+        : (cnt > 0 ? _t('zonesCount')(cnt) : _t('zonesNone'));
 
-      $('zones-body').innerHTML = cnt === 0
+      let unavailHtml = '';
+      if (unavailable) {
+        const src = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)[0];
+        unavailHtml = `<div class="z-item z-unavailable">
+        <div class="z-name">⚠ ${escapeHtml(_t('zoneDataUnavailable'))}</div>
+        <div class="z-details">${escapeHtml(_t('zonesUnavailableHint'))}
+          <a href="${encodeURI(src.url)}" target="_blank" rel="noopener" style="color:var(--accent);">${escapeHtml(src.label)} ↗</a>
+        </div>
+      </div>`;
+      }
+
+      $('zones-body').innerHTML = unavailHtml + (cnt === 0
         ? ''
-        : zones.map(z => `<div class="z-item">
+        : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-          <div style="background:${z.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+          <div style="background:${/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
         </div>
 
@@ -8060,7 +8183,7 @@
           </span></div>
           ${z.desc ? `<div class="z-row"><span class="z-lbl">Info</span><span class="z-val">${escapeHtml(z.desc)}</span></div>` : ''}
         </div>
-      </div>`).join('');
+      </div>`).join(''));
     }
 
     // Map-Overlay für Geozonen aus dem Country-Provider (z. B. FR via JSON).
@@ -8342,6 +8465,7 @@
         const n = (name || '');
         // Labels landen unescaped in innerHTML (i18n-Strings enthalten Entities); nur der aus dem
         // Zonennamen abgeleitete Text (Fremddaten) wird hier escaped.
+        if (z?.unavailable) return { label: escapeHtml(_t('zoneDataUnavailable')), color: '#64748b' };
         if (z?.inactive) return { label: escapeHtml(name || _t('zoneRestrict')) + ' · ' + _t('zoneInactive'), color: '#64748b' };
         if (z?.zoneNum) {
           const f = z.ctrFlight;
@@ -8405,8 +8529,9 @@
         zoneHtml += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
       } else {
         items.forEach(it => {
+          const dot = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(it.color || '') ? it.color : '#64748b';
           zoneHtml += `<div class="ms-zone-item">
-        <span class="ms-zone-dot" style="background:${it.color}"></span>
+        <span class="ms-zone-dot" style="background:${dot}"></span>
         <span>${it.label}</span>
       </div>`;
         });
