@@ -324,6 +324,7 @@ function zonesRender(zones, country = 'de') {
     COUNTRY_ZONE_SOURCES[country] = COUNTRY_ZONE_SOURCES[country] || COUNTRY_ZONE_SOURCES.de;
     let lastZones = [];
     ${grab('safeHexColor')}
+    ${grab('renderBeNotice')}
     ${grab('renderZones')}
     renderZones(zones);`)(els, zones, country);
   return els;
@@ -791,9 +792,11 @@ test('Overlay: gestrichelt in der Farbe der Zone mit schwacher Füllung; Norwege
 const DAY = 86400000;
 const iso = ms => new Date(ms).toISOString();
 const day = ms => iso(ms).slice(0, 10);
+const stampUtc = ms => `${iso(ms).slice(0, 10)} ${iso(ms).slice(11, 16)} UTC`;
 function localZone(feature, light = false, lang = 'en') {
   return new Function('feature', 'light', `
     const LANG = ${JSON.stringify(lang)};
+    const SOON_MS = 24 * 60 * 60 * 1000;
     ${grab('atLocalColor')}
     ${grab('atLocalGeometry')}
     ${grab('atLocalFormatAltitude')}
@@ -820,13 +823,13 @@ test('Fallback inaktiv: künftiges Fenster → inaktiv, „Not yet active — st
   const z = localZone(baseFeature([{ startDateTime: iso(s1), endDateTime: iso(s1 + DAY) }, { startDateTime: iso(s2), endDateTime: iso(s2 + DAY) }]));
   assert.equal(z.inactive, true);
   assert.equal(z.type, 'TEMPORARY_INACTIVE');
-  assert.equal(z.desc, `Not yet active — starts ${day(s2)}. May change — check the official source. Text`);
+  assert.equal(z.desc, `Not yet active — starts ${stampUtc(s2)}. May change — check the official source. Text`);
 });
 test('Fallback inaktiv: beendet + künftig gemischt → inaktiv mit Startdatum', () => {
   const end = Date.now() - 2 * DAY, st = Date.now() + 6 * DAY;
   const z = localZone(baseFeature([{ startDateTime: iso(end - DAY), endDateTime: iso(end) }, { startDateTime: iso(st), endDateTime: iso(st + DAY) }]));
   assert.equal(z.inactive, true);
-  assert.ok(z.desc.startsWith(`Not yet active — starts ${day(st)}.`));
+  assert.ok(z.desc.startsWith(`Not yet active — starts ${stampUtc(st)}.`));
 });
 test('Fallback inaktiv: laufendes Fenster, Fenster ohne Grenzen oder ohne Fenster → aktiv', () => {
   const running = [{ startDateTime: iso(Date.now() - DAY), endDateTime: iso(Date.now() + DAY) }];
@@ -960,4 +963,86 @@ test('Hex-Farbwächter: ein gemeinsamer strikter Helfer, kein loses Muster mehr'
   assert.equal(safe('#aabbccd', '#000'), '#000');
   assert.equal(safe('red;x', '#000'), '#000');
   assert.equal(safe(undefined, '#000'), '#000');
+});
+
+// ── Fix-Welle: 24-Stunden-Regel im lokalen Fallback ───────────────────────────
+const HOUR = 3600000;
+test('Fallback 24-h-Regel: Start in 23 h → aktiv; Start in 25 h → inaktiv mit Uhrzeit', () => {
+  const a = Date.now() + 23 * HOUR, b = Date.now() + 25 * HOUR;
+  assert.ok(!localZone(baseFeature([{ startDateTime: iso(a), endDateTime: iso(a + HOUR) }])).inactive);
+  const z = localZone(baseFeature([{ startDateTime: iso(b), endDateTime: iso(b + HOUR) }]));
+  assert.equal(z.inactive, true);
+  assert.equal(z.desc, `Not yet active — starts ${stampUtc(b)}. May change — check the official source. Text`);
+});
+test('Fallback 24-h-Regel: beendetes Fenster + Start in 2 h → aktiv', () => {
+  const end = Date.now() - 2 * DAY, st = Date.now() + 2 * HOUR;
+  assert.ok(!localZone(baseFeature([{ startDateTime: iso(end - DAY), endDateTime: iso(end) }, { startDateTime: iso(st), endDateTime: iso(st + HOUR) }])).inactive);
+});
+test('SOON_MS steht in allen drei Dateien als 24 * 60 * 60 * 1000', () => {
+  const decl = /const SOON_MS = 24 \* 60 \* 60 \* 1000;/;
+  assert.match(html, decl);
+  for (const f of ['zones-ed269.js', 'notam-se.js']) {
+    assert.match(readFileSync(fileURLToPath(new URL(`../netlify/functions/${f}`, import.meta.url)), 'utf8'), decl);
+  }
+});
+
+// ── Fix-Welle: Reihenfolge der Live-Treffer ───────────────────────────────────
+const LIVE_MIX = '() => [{ name: "L-inaktiv", type: "TEMPORARY_INACTIVE", notam: true, inactive: true }, { name: "L-aktiv", type: "PROHIBITED", notam: true }]';
+for (const country of ['no', 'se', 'be']) {
+  test(`Reihenfolge ${country}: aktive Live-Treffer, Snapshot-Zonen, inaktive Live-Treffer`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => [{ name: "Z", type: "X" }]' }, `const notamHits = ${LIVE_MIX};`);
+    assert.deepEqual(z.map(item => item.name), ['L-aktiv', 'Z', 'L-inaktiv']);
+  });
+  test(`Reihenfolge ${country}: Ausfall-Platzhalter steht zwischen aktiven und inaktiven Live-Treffern`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => { throw new Error("502"); }' }, `const notamHits = ${LIVE_MIX};`);
+    assert.deepEqual(z.map(item => item.name), ['L-aktiv', '', 'L-inaktiv']);
+    assert.equal(z[1].unavailable, true);
+  });
+}
+
+// ── Fix-Welle: Quellenangabe auf der Karte ────────────────────────────────────
+test('ZONE_ATTRIBUTION: genau die fünf Snapshot-Länder; se nennt Lizenz-URL und „adapted"', () => {
+  const m = html.match(/const ZONE_ATTRIBUTION = \{[^\n]*\};/);
+  assert.ok(m, 'ZONE_ATTRIBUTION nicht gefunden');
+  const table = new Function(`${m[0]}; return ZONE_ATTRIBUTION;`)();
+  assert.deepEqual(Object.keys(table).sort(), ['be', 'ee', 'lu', 'no', 'se']);
+  assert.ok(table.se.includes('https://creativecommons.org/licenses/by/4.0/'));
+  assert.ok(table.se.includes('adapted'));
+});
+test('Quellenangabe wird für beide Karten (Hauptkarte und Alarmkarte) gesetzt', () => {
+  const calls = html.match(/addAttribution\(ZONE_ATTRIBUTION\[COUNTRY\]\)/g) || [];
+  assert.equal(calls.length, 2);
+  const av = grab('avInitMap');
+  assert.ok(av.includes('ZONE_ATTRIBUTION[COUNTRY]'));
+});
+test('COUNTRY_ZONE_SOURCES.se trägt zusätzlich den CC-BY-4.0-Chip', () => {
+  const m = html.match(/const COUNTRY_ZONE_SOURCES = \{[\s\S]*?\n\s*\};/);
+  const table = new Function(`${m[0]}; return COUNTRY_ZONE_SOURCES;`)();
+  assert.ok(table.se.some(c => c.label === 'CC BY 4.0' && c.url === 'https://creativecommons.org/licenses/by/4.0/'));
+  assert.ok(table.se.length >= 2);
+});
+
+// ── Fix-Welle: Belgien-Hinweis ────────────────────────────────────────────────
+test('beNoticeShort: die fünf Texte exakt', () => {
+  const want = {
+    de: 'Keine offizielle Anwendung der BCAA — Hinweise unter der Zonenliste.',
+    en: 'Not an official BCAA application — see the notice below the zone list.',
+    fr: 'Application non officielle de la BCAA — voir la mention sous la liste des zones.',
+    es: 'No es una aplicación oficial de la BCAA — véase el aviso bajo la lista de zonas.',
+    pl: 'Nieoficjalna aplikacja BCAA — zob. informację pod listą stref.',
+  };
+  const found = [...html.matchAll(/beNoticeShort: '((?:[^'\\]|\\.)*)'/g)].map(x => x[1]);
+  assert.deepEqual(found, [want.de, want.en, want.fr, want.es, want.pl]);
+});
+test('Belgien-Hinweis im Kartenpanel steht vor dem NOTAM-Hinweis', () => {
+  const body = grab('renderMapStatus');
+  assert.ok(body.indexOf('${beNoticeHtml}') < body.indexOf('${notamHintHtml}'), body.match(/ms-zone-list[^\n]*/)?.[0]);
+});
+test('Belgien-Hinweis wird beim Seitenstart gefüllt (renderBeNotice neben renderZoneSources)', () => {
+  assert.match(html, /function renderBeNotice\(/);
+  assert.ok(grab('renderZones').includes('renderBeNotice()'));
+  assert.match(html, /renderZoneSources\(\);\s*renderBeNotice\(\);/);
+});
+test('drawZoneOverlay nutzt safeHexColor für Zonenfarben', () => {
+  assert.ok(grab('drawZoneOverlay').includes('safeHexColor('));
 });

@@ -4536,7 +4536,7 @@
       lu: [{ label: 'DAC Luxembourg (CC0)', url: 'https://data.public.lu/fr/datasets/uas-geographical-zones-grand-duchy-of-luxembourg-zones-geographiques-uas-grand-duche-de-luxembourg/' }],
       no: [{ label: 'Luftfartstilsynet / dronesoner.no (NLOD)', url: 'https://dronesoner.no/' }],
       ee: [{ label: 'EANS', url: 'https://utm.eans.ee/' }],
-      se: [{ label: 'LFV / Transportstyrelsen (CC BY 4.0)', url: 'https://dronechart.lfv.se/' }],
+      se: [{ label: 'LFV / Transportstyrelsen (CC BY 4.0)', url: 'https://dronechart.lfv.se/' }, { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' }],
       be: [{ label: 'BCAA / skeyes Droneguide', url: 'https://map.droneguide.be/' }],
     };
     // Reihenfolge der Länder-Varianten in der Landing-Kachel „SkyCheck in anderen Ländern".
@@ -4547,6 +4547,8 @@
       { c: 'lu', flag: '🇱🇺' }, { c: 'no', flag: '🇳🇴' }, { c: 'ee', flag: '🇪🇪' },
       { c: 'se', flag: '🇸🇪' }, { c: 'be', flag: '🇧🇪' },
     ];
+    // Quellenangabe in der Leaflet-Attribution der Karten (feste, vertrauenswürdige Texte — keine Remote-Daten).
+    const ZONE_ATTRIBUTION = { lu: '© DAC Luxembourg (CC0)', no: 'Kilde: Luftfartstilsynet / dronesoner.no (NLOD)', ee: '© EANS', se: '© LFV / Transportstyrelsen, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, adapted', be: '© BCAA / skeyes (Droneguide)' };
     function renderZoneSources() {
       const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
         .map(s => `<a href="${s.url}" target="_blank" rel="noopener" class="l-src">${escapeHtml(s.label)}</a>`).join('');
@@ -4623,6 +4625,7 @@
       localStorage.setItem('skycheck-lang', LANG);
       document.querySelectorAll('.lang-menu').forEach(m => m.classList.add('hidden'));
       applyLang();
+      renderBeNotice();          // Hinweis folgt der Sprache, auch vor der ersten Prüfung
       renderCountryVariants();   // Ländernamen in der Kachel folgen der UI-Sprache
       if (S.lat != null) {
         // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
@@ -4659,6 +4662,7 @@
 
       // Länderspezifische Geozonen-Quellen + Länder-Varianten-Kachel füllen
       renderZoneSources();
+      renderBeNotice();
       renderCountryVariants();
       // Settings: DiPUL-Layer-Modus wirkt nur für Deutschland → außerhalb DE ausblenden,
       // nur die (universelle) 48h-Vorschau-Einstellung bleibt sichtbar.
@@ -5213,6 +5217,7 @@
     function avInitMap() {
       const s0 = AV.STYLES[AV.styleIdx];
       AV.map = L.map('alarm-map', { center: [AV.lat, AV.lon], zoom: 13, zoomControl: true, doubleClickZoom: false });
+      if (ZONE_ATTRIBUTION[COUNTRY]) AV.map.attributionControl.addAttribution(ZONE_ATTRIBUTION[COUNTRY]);   // wie die Hauptkarte
       AV.tileL = L.tileLayer(s0.u, { attribution: s0.a, subdomains: s0.s || 'abc', maxZoom: 19, className: s0.dark ? 'tiles-dark' : '' }).addTo(AV.map);
       if (COUNTRY === 'de') {
         AV.dipulL = L.tileLayer.wms(DIPUL_WMS_URL, {
@@ -6429,7 +6434,7 @@
        FR → Netlify-Function zones-fr (räumliche ED-269-Kacheln aus data/fr-zones-tiles)
        AT → Netlify-Function zones-at (data/uas-zones-at.json, Austro Control ED-269;
             monatliches Auto-Update via .github/workflows/update-at-zones.yml)
-       LU/NO/EE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
+       LU/NO/EE/SE/BE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
             .github/workflows/update-eu-zones.yml)
     ================================================================ */
     // Platzhalter für einen fehlgeschlagenen Zonenabruf. Läuft wie eine Zone durch Liste,
@@ -6476,7 +6481,8 @@
       let notam = [];
       try { notam = notamHits(lat, lon, radiusM); }
       catch (error) { console.warn('NOTAM-Treffer nicht auswertbar', error); }   // fetchZones darf nie werfen
-      return notam.concat(zones);
+      // Reihenfolge: aktive Live-Treffer, Snapshot-Zonen (oder Platzhalter), inaktive Live-Treffer zuletzt.
+      return notam.filter(z => !z.inactive).concat(zones, notam.filter(z => z.inactive));
     }
 
     /* [J-API-ARCGIS] ====================================================
@@ -7064,9 +7070,10 @@
     }
 
     // Inaktiv = jedes Aktivierungsfenster (applicability[]) ist entweder vorbei (Ende lesbar, vor jetzt)
-    // oder noch nicht begonnen (Start lesbar, nach jetzt) — wie in der Function. Ein laufendes
+    // oder noch nicht begonnen (Start lesbar, mehr als 24 h nach jetzt) — wie in der Function. Ein laufendes
     // Fenster, eines ohne Grenzen oder ohne lesbare Daten macht die Zone aktiv (null). Sonst
     // { endedAt: spätestes Ende in ms | null, startsAt: frühester künftiger Start in ms | null }.
+    const SOON_MS = 24 * 60 * 60 * 1000;   // beginnt ein Fenster binnen 24 h, gilt es schon als laufend
     function ed269Inactivity(feature) {
       const windows = feature.applicability;
       if (!Array.isArray(windows) || !windows.length) return null;
@@ -7077,7 +7084,7 @@
         const start = Date.parse(w?.startDateTime);
         if (Number.isFinite(end) && end < now) {
           if (endedAt === null || end > endedAt) endedAt = end;
-        } else if (Number.isFinite(start) && start > now) {
+        } else if (Number.isFinite(start) && start > now + SOON_MS) {
           if (startsAt === null || start < startsAt) startsAt = start;
         } else return null;
       }
@@ -7103,8 +7110,9 @@
       zone.desc = find(LANG) || find('en') || feature.message || (feature.typeCode ? String(feature.typeCode).replace(/_/g, ' ') : '');
       if (inactivity) {
         const day = ms => new Date(ms).toISOString().slice(0, 10);
+        const stamp = ms => `${day(ms)} ${new Date(ms).toISOString().slice(11, 16)} UTC`;
         const note = inactivity.startsAt !== null
-          ? `Not yet active — starts ${day(inactivity.startsAt)}. May change — check the official source.`
+          ? `Not yet active — starts ${stamp(inactivity.startsAt)}. May change — check the official source.`
           : `Activation window ended ${day(inactivity.endedAt)}. May be reactivated — check the official source.`;
         zone.desc = note + (zone.desc ? ` ${zone.desc}` : '');
       }
@@ -8194,6 +8202,15 @@
       return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value || '') ? value : fallback;
     }
 
+    // Belgien: Hinweis der BCAA dauerhaft sichtbar, außerhalb des einklappbaren Zonenkörpers.
+    // Unabhängig von renderZones, damit er auch nach einem Fehlerpfad und beim Sprachwechsel steht.
+    function renderBeNotice() {
+      const beNotice = $('be-notice');
+      if (!beNotice) return;
+      beNotice.textContent = COUNTRY === 'be' ? _t('beNotice') : '';
+      beNotice.hidden = COUNTRY !== 'be';
+    }
+
     function renderZones(zones) {
       const unavailable = zones.some(z => z && z.unavailable);
       const real = zones.filter(z => !(z && z.unavailable));
@@ -8218,10 +8235,7 @@
       </div>`;
       }
 
-      // Belgien: Hinweis der BCAA dauerhaft sichtbar, außerhalb des einklappbaren Zonenkörpers.
-      const beNotice = $('be-notice');
-      beNotice.textContent = COUNTRY === 'be' ? _t('beNotice') : '';
-      beNotice.hidden = COUNTRY !== 'be';
+      renderBeNotice();
 
       $('zones-body').innerHTML = unavailHtml + (cnt === 0
         ? ''
@@ -8260,15 +8274,15 @@
               // GeoJSON: [lon, lat] → Leaflet erwartet [lat, lon]
               const rings = g.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon]));
               L.polygon(rings, {
-                color: z.color, weight: 1, opacity: 0.9,
-                fillColor: z.color, fillOpacity: 0.18,
+                color: safeHexColor(z.color, '#64748b'), weight: 1, opacity: 0.9,
+                fillColor: safeHexColor(z.color, '#64748b'), fillOpacity: 0.18,
               }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             } else if (g.type === 'Circle' && Array.isArray(g.center)) {
               const [lon, lat] = g.center;
               L.circle([lat, lon], {
                 radius: g.radius || 0,
-                color: z.color, weight: 1, opacity: 0.9,
-                fillColor: z.color, fillOpacity: 0.18,
+                color: safeHexColor(z.color, '#64748b'), weight: 1, opacity: 0.9,
+                fillColor: safeHexColor(z.color, '#64748b'), fillOpacity: 0.18,
               }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             }
           } catch (_) { /* ignore single bad geometry */ }
@@ -8662,7 +8676,7 @@
         ? `<div class="ms-notam-hint">${escapeHtml(_t('eeStaleHint'))}</div>` : '';
       const beNoticeHtml = COUNTRY === 'be'
         ? `<div class="ms-notam-hint">${escapeHtml(_t('beNoticeShort'))}</div>` : '';
-      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${notamHintHtml}${eeHintHtml}${beNoticeHtml}</div>
+      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${beNoticeHtml}${notamHintHtml}${eeHintHtml}</div>
         <details class="ms-more"${expanded ? ' open' : ''}>
           <summary>${_t('mapMoreDetails')}</summary>
           <div class="ms-more-body">${detailHtml}</div>
@@ -8809,6 +8823,9 @@
           S.layers.dipul = L.layerGroup();
           if (esEasa() || COUNTRY === 'nl' || COUNTRY === 'pt') S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
+        // Quellenangabe der Snapshot-Länder: einmal je Karte (neue Karte = neues Attribution-Control);
+        // ein Wechsel des Basiskarten-Stils tauscht nur die Kachelebene und lässt sie stehen.
+        if (ZONE_ATTRIBUTION[COUNTRY]) S.map.attributionControl.addAttribution(ZONE_ATTRIBUTION[COUNTRY]);
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         if (CONTEXT_COUNTRIES[COUNTRY]) scheduleContextLayerState();
         if (COUNTRY === 'fr') {
