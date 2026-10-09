@@ -147,10 +147,6 @@ test('unlesbare/korrupte Datendatei → 500', async () => {
     fn._test.resetCache();
   }
 });
-  assert.ok(r.status === 200 || r.status === 500);
-  process.env.SKYCHECK_DATA_DIR = keep;
-  fn._test.resetCache();
-});
 
 // ── Inaktive Zonen (abgelaufene Aktivierungsfenster) ───────────────────────
 const WINDOW = { startDateTime: '2026-10-07T09:40:00+02:00', endDateTime: '2026-10-07T19:00:00+02:00', permanent: 'NO' };
