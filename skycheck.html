@@ -3595,6 +3595,7 @@
         msGroundMsl: 'Geländehöhe', msOpenDipul: 'Punkt in DiPUL öffnen',
         notamLoad: 'NOTAM-Sperrgebiete laden', notamLoading: 'NOTAM werden geladen …', notamAsOf: t => `NOTAM · Stand ${t}`, notamError: 'NOTAM-Daten nicht verfügbar', notamHint: 'Befristete NOTAM-Sperrgebiete sind erst nach dem Laden sichtbar.', notamBadge: 'NOTAM',
         zoneInactive: 'derzeit inaktiv',
+        eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3779,6 +3780,7 @@
         msGroundMsl: 'Ground elevation', msOpenDipul: 'Open point in DiPUL',
         notamLoad: 'Load NOTAM restrictions', notamLoading: 'Loading NOTAM …', notamAsOf: t => `NOTAM · as of ${t}`, notamError: 'NOTAM data unavailable', notamHint: 'Temporary NOTAM restrictions are only shown after loading.', notamBadge: 'NOTAM',
         zoneInactive: 'currently inactive',
+        eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3955,6 +3957,7 @@
         msGroundMsl: 'Altitude du terrain', msOpenDipul: 'Ouvrir le point dans DiPUL',
         notamLoad: 'Charger les restrictions NOTAM', notamLoading: 'Chargement des NOTAM …', notamAsOf: t => `NOTAM · état ${t}`, notamError: 'Données NOTAM indisponibles', notamHint: 'Les restrictions NOTAM temporaires ne sont visibles qu’après chargement.', notamBadge: 'NOTAM',
         zoneInactive: 'actuellement inactive',
+        eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -4139,6 +4142,7 @@
         msGroundMsl: 'Altitud del terreno', msOpenDipul: 'Abrir punto en DiPUL',
         notamLoad: 'Cargar restricciones NOTAM', notamLoading: 'Cargando NOTAM …', notamAsOf: t => `NOTAM · a las ${t}`, notamError: 'Datos NOTAM no disponibles', notamHint: 'Las restricciones NOTAM temporales solo se muestran tras cargarlas.', notamBadge: 'NOTAM',
         zoneInactive: 'actualmente inactiva',
+        eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -4323,6 +4327,7 @@
         msGroundMsl: 'Wysokość terenu', msOpenDipul: 'Otwórz punkt w DiPUL',
         notamLoad: 'Wczytaj ograniczenia NOTAM', notamLoading: 'Wczytywanie NOTAM …', notamAsOf: t => `NOTAM · stan ${t}`, notamError: 'Dane NOTAM niedostępne', notamHint: 'Tymczasowe ograniczenia NOTAM są widoczne dopiero po wczytaniu.', notamBadge: 'NOTAM',
         zoneInactive: 'obecnie nieaktywna',
+        eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -4490,7 +4495,7 @@
       { c: 'de', flag: '🇩🇪' }, { c: 'fr', flag: '🇫🇷' }, { c: 'at', flag: '🇦🇹' },
       { c: 'ch', flag: '🇨🇭' }, { c: 'es', flag: '🇪🇸' }, { c: 'dk', flag: '🇩🇰' }, { c: 'ie', flag: '🇮🇪' },
       { c: 'nl', flag: '🇳🇱' }, { c: 'pt', flag: '🇵🇹' },
-      { c: 'lu', flag: '🇱🇺' }, { c: 'no', flag: '🇳🇴' },
+      { c: 'lu', flag: '🇱🇺' }, { c: 'no', flag: '🇳🇴' }, { c: 'ee', flag: '🇪🇪' },
     ];
     function renderZoneSources() {
       const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
@@ -8464,7 +8469,9 @@
       const expanded = wasExpanded === true;
       const notamHintHtml = (COUNTRY === 'no' && !notamNoFresh())
         ? `<div class="ms-notam-hint">${escapeHtml(_t('notamHint'))}</div>` : '';
-      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${notamHintHtml}</div>
+      const eeHintHtml = COUNTRY === 'ee'
+        ? `<div class="ms-notam-hint">${escapeHtml(_t('eeStaleHint'))}</div>` : '';
+      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${notamHintHtml}${eeHintHtml}</div>
         <details class="ms-more"${expanded ? ' open' : ''}>
           <summary>${_t('mapMoreDetails')}</summary>
           <div class="ms-more-body">${detailHtml}</div>

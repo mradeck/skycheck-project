@@ -58,7 +58,7 @@ node scripts/build-eu-zones.mjs <lu|no|ee> <eingabe> <ausgabe.json> [--min N]
 |------|--------|-----|--------|
 | 🇱🇺 Luxemburg | Direction de l'Aviation Civile („UAS Geographical Zones“) | `https://drones.geoportail.lu/zones` | CC0 |
 | 🇳🇴 Norwegen | Luftfartstilsynet / dronesoner.no (ED-269-konform) | `https://dronesoner.no/Downloads/NOR_ED269_compliant_geozones_<YYYY-MM-DD>.json` | NLOD 2.0 |
-| 🇪🇪 Estland | EANS (UAS-Karte) | `https://utm.eans.ee/avm/utm/uas.geojson` | offen: Lizenz noch nicht geklärt |
+| 🇪🇪 Estland | EANS (UAS-Karte) | `https://utm.eans.ee/avm/utm/uas.geojson` | vom Herausgeber nicht angegeben |
 
 **Norwegischer Dateiname:** Der Dateiname trägt das Tagesdatum. Ältere Dateien liefern 404. Der Workflow liest deshalb den aktuellen Link von der Startseite `https://dronesoner.no/`, statt eine feste URL zu verwenden.
 

@@ -26,8 +26,9 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | 🇵🇹 **Portugalia** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (wektor) |
 | 🇱🇺 **Luksemburg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luksemburg — migawka ED-269 (aktualizowana co tydzień) |
 | 🇳🇴 **Norwegia** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — migawka ED-269 (aktualizowana co tydzień); strefy NOTAM po kliknięciu |
+| 🇪🇪 **Estonia** | [skycheck-ee.netlify.app](https://skycheck-ee.netlify.app/) | EANS (utm.eans.ee) — migawka ED-269 (aktualizowana co tydzień); strefy tymczasowe mogą mieć do 7 dni |
 
-> Wszystkie jedenaście to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
+> Wszystkie dwanaście to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
 📦 **Aktualna wersja:** v26.10.117.0
 
@@ -84,6 +85,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Geostrefy 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | portugalskie strefy UAS `Portugal_Geo_Zones_Polygons` (wektor ArcGIS, ~314 stref; schemat pochodzący z KML) | ✅ |
 | **Geostrefy 🇱🇺** [DAC Luksemburg](https://drones.geoportail.lu/) | Luksemburskie strefy UAS, migawka ED-269 (`data/uas-zones-lu.json`, 43 strefy; licencja CC0) | via `zones-ed269.js` |
 | **Geostrefy 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norweskie strefy UAS, migawka ED-269 (`data/uas-zones-no.json`, 1390 stref; licencja NLOD 2.0); czasowe strefy NOTAM ładowane po kliknięciu (`notam-no.js`) | via `zones-ed269.js` |
+| **Geostrefy 🇪🇪** [EANS](https://utm.eans.ee/) | Estońskie strefy UAS, migawka ED-269 (`data/uas-zones-ee.json`, 241 stref; licencja: nie podana przez wydawcę); strefy tymczasowe mogą mieć do 7 dni | via `zones-ed269.js` |
 
 ---
 
@@ -119,7 +121,7 @@ redirect.html               ← optional redirect page
 
 ### Wsparcie wielokrajowe (od v0.73)
 
-SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF i indeks Kp są globalne; **język interfejsu, punkt orientacyjny wskazówki wyszukiwania oraz bounding box geokodowania** są ustawiane per kraj.
+SkyCheck używa **wzorca adaptera** dla źródeł geostref specyficznych dla kraju. Kraj jest wykrywany z nazwy hosta (np. `skycheck-ch.netlify.app`) lub parametru URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Domyślnie: `de`. Pogoda, ADS-B, METAR/TAF i indeks Kp są globalne; **język interfejsu, punkt orientacyjny wskazówki wyszukiwania oraz bounding box geokodowania** są ustawiane per kraj.
 
 | Kraj | Źródło geostref | Nakładka | Lista szczegółów / status | Dane i aktualizacje |
 |---|---|---|---|---|

@@ -26,8 +26,9 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 | 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (vectorial) |
 | 🇱🇺 **Luxemburgo** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxemburgo — snapshot ED-269 (actualizado semanalmente) |
 | 🇳🇴 **Noruega** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — snapshot ED-269 (actualizado semanalmente); zonas NOTAM al pulsar |
+| 🇪🇪 **Estonia** | [skycheck-ee.netlify.app](https://skycheck-ee.netlify.app/) | EANS (utm.eans.ee) — snapshot ED-269 (actualizado semanalmente); las zonas temporales pueden tener hasta 7 días |
 
-> Los once son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
+> Los doce son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
 📦 **Versión actual:** v26.10.117.0
 
@@ -84,6 +85,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 | **Geozonas 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Zonas UAS portuguesas `Portugal_Geo_Zones_Polygons` (vectorial ArcGIS, ~314 zonas; esquema derivado de KML) | ✅ |
 | **Geozonas 🇱🇺** [DAC Luxemburgo](https://drones.geoportail.lu/) | Zonas UAS luxemburguesas, snapshot ED-269 (`data/uas-zones-lu.json`, 43 zonas; licencia CC0) | vía `zones-ed269.js` |
 | **Geozonas 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Zonas UAS noruegas, snapshot ED-269 (`data/uas-zones-no.json`, 1390 zonas; licencia NLOD 2.0); zonas NOTAM temporales cargadas al pulsar (`notam-no.js`) | vía `zones-ed269.js` |
+| **Geozonas 🇪🇪** [EANS](https://utm.eans.ee/) | Zonas UAS estonias, snapshot ED-269 (`data/uas-zones-ee.json`, 241 zonas; licencia: no indicada por el editor); las zonas temporales pueden tener hasta 7 días | vía `zones-ed269.js` |
 
 ---
 
@@ -119,7 +121,7 @@ redirect.html               ← página de redirección opcional
 
 ### Soporte multi-país (desde v0.73)
 
-SkyCheck usa un **patrón de adaptador** para las fuentes de geozonas específicas de cada país. El país se detecta a través del nombre de host (p. ej. `skycheck-ch.netlify.app`) o del parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no`. Por defecto: `de`. La meteorología, ADS-B, METAR/TAF y el índice Kp son globales; el **idioma de la interfaz, el monumento de la sugerencia de búsqueda y el bounding box de geocodificación** se ajustan por país.
+SkyCheck usa un **patrón de adaptador** para las fuentes de geozonas específicas de cada país. El país se detecta a través del nombre de host (p. ej. `skycheck-ch.netlify.app`) o del parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Por defecto: `de`. La meteorología, ADS-B, METAR/TAF y el índice Kp son globales; el **idioma de la interfaz, el monumento de la sugerencia de búsqueda y el bounding box de geocodificación** se ajustan por país.
 
 | País | Fuente de geozonas | Superposición | Lista de detalle / estado | Datos y actualizaciones |
 |---|---|---|---|---|
