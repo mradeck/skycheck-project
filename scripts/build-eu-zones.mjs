@@ -262,18 +262,22 @@ function buildBeZones(data, opts) {
   return finish('be', out, opts);
 }
 
+// Nur was der eigene Code versehentlich erzeugen kann: ganze Wörter undefined/null/NaN.
+const BAD_TOKEN = /\b(undefined|null|NaN)\b/;
+
 function finish(country, zones, opts = {}) {
-  const seen = new Set();
-  for (const z of zones) {
-    const id = z && z.identifier, name = z && z.name;
-    if (typeof id !== 'string' || !id || /undefined|NaN/.test(id) || /-$/.test(id)) throw new Error(`${country}: leere oder ungültige Kennung bei "${name}"`);
-    if (typeof name !== 'string' || !name.trim() || /undefined|NaN/.test(name)) throw new Error(`${country}: leerer oder ungültiger Name bei Kennung ${id}`);
-    if (seen.has(id)) throw new Error(`${country}: Kennung nicht eindeutig: ${id}`);
-    seen.add(id);
-  }
+  // Erst unbrauchbare Geometrie verwerfen (wie bisher still), dann nur die übrigen prüfen.
   zones = zones
     .map(z => ({ ...z, geometry: (Array.isArray(z.geometry) ? z.geometry : []).map(cleanVolume).filter(Boolean) }))
     .filter(z => z.geometry.length > 0);
+  const seen = new Set();
+  for (const z of zones) {
+    const id = z.identifier, name = z.name;
+    if (typeof id !== 'string' || !id || BAD_TOKEN.test(id) || /-$/.test(id)) throw new Error(`${country}: leere oder ungültige Kennung bei "${name}"`);
+    if (typeof name !== 'string' || !name.trim() || BAD_TOKEN.test(name)) throw new Error(`${country}: leerer oder ungültiger Name bei Zone ${id}`);
+    if (seen.has(id)) throw new Error(`${country}: Kennung nicht eindeutig: ${id}`);
+    seen.add(id);
+  }
   const min = Number.isFinite(opts.min) ? opts.min : MIN_ZONES[country];
   if (zones.length < min) throw new Error(`zu wenige Zonen für ${country}: ${zones.length} < ${min}`);
   return zones;

@@ -421,3 +421,36 @@ test('SE Höhen: unbekannte Form bricht ab; gnd/unl/fl sind nicht case-sensitiv'
   assert.equal(layerOf(z, 'TIZ')[0].geometry[0].upperLimit, 9500);
   assert.equal(layerOf(z, 'TIZ')[0].geometry[0].upperVerticalReference, 'STD');
 });
+
+// ───────────────────────── Fix round 2 ─────────────────────────
+test('Namensprüfung (a): CTR mit intakter MSID aber leerem Namen → Namensfehler, nicht Kennungsfehler', () => {
+  const d = JSON.parse(SE_RAW.CTR);
+  d.features[0].properties.LOCATION = ''; d.features[0].properties.NAMEOFAREA = '';
+  assert.throws(() => buildSe({ CTR: JSON.stringify(d) }), err => /Name/.test(err.message) && !/Kennung/.test(err.message));
+});
+
+test('Namensprüfung (b): Heliport ohne LOCATION ergäbe "Heliport 1 km: undefined" → Abbruch', () => {
+  const d = JSON.parse(SE_RAW.HKP1K);
+  delete d.features[0].properties.LOCATION;
+  assert.throws(() => buildSe({ HKP1K: JSON.stringify(d) }), err => /Name/.test(err.message));
+});
+
+test('Validierung nur auf ganze Tokens: "NaNo" im Wort ist erlaubt, undefined/null als Wort nicht', () => {
+  const d = JSON.parse(SE_RAW.HKP1K);
+  d.features[0].properties.LOCATION = 'Nanortalik NaNo Park';
+  const z = buildSe({ HKP1K: JSON.stringify(d) });
+  assert.ok(z.some(x => x.name === 'Heliport 1 km: Nanortalik NaNo Park'));
+  const u = JSON.parse(SE_RAW.HKP1K);
+  u.features[0].properties.LOCATION = 'undefined';
+  assert.throws(() => buildSe({ HKP1K: JSON.stringify(u) }), /Name/);
+  const c = JSON.parse(SE_RAW.CTR);
+  c.features[0].properties.MSID = 'null';
+  assert.throws(() => buildSe({ CTR: JSON.stringify(c) }), /Kennung/);
+});
+
+test('Validierung läuft nach dem Geometriefilter: unbrauchbare Zone ohne Namen bricht LU nicht ab', () => {
+  const d = JSON.parse(LU_RAW.slice(1));
+  d.features.push({ identifier: '', name: '', restriction: 'PROHIBITED', geometry: [] });
+  const z = buildZones('lu', JSON.stringify(d), { min: 1 });
+  assert.deepEqual(z.map(x => x.identifier), ['SPECI16', 'P1']);
+});
