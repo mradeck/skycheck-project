@@ -102,7 +102,7 @@ test('Radius wird auf 1…5000 m begrenzt', async () => {
   assert.equal(huge.body.zones.length, 0);
 });
 
-test('EE: lokalisierte Meldung nach lang, Fallback en; NO_RESTRICTION trägt info:true', async () => {
+test('EE: lokalisierte Meldung nach lang, Fallback en; NO_RESTRICTION ist eine gewöhnliche blaue Zone', async () => {
   const et = await call({ country: 'ee', lat: '59.405', lon: '24.705', lang: 'et' });
   assert.equal(et.body.zones[0].desc, 'Lennud kõrgemal kui 50 meetrit vajavad luba.');
   const de = await call({ country: 'ee', lat: '59.405', lon: '24.705', lang: 'de' });
@@ -110,18 +110,19 @@ test('EE: lokalisierte Meldung nach lang, Fallback en; NO_RESTRICTION trägt inf
   assert.equal(de.body.zones[0].lower, '51 m AGL');
   assert.equal(de.body.zones[0].legalUrl, 'https://transpordiamet.ee/en/flying');
   const free = await call({ country: 'ee', lat: '58.505', lon: '26.005' });
-  assert.equal(free.body.zones[0].info, true);
-  assert.equal(free.body.zones[0].color, '#22c55e');
+  assert.ok(!('info' in free.body.zones[0]));
+  assert.equal(free.body.zones[0].type, 'NO_RESTRICTION');
+  assert.equal(free.body.zones[0].color, '#3b82f6');
 });
 
-test('einschränkende Zonen stehen vor info-Zonen', async () => {
+test('NO_RESTRICTION zählt als einschränkend: Reihenfolge bleibt die der Daten', async () => {
   const dir = process.env.SKYCHECK_DATA_DIR;
   const mk = (id, restriction) => ({ identifier: id, name: id, restriction, geometry: [{
     horizontalProjection: { type: 'Polygon', coordinates: [[[24, 59], [24.1, 59], [24.1, 59.1], [24, 59.1], [24, 59]]] } }] });
   writeFileSync(join(dir, 'uas-zones-ee.json'), JSON.stringify([mk('A', 'NO_RESTRICTION'), mk('B', 'PROHIBITED')]));
   fn._test.resetCache();
   const r = await call({ country: 'ee', lat: '59.05', lon: '24.05' });
-  assert.deepEqual(r.body.zones.map(z => z.name), ['B', 'A']);
+  assert.deepEqual(r.body.zones.map(z => z.name), ['A', 'B']);
 });
 
 test('all=1 liefert alle Zonen in schlanker Form', async () => {
@@ -221,21 +222,40 @@ test('LU-Fixture SPECI16 (Fenster 2023–2031) ist am 2026-10-09 nicht inactive'
   } finally { fn._test.setNow(null); }
 });
 
-test('Reihenfolge: einschränkend → inaktiv → info', async () => {
+test('Reihenfolge: einschränkend (inkl. NO_RESTRICTION) → inaktiv', async () => {
   try {
-    useEeZones([mkZone('INFO', 'NO_RESTRICTION'), mkZone('OLD', 'PROHIBITED', [WINDOW]), mkZone('LIVE', 'REQ_AUTHORISATION')]);
+    useEeZones([mkZone('OLD', 'PROHIBITED', [WINDOW]), mkZone('FREE', 'NO_RESTRICTION'), mkZone('LIVE', 'REQ_AUTHORISATION')]);
     at('2026-10-09T12:00:00Z');
-    assert.deepEqual((await call(Q)).body.zones.map(z => z.name), ['LIVE', 'OLD', 'INFO']);
+    assert.deepEqual((await call(Q)).body.zones.map(z => z.name), ['FREE', 'LIVE', 'OLD']);
   } finally { fn._test.setNow(null); }
 });
 
-test('inaktive Zone gewinnt gegen NO_RESTRICTION (kein info)', async () => {
+test('inaktive NO_RESTRICTION-Zone ist inaktiv und grau', async () => {
   try {
     useEeZones([mkZone('OLDFREE', 'NO_RESTRICTION', [WINDOW])]);
     at('2026-10-09T12:00:00Z');
     const z = (await call(Q)).body.zones[0];
     assert.equal(z.inactive, true);
+    assert.equal(z.type, 'TEMPORARY_INACTIVE');
+    assert.equal(z.color, '#64748b');
     assert.ok(!('info' in z));
+  } finally { fn._test.setNow(null); }
+});
+
+test('EE: realistische NO_RESTRICTION-Genehmigungszone (EER44FAUNA) ist gewöhnlich, blau und vor inaktiven', async () => {
+  try {
+    useEeZones([
+      mkZone('OLD', 'PROHIBITED', [WINDOW]),
+      mkZone('EER44FAUNA', 'NO_RESTRICTION', undefined, { reason: ['Nature'],
+        message: 'Permission from the Estonian Environmental Board required' }),
+    ]);
+    at('2026-10-09T12:00:00Z');
+    const zs = (await call(Q)).body.zones;
+    assert.deepEqual(zs.map(z => z.name), ['EER44FAUNA', 'OLD']);
+    assert.ok(!('info' in zs[0]));
+    assert.equal(zs[0].type, 'NO_RESTRICTION');
+    assert.equal(zs[0].color, '#3b82f6');
+    assert.equal(zs[0].desc, 'Permission from the Estonian Environmental Board required');
   } finally { fn._test.setNow(null); }
 });
 

@@ -6906,8 +6906,8 @@
 
     // Luxemburg / Norwegen / Estland: gemeinsamer ED-269-Adapter (Netlify-Function zones-ed269,
     // Snapshots data/uas-zones-<cc>.json). Gleiche Zonenform wie AT; Name kommt aus `name`
-    // (message ist hier ein Langtext), NO_RESTRICTION-Zonen tragen info:true und zählen nicht
-    // für die Ampel. Lokale Vorschau ohne Function liest die Datei direkt.
+    // (message ist hier ein Langtext), NO_RESTRICTION-Zonen sind gewöhnliche blaue Zonen
+    // (gelbe Ampel). Lokale Vorschau ohne Function liest die Datei direkt.
     const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
     let ed269LocalEntriesPromise = null;
 
@@ -6970,8 +6970,7 @@
         zone.inactive = true;
         zone.type = 'TEMPORARY_INACTIVE';
         zone.color = '#64748b';
-        delete zone.info;
-      } else if (feature.restriction === 'NO_RESTRICTION') zone.info = true;
+      } else if (feature.restriction === 'NO_RESTRICTION') zone.color = '#3b82f6';
       if (light) return zone;
       const authority = (Array.isArray(feature.zoneAuthority) && feature.zoneAuthority[0]) || {};
       const messages = feature.extendedProperties?.localizedMessages || [];
@@ -7026,7 +7025,7 @@
       try {
         const entries = await loadLocalEd269Entries();
         const dLat = radiusM / 111320, dLon = dLat / Math.max(0.01, Math.cos(lat * Math.PI / 180));
-        const rank = zone => (zone.info ? 2 : zone.inactive ? 1 : 0);
+        const rank = zone => (zone.inactive ? 1 : 0);
         return entries
           .filter(({ bbox }) => bbox.minLat <= lat + dLat && bbox.maxLat >= lat - dLat && bbox.minLon <= lon + dLon && bbox.maxLon >= lon - dLon)
           .map(({ feature }) => normalizeLocalEd269Zone(feature))
@@ -7447,7 +7446,6 @@
       const reasons = []; let lvl = 'go';
       const seen = new Set();
       for (const z of zones) {
-        if (z.info) continue;   // rein informative Zone (ED-269 NO_RESTRICTION): keine Ampelwirkung
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
         if (isCtrZone(z)) {

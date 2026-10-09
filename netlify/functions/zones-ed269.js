@@ -3,7 +3,8 @@
 // einmal pro warmer Instanz und liefert dieselbe Zonenform wie zones-at.js:
 //   { name, type, lower, upper, legal, legalUrl, color, desc, geometry }
 // Unterschiede zu zones-at.js: Name aus `name` (message ist hier ein Langtext), exakter
-// Flächentest statt reinem Bounding-Box-Filter, `info: true` bei NO_RESTRICTION.
+// Flächentest statt reinem Bounding-Box-Filter; NO_RESTRICTION ist eine gewöhnliche (blaue) Zone,
+// weil z. B. Estland den Wert auch für genehmigungspflichtige Gebiete verwendet.
 // Quellen: LU Direction de l'Aviation Civile (CC0) · NO Luftfartstilsynet/dronesoner.no
 // (NLOD 2.0) · EE EANS. Auto-Update: .github/workflows/update-eu-zones.yml
 
@@ -119,7 +120,7 @@ function zoneColor(restriction) {
     case 'PROHIBITED':        return '#ef4444';
     case 'REQ_AUTHORISATION': return '#f59e0b';
     case 'CONDITIONAL':       return '#f97316';
-    case 'NO_RESTRICTION':    return '#22c55e';
+    case 'NO_RESTRICTION':    return '#3b82f6';
     default:                  return '#64748b';
   }
 }
@@ -177,7 +178,7 @@ function normalizeLight(f) {
     z.inactive = true;
     z.type = 'TEMPORARY_INACTIVE';
     z.color = INACTIVE_COLOR;
-  } else if (restriction === 'NO_RESTRICTION') z.info = true;
+  }
   return z;
 }
 
@@ -204,7 +205,6 @@ function normalize(f, lang) {
     color: light.color,
     geometry: light.geometry,
   };
-  if (light.info) z.info = true;
   if (light.inactive) z.inactive = true;
   return z;
 }
@@ -248,8 +248,8 @@ exports.handler = async (event) => {
     const n = normalize(z.f, lang);
     if (n.geometry.some(g => hitsPoint(g, lat, lon, radiusM))) hits.push(n);
   }
-  // einschränkende Zonen zuerst, dann inaktive, dann reine Info-Zonen (stabil innerhalb der Gruppe)
-  const rank = z => (z.info ? 2 : z.inactive ? 1 : 0);
+  // einschränkende Zonen (auch NO_RESTRICTION) zuerst, dann inaktive (stabil innerhalb der Gruppe)
+  const rank = z => (z.inactive ? 1 : 0);
   hits.sort((a, b) => rank(a) - rank(b));
   return json(200, { country: COUNTRIES[cc], zones: hits.slice(0, 50) }, 300);
 };
