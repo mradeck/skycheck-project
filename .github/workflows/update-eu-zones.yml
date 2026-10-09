@@ -1,0 +1,113 @@
+name: Update EU UAS zones (LU, NO, EE)
+
+# Holt die amtlichen UAS-Geozonen von Luxemburg (DAC), Norwegen (Luftfartstilsynet /
+# dronesoner.no) und Estland (EANS), wandelt sie mit scripts/build-eu-zones.mjs in das
+# gemeinsame ED-269-Array und committet nach data/uas-zones-<cc>.json — nur bei inhaltlicher
+# Änderung. Netlify deployt anschließend automatisch.
+# Zeitplan: jeden Montag, alle drei Länder. Manuell über "Run workflow" für ein Land oder alle.
+# Bewusst ohne upload-artifact und ohne Cache (kein Actions-Speicherverbrauch).
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'   # montags 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Welches Land aktualisieren'
+        type: choice
+        default: all
+        options: [all, lu, no, ee]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-eu-zones
+  cancel-in-progress: false
+
+env:
+  UA: "Mozilla/5.0 (compatible; SkyCheck-Zones-Updater/1.0; +https://github.com/${{ github.repository }})"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Decide which countries run
+        id: plan
+        run: |
+          set -euo pipefail
+          want="${{ github.event.inputs.country || 'scheduled' }}"
+          lu=false; no=false; ee=false
+          case "$want" in
+            all) lu=true; no=true; ee=true ;;
+            lu)  lu=true ;;
+            no)  no=true ;;
+            ee)  ee=true ;;
+            scheduled) lu=true; no=true; ee=true ;;
+          esac
+          echo "lu=$lu" >> "$GITHUB_OUTPUT"
+          echo "no=$no" >> "$GITHUB_OUTPUT"
+          echo "ee=$ee" >> "$GITHUB_OUTPUT"
+          echo "Plan: lu=$lu no=$no ee=$ee (Auslöser $want)"
+
+      - name: Luxembourg
+        id: lu
+        if: steps.plan.outputs.lu == 'true'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 60 -A "$UA" -o "$RUNNER_TEMP/lu.json" "https://drones.geoportail.lu/zones"
+          node scripts/build-eu-zones.mjs lu "$RUNNER_TEMP/lu.json" data/uas-zones-lu.json
+
+      - name: Norway
+        id: "no"
+        if: steps.plan.outputs.no == 'true'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          # Der Dateiname trägt das Tagesdatum; ältere Dateien liefern 404. Aktuellen Namen
+          # von der Startseite lesen.
+          file=$(curl -fsSL --max-time 60 -A "$UA" "https://dronesoner.no/" \
+            | grep -oE 'Downloads/NOR_ED269_compliant_geozones_[0-9-]+\.json' | head -1 || true)
+          if [ -z "$file" ]; then echo "::error::Kein ED-269-Download-Link auf dronesoner.no gefunden"; exit 1; fi
+          echo "Datei: $file"
+          curl -fsSL --max-time 120 -A "$UA" -o "$RUNNER_TEMP/no.json" "https://dronesoner.no/$file"
+          node scripts/build-eu-zones.mjs no "$RUNNER_TEMP/no.json" data/uas-zones-no.json
+
+      - name: Estonia
+        id: ee
+        if: steps.plan.outputs.ee == 'true'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 120 -A "$UA" -o "$RUNNER_TEMP/ee.json" "https://utm.eans.ee/avm/utm/uas.geojson"
+          node scripts/build-eu-zones.mjs ee "$RUNNER_TEMP/ee.json" data/uas-zones-ee.json
+
+      - name: Commit updated datasets
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/uas-zones-lu.json data/uas-zones-lu.version \
+                  data/uas-zones-no.json data/uas-zones-no.version \
+                  data/uas-zones-ee.json data/uas-zones-ee.version
+          if git diff --cached --quiet; then
+            echo "Keine inhaltliche Änderung — kein Commit."
+            exit 0
+          fi
+          changed=$(git diff --cached --name-only | grep -oE 'uas-zones-[a-z]{2}\.json' | sed -E 's/uas-zones-([a-z]{2})\.json/\1/' | tr '[:lower:]' '[:upper:]' | paste -sd, -)
+          git commit -m "data: EU UAS zones auto-update (${changed})"
+          git push
+
+      - name: Fail if any country failed
+        if: steps.lu.outcome == 'failure' || steps.no.outcome == 'failure' || steps.ee.outcome == 'failure'
+        run: |
+          echo "::error::Mindestens ein Land konnte nicht aktualisiert werden (lu=${{ steps.lu.outcome }}, no=${{ steps.no.outcome }}, ee=${{ steps.ee.outcome }}). Der bisherige Snapshot bleibt in Kraft."
+          exit 1
