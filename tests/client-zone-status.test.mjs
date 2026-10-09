@@ -310,20 +310,22 @@ test('_arcgisQuery strict: error-Zweig allein wirft, auch bei vorhandener featur
 });
 
 // ---- Task 2: renderZones mit Platzhalter ----
-function zonesRender(zones) {
-  const mk = () => ({ textContent: '', className: '', innerHTML: '' });
-  const els = { 'z-count': mk(), 'zones-hdr-text': mk(), 'zones-body': mk() };
-  new Function('els', 'zones', `
+function zonesRender(zones, country = 'de') {
+  const mk = () => ({ textContent: '', className: '', innerHTML: '', hidden: true });
+  const els = { 'z-count': mk(), 'zones-hdr-text': mk(), 'zones-body': mk(), 'be-notice': mk() };
+  new Function('els', 'zones', 'country', `
     const $ = id => els[id];
     const _t = k => (k === 'zonesCount' ? (n => 'T:zonesCount:' + n) : 'T:' + k);
     const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
     const ctrHeightHtml = () => '';
     const getLegalLink = () => '#';
-    const COUNTRY = 'de';
+    const COUNTRY = country;
     const COUNTRY_ZONE_SOURCES = { de: [{ label: 'DiPUL-Quelle', url: 'https://example.test/quelle' }] };
+    COUNTRY_ZONE_SOURCES[country] = COUNTRY_ZONE_SOURCES[country] || COUNTRY_ZONE_SOURCES.de;
     let lastZones = [];
+    ${grab('safeHexColor')}
     ${grab('renderZones')}
-    renderZones(zones);`)(els, zones);
+    renderZones(zones);`)(els, zones, country);
   return els;
 }
 test('renderZones: nur Platzhalter → "!" ohne ok, Hinweiskasten mit Quelle, kein zonesNone', () => {
@@ -761,6 +763,7 @@ function overlayColors(zones) {
     const escapeHtml = s => String(s ?? '');
     const _t = k => 'T:' + k;
     const NOTAM = { zones: ${JSON.stringify(zones)} };
+    ${grab('safeHexColor')}
     ${grab('drawNotamOverlay')}
     drawNotamOverlay();`)({
     layerGroup: () => ({ addTo() { return this; }, clearLayers() {} }),
@@ -892,4 +895,69 @@ test('renderMapStatus: Hinweis gilt für alle Live-Länder und nutzt die Tabelle
   const body = grab('renderMapStatus');
   assert.ok(body.includes('LIVE_NOTAM[COUNTRY]'));
   assert.ok(!body.includes("COUNTRY === 'no'"));
+});
+
+// ---- Task 5: Belgien-Hinweis dauerhaft sichtbar, Live-Knopf-Wächter ----
+const BE_NOTICE = {
+  de: 'Quelle: Droneguide (skeyes, im Auftrag der BCAA). SkyCheck ist keine offizielle Anwendung der BCAA oder belgischer Behörden. Maßgeblich sind allein die amtlichen Kanäle (Droneguide, AIP/NOTAM, CIS). Die Verantwortung für die Einhaltung der Vorschriften bleibt beim Fernpiloten und beim UAS-Betreiber.',
+  en: 'Source: Droneguide (skeyes, on behalf of the BCAA). SkyCheck is not an official application of the BCAA or the Belgian authorities. Only the official channels (Droneguide, AIP/NOTAM, CIS) are authoritative. Responsibility for regulatory compliance remains with the remote pilot and the UAS operator.',
+  fr: "Source : Droneguide (skeyes, pour le compte de la BCAA). SkyCheck n'est pas une application officielle de la BCAA ni des autorités belges. Seuls les canaux officiels (Droneguide, AIP/NOTAM, CIS) font foi. Le respect de la réglementation reste de la responsabilité du télépilote et de l'exploitant d'UAS.",
+  es: 'Fuente: Droneguide (skeyes, por cuenta de la BCAA). SkyCheck no es una aplicación oficial de la BCAA ni de las autoridades belgas. Solo los canales oficiales (Droneguide, AIP/NOTAM, CIS) son vinculantes. La responsabilidad del cumplimiento normativo sigue siendo del piloto a distancia y del operador de UAS.',
+  pl: 'Źródło: Droneguide (skeyes, w imieniu BCAA). SkyCheck nie jest oficjalną aplikacją BCAA ani władz belgijskich. Wiążące są wyłącznie oficjalne kanały (Droneguide, AIP/NOTAM, CIS). Odpowiedzialność za zgodność z przepisami spoczywa na pilocie bezzałogowego statku powietrznego i operatorze UAS.',
+};
+
+test('beNotice: die fünf Texte stimmen wörtlich mit der Vorgabe überein', () => {
+  const found = [...html.matchAll(/^\s*beNotice: ('(?:[^'\\]|\\.)*'),?$/gm)].map(m => (0, eval)('(' + m[1] + ')'));
+  assert.deepEqual(found, [BE_NOTICE.de, BE_NOTICE.en, BE_NOTICE.fr, BE_NOTICE.es, BE_NOTICE.pl]);
+});
+
+test('beNoticeShort: fünf Kurzhinweise vorhanden', () => {
+  assert.equal([...html.matchAll(/^\s*beNoticeShort: '/gm)].length, 5);
+});
+
+test('Belgien-Hinweis steht außerhalb des (einklappbaren) zones-body', () => {
+  assert.ok(/id="zones-body"><\/div>\s*<\/div>\s*<div id="be-notice"[^>]*hidden/.test(html));
+});
+
+test('renderZones be: Hinweisblock bei leerer Liste, mit Zonen und mit Platzhalter sichtbar', () => {
+  for (const zones of [[], [{ name: 'EBR1', type: 'PROHIBITED', color: '#ef4444', lower: '0', upper: '1', legal: 'x' }], [PLACEHOLDER]]) {
+    const els = zonesRender(zones, 'be');
+    assert.equal(els['be-notice'].hidden, false);
+    assert.equal(els['be-notice'].textContent, 'T:beNotice');
+  }
+});
+
+test('renderZones se: Hinweisblock bleibt verborgen und leer', () => {
+  const els = zonesRender([], 'se');
+  assert.equal(els['be-notice'].hidden, true);
+  assert.equal(els['be-notice'].textContent, '');
+});
+
+test('notamControlHtml: ohne Live-Quelle (lu, de) leer; mit Quelle (be) Knopf', () => {
+  const run2 = country => new Function(`
+    const _t = k => 'T:' + k; const escapeHtml = s => String(s);
+    const COUNTRY = ${JSON.stringify(country)};
+    const LIVE_NOTAM = { no: { source: 'https://a.test/' }, se: { source: 'https://b.test/' }, be: { source: 'https://c.test/' } };
+    const NOTAM = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
+    const S = { layers: {} }; const NOTAM_TTL_MS = 1; const _locale = () => 'de';
+    ${grab('notamFresh')}
+    ${grab('notamControlHtml')}
+    return notamControlHtml();`)();
+  assert.equal(run2('lu'), '');
+  assert.equal(run2('de'), '');
+  assert.ok(run2('be').includes('data-notam-load'));
+});
+
+test('Hex-Farbwächter: ein gemeinsamer strikter Helfer, kein loses Muster mehr', () => {
+  assert.ok(!html.includes('[0-9a-f]{3,8}'));
+  const m = html.match(/function safeHexColor\(/);
+  assert.ok(m);
+  const safe = new Function(`${grab('safeHexColor')}; return safeHexColor;`)();
+  assert.equal(safe('#abc', '#000'), '#abc');
+  assert.equal(safe('#aabbcc', '#000'), '#aabbcc');
+  assert.equal(safe('#aabbccdd', '#000'), '#aabbccdd');
+  assert.equal(safe('#aabbc', '#000'), '#000');
+  assert.equal(safe('#aabbccd', '#000'), '#000');
+  assert.equal(safe('red;x', '#000'), '#000');
+  assert.equal(safe(undefined, '#000'), '#000');
 });

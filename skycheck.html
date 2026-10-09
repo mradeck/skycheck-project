@@ -2397,6 +2397,8 @@
     }
     .ms-notam-btn:disabled { opacity: 0.6; cursor: progress; }
     .ms-notam-err { margin-top: 0.3rem; font-size: 0.75rem; color: #ef4444; }
+    .be-notice { margin-top: 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--text2); }
+    .be-notice[hidden] { display: none; }
     .ms-notam-hint { margin-top: 0.3rem; font-size: 0.72rem; opacity: 0.7; }
     .z-notam {
       display: inline-block; margin-right: 0.35rem; padding: 0 0.35rem;
@@ -3279,6 +3281,7 @@
         </div>
         <div class="zones-body" id="zones-body"></div>
       </div>
+      <div id="be-notice" class="be-notice" hidden></div>
     </div>
 
     <!-- WARNINGS -->
@@ -3605,6 +3608,7 @@
         zoneInactive: 'derzeit inaktiv',
         eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
         beNotice: 'Quelle: Droneguide (skeyes, im Auftrag der BCAA). SkyCheck ist keine offizielle Anwendung der BCAA oder belgischer Behörden. Maßgeblich sind allein die amtlichen Kanäle (Droneguide, AIP/NOTAM, CIS). Die Verantwortung für die Einhaltung der Vorschriften bleibt beim Fernpiloten und beim UAS-Betreiber.',
+        beNoticeShort: 'Keine offizielle Anwendung der BCAA — Hinweise unter der Zonenliste.',
         zoneDataUnavailable: 'Zonendaten nicht verfügbar — Luftraum nicht geprüft',
         zonesUnavailable: 'Zonendaten konnten nicht geladen werden.',
         zonesUnavailableHint: 'Der Luftraum an diesem Standort wurde nicht geprüft. Bitte erneut laden oder die amtliche Quelle prüfen:',
@@ -3795,6 +3799,7 @@
         zoneInactive: 'currently inactive',
         eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
         beNotice: 'Source: Droneguide (skeyes, on behalf of the BCAA). SkyCheck is not an official application of the BCAA or the Belgian authorities. Only the official channels (Droneguide, AIP/NOTAM, CIS) are authoritative. Responsibility for regulatory compliance remains with the remote pilot and the UAS operator.',
+        beNoticeShort: 'Not an official BCAA application — see the notice below the zone list.',
         zoneDataUnavailable: 'Zone data unavailable — airspace not checked',
         zonesUnavailable: 'Zone data could not be loaded.',
         zonesUnavailableHint: 'The airspace at this location was not checked. Please reload or check the official source:',
@@ -3977,6 +3982,7 @@
         zoneInactive: 'actuellement inactive',
         eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
         beNotice: 'Source : Droneguide (skeyes, pour le compte de la BCAA). SkyCheck n\'est pas une application officielle de la BCAA ni des autorités belges. Seuls les canaux officiels (Droneguide, AIP/NOTAM, CIS) font foi. Le respect de la réglementation reste de la responsabilité du télépilote et de l\'exploitant d\'UAS.',
+        beNoticeShort: 'Application non officielle de la BCAA — voir la mention sous la liste des zones.',
         zoneDataUnavailable: 'Données de zones indisponibles — espace aérien non vérifié',
         zonesUnavailable: 'Les données de zones n\'ont pas pu être chargées.',
         zonesUnavailableHint: 'L\'espace aérien à cet endroit n\'a pas été vérifié. Rechargez ou consultez la source officielle :',
@@ -4167,6 +4173,7 @@
         zoneInactive: 'actualmente inactiva',
         eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
         beNotice: 'Fuente: Droneguide (skeyes, por cuenta de la BCAA). SkyCheck no es una aplicación oficial de la BCAA ni de las autoridades belgas. Solo los canales oficiales (Droneguide, AIP/NOTAM, CIS) son vinculantes. La responsabilidad del cumplimiento normativo sigue siendo del piloto a distancia y del operador de UAS.',
+        beNoticeShort: 'No es una aplicación oficial de la BCAA — véase el aviso bajo la lista de zonas.',
         zoneDataUnavailable: 'Datos de zonas no disponibles — espacio aéreo no comprobado',
         zonesUnavailable: 'No se pudieron cargar los datos de zonas.',
         zonesUnavailableHint: 'El espacio aéreo en esta ubicación no se ha comprobado. Recargue o consulte la fuente oficial:',
@@ -4357,6 +4364,7 @@
         zoneInactive: 'obecnie nieaktywna',
         eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
         beNotice: 'Źródło: Droneguide (skeyes, w imieniu BCAA). SkyCheck nie jest oficjalną aplikacją BCAA ani władz belgijskich. Wiążące są wyłącznie oficjalne kanały (Droneguide, AIP/NOTAM, CIS). Odpowiedzialność za zgodność z przepisami spoczywa na pilocie bezzałogowego statku powietrznego i operatorze UAS.',
+        beNoticeShort: 'Nieoficjalna aplikacja BCAA — zob. informację pod listą stref.',
         zoneDataUnavailable: 'Dane stref niedostępne — przestrzeń nie została sprawdzona',
         zonesUnavailable: 'Nie udało się wczytać danych stref.',
         zonesUnavailableHint: 'Przestrzeń w tym miejscu nie została sprawdzona. Odśwież lub sprawdź oficjalne źródło:',
@@ -7241,7 +7249,7 @@
       (NOTAM.zones || []).forEach(zone => (zone.geometry || []).forEach(g => {
         if (g.type !== 'Polygon' || !Array.isArray(g.coordinates)) return;
         try {
-          const color = /^#[0-9a-f]{3,8}$/i.test(zone.color || '') ? zone.color : '#ef4444';
+          const color = safeHexColor(zone.color, '#ef4444');
           const rings = g.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon]));
           L.polygon(rings, { color, weight: 2, dashArray: '6 4', fillColor: color, fillOpacity: 0.12 })
             .bindTooltip(`${escapeHtml(_t('notamBadge'))} · ${escapeHtml(zone.name)}`, { sticky: true })
@@ -8181,6 +8189,11 @@
       </div>`;
     }
 
+    // Farbwerte aus Fremddaten landen in style-Attributen und Leaflet-Optionen: nur 3, 4, 6 oder 8 Hex-Ziffern.
+    function safeHexColor(value, fallback) {
+      return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value || '') ? value : fallback;
+    }
+
     function renderZones(zones) {
       const unavailable = zones.some(z => z && z.unavailable);
       const real = zones.filter(z => !(z && z.unavailable));
@@ -8205,11 +8218,16 @@
       </div>`;
       }
 
+      // Belgien: Hinweis der BCAA dauerhaft sichtbar, außerhalb des einklappbaren Zonenkörpers.
+      const beNotice = $('be-notice');
+      beNotice.textContent = COUNTRY === 'be' ? _t('beNotice') : '';
+      beNotice.hidden = COUNTRY !== 'be';
+
       $('zones-body').innerHTML = unavailHtml + (cnt === 0
         ? ''
         : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-          <div style="background:${/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+          <div style="background:${safeHexColor(z.color, '#64748b')}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
         </div>
 
@@ -8571,7 +8589,7 @@
         zoneHtml += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
       } else {
         items.forEach(it => {
-          const dot = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(it.color || '') ? it.color : '#64748b';
+          const dot = safeHexColor(it.color, '#64748b');
           zoneHtml += `<div class="ms-zone-item">
         <span class="ms-zone-dot" style="background:${dot}"></span>
         <span>${it.label}</span>
@@ -8643,7 +8661,7 @@
       const eeHintHtml = COUNTRY === 'ee'
         ? `<div class="ms-notam-hint">${escapeHtml(_t('eeStaleHint'))}</div>` : '';
       const beNoticeHtml = COUNTRY === 'be'
-        ? `<div class="ms-notam-hint">${escapeHtml(_t('beNotice'))}</div>` : '';
+        ? `<div class="ms-notam-hint">${escapeHtml(_t('beNoticeShort'))}</div>` : '';
       el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${notamHintHtml}${eeHintHtml}${beNoticeHtml}</div>
         <details class="ms-more"${expanded ? ' open' : ''}>
           <summary>${_t('mapMoreDetails')}</summary>
