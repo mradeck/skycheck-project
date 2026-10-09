@@ -1,10 +1,11 @@
-name: Update EU UAS zones (LU, NO, EE)
+name: Update EU UAS zones (LU, NO, EE, SE, BE)
 
 # Holt die amtlichen UAS-Geozonen von Luxemburg (DAC), Norwegen (Luftfartstilsynet /
-# dronesoner.no) und Estland (EANS), wandelt sie mit scripts/build-eu-zones.mjs in das
-# gemeinsame ED-269-Array und committet nach data/uas-zones-<cc>.json — nur bei inhaltlicher
-# Änderung. Netlify deployt anschließend automatisch.
-# Zeitplan: jeden Montag, alle drei Länder. Manuell über "Run workflow" für ein Land oder alle.
+# dronesoner.no), Estland (EANS), Schweden (LFV / DAIM, daim.lfv.se) und Belgien (droneguide.be)
+# wandelt sie mit scripts/build-eu-zones.mjs in das gemeinsame ED-269-Array und committet
+# nach data/uas-zones-<cc>.json — nur bei inhaltlicher Änderung. Netlify deployt anschließend
+# automatisch.
+# Zeitplan: jeden Montag, alle fünf Länder. Manuell über "Run workflow" für ein Land oder alle.
 # Bewusst ohne upload-artifact und ohne Cache (kein Actions-Speicherverbrauch).
 
 on:
@@ -16,7 +17,7 @@ on:
         description: 'Welches Land aktualisieren'
         type: choice
         default: all
-        options: [all, lu, 'no', ee]
+        options: ['all', 'lu', 'no', 'ee', 'se', 'be']
 
 permissions:
   contents: write
@@ -31,7 +32,7 @@ env:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -44,24 +45,29 @@ jobs:
         run: |
           set -euo pipefail
           want="${{ github.event.inputs.country || 'scheduled' }}"
-          lu=false; no=false; ee=false
+          lu=false; no=false; ee=false; se=false; be=false
           case "$want" in
-            all) lu=true; no=true; ee=true ;;
+            all) lu=true; no=true; ee=true; se=true; be=true ;;
             lu)  lu=true ;;
             no)  no=true ;;
             ee)  ee=true ;;
-            scheduled) lu=true; no=true; ee=true ;;
+            se)  se=true ;;
+            be)  be=true ;;
+            scheduled) lu=true; no=true; ee=true; se=true; be=true ;;
             *) echo "::error::Unbekanntes Land: $want"; exit 1 ;;
           esac
           echo "lu=$lu" >> "$GITHUB_OUTPUT"
           echo "no=$no" >> "$GITHUB_OUTPUT"
           echo "ee=$ee" >> "$GITHUB_OUTPUT"
-          echo "Plan: lu=$lu no=$no ee=$ee (Auslöser $want)"
+          echo "se=$se" >> "$GITHUB_OUTPUT"
+          echo "be=$be" >> "$GITHUB_OUTPUT"
+          echo "Plan: lu=$lu no=$no ee=$ee se=$se be=$be (Auslöser $want)"
 
       - name: Luxembourg
         id: lu
         if: steps.plan.outputs.lu == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           curl -fsSL --max-time 60 -A "$UA" -o "$RUNNER_TEMP/lu.json" "https://drones.geoportail.lu/zones"
@@ -71,6 +77,7 @@ jobs:
         id: "no"
         if: steps.plan.outputs.no == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           # Der Dateiname trägt das Tagesdatum; ältere Dateien liefern 404. Aktuellen Namen
@@ -86,10 +93,53 @@ jobs:
         id: ee
         if: steps.plan.outputs.ee == 'true'
         continue-on-error: true
+        timeout-minutes: 4
         run: |
           set -euo pipefail
           curl -fsSL --max-time 120 -A "$UA" -o "$RUNNER_TEMP/ee.json" "https://utm.eans.ee/avm/utm/uas.geojson"
           node scripts/build-eu-zones.mjs ee "$RUNNER_TEMP/ee.json" data/uas-zones-ee.json
+
+      - name: Sweden
+        id: se
+        if: steps.plan.outputs.se == 'true'
+        continue-on-error: true
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/se"
+          mkdir -p "$d"
+          # Sieben WFS-Layer (GeoJSON, EPSG:4326) plus die ED-318-Datei; das Skript erwartet
+          # genau diese acht Dateinamen im Verzeichnis.
+          base="https://daim.lfv.se/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&outputFormat=application/json&srsname=EPSG:4326&typename="
+          for pair in \
+            'mais:RSTA RSTA.json' \
+            'mais:DNGA DNGA.json' \
+            'mais:ATZ ATZ.json' \
+            'mais:TIZ TIZ.json' \
+            'mais:CTR CTR.json' \
+            'DAIM_TOPO:HKP1K HKP1K.json' \
+            'DAIM_TOPO:RWY5K RWY5K.json'
+          do
+            layer=${pair% *}
+            file=${pair#* }
+            curl -fsSL --retry 2 --max-time 120 -A "$UA" -o "$d/$file" "$base$layer"
+          done
+          curl -fsSL --retry 2 --max-time 120 -A "$UA" -o "$d/uas_zones_ED318.json" "https://dronechart.lfv.se/data/uas_zones_ED318.json"
+          node scripts/build-eu-zones.mjs se "$d" data/uas-zones-se.json
+
+      - name: Belgium
+        id: be
+        if: steps.plan.outputs.be == 'true'
+        continue-on-error: true
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          # Der cql_filter ist zwingend: Der Layer geo_zone_fast enthält ungefiltert 420
+          # Weltzeitzonen-Polygone (ca. 149 MB) und ist ohne Filter nicht sinnvoll abrufbar.
+          # Den Filter niemals entfernen — er schließt nur Zeitzonen, NOTAMs und temporäre
+          # Flugverbotszonen aus, die SkyCheck nicht braucht.
+          curl -fsSL --compressed --retry 2 --max-time 180 -A "$UA" -o "$RUNNER_TEMP/be.json" "https://map.droneguide.be/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=geo_zone_fast&srsName=EPSG:4326&outputFormat=application/json&cql_filter=type_code%20NOT%20IN%20(%27TIME_ZONE%27,%27NOTAM%27,%27TEMPORARY-NO-FLY-ZONE%27)"
+          node scripts/build-eu-zones.mjs be "$RUNNER_TEMP/be.json" data/uas-zones-be.json
 
       - name: Commit updated datasets
         run: |
@@ -98,7 +148,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/uas-zones-lu.json data/uas-zones-lu.version \
                   data/uas-zones-no.json data/uas-zones-no.version \
-                  data/uas-zones-ee.json data/uas-zones-ee.version
+                  data/uas-zones-ee.json data/uas-zones-ee.version \
+                  data/uas-zones-se.json data/uas-zones-se.version \
+                  data/uas-zones-be.json data/uas-zones-be.version
           if git diff --cached --quiet; then
             echo "Keine inhaltliche Änderung — kein Commit."
             exit 0
@@ -108,7 +160,7 @@ jobs:
           git push
 
       - name: Fail if any country failed
-        if: steps.lu.outcome == 'failure' || steps.no.outcome == 'failure' || steps.ee.outcome == 'failure'
+        if: steps.lu.outcome == 'failure' || steps.no.outcome == 'failure' || steps.ee.outcome == 'failure' || steps.se.outcome == 'failure' || steps.be.outcome == 'failure'
         run: |
-          echo "::error::Mindestens ein Land konnte nicht aktualisiert werden (lu=${{ steps.lu.outcome }}, no=${{ steps.no.outcome }}, ee=${{ steps.ee.outcome }}). Der bisherige Snapshot bleibt in Kraft."
+          echo "::error::Mindestens ein Land konnte nicht aktualisiert werden (lu=${{ steps.lu.outcome }}, no=${{ steps.no.outcome }}, ee=${{ steps.ee.outcome }}, se=${{ steps.se.outcome }}, be=${{ steps.be.outcome }}). Der bisherige Snapshot bleibt in Kraft."
           exit 1

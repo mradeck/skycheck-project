@@ -2397,6 +2397,8 @@
     }
     .ms-notam-btn:disabled { opacity: 0.6; cursor: progress; }
     .ms-notam-err { margin-top: 0.3rem; font-size: 0.75rem; color: #ef4444; }
+    .be-notice { margin-top: 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--text2); }
+    .be-notice[hidden] { display: none; }
     .ms-notam-hint { margin-top: 0.3rem; font-size: 0.72rem; opacity: 0.7; }
     .z-notam {
       display: inline-block; margin-right: 0.35rem; padding: 0 0.35rem;
@@ -3279,6 +3281,7 @@
         </div>
         <div class="zones-body" id="zones-body"></div>
       </div>
+      <div id="be-notice" class="be-notice" hidden></div>
     </div>
 
     <!-- WARNINGS -->
@@ -3446,7 +3449,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.117.2';
+    const APP_VER = '26.10.118.0';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3469,6 +3472,8 @@
         if (host.includes('skycheck-lu') || host.endsWith('skycheck.lu')) return 'lu';
         if (host.includes('skycheck-no') || host.endsWith('skycheck.no')) return 'no';
         if (host.includes('skycheck-ee') || host.endsWith('skycheck.ee')) return 'ee';
+        if (host.includes('skycheck-se') || host.endsWith('skycheck.se')) return 'se';
+        if (host.includes('skycheck-be') || host.endsWith('skycheck.be')) return 'be';
         return 'de';
       } catch (_) { return 'de'; }
     })();
@@ -3602,6 +3607,8 @@
         notamLoad: 'NOTAM-Sperrgebiete laden', notamLoading: 'NOTAM werden geladen …', notamAsOf: t => `NOTAM · Stand ${t}`, notamError: 'NOTAM-Daten nicht verfügbar', notamHint: 'Befristete NOTAM-Sperrgebiete sind erst nach dem Laden sichtbar.', notamBadge: 'NOTAM',
         zoneInactive: 'derzeit inaktiv',
         eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
+        beNotice: 'Quelle: Droneguide (skeyes, im Auftrag der BCAA). SkyCheck ist keine offizielle Anwendung der BCAA oder belgischer Behörden. Maßgeblich sind allein die amtlichen Kanäle (Droneguide, AIP/NOTAM, CIS). Die Verantwortung für die Einhaltung der Vorschriften bleibt beim Fernpiloten und beim UAS-Betreiber.',
+        beNoticeShort: 'Keine offizielle Anwendung der BCAA — Hinweise unter der Zonenliste.',
         zoneDataUnavailable: 'Zonendaten nicht verfügbar — Luftraum nicht geprüft',
         zonesUnavailable: 'Zonendaten konnten nicht geladen werden.',
         zonesUnavailableHint: 'Der Luftraum an diesem Standort wurde nicht geprüft. Bitte erneut laden oder die amtliche Quelle prüfen:',
@@ -3791,6 +3798,8 @@
         notamLoad: 'Load NOTAM restrictions', notamLoading: 'Loading NOTAM …', notamAsOf: t => `NOTAM · as of ${t}`, notamError: 'NOTAM data unavailable', notamHint: 'Temporary NOTAM restrictions are only shown after loading.', notamBadge: 'NOTAM',
         zoneInactive: 'currently inactive',
         eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
+        beNotice: 'Source: Droneguide (skeyes, on behalf of the BCAA). SkyCheck is not an official application of the BCAA or the Belgian authorities. Only the official channels (Droneguide, AIP/NOTAM, CIS) are authoritative. Responsibility for regulatory compliance remains with the remote pilot and the UAS operator.',
+        beNoticeShort: 'Not an official BCAA application — see the notice below the zone list.',
         zoneDataUnavailable: 'Zone data unavailable — airspace not checked',
         zonesUnavailable: 'Zone data could not be loaded.',
         zonesUnavailableHint: 'The airspace at this location was not checked. Please reload or check the official source:',
@@ -3972,6 +3981,8 @@
         notamLoad: 'Charger les restrictions NOTAM', notamLoading: 'Chargement des NOTAM …', notamAsOf: t => `NOTAM · état ${t}`, notamError: 'Données NOTAM indisponibles', notamHint: 'Les restrictions NOTAM temporaires ne sont visibles qu’après chargement.', notamBadge: 'NOTAM',
         zoneInactive: 'actuellement inactive',
         eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
+        beNotice: 'Source : Droneguide (skeyes, pour le compte de la BCAA). SkyCheck n\'est pas une application officielle de la BCAA ni des autorités belges. Seuls les canaux officiels (Droneguide, AIP/NOTAM, CIS) font foi. Le respect de la réglementation reste de la responsabilité du télépilote et de l\'exploitant d\'UAS.',
+        beNoticeShort: 'Application non officielle de la BCAA — voir la mention sous la liste des zones.',
         zoneDataUnavailable: 'Données de zones indisponibles — espace aérien non vérifié',
         zonesUnavailable: 'Les données de zones n\'ont pas pu être chargées.',
         zonesUnavailableHint: 'L\'espace aérien à cet endroit n\'a pas été vérifié. Rechargez ou consultez la source officielle :',
@@ -4161,6 +4172,8 @@
         notamLoad: 'Cargar restricciones NOTAM', notamLoading: 'Cargando NOTAM …', notamAsOf: t => `NOTAM · a las ${t}`, notamError: 'Datos NOTAM no disponibles', notamHint: 'Las restricciones NOTAM temporales solo se muestran tras cargarlas.', notamBadge: 'NOTAM',
         zoneInactive: 'actualmente inactiva',
         eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
+        beNotice: 'Fuente: Droneguide (skeyes, por cuenta de la BCAA). SkyCheck no es una aplicación oficial de la BCAA ni de las autoridades belgas. Solo los canales oficiales (Droneguide, AIP/NOTAM, CIS) son vinculantes. La responsabilidad del cumplimiento normativo sigue siendo del piloto a distancia y del operador de UAS.',
+        beNoticeShort: 'No es una aplicación oficial de la BCAA — véase el aviso bajo la lista de zonas.',
         zoneDataUnavailable: 'Datos de zonas no disponibles — espacio aéreo no comprobado',
         zonesUnavailable: 'No se pudieron cargar los datos de zonas.',
         zonesUnavailableHint: 'El espacio aéreo en esta ubicación no se ha comprobado. Recargue o consulte la fuente oficial:',
@@ -4350,6 +4363,8 @@
         notamLoad: 'Wczytaj ograniczenia NOTAM', notamLoading: 'Wczytywanie NOTAM …', notamAsOf: t => `NOTAM · stan ${t}`, notamError: 'Dane NOTAM niedostępne', notamHint: 'Tymczasowe ograniczenia NOTAM są widoczne dopiero po wczytaniu.', notamBadge: 'NOTAM',
         zoneInactive: 'obecnie nieaktywna',
         eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
+        beNotice: 'Źródło: Droneguide (skeyes, w imieniu BCAA). SkyCheck nie jest oficjalną aplikacją BCAA ani władz belgijskich. Wiążące są wyłącznie oficjalne kanały (Droneguide, AIP/NOTAM, CIS). Odpowiedzialność za zgodność z przepisami spoczywa na pilocie bezzałogowego statku powietrznego i operatorze UAS.',
+        beNoticeShort: 'Nieoficjalna aplikacja BCAA — zob. informację pod listą stref.',
         zoneDataUnavailable: 'Dane stref niedostępne — przestrzeń nie została sprawdzona',
         zonesUnavailable: 'Nie udało się wczytać danych stref.',
         zonesUnavailableHint: 'Przestrzeń w tym miejscu nie została sprawdzona. Odśwież lub sprawdź oficjalne źródło:',
@@ -4428,7 +4443,7 @@
       }
     };
     // Standard-UI-Sprache pro Land (nur beim Erstbesuch; eine gespeicherte Wahl hat Vorrang).
-    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en', nl: 'en', pt: 'en', lu: 'en', no: 'en', ee: 'en' };
+    const COUNTRY_DEFAULT_LANG = { de: 'de', fr: 'fr', at: 'de', ch: 'de', es: 'es', dk: 'en', ie: 'en', nl: 'en', pt: 'en', lu: 'en', no: 'en', ee: 'en', se: 'en', be: 'en' };
     // Adressvorschlag: bekanntes Wahrzeichen der jeweiligen Hauptstadt (sprachneutrale Eigennamen).
     const COUNTRY_LANDMARK = {
       de: 'Brandenburger Tor, Berlin',
@@ -4443,6 +4458,8 @@
       lu: 'Place Guillaume II, Luxembourg',
       no: 'Rådhuset, Oslo',
       ee: 'Raekoja plats, Tallinn',
+      se: 'Stadshuset, Stockholm',
+      be: 'Grand-Place, Bruxelles',
     };
     // Sprachabhängiges „z. B."-Präfix für den Platzhalter.
     const SEARCH_PREFIX = { de: 'z. B. ', en: 'e.g. ', fr: 'ex. ', es: 'p. ej. ', pl: 'np. ' };
@@ -4461,12 +4478,14 @@
       lu: '5.7,49.4,6.6,50.2',
       no: '4.0,57.8,31.5,71.4',
       ee: '21.5,57.4,28.3,59.8',
+      se: '10.5,55.2,24.3,69.1',
+      be: '2.5,49.4,6.5,51.6',
     };
     // Photon unterstützt nur de/en/fr/it — sonst Fallback auf en.
     const _photonLang = () => (({ de: 'de', en: 'en', fr: 'fr', it: 'it' })[LANG] || 'en');
     // ISO-Ländercode pro Land — für exakten Photon-`countrycode`-Filter (die Bbox überlappt
     // an Grenzen leicht mit Nachbarländern; der Code entfernt diese Fremdtreffer).
-    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE', nl: 'NL', pt: 'PT', lu: 'LU', no: 'NO', ee: 'EE' };
+    const COUNTRY_CC = { de: 'DE', fr: 'FR', at: 'AT', ch: 'CH', es: 'ES', dk: 'DK', ie: 'IE', nl: 'NL', pt: 'PT', lu: 'LU', no: 'NO', ee: 'EE', se: 'SE', be: 'BE' };
     function searchPlaceholder() {
       return (SEARCH_PREFIX[LANG] || SEARCH_PREFIX.de) + (COUNTRY_LANDMARK[COUNTRY] || COUNTRY_LANDMARK.de);
     }
@@ -4491,6 +4510,8 @@
       lu: { de: 'Luxemburg',   en: 'Luxembourg',  fr: 'Luxembourg', es: 'Luxemburgo', pl: 'Luksemburg' },
       no: { de: 'Norwegen',    en: 'Norway',      fr: 'Norvège',  es: 'Noruega',  pl: 'Norwegia' },
       ee: { de: 'Estland',     en: 'Estonia',     fr: 'Estonie',  es: 'Estonia',  pl: 'Estonia' },
+      se: { de: 'Schweden',    en: 'Sweden',      fr: 'Suède',    es: 'Suecia',   pl: 'Szwecja' },
+      be: { de: 'Belgien',     en: 'Belgium',     fr: 'Belgique', es: 'Bélgica',  pl: 'Belgia' },
     };
     function _country() {
       const t = COUNTRY_NAMES[COUNTRY] || COUNTRY_NAMES.de;
@@ -4515,6 +4536,8 @@
       lu: [{ label: 'DAC Luxembourg (CC0)', url: 'https://data.public.lu/fr/datasets/uas-geographical-zones-grand-duchy-of-luxembourg-zones-geographiques-uas-grand-duche-de-luxembourg/' }],
       no: [{ label: 'Luftfartstilsynet / dronesoner.no (NLOD)', url: 'https://dronesoner.no/' }],
       ee: [{ label: 'EANS', url: 'https://utm.eans.ee/' }],
+      se: [{ label: 'LFV / Transportstyrelsen (CC BY 4.0)', url: 'https://dronechart.lfv.se/' }, { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' }],
+      be: [{ label: 'BCAA / skeyes Droneguide', url: 'https://map.droneguide.be/' }],
     };
     // Reihenfolge der Länder-Varianten in der Landing-Kachel „SkyCheck in anderen Ländern".
     const COUNTRY_VARIANTS = [
@@ -4522,7 +4545,10 @@
       { c: 'ch', flag: '🇨🇭' }, { c: 'es', flag: '🇪🇸' }, { c: 'dk', flag: '🇩🇰' }, { c: 'ie', flag: '🇮🇪' },
       { c: 'nl', flag: '🇳🇱' }, { c: 'pt', flag: '🇵🇹' },
       { c: 'lu', flag: '🇱🇺' }, { c: 'no', flag: '🇳🇴' }, { c: 'ee', flag: '🇪🇪' },
+      { c: 'se', flag: '🇸🇪' }, { c: 'be', flag: '🇧🇪' },
     ];
+    // Quellenangabe in der Leaflet-Attribution der Karten (feste, vertrauenswürdige Texte — keine Remote-Daten).
+    const ZONE_ATTRIBUTION = { lu: '© DAC Luxembourg (CC0)', no: 'Kilde: Luftfartstilsynet / dronesoner.no (NLOD)', ee: '© EANS', se: '© LFV / Transportstyrelsen, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, adapted', be: '© BCAA / skeyes (Droneguide)' };
     function renderZoneSources() {
       const links = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)
         .map(s => `<a href="${s.url}" target="_blank" rel="noopener" class="l-src">${escapeHtml(s.label)}</a>`).join('');
@@ -4599,6 +4625,7 @@
       localStorage.setItem('skycheck-lang', LANG);
       document.querySelectorAll('.lang-menu').forEach(m => m.classList.add('hidden'));
       applyLang();
+      renderBeNotice();          // Hinweis folgt der Sprache, auch vor der ersten Prüfung
       renderCountryVariants();   // Ländernamen in der Kachel folgen der UI-Sprache
       if (S.lat != null) {
         // ALLE dynamisch gerenderten Ergebnis-Abschnitte neu rendern, damit der Sprachwechsel
@@ -4635,6 +4662,7 @@
 
       // Länderspezifische Geozonen-Quellen + Länder-Varianten-Kachel füllen
       renderZoneSources();
+      renderBeNotice();
       renderCountryVariants();
       // Settings: DiPUL-Layer-Modus wirkt nur für Deutschland → außerhalb DE ausblenden,
       // nur die (universelle) 48h-Vorschau-Einstellung bleibt sichtbar.
@@ -5189,6 +5217,7 @@
     function avInitMap() {
       const s0 = AV.STYLES[AV.styleIdx];
       AV.map = L.map('alarm-map', { center: [AV.lat, AV.lon], zoom: 13, zoomControl: true, doubleClickZoom: false });
+      if (ZONE_ATTRIBUTION[COUNTRY]) AV.map.attributionControl.addAttribution(ZONE_ATTRIBUTION[COUNTRY]);   // wie die Hauptkarte
       AV.tileL = L.tileLayer(s0.u, { attribution: s0.a, subdomains: s0.s || 'abc', maxZoom: 19, className: s0.dark ? 'tiles-dark' : '' }).addTo(AV.map);
       if (COUNTRY === 'de') {
         AV.dipulL = L.tileLayer.wms(DIPUL_WMS_URL, {
@@ -6405,7 +6434,7 @@
        FR → Netlify-Function zones-fr (räumliche ED-269-Kacheln aus data/fr-zones-tiles)
        AT → Netlify-Function zones-at (data/uas-zones-at.json, Austro Control ED-269;
             monatliches Auto-Update via .github/workflows/update-at-zones.yml)
-       LU/NO/EE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
+       LU/NO/EE/SE/BE → Netlify-Function zones-ed269 (data/uas-zones-<cc>.json; Auto-Update via
             .github/workflows/update-eu-zones.yml)
     ================================================================ */
     // Platzhalter für einen fehlgeschlagenen Zonenabruf. Läuft wie eine Zone durch Liste,
@@ -6447,12 +6476,13 @@
       } finally {
         clearTimeout(timer);
       }
-      // Norwegen: geladene NOTAM-Treffer voranstellen (auch vor dem Platzhalter).
-      if (!ED269_COUNTRIES[COUNTRY]) return zones;
+      // Norwegen/Schweden/Belgien: geladene NOTAM-Treffer voranstellen (auch vor dem Platzhalter).
+      if (!LIVE_NOTAM[COUNTRY]) return zones;
       let notam = [];
-      try { notam = notamNoHits(lat, lon, radiusM); }
+      try { notam = notamHits(lat, lon, radiusM); }
       catch (error) { console.warn('NOTAM-Treffer nicht auswertbar', error); }   // fetchZones darf nie werfen
-      return notam.concat(zones);
+      // Reihenfolge: aktive Live-Treffer, Snapshot-Zonen (oder Platzhalter), inaktive Live-Treffer zuletzt.
+      return notam.filter(z => !z.inactive).concat(zones, notam.filter(z => z.inactive));
     }
 
     /* [J-API-ARCGIS] ====================================================
@@ -6995,11 +7025,11 @@
       return fetchZonesATLocal(lat, lon, radiusM);   // Fehler des Datei-Fallbacks wird weitergereicht
     }
 
-    // Luxemburg / Norwegen / Estland: gemeinsamer ED-269-Adapter (Netlify-Function zones-ed269,
+    // Luxemburg / Norwegen / Estland / Schweden / Belgien: gemeinsamer ED-269-Adapter (Netlify-Function zones-ed269,
     // Snapshots data/uas-zones-<cc>.json). Gleiche Zonenform wie AT; Name kommt aus `name`
     // (message ist hier ein Langtext), NO_RESTRICTION-Zonen sind gewöhnliche blaue Zonen
     // (gelbe Ampel). Lokale Vorschau ohne Function liest die Datei direkt.
-    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1, se: 1, be: 1 };
     let ed269LocalEntriesPromise = null;
 
     function _pointInRing(lat, lon, ring) {
@@ -7039,25 +7069,33 @@
       });
     }
 
-    // Inaktiv = jedes Aktivierungsfenster (applicability[].endDateTime) ist vorbei (wie in der Function).
-    // Liefert das Datum des spätesten Endes (YYYY-MM-DD) oder null.
-    function ed269InactiveSince(feature) {
+    // Inaktiv = jedes Aktivierungsfenster (applicability[]) ist entweder vorbei (Ende lesbar, vor jetzt)
+    // oder noch nicht begonnen (Start lesbar, mehr als 24 h nach jetzt) — wie in der Function. Ein laufendes
+    // Fenster, eines ohne Grenzen oder ohne lesbare Daten macht die Zone aktiv (null). Sonst
+    // { endedAt: spätestes Ende in ms | null, startsAt: frühester künftiger Start in ms | null }.
+    const SOON_MS = 24 * 60 * 60 * 1000;   // beginnt ein Fenster binnen 24 h, gilt es schon als laufend
+    function ed269Inactivity(feature) {
       const windows = feature.applicability;
       if (!Array.isArray(windows) || !windows.length) return null;
-      let latest = -Infinity;
+      const now = Date.now();
+      let endedAt = null, startsAt = null;
       for (const w of windows) {
-        const ms = Date.parse(w?.endDateTime);
-        if (!Number.isFinite(ms) || ms >= Date.now()) return null;
-        latest = Math.max(latest, ms);
+        const end = Date.parse(w?.endDateTime);
+        const start = Date.parse(w?.startDateTime);
+        if (Number.isFinite(end) && end < now) {
+          if (endedAt === null || end > endedAt) endedAt = end;
+        } else if (Number.isFinite(start) && start > now + SOON_MS) {
+          if (startsAt === null || start < startsAt) startsAt = start;
+        } else return null;
       }
-      return new Date(latest).toISOString().slice(0, 10);
+      return { endedAt, startsAt };
     }
 
     function normalizeLocalEd269Zone(feature, light = false) {
       const zone = normalizeLocalAtZone(feature, light);
       zone.name = feature.name || feature.identifier || '—';
-      const inactiveSince = ed269InactiveSince(feature);
-      if (inactiveSince) {
+      const inactivity = ed269Inactivity(feature);
+      if (inactivity) {
         zone.inactive = true;
         zone.type = 'TEMPORARY_INACTIVE';
         zone.color = '#64748b';
@@ -7068,9 +7106,15 @@
       const find = code => messages.find(item => String(item.language || '').toLowerCase().startsWith(code))?.message;
       zone.legal = authority.name || '—';
       zone.legalUrl = /^https?:\/\//i.test(authority.siteURL || '') ? authority.siteURL : '';
-      zone.desc = find(LANG) || find('en') || feature.message || '';
-      if (inactiveSince) {
-        zone.desc = `Activation window ended ${inactiveSince}. May be reactivated — check the official source.` + (zone.desc ? ` ${zone.desc}` : '');
+      // Ohne Beschreibung dient der lesbare Zonenart-Code (Belgien: CIV_HELISTRIP → CIV HELISTRIP).
+      zone.desc = find(LANG) || find('en') || feature.message || (feature.typeCode ? String(feature.typeCode).replace(/_/g, ' ') : '');
+      if (inactivity) {
+        const day = ms => new Date(ms).toISOString().slice(0, 10);
+        const stamp = ms => `${day(ms)} ${new Date(ms).toISOString().slice(11, 16)} UTC`;
+        const note = inactivity.startsAt !== null
+          ? `Not yet active — starts ${stamp(inactivity.startsAt)}. May change — check the official source.`
+          : `Activation window ended ${day(inactivity.endedAt)}. May be reactivated — check the official source.`;
+        zone.desc = note + (zone.desc ? ` ${zone.desc}` : '');
       }
       return zone;
     }
@@ -7132,7 +7176,7 @@
     // weiterhin nur Detailliste + Flugstatus. Promise wird gecacht (kein Doppel-Fetch).
     // Flächiges „alle Zonen"-Overlay (AT-Datei, DK/IE-ArcGIS) — einmal geladen, Promise gecacht.
     const _overlayPromise = {};
-    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1, nl: 1, pt: 1, lu: 1, no: 1, ee: 1 };   // Länder mit flächigem Client-Vektor-Overlay
+    const OVERLAY_ALL = { at: 1, dk: 1, ie: 1, nl: 1, pt: 1, lu: 1, no: 1, ee: 1, se: 1, be: 1 };   // Länder mit flächigem Client-Vektor-Overlay
     function ensureAllZones() {
       if (_overlayPromise[COUNTRY]) return _overlayPromise[COUNTRY];
       let p;
@@ -7177,85 +7221,99 @@
       drawZoneOverlay(pointZones, S.layers.dipul);
     }
 
-    // Norwegen: befristete NOTAM-Sperrgebiete, live von dronesoner.no über die Function
-    // notam-no — nur auf Nutzerklick. Geladene Daten gelten NOTAM_NO_TTL_MS; danach zählen
-    // sie nicht mehr für die Ampel, das Overlay wird geleert und der Knopf bietet Neuladen an.
-    const NOTAM_NO_TTL_MS = 5 * 60 * 1000;
-    const NOTAM_NO = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
+    // Befristete NOTAM-Sperrgebiete (NO/SE/BE), live über die Function des Landes — nur auf
+    // Nutzerklick. Ein Codepfad für alle Länder, die Tabelle LIVE_NOTAM nennt Function-URL und
+    // Quellen-Link. Geladene Daten gelten NOTAM_TTL_MS; danach zählen sie nicht mehr für die
+    // Ampel, das Overlay wird geleert und der Knopf bietet Neuladen an. Das Land ändert sich
+    // innerhalb eines Seitenaufrufs nie, daher genügt ein Zustandsobjekt.
+    const LIVE_NOTAM = {
+      no: { url: '/.netlify/functions/notam-no', source: 'https://dronesoner.no/' },
+      se: { url: '/.netlify/functions/notam-se', source: 'https://dronechart.lfv.se/' },
+      be: { url: '/.netlify/functions/notam-be', source: 'https://map.droneguide.be/' },
+    };
+    const NOTAM_TTL_MS = 5 * 60 * 1000;
+    const NOTAM = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
 
-    function notamNoFresh() {
-      if (NOTAM_NO.zones && Date.now() - NOTAM_NO.at > NOTAM_NO_TTL_MS) {
-        NOTAM_NO.zones = null;
-        if (S.layers.notamNo) S.layers.notamNo.clearLayers();
+    function notamFresh() {
+      if (NOTAM.zones && Date.now() - NOTAM.at > NOTAM_TTL_MS) {
+        NOTAM.zones = null;
+        if (S.layers.notam) S.layers.notam.clearLayers();
       }
-      return Array.isArray(NOTAM_NO.zones);
+      return Array.isArray(NOTAM.zones);
     }
 
-    function notamNoHits(lat, lon, radiusM) {
-      if (COUNTRY !== 'no' || !notamNoFresh()) return [];
-      return NOTAM_NO.zones.filter(zone => zoneHitsPoint(zone, lat, lon, radiusM));
+    function notamHits(lat, lon, radiusM) {
+      if (!LIVE_NOTAM[COUNTRY] || !notamFresh()) return [];
+      return NOTAM.zones.filter(zone => zoneHitsPoint(zone, lat, lon, radiusM));
     }
 
-    function drawNotamNoOverlay() {
+    // Overlay: gestrichelter Rand in der Farbe der Zone (rot, bernstein, orange, grau), Füllung
+    // in derselben Farbe schwach. Norwegens Zonen sind rot; ohne gültige Farbe bleibt es rot.
+    function drawNotamOverlay() {
       if (!S.map) return;
-      if (!S.layers.notamNo) S.layers.notamNo = L.layerGroup().addTo(S.map);
-      const group = S.layers.notamNo;
+      if (!S.layers.notam) S.layers.notam = L.layerGroup().addTo(S.map);
+      const group = S.layers.notam;
       group.clearLayers();
-      (NOTAM_NO.zones || []).forEach(zone => (zone.geometry || []).forEach(g => {
+      (NOTAM.zones || []).forEach(zone => (zone.geometry || []).forEach(g => {
         if (g.type !== 'Polygon' || !Array.isArray(g.coordinates)) return;
         try {
+          const color = safeHexColor(zone.color, '#ef4444');
           const rings = g.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon]));
-          L.polygon(rings, { color: '#ef4444', weight: 2, dashArray: '6 4', fillColor: '#ef4444', fillOpacity: 0.12 })
+          L.polygon(rings, { color, weight: 2, dashArray: '6 4', fillColor: color, fillOpacity: 0.12 })
             .bindTooltip(`${escapeHtml(_t('notamBadge'))} · ${escapeHtml(zone.name)}`, { sticky: true })
             .addTo(group);
         } catch (_) { /* einzelne defekte Geometrie überspringen */ }
       }));
     }
 
-    function notamNoControlHtml() {
-      const fresh = notamNoFresh();
-      const label = NOTAM_NO.loading
+    function notamControlHtml() {
+      const live = LIVE_NOTAM[COUNTRY];
+      if (!live) return '';
+      const fresh = notamFresh();
+      const label = NOTAM.loading
         ? _t('notamLoading')
         : fresh
-          ? _t('notamAsOf')(new Date(NOTAM_NO.fetchedAt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit' }))
+          ? _t('notamAsOf')(new Date(NOTAM.fetchedAt).toLocaleTimeString(_locale(), { hour: '2-digit', minute: '2-digit' }))
           : _t('notamLoad');
-      const error = NOTAM_NO.error
-        ? `<div class="ms-notam-err">${escapeHtml(_t('notamError'))} · <a href="https://dronesoner.no/" target="_blank" rel="noopener">dronesoner.no ↗</a></div>`
+      const host = live.source.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      const error = NOTAM.error
+        ? `<div class="ms-notam-err">${escapeHtml(_t('notamError'))} · <a href="${escapeHtml(live.source)}" target="_blank" rel="noopener">${escapeHtml(host)} ↗</a></div>`
         : '';
-      return `<button type="button" class="ms-notam-btn" data-notam-load${NOTAM_NO.loading ? ' disabled' : ''}>${escapeHtml(label)}</button>${error}`;
+      return `<button type="button" class="ms-notam-btn" data-notam-load${NOTAM.loading ? ' disabled' : ''}>${escapeHtml(label)}</button>${error}`;
     }
 
-    async function loadNotamNo() {
-      if (COUNTRY !== 'no' || NOTAM_NO.loading) return;
-      NOTAM_NO.loading = true;
-      NOTAM_NO.error = false;
+    async function loadNotam() {
+      const live = LIVE_NOTAM[COUNTRY];
+      if (!live || NOTAM.loading) return;
+      NOTAM.loading = true;
+      NOTAM.error = false;
       renderMapStatus(lastWeather, lastZones);
       try {
-        const response = await fetch('/.netlify/functions/notam-no');
+        const response = await fetch(live.url);
         if (!response.ok) throw new Error(`NOTAM HTTP ${response.status}`);
         const data = await response.json();
         if (!Array.isArray(data.zones)) throw new Error('NOTAM payload without zones');
-        NOTAM_NO.zones = data.zones;
-        NOTAM_NO.at = Date.now();
+        NOTAM.zones = data.zones;
+        NOTAM.at = Date.now();
         const fetchedAtMs = Date.parse(data.fetchedAt);
-        NOTAM_NO.fetchedAt = Number.isFinite(fetchedAtMs) ? fetchedAtMs : NOTAM_NO.at;
-        drawNotamNoOverlay();
+        NOTAM.fetchedAt = Number.isFinite(fetchedAtMs) ? fetchedAtMs : NOTAM.at;
+        drawNotamOverlay();
       } catch (error) {
-        console.warn('NOTAM NO fetch error', error);
-        NOTAM_NO.error = true;
+        console.warn('NOTAM fetch error (' + COUNTRY + ')', error);
+        NOTAM.error = true;
       } finally {
-        NOTAM_NO.loading = false;
+        NOTAM.loading = false;
         renderMapStatus(lastWeather, lastZones);
         refreshZonesAtCurrentPoint();
       }
     }
 
     document.addEventListener('click', event => {
-      if (event.target instanceof Element && event.target.closest('[data-notam-load]')) loadNotamNo();
+      if (event.target instanceof Element && event.target.closest('[data-notam-load]')) loadNotam();
     });
 
     // Zonen am aktuellen Standort neu holen und alles Abhängige neu rendern (Liste, Overlay,
-    // Ampel, Kartenstatus). Genutzt vom Radius-Umschalter und vom NOTAM-Knopf (Norwegen).
+    // Ampel, Kartenstatus). Genutzt vom Radius-Umschalter und vom NOTAM-Knopf (NO/SE/BE).
     function refreshZonesAtCurrentPoint() {
       if (!S.lat || !S.lon) return;
       fetchZones(S.lat, S.lon, S.searchRadius).then(zones => {
@@ -8139,6 +8197,20 @@
       </div>`;
     }
 
+    // Farbwerte aus Fremddaten landen in style-Attributen und Leaflet-Optionen: nur 3, 4, 6 oder 8 Hex-Ziffern.
+    function safeHexColor(value, fallback) {
+      return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value || '') ? value : fallback;
+    }
+
+    // Belgien: Hinweis der BCAA dauerhaft sichtbar, außerhalb des einklappbaren Zonenkörpers.
+    // Unabhängig von renderZones, damit er auch nach einem Fehlerpfad und beim Sprachwechsel steht.
+    function renderBeNotice() {
+      const beNotice = $('be-notice');
+      if (!beNotice) return;
+      beNotice.textContent = COUNTRY === 'be' ? _t('beNotice') : '';
+      beNotice.hidden = COUNTRY !== 'be';
+    }
+
     function renderZones(zones) {
       const unavailable = zones.some(z => z && z.unavailable);
       const real = zones.filter(z => !(z && z.unavailable));
@@ -8163,11 +8235,13 @@
       </div>`;
       }
 
+      renderBeNotice();
+
       $('zones-body').innerHTML = unavailHtml + (cnt === 0
         ? ''
         : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-          <div style="background:${/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(z.color || '') ? z.color : '#64748b'}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+          <div style="background:${safeHexColor(z.color, '#64748b')}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
         </div>
 
@@ -8200,15 +8274,15 @@
               // GeoJSON: [lon, lat] → Leaflet erwartet [lat, lon]
               const rings = g.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon]));
               L.polygon(rings, {
-                color: z.color, weight: 1, opacity: 0.9,
-                fillColor: z.color, fillOpacity: 0.18,
+                color: safeHexColor(z.color, '#64748b'), weight: 1, opacity: 0.9,
+                fillColor: safeHexColor(z.color, '#64748b'), fillOpacity: 0.18,
               }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             } else if (g.type === 'Circle' && Array.isArray(g.center)) {
               const [lon, lat] = g.center;
               L.circle([lat, lon], {
                 radius: g.radius || 0,
-                color: z.color, weight: 1, opacity: 0.9,
-                fillColor: z.color, fillOpacity: 0.18,
+                color: safeHexColor(z.color, '#64748b'), weight: 1, opacity: 0.9,
+                fillColor: safeHexColor(z.color, '#64748b'), fillOpacity: 0.18,
               }).bindTooltip(`${escapeHtml(z.name)} · ${escapeHtml(z.type)}`, { sticky: true }).addTo(layerGroup);
             }
           } catch (_) { /* ignore single bad geometry */ }
@@ -8529,7 +8603,7 @@
         zoneHtml += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
       } else {
         items.forEach(it => {
-          const dot = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(it.color || '') ? it.color : '#64748b';
+          const dot = safeHexColor(it.color, '#64748b');
           zoneHtml += `<div class="ms-zone-item">
         <span class="ms-zone-dot" style="background:${dot}"></span>
         <span>${it.label}</span>
@@ -8591,16 +8665,18 @@
           <div>${_t('msGroundMsl')}: ${elevation}</div>
           ${coordinateDetailsHtml(S.lat, S.lon)}
           ${COUNTRY === 'de' ? `<a href="${dipulUrl}" target="_blank" rel="noopener">${_t('msOpenDipul')} ↗</a>` : ''}
-          ${COUNTRY === 'no' ? notamNoControlHtml() : ''}
+          ${notamControlHtml()}
         </div>`;
       }
 
       const expanded = wasExpanded === true;
-      const notamHintHtml = (COUNTRY === 'no' && !notamNoFresh())
+      const notamHintHtml = (LIVE_NOTAM[COUNTRY] && !notamFresh())
         ? `<div class="ms-notam-hint">${escapeHtml(_t('notamHint'))}</div>` : '';
       const eeHintHtml = COUNTRY === 'ee'
         ? `<div class="ms-notam-hint">${escapeHtml(_t('eeStaleHint'))}</div>` : '';
-      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${notamHintHtml}${eeHintHtml}</div>
+      const beNoticeHtml = COUNTRY === 'be'
+        ? `<div class="ms-notam-hint">${escapeHtml(_t('beNoticeShort'))}</div>` : '';
+      el.innerHTML = `<div class="ms-zone-list">${zoneHtml}${beNoticeHtml}${notamHintHtml}${eeHintHtml}</div>
         <details class="ms-more"${expanded ? ' open' : ''}>
           <summary>${_t('mapMoreDetails')}</summary>
           <div class="ms-more-body">${detailHtml}</div>
@@ -8747,6 +8823,9 @@
           S.layers.dipul = L.layerGroup();
           if (esEasa() || COUNTRY === 'nl' || COUNTRY === 'pt') S.map.attributionControl.addAttribution('© EASA Common Repository');
         }
+        // Quellenangabe der Snapshot-Länder: einmal je Karte (neue Karte = neues Attribution-Control);
+        // ein Wechsel des Basiskarten-Stils tauscht nur die Kachelebene und lässt sie stehen.
+        if (ZONE_ATTRIBUTION[COUNTRY]) S.map.attributionControl.addAttribution(ZONE_ATTRIBUTION[COUNTRY]);
         if (S.layerVisible.dipul) S.layers.dipul.addTo(S.map);
         if (CONTEXT_COUNTRIES[COUNTRY]) scheduleContextLayerState();
         if (COUNTRY === 'fr') {
@@ -8761,7 +8840,7 @@
         }
         // Falls zones bereits vor der Map-Erstellung gefetcht wurden (FR-Modus, erster Render),
         // jetzt nachzeichnen — sonst bleibt das Overlay leer bis zum naechsten fetchZones-Trigger.
-        if (COUNTRY === 'no') { S.layers.notamNo = null; if (notamNoFresh()) drawNotamNoOverlay(); }
+        if (LIVE_NOTAM[COUNTRY]) { S.layers.notam = null; if (notamFresh()) drawNotamOverlay(); }
         if (OVERLAY_ALL[COUNTRY]) {
           drawAllOverlay(S.layers.dipul);   // AT/DK/IE: alle Zonen flächig zeichnen
         } else if (esEasa()) {

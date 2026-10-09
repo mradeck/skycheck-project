@@ -54,11 +54,11 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
       direkt bei `aim@ans.cz` anfragen. Damit wäre skycheck-cz sauber und lizenzkonform baubar.
       (Notiert 2026-08 auf Nutzerwunsch; NL + PT via EASA bereits umgesetzt.)
 
-- [ ] **Lücken gegenüber Hoverpoint (LU, NO, EE, SE, BE) — Quellenrecherche 2026-10-09.**
+- [x] **Lücken gegenüber Hoverpoint (LU, NO, EE, SE, BE) — Quellenrecherche 2026-10-09.**
       Anlass: web.hoverpoint.info bindet 13 Länder an (DE, CH/LI, LU, NL, BE, FR, ES, DK, SE, NO,
       EE, IE; FI gelistet, aber inaktiv), jeweils direkt bei der nationalen Stelle (Quellenliste
       auf `web.hoverpoint.info/status`; die Abfragen laufen dort serverseitig, die konkreten URLs
-      sind nicht einsehbar). SkyCheck hat 9 (DE, FR, AT, CH, ES, DK, IE, NL, PT) (Stand vor v26.10.117.0; seitdem hat SkyCheck zwölf). Das EASA Common
+      sind nicht einsehbar). SkyCheck hat 9 (DE, FR, AT, CH, ES, DK, IE, NL, PT) (Stand vor v26.10.117.0; seitdem hat SkyCheck zwölf, mit v26.10.118.0 vierzehn). Das EASA Common
       Repository (`services-eu1.arcgis.com/71Lfb7umh2boMcWI`) enthält nur PT, NL, DK, IE, ES —
       für die fünf Lücken hilft es nicht. Stand je Land (Endpunkte per HTTP-Abruf geprüft):
   - [x] **Luxemburg (skycheck-lu).** Direction de l'Aviation Civile, Datensatz „UAS Geographical
@@ -73,12 +73,20 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
         Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln. Wegen Größe wäre Kacheln wie bei FR denkbar — **umgesetzt in v26.10.117.0 als ungekachelter Snapshot (1390 dauerhafte Zonen)**
   - [x] **Estland (skycheck-ee).** EANS: `https://utm.eans.ee/avm/utm/uas.geojson`
         (GeoJSON-FeatureCollection, ohne Key). **umgesetzt und veröffentlicht in v26.10.117.0 (Entscheidung des Nutzers; Lizenz vom Herausgeber nicht angegeben; Hinweis auf bis zu 7 Tage alte Kurzzeitzonen)**
-  - [ ] **Schweden (skycheck-se).** LFV-GeoServer `https://daim.lfv.se/geoserver/ows` (offener WFS).
-        Kein einzelner Geozonen-Layer, sondern Luftraum-Layer (`mais:CTR`, `mais:ATZ`, `mais:RSTA`,
-        `mais:DNGA`, `mais:TIZ`, `mais:TIA` …) → Zonen müssen zusammengesetzt werden; Referenzkarte
-        `dronechart.lfv.se`. Offen: Lizenz und welche Layer drohnenrelevant sind.
-  - [ ] **Belgien (skycheck-be).** Amtliche Karte `map.droneguide.be` (skeyes/BCAA, Unifly-Plattform).
-        Kein offener Endpunkt gefunden: die Karten-API verlangt Login + Annahme der Lizenzvereinbarung;
-        der 2021 angekündigte Geozonen-Download liegt hinter dieser Anmeldung. Nächster Schritt:
-        Download-Format und Weiterverwendungsbedingungen nach Anmeldung prüfen oder bei skeyes/BCAA
-        anfragen.
+  - [x] **Schweden (skycheck-se).** LFV-GeoServer `https://daim.lfv.se/geoserver/wfs` (offener WFS,
+        Lizenz **CC BY 4.0**) plus ED-318-Zonendatei der Transportstyrelsen
+        (`https://dronechart.lfv.se/data/uas_zones_ED318.json`, 68 UAS-Zonen). Der Snapshot setzt
+        sich aus sieben Layern (`mais:RSTA`, `mais:DNGA`, `mais:ATZ`, `mais:TIZ`, `mais:CTR`,
+        `DAIM_TOPO:HKP1K`, `DAIM_TOPO:RWY5K`) und der ED-318-Datei zusammen (390 Zonen); befristete
+        Gebiete (NOTAM, AIP SUP) kommen live per Knopf über `notam-se`. **umgesetzt in v26.10.118.0**
+  - [x] **Belgien (skycheck-be).** Droneguide-WFS `https://map.droneguide.be/ows` (skeyes im Auftrag
+        der BCAA, anonym abrufbar, jede Abfrage mit `cql_filter` wegen 149 MB Welt-Zeitzonen).
+        Lizenz vom Herausgeber nicht angegeben; Weiterverwendung laut dokumentierter BCAA-Auskunft
+        (Az. G26-187 vom 2026-09-16, wiedergegeben in
+        github.com/CallMarcus/dji-drone-metadata-embedder/issues/562): keine Einzelgenehmigung nötig,
+        vier empfohlene Hinweise (Quelle Droneguide/skeyes im Auftrag der BCAA; keine offizielle
+        Anwendung der BCAA oder belgischer Behörden; maßgeblich nur die amtlichen Kanäle; Verantwortung
+        bleibt beim Fernpiloten und UAS-Betreiber), die die App dauerhaft unter der Zonenliste zeigt.
+        Snapshot 582 Zonen (ohne Zonen über 120 m AGL); NOTAM-Zonen und temporäre Flugverbotszonen
+        live per Knopf über `notam-be`. **umgesetzt in v26.10.118.0**
+  - [ ] **Finnland** bleibt offen (bei Hoverpoint gelistet, aber inaktiv).

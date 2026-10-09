@@ -2,7 +2,7 @@
 
 ---
 
-# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES · DK · IE · NL · PT · LU · NO · EE)
+# SkyCheck — Drone Flight Check (DE · FR · AT · CH · ES · DK · IE · NL · PT · LU · NO · EE · SE · BE)
 
 **SkyCheck** is a free single-page web app for quickly pre-checking drone flights. It aggregates real-time data from several official sources and provides an immediate flight recommendation. Our use cases: surveying, inspection, image films, TV & film productions, and A2/STS drone licence training at [www.multikopterschule.de](https://www.multikopterschule.de).
 
@@ -27,10 +27,12 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | 🇱🇺 **Luxembourg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxembourg — ED-269 snapshot (auto-updated weekly) |
 | 🇳🇴 **Norway** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — ED-269 snapshot (auto-updated weekly); NOTAM restricted areas on click |
 | 🇪🇪 **Estonia** | [skycheck-ee.netlify.app](https://skycheck-ee.netlify.app/) | EANS (utm.eans.ee) — ED-269 snapshot (auto-updated weekly); short-term areas may be up to 7 days old |
+| 🇸🇪 **Sweden** | [skycheck-se.netlify.app](https://skycheck-se.netlify.app/) | LFV / Transportstyrelsen (daim.lfv.se, CC BY 4.0) — ED-269 snapshot (auto-updated weekly); NOTAM and AIP SUP areas on click |
+| 🇧🇪 **Belgium** | [skycheck-be.netlify.app](https://skycheck-be.netlify.app/) | BCAA / skeyes Droneguide (map.droneguide.be) — ED-269 snapshot (auto-updated weekly); NOTAM zones and temporary no-fly zones on click; BCAA notice permanently below the zone list |
 
-> All twelve are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
+> All fourteen are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.10.117.2
+📦 **Current version:** v26.10.118.0
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -92,6 +94,8 @@ the app header.
 | **Geo-zones 🇱🇺** [DAC Luxembourg](https://drones.geoportail.lu/) | Luxembourg UAS geographical zones, ED-269 snapshot (`data/uas-zones-lu.json`, 43 zones; licence CC0) | via `zones-ed269.js` |
 | **Geo-zones 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norwegian UAS zones, ED-269 snapshot (`data/uas-zones-no.json`, 1390 zones; licence NLOD 2.0); temporary NOTAM restricted areas loaded on click (`notam-no.js`) | via `zones-ed269.js` |
 | **Geo-zones 🇪🇪** [EANS](https://utm.eans.ee/) | Estonian UAS zones, ED-269 snapshot (`data/uas-zones-ee.json`, 241 zones; licence: not stated by the publisher); short-term areas may be up to 7 days old | via `zones-ed269.js` |
+| **Geo-zones 🇸🇪** [LFV / Transportstyrelsen](https://dronechart.lfv.se/) | Swedish UAS zones, ED-269 snapshot (`data/uas-zones-se.json`, 390 zones; licence CC BY 4.0), composed from seven LFV WFS layers and the Transportstyrelsen ED-318 zone file; NOTAM and AIP SUP areas loaded on click (`notam-se.js`) | via `zones-ed269.js` |
+| **Geo-zones 🇧🇪** [BCAA / skeyes Droneguide](https://map.droneguide.be/) | Belgian UAS zones, ED-269 snapshot (`data/uas-zones-be.json`, 582 zones; licence: not stated by the publisher); zones starting above 120 m AGL are left out, like the official map's default view; reuse per the BCAA's documented reply (ref. G26-187 of 2026-09-16), with four notices shown permanently below the zone list; NOTAM zones and temporary no-fly zones loaded on click (`notam-be.js`) | via `zones-ed269.js` |
 | **Context layers** (🇦🇹🇨🇭🇪🇸🇩🇰🇮🇪🇫🇷) [OpenStreetMap](https://www.openstreetmap.org/) (ODbL) | Optional overlays — protected areas, motorways, power lines, railways (static GeoJSON snapshots in `data/<cc>-*.json`, generated via `scripts/`); informational only, not part of the flight-status check. DE already has these via DiPUL | ✅ |
 
 ---
@@ -116,16 +120,18 @@ netlify/
     gfz.js                  ← GFZ Potsdam proxy for Kp-index/Hp30
     zones-fr.js             ← France UAS zones (reads spatial 2° tiles, bbox-filtered)
     zones-at.js             ← Austria UAS zones (reads data/uas-zones-at.json; ?all=1 = full overlay)
-    zones-ed269.js          ← LU/NO/EE UAS zones (reads data/uas-zones-<cc>.json; exact area test; ?all=1 = full overlay)
+    zones-ed269.js          ← LU/NO/EE/SE/BE UAS zones (reads data/uas-zones-<cc>.json; exact area test; ?all=1 = full overlay)
     notam-no.js             ← Norway: live proxy for temporary NOTAM restriction areas (dronesoner.no, on click only)
+    notam-se.js             ← Sweden: live proxy for NOTAM and AIP SUP restriction areas (LFV, on click only)
+    notam-be.js             ← Belgium: live proxy for NOTAM zones and temporary no-fly zones (Droneguide, on click only)
 data/
   uas-zones-fr.json         ← ED-269 France UAS zones (monthly snapshot, replaceable)
   fr-zones-tiles/           ← generated spatial index for the Netlify function
   context/fr/               ← bundled viewport tiles for the four France context layers
   uas-zones-at.json         ← ED-269 Austria UAS zones (about 290 zones, auto-updated)
   uas-zones-at.version      ← marker of the last imported Austro Control release (idempotency)
-  uas-zones-{lu,no,ee}.json ← ED-269 Luxembourg / Norway / Estonia UAS zones (weekly snapshots)
-  uas-zones-{lu,no,ee}.version ← markers of the last imported snapshot per country (idempotency)
+  uas-zones-{lu,no,ee,se,be}.json ← ED-269 Luxembourg / Norway / Estonia / Sweden / Belgium UAS zones (weekly snapshots)
+  uas-zones-{lu,no,ee,se,be}.version ← markers of the last imported snapshot per country (idempotency)
   dipul-airac/              ← extracted DiPUL AIRAC air-traffic layers (weekly check)
   <cc>-protected.json       ← context: protected areas (OSM, ODbL) — cc ∈ at,ch,es,dk,ie,fr
   <cc>-motorways.json       ← context: motorways (OSM, ODbL)
@@ -133,7 +139,7 @@ data/
   <cc>-rail.json            ← context: main railway lines (OSM, ODbL)
   gcg2016v2023-cm.i16       ← compact GCG2016 quasi-geoid grid (Int16, cm) for the coordinate page
 scripts/
-  build-eu-zones.mjs        ← builds the LU/NO/EE ED-269 snapshots from the official sources
+  build-eu-zones.mjs        ← builds the LU/NO/EE/SE/BE ED-269 snapshots from the official sources
   gen-context.mjs           ← reusable generator: Overpass → simplified GeoJSON (lines + polygons)
   fetch-context.sh          ← robust driver: curl-fetch (retry) + gen-context per layer, idempotent
   build-fr-spatial-data.mjs ← builds the 2° spatial tiles for France (zones index + context layers)
@@ -144,7 +150,7 @@ tests/                      ← Node tests (`node --test "tests/*.test.mjs"`)
 .github/
   workflows/
     update-at-zones.yml     ← monthly job: fetch newest Austro Control ED-269 → commit data file
-    update-eu-zones.yml     ← weekly job (Mondays): refresh the LU/NO/EE ED-269 snapshots → commit data files
+    update-eu-zones.yml     ← weekly job (Mondays): refresh the LU/NO/EE/SE/BE ED-269 snapshots → commit data files
     update-de-airac.yml     ← weekly job: check the Mobilithek AIRAC offer → extract the DiPUL air-traffic layers
 redirect.html               ← optional redirect page
 ```
@@ -153,7 +159,7 @@ redirect.html               ← optional redirect page
 
 ### Multi-country support (since v0.73)
 
-SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
+SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Country is detected from the hostname (e.g. `skycheck-ch.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Default: `de`. Weather, ADS-B, METAR/TAF and Kp-index are global; the **UI language, the search-hint landmark and the geocoding bounding box** are set per country.
 
 | Country | Geo-zone source | Overlay | Detail list / status | Data & updates |
 |---|---|---|---|---|
@@ -169,12 +175,14 @@ SkyCheck uses an **adapter pattern** for country-specific geo-zone sources. Coun
 | 🇱🇺 **LU** | DAC Luxembourg ED-269 | all zones drawn client-side (43) | `zones-ed269.js` (exact area test) | `data/uas-zones-lu.json` — **auto-updated weekly** via GitHub Actions (`update-eu-zones.yml`) |
 | 🇳🇴 **NO** | Luftfartstilsynet / dronesoner.no ED-269 | all zones drawn client-side (1390) | `zones-ed269.js` (exact area test) | `data/uas-zones-no.json` — **auto-updated weekly** via GitHub Actions (`update-eu-zones.yml`); NOTAM areas live on click (`notam-no.js`) |
 | 🇪🇪 **EE** | EANS ED-269 | all zones drawn client-side (241) | `zones-ed269.js` (exact area test) | `data/uas-zones-ee.json` — **auto-updated weekly** via GitHub Actions (`update-eu-zones.yml`); short-term areas may be up to 7 days old |
+| 🇸🇪 **SE** | LFV / Transportstyrelsen ED-269 (CC BY 4.0) | all zones drawn client-side (390) | `zones-ed269.js` (exact area test) | `data/uas-zones-se.json` — **auto-updated weekly** via GitHub Actions (`update-eu-zones.yml`); NOTAM and AIP SUP areas live on click (`notam-se.js`) |
+| 🇧🇪 **BE** | BCAA / skeyes Droneguide | all zones drawn client-side (582) | `zones-ed269.js` (exact area test) | `data/uas-zones-be.json` — **auto-updated weekly** via GitHub Actions (`update-eu-zones.yml`); NOTAM and temporary no-fly zones live on click (`notam-be.js`); notice below the zone list |
 
-Three integration styles: **WMS + point query** (DE, CH, ES — official live services render the whole country and answer point queries directly), **client-side ArcGIS vector** (DK, IE, NL, PT — GeoJSON pulled live from an ArcGIS FeatureServer, drawn as colour-coded polygons), and **hosted ED-269 file + Netlify function** (FR, AT, LU, NO, EE — a JSON dataset in the repo, filtered server-side; AT refreshes itself monthly, LU/NO/EE weekly).
+Three integration styles: **WMS + point query** (DE, CH, ES — official live services render the whole country and answer point queries directly), **client-side ArcGIS vector** (DK, IE, NL, PT — GeoJSON pulled live from an ArcGIS FeatureServer, drawn as colour-coded polygons), and **hosted ED-269 file + Netlify function** (FR, AT, LU, NO, EE, SE, BE — a JSON dataset in the repo, filtered server-side; AT refreshes itself monthly, LU/NO/EE/SE/BE weekly).
 
 ### How many geo-zones per country?
 
-Zone counts pulled directly from each country's live source (DE via DiPUL WFS across all 31 categories; ES via ENAIRE ArcGIS; FR/AT from the ED-269 datasets; CH from the geo.admin.ch GeoJSON; DK/IE via ArcGIS FeatureServer), normalised by land area:
+Zone counts pulled directly from each country's live source (DE via DiPUL WFS across all 31 categories; ES via ENAIRE ArcGIS; FR/AT from the ED-269 datasets; CH from the geo.admin.ch GeoJSON; DK/IE via ArcGIS FeatureServer; LU/NO/EE/SE/BE from the weekly ED-269 snapshots in `data/`), normalised by land area:
 
 | Country | Geo-zones | Area (km²) | Zones per 1 000 km² |
 |---|--:|--:|--:|
@@ -182,9 +190,14 @@ Zone counts pulled directly from each country's live source (DE via DiPUL WFS ac
 | 🇪🇸 Spain | 15 787 | 505 990 | ≈ 31 |
 | 🇨🇭 Switzerland | 1 232 | 41 285 | ≈ 30 |
 | 🇩🇰 Denmark | 870 | 42 952 | ≈ 20 |
+| 🇧🇪 Belgium | 582 | 30 689 | ≈ 19 |
+| 🇱🇺 Luxembourg | 43 | 2 586 | ≈ 17 |
 | 🇫🇷 France | 3 642 | 551 695 | ≈ 6.6 |
+| 🇪🇪 Estonia | 241 | 45 339 | ≈ 5.3 |
+| 🇳🇴 Norway | 1 390 | 385 207 | ≈ 3.6 |
 | 🇦🇹 Austria | about 290 | 83 879 | ≈ 3.4 |
 | 🇮🇪 Ireland\* | 76 | 70 273 | ≈ 1.1 |
+| 🇸🇪 Sweden | 390 | 450 295 | ≈ 0.9 |
 
 \* Ireland's figure is from the EASA Common Repository, which is still **preliminary** (the national IAA dataset lists ~87) — so its count is indicative, not complete.
 
@@ -249,6 +262,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.10.118.0 | 🇸🇪🇧🇪 **Sweden and Belgium.** Two new country variants (`skycheck-se`, `skycheck-be`) with official zones as weekly refreshed ED-269 snapshots (`data/uas-zones-{se,be}.json`, 390 / 582 zones). **Sweden:** seven LFV WFS layers plus the Transportstyrelsen ED-318 zone file (CC BY 4.0); restricted areas and 5 km airport areas = authorisation required; control zones, traffic (information) zones, 1 km heliport areas and danger areas = conditional; the 68 UAS zones with their validity windows as stated in the file. **Belgium:** Droneguide WFS (skeyes, for the BCAA), without the world time-zone polygons and without zones starting above 120 m AGL (like the official map's default view); licence not stated by the publisher; reuse per the BCAA's documented reply (ref. G26-187 of 2026-09-16) with four notices that the app shows permanently below the zone list. **Live button** now also for Sweden (`notam-se`: NOTAM areas with the official chart's filter, ground level only, plus currently valid AIP SUP areas near ground level) and Belgium (`notam-be`: NOTAM zones and temporary no-fly zones), alongside Norway. **New rule for all five ED-269 countries:** a zone counts as "currently inactive" when every activation window has ended or starts more than 24 hours from now ("Not yet active — starts <YYYY-MM-DD HH:mm> UTC"); windows starting within 24 hours count as running. Build script and workflow cover `se` (directory of eight files) and `be` (one file); unknown restriction values or altitude texts abort that country's build. 299 Node tests. **Fix wave after the final review:** source attribution for the five snapshot countries (Sweden with the CC BY 4.0 link and "adapted") in the map attribution; Swedish SUP legal links encoded correctly; NOTAM classification RD/W… conditional, every other R… prohibited; live hits ordered active – snapshot zones – inactive; Belgium one-liner in the map panel above the NOTAM hint; per-country step time limits in the workflow. |
 | v26.10.117.2 | **Installed app starts light.** `manifest.json` splash and theme colours changed from dark to the light `#eef4fb`, and the iOS status bar style from `black-translucent` to `default`, matching the light default interface introduced in v26.10.117.0. Already installed apps pick up the new colours with a delay or after reinstalling, depending on the operating system. |
 | v26.10.117.1 | 🛟 **Zone data outage is now visible.** If the geo-zone lookup fails (HTTP error, timeout, offline), SkyCheck now shows **"Zone data unavailable"** with a **yellow** traffic light instead of "no restrictions" in green — in all twelve countries. The zone list shows a notice box with a link to the official source; the map panel shows a grey entry. A successful lookup with no hits stays green; local file fallbacks stay in place. A hanging service runs into the outage notice after **20 seconds**; while the lookup runs, the banner shows **"Checking airspace …"** instead of "no restrictions". Germany: a 200 answer that is not GeoServer output counts as a failure; Denmark and Germany show partial results together with the outage notice. Not covered: (1) the full-country map overlay; (2) Germany: a DiPUL layer that answers with a server error is skipped for the rest of the session, and its zones are then missing without a notice; (3) while a lookup is running, the zone list and map panel may still show the previous point's entries; (4) the banner's weather line keeps the old language after a language switch until the next check. 147 Node tests. |
 | v26.10.117.0 | 🇱🇺🇳🇴🇪🇪 **Luxembourg, Norway and Estonia.** Three new country variants (`skycheck-lu`, `skycheck-no`, `skycheck-ee`) with official ED-269 geozones as weekly refreshed snapshots (`data/uas-zones-{lu,no,ee}.json`, 43 / 1390 / 241 zones; sources: DAC Luxembourg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS). New Netlify function `zones-ed269` with an exact area test (point in polygon or edge within the search radius). Zones whose activation windows have all ended stay visible as "currently inactive" (yellow instead of red). **Norway:** temporary NOTAM restriction areas are loaded live on click via the new function `notam-no`, drawn dashed red and counted for the traffic light for 5 minutes. **Estonia:** a fixed hint says short-term areas may be up to 7 days old. Zone names are now HTML-escaped in the status banner and map panel. **The interface now starts in light mode by default** (a stored choice, including dark, is respected). 39 Node tests. |

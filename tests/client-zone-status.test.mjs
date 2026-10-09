@@ -71,11 +71,11 @@ function dispatcher(country, adapters, extra = '') {
   return new Function(`
     const _t = k => 'T:' + k;
     const COUNTRY = ${JSON.stringify(country)};
-    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1, se: 1, be: 1 }; const LIVE_NOTAM = { no: {}, se: {}, be: {} };
     const ZONE_LOOKUP_TIMEOUT_MS = 20000;
     const esEasa = () => false;
     const console = { warn() {}, info() {}, log() {} };
-    ${extra || 'const notamNoHits = () => [];'}
+    ${extra || 'const notamHits = () => [];'}
     ${stubs}
     ${grab('zoneDataUnavailable')}
     ${grab('fetchZones')}
@@ -85,13 +85,14 @@ function dispatcher(country, adapters, extra = '') {
 
 for (const [country, adapter] of [['de', 'fetchZonesDE'], ['fr', 'fetchZonesFR'], ['at', 'fetchZonesAT'],
   ['ch', 'fetchZonesCH'], ['es', 'fetchZonesESEasa'], ['dk', 'fetchZonesDK'], ['ie', 'fetchZonesIE'],
-  ['nl', 'fetchZonesNL'], ['pt', 'fetchZonesPT'], ['lu', 'fetchZonesEd269'], ['ee', 'fetchZonesEd269']]) {
+  ['nl', 'fetchZonesNL'], ['pt', 'fetchZonesPT'], ['lu', 'fetchZonesEd269'], ['ee', 'fetchZonesEd269'], ['no', 'fetchZonesEd269'],
+  ['se', 'fetchZonesEd269'], ['be', 'fetchZonesEd269']]) {
   test(`Verteiler ${country}: werfender Adapter → [Platzhalter], kein Wurf nach außen`, async () => {
     const adapters = { [adapter]: 'async () => { throw new Error("HTTP 500"); }' };
     const result = country === 'es'
       ? await new Function(`
-          const _t = k => 'T:' + k; const COUNTRY = 'es'; const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
-          const esEasa = () => true; const console = { warn() {} }; const notamNoHits = () => []; const ZONE_LOOKUP_TIMEOUT_MS = 20000;
+          const _t = k => 'T:' + k; const COUNTRY = 'es'; const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1, se: 1, be: 1 }; const LIVE_NOTAM = { no: {}, se: {}, be: {} };
+          const esEasa = () => true; const console = { warn() {} }; const notamHits = () => []; const ZONE_LOOKUP_TIMEOUT_MS = 20000;
           const fetchZonesESEasa = async () => { throw new Error('HTTP 500'); };
           const fetchZonesES = async () => { throw new Error('nicht erwartet'); };
           ${grab('zoneDataUnavailable')}
@@ -113,7 +114,7 @@ test('Verteiler: Adapter mit Zonen → unverändert durchgereicht', async () => 
 
 test('Verteiler Norwegen: Adapterfehler + geladene NOTAM-Treffer → NOTAM zuerst, dann Platzhalter', async () => {
   const z = await dispatcher('no', { fetchZonesEd269: 'async () => { throw new Error("502"); }' },
-    'const notamNoHits = () => [{ name: "ENR412", type: "PROHIBITED", notam: true }];');
+    'const notamHits = () => [{ name: "ENR412", type: "PROHIBITED", notam: true }];');
   assert.equal(z.length, 2);
   assert.equal(z[0].notam, true);
   assert.deepEqual(z[1], PLACEHOLDER);
@@ -150,14 +151,14 @@ test('ArcGIS lenient (Overlay): 200 mit error-Body → []', async () => {
   assert.deepEqual(await arcgis(async () => jsonResp({ error: { code: 400 } }), `_arcgisQuery('u')`), []);
 });
 
-test('Verteiler Norwegen: werfendes notamNoHits → Adapter-Zonen, kein Reject', async () => {
+test('Verteiler Norwegen: werfendes notamHits → Adapter-Zonen, kein Reject', async () => {
   const z = await dispatcher('no', { fetchZonesEd269: 'async () => [{ name: "A", type: "X" }]' },
-    'const notamNoHits = () => { throw new Error("kaputte Geometrie"); };');
+    'const notamHits = () => { throw new Error("kaputte Geometrie"); };');
   assert.deepEqual(z, [{ name: 'A', type: 'X' }]);
 });
-test('Verteiler Norwegen: werfendes notamNoHits + werfender Adapter → [Platzhalter]', async () => {
+test('Verteiler Norwegen: werfendes notamHits + werfender Adapter → [Platzhalter]', async () => {
   const z = await dispatcher('no', { fetchZonesEd269: 'async () => { throw new Error("502"); }' },
-    'const notamNoHits = () => { throw new Error("kaputte Geometrie"); };');
+    'const notamHits = () => { throw new Error("kaputte Geometrie"); };');
   assert.deepEqual(z, [PLACEHOLDER]);
 });
 test('Verteiler: Adapter liefert keine Liste → [Platzhalter]', async () => {
@@ -309,20 +310,23 @@ test('_arcgisQuery strict: error-Zweig allein wirft, auch bei vorhandener featur
 });
 
 // ---- Task 2: renderZones mit Platzhalter ----
-function zonesRender(zones) {
-  const mk = () => ({ textContent: '', className: '', innerHTML: '' });
-  const els = { 'z-count': mk(), 'zones-hdr-text': mk(), 'zones-body': mk() };
-  new Function('els', 'zones', `
+function zonesRender(zones, country = 'de') {
+  const mk = () => ({ textContent: '', className: '', innerHTML: '', hidden: true });
+  const els = { 'z-count': mk(), 'zones-hdr-text': mk(), 'zones-body': mk(), 'be-notice': mk() };
+  new Function('els', 'zones', 'country', `
     const $ = id => els[id];
     const _t = k => (k === 'zonesCount' ? (n => 'T:zonesCount:' + n) : 'T:' + k);
     const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
     const ctrHeightHtml = () => '';
     const getLegalLink = () => '#';
-    const COUNTRY = 'de';
+    const COUNTRY = country;
     const COUNTRY_ZONE_SOURCES = { de: [{ label: 'DiPUL-Quelle', url: 'https://example.test/quelle' }] };
+    COUNTRY_ZONE_SOURCES[country] = COUNTRY_ZONE_SOURCES[country] || COUNTRY_ZONE_SOURCES.de;
     let lastZones = [];
+    ${grab('safeHexColor')}
+    ${grab('renderBeNotice')}
     ${grab('renderZones')}
-    renderZones(zones);`)(els, zones);
+    renderZones(zones);`)(els, zones, country);
   return els;
 }
 test('renderZones: nur Platzhalter → "!" ohne ok, Hinweiskasten mit Quelle, kein zonesNone', () => {
@@ -467,10 +471,10 @@ function dispatcherTimed(country, adapterSrc, timeoutMs, notamSrc = '() => []') 
   return new Function(`
     const _t = k => 'T:' + k;
     const COUNTRY = ${JSON.stringify(country)};
-    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1 };
+    const ED269_COUNTRIES = { lu: 1, no: 1, ee: 1, se: 1, be: 1 }; const LIVE_NOTAM = { no: {}, se: {}, be: {} };
     const esEasa = () => false;
     const console = { warn() {}, info() {}, log() {} };
-    const notamNoHits = ${notamSrc};
+    const notamHits = ${notamSrc};
     const ZONE_LOOKUP_TIMEOUT_MS = ${timeoutMs};
     const open = new Set();
     const setTimeout = (f, ms) => { const t = globalThis.setTimeout(f, ms); open.add(t); return t; };
@@ -604,4 +608,441 @@ test('F2b: abgebrochener Check (catch in runCheck) ersetzt den Pending-Status du
   const c = body.slice(body.indexOf('} catch (e) {'));
   assert.ok(c.includes('lastZoneStatus = evalZoneStatus(lastZones)'));
   assert.ok(c.includes('lastZones = [zoneDataUnavailable()]'));
+});
+
+// ── Task 4: Schweden/Belgien, verallgemeinerter Live-Knopf, Belgien-Hinweis ─────────────────
+const LIVE_HIT = '() => [{ name: "NOTAM A1/26", type: "PROHIBITED", notam: true }]';
+for (const country of ['no', 'se', 'be']) {
+  test(`Verteiler ${country}: Adapterfehler + geladene Live-Treffer → Treffer zuerst, dann Platzhalter`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => { throw new Error("502"); }' },
+      `const notamHits = ${LIVE_HIT};`);
+    assert.equal(z.length, 2);
+    assert.equal(z[0].notam, true);
+    assert.deepEqual(z[1], PLACEHOLDER);
+  });
+  test(`Verteiler ${country}: Live-Treffer werden vor die Adapter-Zonen gestellt`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => [{ name: "Z", type: "X" }]' },
+      `const notamHits = ${LIVE_HIT};`);
+    assert.deepEqual(z.map(item => item.name), ['NOTAM A1/26', 'Z']);
+  });
+}
+for (const country of ['lu', 'ee', 'de']) {
+  test(`Verteiler ${country} (kein Live-Eintrag): nichts wird vorangestellt, notamHits wird nicht gefragt`, async () => {
+    const adapter = country === 'de' ? 'fetchZonesDE' : 'fetchZonesEd269';
+    const z = await dispatcher(country, { [adapter]: 'async () => [{ name: "Z", type: "X" }]' },
+      'const notamHits = () => { throw new Error("darf nicht aufgerufen werden"); };');
+    assert.deepEqual(z, [{ name: 'Z', type: 'X' }]);
+    const withHit = await dispatcher(country, { [adapter]: 'async () => [{ name: "Z", type: "X" }]' },
+      `const notamHits = ${LIVE_HIT};`);
+    assert.deepEqual(withHit.map(item => item.name), ['Z']);
+  });
+}
+
+const LIVE_TABLE = `const LIVE_NOTAM = {
+  no: { url: '/.netlify/functions/notam-no', source: 'https://dronesoner.no/' },
+  se: { url: '/.netlify/functions/notam-se', source: 'https://dronechart.lfv.se/' },
+  be: { url: '/.netlify/functions/notam-be', source: 'https://map.droneguide.be/' } };`;
+test('LIVE_NOTAM: Tabelle im Quelltext wie vereinbart (genau no, se, be)', () => {
+  const m = html.match(/const LIVE_NOTAM = \{[\s\S]*?\n\s*\};/);
+  assert.ok(m, 'LIVE_NOTAM nicht gefunden');
+  const table = new Function(`${m[0]}; return LIVE_NOTAM;`)();
+  assert.deepEqual(Object.keys(table), ['no', 'se', 'be']);
+  assert.equal(table.no.url, '/.netlify/functions/notam-no');
+  assert.equal(table.no.source, 'https://dronesoner.no/');
+  assert.equal(table.se.url, '/.netlify/functions/notam-se');
+  assert.equal(table.se.source, 'https://dronechart.lfv.se/');
+  assert.equal(table.be.url, '/.netlify/functions/notam-be');
+  assert.equal(table.be.source, 'https://map.droneguide.be/');
+});
+
+function notamUi(country, state, extra = '') {
+  return new Function(`
+    const _t = k => (k === 'notamAsOf' ? (t => 'T:notamAsOf:' + t) : 'T:' + k);
+    const _locale = () => 'en-GB';
+    const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+    const COUNTRY = ${JSON.stringify(country)};
+    ${LIVE_TABLE}
+    const NOTAM_TTL_MS = 5 * 60 * 1000;
+    const NOTAM = ${JSON.stringify(state)};
+    const S = { layers: {} };
+    ${extra}
+    ${grab('notamFresh')}
+    ${grab('notamHits')}
+    ${grab('notamControlHtml')}
+    return { notamFresh, notamHits, notamControlHtml, NOTAM };
+  `)();
+}
+const SQUARE = { name: 'Q', type: 'PROHIBITED', notam: true,
+  geometry: [{ type: 'Polygon', coordinates: [[[10, 60], [10.1, 60], [10.1, 60.1], [10, 60.1], [10, 60]]] }] };
+const hitStub = 'const zoneHitsPoint = (z, lat, lon, r) => lat >= 60 && lat <= 60.1;';
+
+for (const [country, host] of [['no', 'dronesoner.no'], ['se', 'dronechart.lfv.se'], ['be', 'map.droneguide.be']]) {
+  test(`Knopf ${country}: Fehlermeldung verlinkt die Quelle des Landes`, () => {
+    const ui = notamUi(country, { zones: null, at: 0, fetchedAt: 0, loading: false, error: true });
+    const out = ui.notamControlHtml();
+    assert.ok(out.includes(`href="https://${host}/"`), out);
+    assert.ok(out.includes(`${host} ↗`), out);
+    assert.ok(out.includes('T:notamError'));
+    assert.ok(out.includes('data-notam-load'));
+    assert.ok(out.includes('T:notamLoad'));
+  });
+  test(`Treffer ${country}: geladene frische Zonen werden über zoneHitsPoint gefiltert`, () => {
+    const ui = notamUi(country, { zones: [SQUARE, { ...SQUARE, name: 'weit' }], at: Date.now(), fetchedAt: Date.now(), loading: false, error: false },
+      hitStub.replace('lat >= 60', 'z.name === "Q" && lat >= 60'));
+    assert.deepEqual(ui.notamHits(60.05, 10.05, 100).map(z => z.name), ['Q']);
+  });
+}
+test('Knopf: laufender Abruf zeigt notamLoading und ist deaktiviert; frische Daten zeigen notamAsOf', () => {
+  const loading = notamUi('se', { zones: null, at: 0, fetchedAt: 0, loading: true, error: false }).notamControlHtml();
+  assert.ok(loading.includes('T:notamLoading') && loading.includes(' disabled'));
+  const fresh = notamUi('be', { zones: [], at: Date.now(), fetchedAt: Date.now(), loading: false, error: false }).notamControlHtml();
+  assert.ok(fresh.includes('T:notamAsOf:'));
+});
+test('Treffer: Land ohne Eintrag (lu) und nicht geladene Daten liefern nichts', () => {
+  const state = { zones: [SQUARE], at: Date.now(), fetchedAt: Date.now(), loading: false, error: false };
+  assert.deepEqual(notamUi('lu', state, hitStub).notamHits(60.05, 10.05, 100), []);
+  assert.deepEqual(notamUi('se', { ...state, zones: null }, hitStub).notamHits(60.05, 10.05, 100), []);
+});
+test('Frist: Daten älter als fünf Minuten gelten nicht mehr und leeren das Overlay', () => {
+  const state = { zones: [SQUARE], at: Date.now() - 5 * 60 * 1000 - 1000, fetchedAt: 0, loading: false, error: false };
+  const ui = notamUi('se', state, 'S.layers.notam = { clearLayers() { globalThis.__cleared = (globalThis.__cleared || 0) + 1; } };');
+  globalThis.__cleared = 0;
+  assert.equal(ui.notamFresh(), false);
+  assert.equal(ui.NOTAM.zones, null);
+  assert.equal(globalThis.__cleared, 1);
+  delete globalThis.__cleared;
+});
+test('Frist: Konstante bleibt fünf Minuten', () => {
+  assert.match(html, /const NOTAM_TTL_MS = 5 \* 60 \* 1000;/);
+});
+
+// loadNotam: Abruf je Land über die URL der Tabelle
+test('loadNotam: ruft die Function-URL des Landes ab und speichert die Zonen', async () => {
+  for (const [country, url] of [['no', '/.netlify/functions/notam-no'], ['se', '/.netlify/functions/notam-se'], ['be', '/.netlify/functions/notam-be']]) {
+    const urls = [];
+    const api = new Function('fetch', 'urls', `
+      const COUNTRY = ${JSON.stringify(country)}; ${LIVE_TABLE}
+      const NOTAM = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
+      const S = { layers: {} }; let lastWeather = null, lastZones = [];
+      const console = { warn() {} };
+      const renderMapStatus = () => {}; const refreshZonesAtCurrentPoint = () => {}; const drawNotamOverlay = () => {};
+      ${grab('loadNotam')}
+      return { loadNotam, NOTAM };`)(async u => { urls.push(u); return { ok: true, status: 200, json: async () => ({ fetchedAt: '2026-10-09T10:00:00Z', zones: [{ name: 'A', notam: true }] }) }; }, urls);
+    await api.loadNotam();
+    assert.deepEqual(urls, [url]);
+    assert.equal(api.NOTAM.zones.length, 1);
+    assert.equal(api.NOTAM.error, false);
+  }
+});
+test('loadNotam: Land ohne Eintrag ruft nichts ab', async () => {
+  let called = 0;
+  const api = new Function('fetch', `
+    const COUNTRY = 'lu'; ${LIVE_TABLE}
+    const NOTAM = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
+    const renderMapStatus = () => {}; const refreshZonesAtCurrentPoint = () => {}; const drawNotamOverlay = () => {};
+    let lastWeather = null, lastZones = []; const console = { warn() {} };
+    ${grab('loadNotam')}
+    return { loadNotam };`)(async () => { called++; });
+  await api.loadNotam();
+  assert.equal(called, 0);
+});
+
+// Ampel: Live-Zone, die noch nicht gilt, wird gelb, nie rot
+test('evalZoneStatus: NOTAM-Zone PROHIBITED + inactive → warn mit „derzeit inaktiv", nicht nogo', () => {
+  const r = run(`return evalZoneStatus([{ name: 'NOTAM A1/26', type: 'PROHIBITED', notam: true, inactive: true }]);`);
+  assert.equal(r.lvl, 'warn');
+  assert.deepEqual(r.reasons, ['NOTAM A1/26 · T:zoneInactive']);
+});
+test('evalZoneStatus: dieselbe NOTAM-Zone ohne inactive → nogo', () => {
+  assert.equal(run(`return evalZoneStatus([{ name: 'NOTAM A1/26', type: 'PROHIBITED', notam: true }]).lvl;`), 'nogo');
+});
+
+// Overlay: Farbe der Zone, Norwegen (rot) bleibt rot
+function overlayColors(zones) {
+  const calls = [];
+  new Function('L', 'S', 'calls', `
+    const escapeHtml = s => String(s ?? '');
+    const _t = k => 'T:' + k;
+    const NOTAM = { zones: ${JSON.stringify(zones)} };
+    ${grab('safeHexColor')}
+    ${grab('drawNotamOverlay')}
+    drawNotamOverlay();`)({
+    layerGroup: () => ({ addTo() { return this; }, clearLayers() {} }),
+    polygon: (rings, style) => ({ bindTooltip() { return this; }, addTo() { calls.push(style); return this; } }),
+  }, { map: {}, layers: {} }, calls);
+  return calls;
+}
+test('Overlay: gestrichelt in der Farbe der Zone mit schwacher Füllung; Norwegen bleibt rot', () => {
+  const sq = [[[10, 60], [10.1, 60], [10.1, 60.1], [10, 60]]];
+  const calls = overlayColors([
+    { name: 'a', color: '#ef4444', geometry: [{ type: 'Polygon', coordinates: sq }] },
+    { name: 'b', color: '#64748b', geometry: [{ type: 'Polygon', coordinates: sq }] },
+    { name: 'c', geometry: [{ type: 'Polygon', coordinates: sq }] },
+    { name: 'd', color: 'url(javascript:x)', geometry: [{ type: 'Polygon', coordinates: sq }] },
+    { name: 'e', color: '#f59e0b', geometry: [{ type: 'Circle', center: [10, 60], radius: 5 }] }]);
+  assert.equal(calls.length, 4);
+  assert.deepEqual(calls[0], { color: '#ef4444', weight: 2, dashArray: '6 4', fillColor: '#ef4444', fillOpacity: 0.12 });
+  assert.equal(calls[1].color, '#64748b');
+  assert.equal(calls[1].fillColor, '#64748b');
+  assert.equal(calls[2].color, '#ef4444');     // ohne Farbe: wie bisher rot
+  assert.equal(calls[3].color, '#ef4444');     // ungültiger Farbwert verworfen
+});
+
+// Lokaler Fallback: Inaktivität (beendet oder noch nicht begonnen)
+const DAY = 86400000;
+const iso = ms => new Date(ms).toISOString();
+const day = ms => iso(ms).slice(0, 10);
+const stampUtc = ms => `${iso(ms).slice(0, 10)} ${iso(ms).slice(11, 16)} UTC`;
+function localZone(feature, light = false, lang = 'en') {
+  return new Function('feature', 'light', `
+    const LANG = ${JSON.stringify(lang)};
+    const SOON_MS = 24 * 60 * 60 * 1000;
+    ${grab('atLocalColor')}
+    ${grab('atLocalGeometry')}
+    ${grab('atLocalFormatAltitude')}
+    ${grab('atLocalMessage')}
+    ${grab('normalizeLocalAtZone')}
+    ${grab('ed269Inactivity')}
+    ${grab('normalizeLocalEd269Zone')}
+    return normalizeLocalEd269Zone(feature, light);`)(feature, light);
+}
+const baseFeature = (applicability, extra = {}) => ({
+  name: 'Zone', restriction: 'PROHIBITED', message: 'Text',
+  geometry: [{ horizontalProjection: { type: 'Polygon', coordinates: [[[1, 1], [2, 1], [2, 2], [1, 1]]] }, lowerLimit: 0, lowerVerticalReference: 'AGL', uomDimensions: 'M' }],
+  applicability, ...extra });
+test('Fallback inaktiv: beendetes Fenster → inaktiv, „Activation window ended <spätestes Ende>"', () => {
+  const end = Date.now() - 3 * DAY;
+  const z = localZone(baseFeature([{ startDateTime: iso(end - DAY), endDateTime: iso(end) }, { startDateTime: iso(end - 9 * DAY), endDateTime: iso(end - 5 * DAY) }]));
+  assert.equal(z.inactive, true);
+  assert.equal(z.type, 'TEMPORARY_INACTIVE');
+  assert.equal(z.color, '#64748b');
+  assert.equal(z.desc, `Activation window ended ${day(end)}. May be reactivated — check the official source. Text`);
+});
+test('Fallback inaktiv: künftiges Fenster → inaktiv, „Not yet active — starts <frühester Start>"', () => {
+  const s1 = Date.now() + 10 * DAY, s2 = Date.now() + 4 * DAY;
+  const z = localZone(baseFeature([{ startDateTime: iso(s1), endDateTime: iso(s1 + DAY) }, { startDateTime: iso(s2), endDateTime: iso(s2 + DAY) }]));
+  assert.equal(z.inactive, true);
+  assert.equal(z.type, 'TEMPORARY_INACTIVE');
+  assert.equal(z.desc, `Not yet active — starts ${stampUtc(s2)}. May change — check the official source. Text`);
+});
+test('Fallback inaktiv: beendet + künftig gemischt → inaktiv mit Startdatum', () => {
+  const end = Date.now() - 2 * DAY, st = Date.now() + 6 * DAY;
+  const z = localZone(baseFeature([{ startDateTime: iso(end - DAY), endDateTime: iso(end) }, { startDateTime: iso(st), endDateTime: iso(st + DAY) }]));
+  assert.equal(z.inactive, true);
+  assert.ok(z.desc.startsWith(`Not yet active — starts ${stampUtc(st)}.`));
+});
+test('Fallback inaktiv: laufendes Fenster, Fenster ohne Grenzen oder ohne Fenster → aktiv', () => {
+  const running = [{ startDateTime: iso(Date.now() - DAY), endDateTime: iso(Date.now() + DAY) }];
+  assert.ok(!localZone(baseFeature(running)).inactive);
+  assert.equal(localZone(baseFeature(running)).type, 'PROHIBITED');
+  assert.ok(!localZone(baseFeature([{}])).inactive);
+  assert.ok(!localZone(baseFeature([{ startDateTime: iso(Date.now() - DAY) }])).inactive);
+  assert.ok(!localZone(baseFeature(undefined)).inactive);
+  assert.ok(!localZone(baseFeature([])).inactive);
+  // ein beendetes + ein laufendes Fenster → aktiv
+  const end = Date.now() - 2 * DAY;
+  assert.ok(!localZone(baseFeature([{ endDateTime: iso(end) }, ...running])).inactive);
+});
+test('Fallback inaktiv: leichte Variante setzt inaktiv/Farbe ohne Beschreibung', () => {
+  const end = Date.now() - DAY;
+  const z = localZone(baseFeature([{ endDateTime: iso(end) }]), true);
+  assert.equal(z.inactive, true);
+  assert.equal(z.color, '#64748b');
+  assert.equal(z.desc, undefined);
+});
+test('Fallback Schweden: Kreisgeometrie ohne Höhen wird gezeichnet, Höhen „—"', () => {
+  const z = localZone({ name: 'CIRC', restriction: 'REQ_AUTHORISATION', message: '',
+    geometry: [{ horizontalProjection: { type: 'Circle', center: [18, 59], radius: 500 } }] });
+  assert.deepEqual(z.geometry, [{ type: 'Circle', center: [18, 59], radius: 500 }]);
+  assert.equal(z.lower, '—');
+  assert.equal(z.upper, '—');
+});
+test('Fallback Belgien: ohne Beschreibung → Zonenart-Code mit Leerzeichen statt Unterstrichen', () => {
+  const z = localZone(baseFeature(undefined, { message: '', typeCode: 'CIV_HELISTRIP' }));
+  assert.equal(z.desc, 'CIV HELISTRIP');
+  const withText = localZone(baseFeature(undefined, { message: 'Echter Text', typeCode: 'CIV_HELISTRIP' }));
+  assert.equal(withText.desc, 'Echter Text');
+  const end = Date.now() - DAY;
+  const inactive = localZone(baseFeature([{ endDateTime: iso(end) }], { message: '', typeCode: 'CIV_HELISTRIP' }));
+  assert.equal(inactive.desc, `Activation window ended ${day(end)}. May be reactivated — check the official source. CIV HELISTRIP`);
+});
+
+// Länder-Verdrahtung und Texte
+test('Länder-Verdrahtung: se und be in allen Tabellen', () => {
+  for (const name of ['COUNTRY_DEFAULT_LANG', 'COUNTRY_LANDMARK', 'COUNTRY_BBOX', 'COUNTRY_CC', 'COUNTRY_NAMES', 'COUNTRY_ZONE_SOURCES']) {
+    const m = html.match(new RegExp(`const ${name} = \\{[\\s\\S]*?\\n\\s*\\};|const ${name} = \\{[^\\n]*\\};`));
+    assert.ok(m, `${name} nicht gefunden`);
+    assert.match(m[0], /\bse:/, `${name}: se fehlt`);
+    assert.match(m[0], /\bbe:/, `${name}: be fehlt`);
+  }
+  assert.match(html, /const ED269_COUNTRIES = \{[^}]*\bse: 1[^}]*\bbe: 1[^}]*\};/);
+  assert.match(html, /const OVERLAY_ALL = \{[^}]*\bse: 1[^}]*\bbe: 1[^}]*\};/);
+  assert.match(html, /\{ c: 'se', flag: '🇸🇪' \}/);
+  assert.match(html, /\{ c: 'be', flag: '🇧🇪' \}/);
+  assert.match(html, /host\.includes\('skycheck-se'\) \|\| host\.endsWith\('skycheck\.se'\)\) return 'se'/);
+  assert.match(html, /host\.includes\('skycheck-be'\) \|\| host\.endsWith\('skycheck\.be'\)\) return 'be'/);
+  assert.match(html, /LFV \/ Transportstyrelsen \(CC BY 4\.0\)', url: 'https:\/\/dronechart\.lfv\.se\/'/);
+});
+test('beNotice: genau einmal je Sprachblock, alle vier Aussagen, nur für Belgien gerendert', () => {
+  assert.equal((html.match(/^\s+beNotice: '/gm) || []).length, 5);
+  const notices = [...html.matchAll(/^\s+beNotice: '((?:[^'\\]|\\.)*)'/gm)].map(m => m[1]);
+  assert.equal(notices.length, 5);
+  for (const text of notices) {
+    assert.ok(/Droneguide/.test(text) && /skeyes/.test(text) && /BCAA/.test(text) && /AIP\/NOTAM/.test(text) && /CIS/.test(text), text);
+    assert.ok(/UAS/.test(text), text);
+  }
+  const body = grab('renderMapStatus');
+  assert.match(body, /COUNTRY === 'be'[\s\S]*?beNotice/);
+});
+test('renderMapStatus: Hinweis gilt für alle Live-Länder und nutzt die Tabelle statt COUNTRY === \'no\'', () => {
+  const body = grab('renderMapStatus');
+  assert.ok(body.includes('LIVE_NOTAM[COUNTRY]'));
+  assert.ok(!body.includes("COUNTRY === 'no'"));
+});
+
+// ---- Task 5: Belgien-Hinweis dauerhaft sichtbar, Live-Knopf-Wächter ----
+const BE_NOTICE = {
+  de: 'Quelle: Droneguide (skeyes, im Auftrag der BCAA). SkyCheck ist keine offizielle Anwendung der BCAA oder belgischer Behörden. Maßgeblich sind allein die amtlichen Kanäle (Droneguide, AIP/NOTAM, CIS). Die Verantwortung für die Einhaltung der Vorschriften bleibt beim Fernpiloten und beim UAS-Betreiber.',
+  en: 'Source: Droneguide (skeyes, on behalf of the BCAA). SkyCheck is not an official application of the BCAA or the Belgian authorities. Only the official channels (Droneguide, AIP/NOTAM, CIS) are authoritative. Responsibility for regulatory compliance remains with the remote pilot and the UAS operator.',
+  fr: "Source : Droneguide (skeyes, pour le compte de la BCAA). SkyCheck n'est pas une application officielle de la BCAA ni des autorités belges. Seuls les canaux officiels (Droneguide, AIP/NOTAM, CIS) font foi. Le respect de la réglementation reste de la responsabilité du télépilote et de l'exploitant d'UAS.",
+  es: 'Fuente: Droneguide (skeyes, por cuenta de la BCAA). SkyCheck no es una aplicación oficial de la BCAA ni de las autoridades belgas. Solo los canales oficiales (Droneguide, AIP/NOTAM, CIS) son vinculantes. La responsabilidad del cumplimiento normativo sigue siendo del piloto a distancia y del operador de UAS.',
+  pl: 'Źródło: Droneguide (skeyes, w imieniu BCAA). SkyCheck nie jest oficjalną aplikacją BCAA ani władz belgijskich. Wiążące są wyłącznie oficjalne kanały (Droneguide, AIP/NOTAM, CIS). Odpowiedzialność za zgodność z przepisami spoczywa na pilocie bezzałogowego statku powietrznego i operatorze UAS.',
+};
+
+test('beNotice: die fünf Texte stimmen wörtlich mit der Vorgabe überein', () => {
+  const found = [...html.matchAll(/^\s*beNotice: ('(?:[^'\\]|\\.)*'),?$/gm)].map(m => (0, eval)('(' + m[1] + ')'));
+  assert.deepEqual(found, [BE_NOTICE.de, BE_NOTICE.en, BE_NOTICE.fr, BE_NOTICE.es, BE_NOTICE.pl]);
+});
+
+test('beNoticeShort: fünf Kurzhinweise vorhanden', () => {
+  assert.equal([...html.matchAll(/^\s*beNoticeShort: '/gm)].length, 5);
+});
+
+test('Belgien-Hinweis steht außerhalb des (einklappbaren) zones-body', () => {
+  assert.ok(/id="zones-body"><\/div>\s*<\/div>\s*<div id="be-notice"[^>]*hidden/.test(html));
+});
+
+test('renderZones be: Hinweisblock bei leerer Liste, mit Zonen und mit Platzhalter sichtbar', () => {
+  for (const zones of [[], [{ name: 'EBR1', type: 'PROHIBITED', color: '#ef4444', lower: '0', upper: '1', legal: 'x' }], [PLACEHOLDER]]) {
+    const els = zonesRender(zones, 'be');
+    assert.equal(els['be-notice'].hidden, false);
+    assert.equal(els['be-notice'].textContent, 'T:beNotice');
+  }
+});
+
+test('renderZones se: Hinweisblock bleibt verborgen und leer', () => {
+  const els = zonesRender([], 'se');
+  assert.equal(els['be-notice'].hidden, true);
+  assert.equal(els['be-notice'].textContent, '');
+});
+
+test('notamControlHtml: ohne Live-Quelle (lu, de) leer; mit Quelle (be) Knopf', () => {
+  const run2 = country => new Function(`
+    const _t = k => 'T:' + k; const escapeHtml = s => String(s);
+    const COUNTRY = ${JSON.stringify(country)};
+    const LIVE_NOTAM = { no: { source: 'https://a.test/' }, se: { source: 'https://b.test/' }, be: { source: 'https://c.test/' } };
+    const NOTAM = { zones: null, at: 0, fetchedAt: 0, loading: false, error: false };
+    const S = { layers: {} }; const NOTAM_TTL_MS = 1; const _locale = () => 'de';
+    ${grab('notamFresh')}
+    ${grab('notamControlHtml')}
+    return notamControlHtml();`)();
+  assert.equal(run2('lu'), '');
+  assert.equal(run2('de'), '');
+  assert.ok(run2('be').includes('data-notam-load'));
+});
+
+test('Hex-Farbwächter: ein gemeinsamer strikter Helfer, kein loses Muster mehr', () => {
+  assert.ok(!html.includes('[0-9a-f]{3,8}'));
+  const m = html.match(/function safeHexColor\(/);
+  assert.ok(m);
+  const safe = new Function(`${grab('safeHexColor')}; return safeHexColor;`)();
+  assert.equal(safe('#abc', '#000'), '#abc');
+  assert.equal(safe('#aabbcc', '#000'), '#aabbcc');
+  assert.equal(safe('#aabbccdd', '#000'), '#aabbccdd');
+  assert.equal(safe('#aabbc', '#000'), '#000');
+  assert.equal(safe('#aabbccd', '#000'), '#000');
+  assert.equal(safe('red;x', '#000'), '#000');
+  assert.equal(safe(undefined, '#000'), '#000');
+});
+
+// ── Fix-Welle: 24-Stunden-Regel im lokalen Fallback ───────────────────────────
+const HOUR = 3600000;
+test('Fallback 24-h-Regel: Start in 23 h → aktiv; Start in 25 h → inaktiv mit Uhrzeit', () => {
+  const a = Date.now() + 23 * HOUR, b = Date.now() + 25 * HOUR;
+  assert.ok(!localZone(baseFeature([{ startDateTime: iso(a), endDateTime: iso(a + HOUR) }])).inactive);
+  const z = localZone(baseFeature([{ startDateTime: iso(b), endDateTime: iso(b + HOUR) }]));
+  assert.equal(z.inactive, true);
+  assert.equal(z.desc, `Not yet active — starts ${stampUtc(b)}. May change — check the official source. Text`);
+});
+test('Fallback 24-h-Regel: beendetes Fenster + Start in 2 h → aktiv', () => {
+  const end = Date.now() - 2 * DAY, st = Date.now() + 2 * HOUR;
+  assert.ok(!localZone(baseFeature([{ startDateTime: iso(end - DAY), endDateTime: iso(end) }, { startDateTime: iso(st), endDateTime: iso(st + HOUR) }])).inactive);
+});
+test('SOON_MS steht in allen drei Dateien als 24 * 60 * 60 * 1000', () => {
+  const decl = /const SOON_MS = 24 \* 60 \* 60 \* 1000;/;
+  assert.match(html, decl);
+  for (const f of ['zones-ed269.js', 'notam-se.js']) {
+    assert.match(readFileSync(fileURLToPath(new URL(`../netlify/functions/${f}`, import.meta.url)), 'utf8'), decl);
+  }
+});
+
+// ── Fix-Welle: Reihenfolge der Live-Treffer ───────────────────────────────────
+const LIVE_MIX = '() => [{ name: "L-inaktiv", type: "TEMPORARY_INACTIVE", notam: true, inactive: true }, { name: "L-aktiv", type: "PROHIBITED", notam: true }]';
+for (const country of ['no', 'se', 'be']) {
+  test(`Reihenfolge ${country}: aktive Live-Treffer, Snapshot-Zonen, inaktive Live-Treffer`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => [{ name: "Z", type: "X" }]' }, `const notamHits = ${LIVE_MIX};`);
+    assert.deepEqual(z.map(item => item.name), ['L-aktiv', 'Z', 'L-inaktiv']);
+  });
+  test(`Reihenfolge ${country}: Ausfall-Platzhalter steht zwischen aktiven und inaktiven Live-Treffern`, async () => {
+    const z = await dispatcher(country, { fetchZonesEd269: 'async () => { throw new Error("502"); }' }, `const notamHits = ${LIVE_MIX};`);
+    assert.deepEqual(z.map(item => item.name), ['L-aktiv', '', 'L-inaktiv']);
+    assert.equal(z[1].unavailable, true);
+  });
+}
+
+// ── Fix-Welle: Quellenangabe auf der Karte ────────────────────────────────────
+test('ZONE_ATTRIBUTION: genau die fünf Snapshot-Länder; se nennt Lizenz-URL und „adapted"', () => {
+  const m = html.match(/const ZONE_ATTRIBUTION = \{[^\n]*\};/);
+  assert.ok(m, 'ZONE_ATTRIBUTION nicht gefunden');
+  const table = new Function(`${m[0]}; return ZONE_ATTRIBUTION;`)();
+  assert.deepEqual(Object.keys(table).sort(), ['be', 'ee', 'lu', 'no', 'se']);
+  assert.ok(table.se.includes('https://creativecommons.org/licenses/by/4.0/'));
+  assert.ok(table.se.includes('adapted'));
+});
+test('Quellenangabe wird für beide Karten (Hauptkarte und Alarmkarte) gesetzt', () => {
+  const calls = html.match(/addAttribution\(ZONE_ATTRIBUTION\[COUNTRY\]\)/g) || [];
+  assert.equal(calls.length, 2);
+  const av = grab('avInitMap');
+  assert.ok(av.includes('ZONE_ATTRIBUTION[COUNTRY]'));
+});
+test('COUNTRY_ZONE_SOURCES.se trägt zusätzlich den CC-BY-4.0-Chip', () => {
+  const m = html.match(/const COUNTRY_ZONE_SOURCES = \{[\s\S]*?\n\s*\};/);
+  const table = new Function(`${m[0]}; return COUNTRY_ZONE_SOURCES;`)();
+  assert.ok(table.se.some(c => c.label === 'CC BY 4.0' && c.url === 'https://creativecommons.org/licenses/by/4.0/'));
+  assert.ok(table.se.length >= 2);
+});
+
+// ── Fix-Welle: Belgien-Hinweis ────────────────────────────────────────────────
+test('beNoticeShort: die fünf Texte exakt', () => {
+  const want = {
+    de: 'Keine offizielle Anwendung der BCAA — Hinweise unter der Zonenliste.',
+    en: 'Not an official BCAA application — see the notice below the zone list.',
+    fr: 'Application non officielle de la BCAA — voir la mention sous la liste des zones.',
+    es: 'No es una aplicación oficial de la BCAA — véase el aviso bajo la lista de zonas.',
+    pl: 'Nieoficjalna aplikacja BCAA — zob. informację pod listą stref.',
+  };
+  const found = [...html.matchAll(/beNoticeShort: '((?:[^'\\]|\\.)*)'/g)].map(x => x[1]);
+  assert.deepEqual(found, [want.de, want.en, want.fr, want.es, want.pl]);
+});
+test('Belgien-Hinweis im Kartenpanel steht vor dem NOTAM-Hinweis', () => {
+  const body = grab('renderMapStatus');
+  assert.ok(body.indexOf('${beNoticeHtml}') < body.indexOf('${notamHintHtml}'), body.match(/ms-zone-list[^\n]*/)?.[0]);
+});
+test('Belgien-Hinweis wird beim Seitenstart gefüllt (renderBeNotice neben renderZoneSources)', () => {
+  assert.match(html, /function renderBeNotice\(/);
+  assert.ok(grab('renderZones').includes('renderBeNotice()'));
+  assert.match(html, /renderZoneSources\(\);\s*renderBeNotice\(\);/);
+});
+test('drawZoneOverlay nutzt safeHexColor für Zonenfarben', () => {
+  assert.ok(grab('drawZoneOverlay').includes('safeHexColor('));
 });

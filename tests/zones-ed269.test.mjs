@@ -4,8 +4,8 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { buildZones } from '../scripts/build-eu-zones.mjs';
-import { LU_RAW, NO_RAW, EE_RAW } from './fixtures/zones.mjs';
+import { buildZones, buildSeZones } from '../scripts/build-eu-zones.mjs';
+import { LU_RAW, NO_RAW, EE_RAW, SE_RAW, BE_RAW } from './fixtures/zones.mjs';
 
 const require = createRequire(import.meta.url);
 let fn;
@@ -26,6 +26,8 @@ before(() => {
   writeFileSync(join(dir, 'uas-zones-lu.json'), JSON.stringify([...buildZones('lu', LU_RAW, { min: 1 }), circle, holed]));
   writeFileSync(join(dir, 'uas-zones-no.json'), JSON.stringify(buildZones('no', NO_RAW, { min: 1 })));
   writeFileSync(join(dir, 'uas-zones-ee.json'), JSON.stringify(buildZones('ee', EE_RAW, { min: 1 })));
+  writeFileSync(join(dir, 'uas-zones-se.json'), JSON.stringify(buildSeZones(SE_RAW, { min: 1 })));
+  writeFileSync(join(dir, 'uas-zones-be.json'), JSON.stringify(buildZones('be', BE_RAW, { min: 1 })));
   process.env.SKYCHECK_DATA_DIR = dir;
   fn = require('../netlify/functions/zones-ed269.js');
   fn._test.resetCache();
@@ -188,14 +190,14 @@ test('innerhalb des Aktivierungsfensters → nicht inactive, Originaltyp', async
   } finally { fn._test.setNow(null); }
 });
 
-test('ein vergangenes und ein künftiges Fenster → nicht inactive', async () => {
+test('ein vergangenes und ein künftiges Fenster → inactive (Regel seit v118: noch nicht begonnen zählt wie beendet)', async () => {
   try {
     const future = { startDateTime: '2026-11-01T00:00:00Z', endDateTime: '2026-11-02T00:00:00Z', permanent: 'NO' };
     useEeZones([mkZone('T1', 'PROHIBITED', [WINDOW, future])]);
     at('2026-10-09T12:00:00Z');
     const z = (await call(Q)).body.zones[0];
-    assert.ok(!('inactive' in z));
-    assert.equal(z.type, 'PROHIBITED');
+    assert.equal(z.inactive, true);
+    assert.equal(z.type, 'TEMPORARY_INACTIVE');
   } finally { fn._test.setNow(null); }
 });
 
@@ -267,5 +269,195 @@ test('all=1 liefert die inaktive Zone mit inactive:true und grauer Farbe', async
     assert.equal(r.body.zones[0].inactive, true);
     assert.equal(r.body.zones[0].color, '#64748b');
     assert.equal(r.body.zones[0].type, 'TEMPORARY_INACTIVE');
+  } finally { fn._test.setNow(null); }
+});
+
+// ── Schweden und Belgien ───────────────────────────────────────────────────
+test('SE: Punkt an der Ecke einer RSTA-Zone trifft; Form, Höhen in ft, Behörde', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    const r = await call({ country: 'se', lat: '60.3867', lon: '18.175', radius: '100' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.country, 'SE');
+    const z = r.body.zones.find(x => x.name === 'ES R107 FORSMARK');
+    assert.ok(z);
+    assert.equal(z.type, 'REQ_AUTHORISATION');
+    assert.equal(z.color, '#f59e0b');
+    assert.equal(z.lower, 'GND');
+    assert.equal(z.upper, '2000 ft AMSL');
+    assert.match(z.legal, /LFV/);
+    assert.match(z.legalUrl, /^https:\/\/dronechart\.lfv\.se/);
+  } finally { fn._test.setNow(null); }
+});
+
+test('SE: Kreis-Zone aus ED-318 (Point + extent) trifft im Radius, nicht außerhalb', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    const hit = await call({ country: 'se', lat: '63.8545', lon: '20.0511', radius: '100' }); // ~250 m vom Zentrum
+    const z = hit.body.zones.find(x => x.name === 'Stornorrforsen hydro power plant');
+    assert.ok(z);
+    assert.deepEqual(z.geometry[0], { type: 'Circle', center: [20.05111, 63.85222], radius: 500 });
+    assert.ok(!('inactive' in z));
+    const miss = await call({ country: 'se', lat: '63.8650', lon: '20.0511', radius: '100' }); // ~1,4 km
+    assert.ok(!miss.body.zones.some(x => x.name === 'Stornorrforsen hydro power plant'));
+  } finally { fn._test.setNow(null); }
+});
+
+test('SE: all=1 liefert alle Zonen schlank', async () => {
+  const r = await call({ country: 'se', all: '1' });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.country, 'SE');
+  assert.equal(r.body.zones.length, 16);
+  assert.ok(r.body.zones.every(z => ['color', 'geometry', 'name', 'type'].every(k => k in z)));
+});
+
+test('BE: Punkt trifft; Beschreibung aus den Daten, Höhen in m AGL', async () => {
+  const r = await call({ country: 'be', lat: '51.2537', lon: '3.3704', radius: '100' });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.country, 'BE');
+  const z = r.body.zones.find(x => x.name === 'Plain text name');
+  assert.ok(z);
+  assert.equal(z.desc, 'Plain description');
+  assert.equal(z.type, 'CONDITIONAL');
+  assert.equal(z.lower, 'GND');
+  assert.equal(z.upper, '80 m AGL');
+});
+
+test('BE: ohne Beschreibung → lesbarer Zonenart-Code als Beschreibung (Unterstrich → Leerzeichen)', async () => {
+  const r = await call({ country: 'be', lat: '51.2537', lon: '3.3704', radius: '100' });
+  const z = r.body.zones.find(x => x.name === 'EBMH - MALDEGEM - Huysman (UGZ)');
+  assert.ok(z);
+  assert.equal(z.desc, 'CIV HELISTRIP');
+});
+
+test('Beschreibung bleibt unverändert, wenn vorhanden oder kein typeCode da ist', async () => {
+  try {
+    useEeZones([mkZone('A', 'PROHIBITED', undefined, { message: 'Text.', typeCode: 'CIV_PORT' }),
+      mkZone('B', 'PROHIBITED')]);
+    const zs = (await call(Q)).body.zones;
+    assert.equal(zs.find(z => z.name === 'A').desc, 'Text.');
+    assert.equal(zs.find(z => z.name === 'B').desc, '');
+  } finally { fn._test.setNow(null); }
+});
+
+// ── Fenster, die noch nicht begonnen haben ─────────────────────────────────
+const FUTURE = { startDateTime: '2026-11-01T00:00:00Z', endDateTime: '2026-11-02T00:00:00Z', permanent: 'NO' };
+
+test('nur ein künftiges Fenster → inactive mit „Not yet active"-Hinweis und Startdatum', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [FUTURE], { message: 'Drone ban.' })]);
+    at('2026-10-09T12:00:00Z');
+    const z = (await call(Q)).body.zones[0];
+    assert.equal(z.inactive, true);
+    assert.equal(z.type, 'TEMPORARY_INACTIVE');
+    assert.equal(z.color, '#64748b');
+    assert.equal(z.desc, 'Not yet active — starts 2026-11-01 00:00 UTC. May change — check the official source. Drone ban.');
+  } finally { fn._test.setNow(null); }
+});
+
+test('künftiges Fenster ohne Beschreibung → Hinweis ohne Anhang', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [FUTURE])]);
+    at('2026-10-09T12:00:00Z');
+    assert.equal((await call(Q)).body.zones[0].desc, 'Not yet active — starts 2026-11-01 00:00 UTC. May change — check the official source.');
+  } finally { fn._test.setNow(null); }
+});
+
+test('ein beendetes und ein künftiges Fenster → inactive mit dem Zukunftshinweis', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [WINDOW, FUTURE])]);
+    at('2026-10-09T12:00:00Z');
+    const z = (await call(Q)).body.zones[0];
+    assert.equal(z.inactive, true);
+    assert.ok(z.desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.'));
+  } finally { fn._test.setNow(null); }
+});
+
+test('mehrere künftige Fenster → frühester Start gewinnt', async () => {
+  try {
+    const later = { startDateTime: '2026-12-01T00:00:00Z', permanent: 'NO' };
+    useEeZones([mkZone('F1', 'PROHIBITED', [later, FUTURE])]);
+    at('2026-10-09T12:00:00Z');
+    assert.ok((await call(Q)).body.zones[0].desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.'));
+  } finally { fn._test.setNow(null); }
+});
+
+// ── 24-Stunden-Regel (SOON_MS): bald beginnende Fenster gelten als laufend ──
+test('Start in 23 h → aktiv; Start in 25 h → inaktiv mit Uhrzeit im Hinweis', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    useEeZones([mkZone('S1', 'PROHIBITED', [{ startDateTime: '2026-10-10T11:00:00Z', endDateTime: '2026-10-11T00:00:00Z' }]),
+      mkZone('S2', 'PROHIBITED', [{ startDateTime: '2026-10-10T13:00:00Z', endDateTime: '2026-10-11T00:00:00Z' }])]);
+    const zs = (await call(Q)).body.zones;
+    const a = zs.find(z => z.name === 'S1'), b = zs.find(z => z.name === 'S2');
+    assert.ok(!('inactive' in a));
+    assert.equal(a.type, 'PROHIBITED');
+    assert.equal(b.inactive, true);
+    assert.ok(b.desc.startsWith('Not yet active — starts 2026-10-10 13:00 UTC. May change'));
+  } finally { fn._test.setNow(null); }
+});
+
+test('beendetes Fenster + Start in 2 h → aktiv', async () => {
+  try {
+    at('2026-10-09T12:00:00Z');
+    useEeZones([mkZone('S1', 'PROHIBITED', [WINDOW, { startDateTime: '2026-10-09T14:00:00Z', endDateTime: '2026-10-09T18:00:00Z' }])]);
+    const z = (await call(Q)).body.zones[0];
+    assert.ok(!('inactive' in z));
+    assert.equal(z.type, 'PROHIBITED');
+  } finally { fn._test.setNow(null); }
+});
+
+test('ein laufendes und ein künftiges Fenster → aktiv', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [WINDOW, FUTURE])]);
+    at('2026-10-07T10:00:00Z'); // innerhalb von WINDOW
+    const z = (await call(Q)).body.zones[0];
+    assert.ok(!('inactive' in z));
+    assert.equal(z.type, 'PROHIBITED');
+  } finally { fn._test.setNow(null); }
+});
+
+test('Start in der Zukunft, Ende unlesbar oder fehlend → inactive (der Start entscheidet)', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [{ startDateTime: '2026-11-01T00:00:00Z', endDateTime: 'kaputt' }]),
+      mkZone('F2', 'PROHIBITED', [{ startDateTime: '2026-11-01T00:00:00Z', permanent: 'YES' }])]);
+    at('2026-10-09T12:00:00Z');
+    const zs = (await call(Q)).body.zones;
+    assert.equal(zs.length, 2);
+    assert.ok(zs.every(z => z.inactive === true && z.desc.startsWith('Not yet active — starts 2026-11-01 00:00 UTC.')));
+  } finally { fn._test.setNow(null); }
+});
+
+test('Fenster mit unlesbarem Start und ohne Ende → aktiv; begonnenes Fenster ohne Ende → aktiv', async () => {
+  try {
+    useEeZones([mkZone('G1', 'PROHIBITED', [{ startDateTime: 'kaputt' }]),
+      mkZone('G2', 'PROHIBITED', [{ startDateTime: '2026-10-01T00:00:00Z', permanent: 'YES' }])]);
+    at('2026-10-09T12:00:00Z');
+    const zs = (await call(Q)).body.zones;
+    assert.ok(zs.every(z => !z.inactive && z.type === 'PROHIBITED'));
+  } finally { fn._test.setNow(null); }
+});
+
+test('all=1 trägt inactive für eine Zone mit nur künftigem Fenster', async () => {
+  try {
+    useEeZones([mkZone('F1', 'PROHIBITED', [FUTURE])]);
+    at('2026-10-09T12:00:00Z');
+    const z = (await call({ country: 'ee', all: '1' })).body.zones[0];
+    assert.equal(z.inactive, true);
+    assert.equal(z.type, 'TEMPORARY_INACTIVE');
+    assert.equal(z.color, '#64748b');
+  } finally { fn._test.setNow(null); }
+});
+
+test('D1: Uhr springt zwischen zwei Lesungen über den Start eines Fensters → Antwort 200, kein Wurf', async () => {
+  try {
+    useEeZones([mkZone('S1', 'PROHIBITED', [{ startDateTime: '2026-10-09T12:00:00.500Z', endDateTime: '2026-10-10T00:00:00Z' }])]);
+    const base = Date.parse('2026-10-09T12:00:00Z');
+    let reads = 0;
+    // erste Lesung vor dem Start (inaktiv), alle weiteren danach (aktiv)
+    fn._test.setNow(() => base + (reads++ === 0 ? 0 : 5000));
+    const r = await call(Q);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.zones.length, 1);
   } finally { fn._test.setNow(null); }
 });
