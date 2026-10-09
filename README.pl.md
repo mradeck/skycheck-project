@@ -24,10 +24,12 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | 🇮🇪 **Irlandia** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (wektor, wstępne) |
 | 🇳🇱 **Holandia** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (wektor, ED-318) |
 | 🇵🇹 **Portugalia** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (wektor) |
+| 🇱🇺 **Luksemburg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luksemburg — migawka ED-269 (aktualizowana co tydzień) |
+| 🇳🇴 **Norwegia** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — migawka ED-269 (aktualizowana co tydzień); strefy NOTAM po kliknięciu |
 
-> Wszystkie dziewięć to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
+> Wszystkie jedenaście to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.08.116.8
+📦 **Aktualna wersja:** v26.10.117.0
 
 ---
 
@@ -80,6 +82,8 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **Geostrefy 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | irlandzkie strefy UAS `ie_geozones` (ArcGIS, ED-318, wstępne) | ✅ |
 | **Geostrefy 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | holenderskie strefy UAS `Netherlands_ED318` (wektor ArcGIS, ED-318, ~162 stref) | ✅ |
 | **Geostrefy 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | portugalskie strefy UAS `Portugal_Geo_Zones_Polygons` (wektor ArcGIS, ~314 stref; schemat pochodzący z KML) | ✅ |
+| **Geostrefy 🇱🇺** [DAC Luksemburg](https://drones.geoportail.lu/) | Luksemburskie strefy UAS, migawka ED-269 (`data/uas-zones-lu.json`, 43 strefy; licencja CC0) | via `zones-ed269.js` |
+| **Geostrefy 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norweskie strefy UAS, migawka ED-269 (`data/uas-zones-no.json`, 1390 stref; licencja NLOD 2.0); czasowe strefy NOTAM ładowane po kliknięciu (`notam-no.js`) | via `zones-ed269.js` |
 
 ---
 

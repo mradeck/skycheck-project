@@ -40,6 +40,32 @@ und fließen **nicht** in die Go/No-Go-Bewertung ein — verbindlich bleibt die 
    (Anker `[J-CONFIG]`). Die Toggle-Gruppe erscheint dann automatisch für dieses Land.
 3. Version bumpen, README/CLAUDE aktualisieren, committen, deployen, live prüfen.
 
+## EU-Geozonen (LU/NO/EE)
+
+Erzeugt die ED-269-Snapshots `data/uas-zones-{lu,no,ee}.json` aus den amtlichen Rohdateien. Reine Transformation, **ohne Netzwerkzugriff**:
+
+```bash
+node scripts/build-eu-zones.mjs <lu|no|ee> <eingabe> <ausgabe.json> [--min N]
+```
+
+- Schreibt `<ausgabe.json>` und daneben `<ausgabe>.version` (SHA-256 der Ausgabe).
+- `--min N` setzt die Mindestanzahl Zonen; ohne Angabe gilt LU 20, NO 500, EE 100. Liegt die Zahl darunter (abgeschnittener Download), bricht das Skript mit Exit-Code 1 ab und lässt die Ausgabedatei unverändert.
+- Erwartete Größenordnung 2026-10: LU 43, NO 1390, EE 241 Zonen.
+
+**Quellen:**
+
+| Land | Quelle | URL | Lizenz |
+|------|--------|-----|--------|
+| 🇱🇺 Luxemburg | Direction de l'Aviation Civile („UAS Geographical Zones“) | `https://drones.geoportail.lu/zones` | CC0 |
+| 🇳🇴 Norwegen | Luftfartstilsynet / dronesoner.no (ED-269-konform) | `https://dronesoner.no/Downloads/NOR_ED269_compliant_geozones_<YYYY-MM-DD>.json` | NLOD 2.0 |
+| 🇪🇪 Estland | EANS (UAS-Karte) | `https://utm.eans.ee/avm/utm/uas.geojson` | offen: Lizenz noch nicht geklärt |
+
+**Norwegischer Dateiname:** Der Dateiname trägt das Tagesdatum. Ältere Dateien liefern 404. Der Workflow liest deshalb den aktuellen Link von der Startseite `https://dronesoner.no/`, statt eine feste URL zu verwenden.
+
+**Automatisches Update:** `.github/workflows/update-eu-zones.yml` läuft jeden Montag um 04:00 UTC für alle drei Länder und lässt sich manuell per „Run workflow“ für ein Land oder alle starten. Committet wird nur bei inhaltlicher Änderung; Artefakte und Cache werden bewusst nicht verwendet. Schlägt ein Land fehl, bleibt sein bisheriger Snapshot erhalten, und der Workflow endet mit Fehler.
+
+---
+
 ## Hinweise
 
 - **Einmaliger Snapshot** (kein Auto-Update). Wer die Daten aktuell halten will, kann den Treiber

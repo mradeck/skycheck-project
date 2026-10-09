@@ -61,18 +61,18 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
       sind nicht einsehbar). SkyCheck hat 9 (DE, FR, AT, CH, ES, DK, IE, NL, PT). Das EASA Common
       Repository (`services-eu1.arcgis.com/71Lfb7umh2boMcWI`) enthält nur PT, NL, DK, IE, ES —
       für die fünf Lücken hilft es nicht. Stand je Land (Endpunkte per HTTP-Abruf geprüft):
-  - [ ] **Luxemburg (skycheck-lu).** Direction de l'Aviation Civile, Datensatz „UAS Geographical
+  - [x] **Luxemburg (skycheck-lu).** Direction de l'Aviation Civile, Datensatz „UAS Geographical
         Zones" auf data.public.lu, Lizenz **CC0**. Datei: `https://drones.geoportail.lu/zones`
         (ED-269-JSON mit UTF-8-BOM, ~80 KB, 43 Zonen, Polygone in `geometry[].horizontalProjection`).
-        Kein CORS-Header → wie AT als Datei bündeln (`data/uas-zones-lu.json` + Function/Workflow).
-  - [ ] **Norwegen (skycheck-no).** Luftfartstilsynet / dronesoner.no, Lizenz **NLOD 2.0**
+        Kein CORS-Header → wie AT als Datei bündeln (`data/uas-zones-lu.json` + Function/Workflow) — **umgesetzt in v26.10.117.0**
+  - [x] **Norwegen (skycheck-no).** Luftfartstilsynet / dronesoner.no, Lizenz **NLOD 2.0**
         (Weiterverwendung auch in Drittanwendungen erlaubt; Kreditierung „Kilde: Luftfartstilsynet /
         dronesoner.no"). Tagesaktuelle Dateien mit Datum im Namen:
         `https://dronesoner.no/Downloads/NOR_ED269_compliant_geozones_<YYYY-MM-DD>.json` (~2,9 MB,
         1394 Zonen) und `NOR_ED318_compliant_geozones_<YYYY-MM-DD>.json`. Enthält auch die zum
-        Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln; wegen Größe wie FR kacheln.
+        Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln; wegen Größe wie FR kacheln — **umgesetzt in v26.10.117.0**
   - [ ] **Estland (skycheck-ee).** EANS: `https://utm.eans.ee/avm/utm/uas.geojson`
-        (GeoJSON-FeatureCollection, ohne Key). Offen: Lizenz/Nutzungsbedingungen und CORS.
+        (GeoJSON-FeatureCollection, ohne Key). Offen: Lizenz/Nutzungsbedingungen und CORS — **technisch umgesetzt in v26.10.117.0, Veröffentlichung wartet auf Lizenzklärung**
   - [ ] **Schweden (skycheck-se).** LFV-GeoServer `https://daim.lfv.se/geoserver/ows` (offener WFS).
         Kein einzelner Geozonen-Layer, sondern Luftraum-Layer (`mais:CTR`, `mais:ATZ`, `mais:RSTA`,
         `mais:DNGA`, `mais:TIZ`, `mais:TIA` …) → Zonen müssen zusammengesetzt werden; Referenzkarte

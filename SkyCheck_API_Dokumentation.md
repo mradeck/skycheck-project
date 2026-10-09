@@ -350,6 +350,145 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 
 ---
 
+## 8. Luftraumzonen Luxemburg, Norwegen, Estland — `zones-ed269` (SkyCheck-Netlify-Function)
+
+**Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`) und **Estland** (`ee`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS).
+
+**Basis-URL:** `/.netlify/functions/zones-ed269` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *`)
+
+**Kein API-Key erforderlich · kostenlos · Antwort im JSON-Format**
+
+### Endpunkt
+
+```
+GET /.netlify/functions/zones-ed269?country={lu|no|ee}&lat={lat}&lon={lon}&radius={m}&lang={xx}
+GET /.netlify/functions/zones-ed269?country={lu|no|ee}&all=1
+```
+
+**Parameter:**
+
+| Parameter | Pflicht | Beschreibung |
+|-----------|---------|--------------|
+| `country` | ja      | `lu`, `no` oder `ee`; alles andere → HTTP 400 |
+| `lat`     | ja (Punktabfrage) | Breitengrad, −90 … 90 |
+| `lon`     | ja (Punktabfrage) | Längengrad, −180 … 180 |
+| `radius`  | nein    | Suchradius in Metern, auf 1 … 5000 begrenzt; Standard 100 (auch bei ungültigem Wert) |
+| `lang`    | nein    | Zweibuchstabiges Sprachkürzel für die Beschreibung (`desc`); Standard `en`, Rückfall auf Englisch bzw. Originaltext |
+| `all`     | nein    | `1` oder `true`: alle Zonen des Landes statt Punktabfrage (für das Kartenoverlay); `lat`/`lon` entfallen |
+
+**Trefferlogik:** Eine Zone trifft, wenn der Punkt in einem ihrer Polygone liegt oder ein Polygonrand bzw. kreisförmiger Bereich innerhalb des Suchradius liegt (exakter Flächentest, kein reiner Bounding-Box-Filter). Es werden höchstens **50 Treffer** zurückgegeben. Die Sortierung ist: einschränkende Zonen zuerst, dann inaktive (`inactive: true`), dann Info-Zonen (`info: true`).
+
+**Antwort (Punktabfrage, gekürzt):**
+
+```json
+{
+  "country": "LU",
+  "zones": [
+    {
+      "name": "Beispielzone",
+      "type": "PROHIBITED",
+      "lower": "GND",
+      "upper": "120 m AGL",
+      "legal": "Beispielbehörde",
+      "legalUrl": "https://example.org/",
+      "desc": "Beispielbeschreibung",
+      "color": "#ef4444",
+      "geometry": [
+        { "type": "Polygon", "coordinates": [[[6.10, 49.60], [6.11, 49.60], [6.11, 49.61], [6.10, 49.60]]] }
+      ]
+    }
+  ]
+}
+```
+
+**Felder einer Zone:**
+
+| Feld       | Bedeutung |
+|------------|-----------|
+| `name`     | Zonenname |
+| `type`     | Einschränkungsart: `PROHIBITED`, `REQ_AUTHORISATION`, `CONDITIONAL`, `NO_RESTRICTION`, `TEMPORARY_INACTIVE` (inaktive Zone) oder `UAS_ZONE` (unbekannte Art) |
+| `lower`, `upper` | Untere/obere Grenze, z. B. `GND` oder `120 m AGL` |
+| `legal`, `legalUrl` | Zuständige Behörde und Link (leer, wenn kein gültiger `http(s)`-Link vorliegt) |
+| `desc`     | Beschreibung in der angeforderten Sprache |
+| `color`    | Anzeigefarbe: `PROHIBITED` `#ef4444`, `REQ_AUTHORISATION` `#f59e0b`, `CONDITIONAL` `#f97316`, `NO_RESTRICTION` `#22c55e`, sonst `#64748b` |
+| `geometry` | Array aus `{type:"Polygon", coordinates}` oder `{type:"Circle", center:[lon,lat], radius}` (Meter); Koordinaten immer `[lon, lat]` |
+| `info`     | Nur vorhanden, wenn `true`: `NO_RESTRICTION`-Zone. Sie erscheint in der Liste, verändert die Ampel aber nicht |
+| `inactive` | Nur vorhanden, wenn `true`: Alle Aktivierungsfenster der Zone sind abgelaufen. Die Zone bleibt sichtbar, `desc` beginnt dann mit „Activation window ended <YYYY-MM-DD>. May be reactivated — check the official source.“ und die Ampel wird gelb statt rot |
+
+**Antwort mit `all=1`:** `{ "country": "LU", "all": true, "zones": [...] }`. Jede Zone enthält hier nur `name`, `type`, `color`, `geometry` sowie ggf. `info` und `inactive`.
+
+**Caching:** Punktabfrage 300 s (`Cache-Control: public, max-age=300`), `all=1` 3600 s.
+
+**Fehlercodes:**
+
+| HTTP | Body (Text) | Ursache |
+|------|-------------|---------|
+| 400  | `Unknown country` | `country` fehlt oder ist nicht `lu`/`no`/`ee` |
+| 400  | `Missing or invalid lat/lon` | Punktabfrage ohne gültige Koordinaten |
+| 500  | `Data file unavailable` | Snapshot `data/uas-zones-<cc>.json` fehlt oder ist nicht lesbar |
+
+---
+
+## 9. Norwegische NOTAM-Sperrgebiete — `notam-no` (SkyCheck-Netlify-Function)
+
+**Zweck:** Befristete NOTAM-Sperrgebiete für Norwegen als Live-Proxy für `dronesoner.no`. Diese Zonen sind **nicht** im Snapshot enthalten. Die Function wird nur auf **Nutzerklick** aufgerufen („NOTAM-Sperrgebiete laden“), weil der Upstream keinen CORS-Header sendet.
+
+**Upstream:** `https://dronesoner.no/data/forbud_notam.geojson` (Luftfartstilsynet, NLOD 2.0)
+
+**Basis-URL:** `/.netlify/functions/notam-no` (Same-Origin; Antwort mit `Access-Control-Allow-Origin: *`)
+
+**Kein API-Key erforderlich · kostenlos**
+
+### Endpunkt
+
+```
+GET /.netlify/functions/notam-no
+```
+
+**Keine Parameter.** Der Upstream-Abruf hat einen Timeout von 8 s. Erfolgreiche Antworten werden 300 s gecacht, Fehlerantworten nicht (`no-store`).
+
+**Antwort (gekürzt):**
+
+```json
+{
+  "country": "NO",
+  "fetchedAt": "2026-10-09T10:00:00.000Z",
+  "zones": [
+    {
+      "name": "Beispiel-NOTAM",
+      "type": "PROHIBITED",
+      "lower": "0",
+      "upper": "120",
+      "legal": "NOTAM",
+      "legalUrl": "https://dronesoner.no/",
+      "desc": "Beispielbemerkung",
+      "color": "#ef4444",
+      "geometry": [
+        { "type": "Polygon", "coordinates": [[[10.70, 59.90], [10.72, 59.90], [10.72, 59.92], [10.70, 59.90]]] }
+      ],
+      "notam": true
+    }
+  ]
+}
+```
+
+**Hinweise:**
+- `fetchedAt` ist der Zeitpunkt des Abrufs (ISO 8601, UTC). Die Client-App zeigt ihn auf dem Knopf an und wertet geladene Daten 5 Minuten lang für die Ampel aus.
+- Jede Zone trägt `notam: true`. Alle Zonen sind `PROHIBITED` und rot.
+- Nur Features mit `Polygon` oder `MultiPolygon` werden übernommen; andere Geometrien werden verworfen.
+
+**Fehlercodes:** Alle Fehler kommen als **HTTP 502** mit JSON `{ "error": "…" }`:
+
+| `error` | Ursache |
+|---------|---------|
+| `Upstream HTTP <Status>` | dronesoner.no antwortet mit Fehlercode |
+| `Upstream timeout` | Keine Antwort innerhalb von 8 s |
+| `Upstream unreachable` | Verbindungsfehler |
+| `Upstream returned invalid JSON` | Upstream-Antwort ist kein gültiges JSON |
+| `Upstream returned no feature list` | JSON ohne `features`-Liste |
+
+---
+
 ## Gesamtübersicht
 
 | Dienst          | URL-Basis                              | CORS | Auth | Limit     |
@@ -361,6 +500,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 | Airplanes.live  | `api.airplanes.live/v2/point`          | ✅   | –    | kostenlos |
 | DiPUL WMS       | `uas-betrieb.de/geoservices/dipul/wms` | ✅   | –    | kostenlos |
 | CartoDB Tiles   | `basemaps.cartocdn.com`                | ✅   | –    | 75k/Monat |
+| zones-ed269 (LU/NO/EE) | `/.netlify/functions/zones-ed269` | ✅   | –    | eigene Function |
+| notam-no (NO)  | `/.netlify/functions/notam-no`         | ✅   | –    | eigene Function, nur auf Klick |
 
 ---
 

@@ -24,10 +24,12 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | 🇮🇪 **Irland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, vorläufig) |
 | 🇳🇱 **Niederlande** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (Vektor, ED-318) |
 | 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (Vektor) |
+| 🇱🇺 **Luxemburg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxemburg — ED-269-Snapshot (wöchentlich aktualisiert) |
+| 🇳🇴 **Norwegen** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — ED-269-Snapshot (wöchentlich aktualisiert); NOTAM-Sperrgebiete auf Klick |
 
-> Alle neun sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
+> Alle elf sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.08.116.8
+📦 **Aktuelle Version:** v26.10.117.0
 
 ---
 
@@ -80,6 +82,8 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 | **Geozonen 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irische UAS-Zonen `ie_geozones` (ArcGIS, ED-318, vorläufig) | ✅ |
 | **Geozonen 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Niederländische UAS-Zonen `Netherlands_ED318` (ArcGIS-Vektor, ED-318, ~162 Zonen) | ✅ |
 | **Geozonen 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Portugiesische UAS-Zonen `Portugal_Geo_Zones_Polygons` (ArcGIS-Vektor, ~314 Zonen; KML-abgeleitetes Schema) | ✅ |
+| **Geozonen 🇱🇺** [DAC Luxemburg](https://drones.geoportail.lu/) | Luxemburgische UAS-Zonen, ED-269-Snapshot (`data/uas-zones-lu.json`, 43 Zonen; Lizenz CC0) | via `zones-ed269.js` |
+| **Geozonen 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norwegische UAS-Zonen, ED-269-Snapshot (`data/uas-zones-no.json`, 1390 Zonen; Lizenz NLOD 2.0); befristete NOTAM-Sperrgebiete auf Klick (`notam-no.js`) | via `zones-ed269.js` |
 
 ---
 

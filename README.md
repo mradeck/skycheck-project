@@ -24,10 +24,12 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 | 🇮🇪 **Ireland** | [skycheck-ie.netlify.app](https://skycheck-ie.netlify.app/) | EASA Common Repository — ArcGIS (vector, preliminary) |
 | 🇳🇱 **Netherlands** | [skycheck-nl.netlify.app](https://skycheck-nl.netlify.app/) | EASA Common Repository — ArcGIS (vector, ED-318) |
 | 🇵🇹 **Portugal** | [skycheck-pt.netlify.app](https://skycheck-pt.netlify.app/) | EASA Common Repository — ArcGIS (vector) |
+| 🇱🇺 **Luxembourg** | [skycheck-lu.netlify.app](https://skycheck-lu.netlify.app/) | DAC Luxembourg — ED-269 snapshot (auto-updated weekly) |
+| 🇳🇴 **Norway** | [skycheck-no.netlify.app](https://skycheck-no.netlify.app/) | Luftfartstilsynet / dronesoner.no — ED-269 snapshot (auto-updated weekly); NOTAM restricted areas on click |
 
-> All nine are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
+> All eleven are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.08.116.8
+📦 **Current version:** v26.10.117.0
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -86,6 +88,8 @@ the app header.
 | **Geo-zones 🇮🇪** [EASA Common Repository](https://www.easa.europa.eu/) | Irish UAS zones `ie_geozones` (ArcGIS, ED-318, preliminary) | ✅ |
 | **Geo-zones 🇳🇱** [EASA Common Repository](https://www.easa.europa.eu/) | Dutch UAS zones `Netherlands_ED318` (ArcGIS vector, ED-318, ~162 zones) | ✅ |
 | **Geo-zones 🇵🇹** [EASA Common Repository](https://www.easa.europa.eu/) / [ANAC](https://www.voanaeuropa.eu/) | Portuguese UAS zones `Portugal_Geo_Zones_Polygons` (ArcGIS vector, ~314 zones; KML-derived schema) | ✅ |
+| **Geo-zones 🇱🇺** [DAC Luxembourg](https://drones.geoportail.lu/) | Luxembourg UAS geographical zones, ED-269 snapshot (`data/uas-zones-lu.json`, 43 zones; licence CC0) | via `zones-ed269.js` |
+| **Geo-zones 🇳🇴** [Luftfartstilsynet / dronesoner.no](https://dronesoner.no/) | Norwegian UAS zones, ED-269 snapshot (`data/uas-zones-no.json`, 1390 zones; licence NLOD 2.0); temporary NOTAM restricted areas loaded on click (`notam-no.js`) | via `zones-ed269.js` |
 | **Context layers** (🇦🇹🇨🇭🇪🇸🇩🇰🇮🇪🇫🇷) [OpenStreetMap](https://www.openstreetmap.org/) (ODbL) | Optional overlays — protected areas, motorways, power lines, railways (static GeoJSON snapshots in `data/<cc>-*.json`, generated via `scripts/`); informational only, not part of the flight-status check. DE already has these via DiPUL | ✅ |
 
 ---
