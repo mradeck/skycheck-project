@@ -72,7 +72,7 @@ Offene Ideen und geplante Verbesserungen. Kein festes Datum; Priorität nach Bed
         1394 Zonen) und `NOR_ED318_compliant_geozones_<YYYY-MM-DD>.json`. Enthält auch die zum
         Bauzeitpunkt aktiven NOTAM-Zonen. Kein CORS-Header → bündeln. Wegen Größe wäre Kacheln wie bei FR denkbar — **umgesetzt in v26.10.117.0 als ungekachelter Snapshot (1390 dauerhafte Zonen)**
   - [x] **Estland (skycheck-ee).** EANS: `https://utm.eans.ee/avm/utm/uas.geojson`
-        (GeoJSON-FeatureCollection, ohne Key). Offen: Lizenz/Nutzungsbedingungen und CORS — **umgesetzt und veröffentlicht in v26.10.117.0 (Entscheidung des Nutzers; Lizenz vom Herausgeber nicht angegeben; Hinweis auf bis zu 7 Tage alte Kurzzeitzonen)**
+        (GeoJSON-FeatureCollection, ohne Key). **umgesetzt und veröffentlicht in v26.10.117.0 (Entscheidung des Nutzers; Lizenz vom Herausgeber nicht angegeben; Hinweis auf bis zu 7 Tage alte Kurzzeitzonen)**
   - [ ] **Schweden (skycheck-se).** LFV-GeoServer `https://daim.lfv.se/geoserver/ows` (offener WFS).
         Kein einzelner Geozonen-Layer, sondern Luftraum-Layer (`mais:CTR`, `mais:ATZ`, `mais:RSTA`,
         `mais:DNGA`, `mais:TIZ`, `mais:TIA` …) → Zonen müssen zusammengesetzt werden; Referenzkarte

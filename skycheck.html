@@ -61,9 +61,13 @@
   <meta name="theme-color" content="#eef4fb">
   <script>
     // Light is the default; only an explicit stored 'dark' choice yields the dark interface.
-    var skycheckDark = false;
-    try { skycheckDark = localStorage.getItem('skycheck-interface-theme') === 'dark'; } catch (_) {}
-    if (!skycheckDark) document.documentElement.classList.add('light-mode');
+    (function () {
+      var dark = false;
+      try { dark = localStorage.getItem('skycheck-interface-theme') === 'dark'; } catch (_) {}
+      if (!dark) { document.documentElement.classList.add('light-mode'); return; }
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = '#0a1628';
+    })();
   </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
