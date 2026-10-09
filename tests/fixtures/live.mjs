@@ -38,7 +38,7 @@ export const SE_SUP_RAW = JSON.stringify({ type: 'FeatureCollection', features: 
   sup({ ID: 'ESR833_1' }, { type: 'MultiPolygon', coordinates: [tri(16.5, 57.7), tri(16.8, 57.9)] }),
   sup({ ID: 'ESR900_1', NAME: 'OLD', DESIG: 'ESR900', FROM: '2025-01-01T00:00Z', TO: '2025-12-31T23:59Z' }),
   sup({ ID: 'ESR901_1', NAME: 'LATER', DESIG: 'ESR901', FROM: '2027-01-01T00:00Z', TO: '2027-12-31T23:59Z' }),
-  sup({ ID: 'ESR902_1', NAME: 'HIGH', DESIG: 'ESR902', LOWER: 'FL520', UPPER: 'FL660', UP_UOM: '', COM_EN: '', URL: '' }),
+  sup({ ID: 'ESR902_1', NAME: 'HIGH', DESIG: 'ESR902', LOWER: 'SFC', UPPER: 'FL660', UP_UOM: '', COM_EN: '', URL: '' }),
 ] });
 
 const be = (over, geometry) => ({

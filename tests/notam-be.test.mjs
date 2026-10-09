@@ -107,3 +107,34 @@ test('Netzwerkfehler → 502; hängender Upstream wird per AbortController abgeb
   assert.equal(r.status, 502);
   assert.match(r.body.error, /timeout/i);
 });
+
+// ── Fix-Runde 1 ────────────────────────────────────────────────────────────
+const feat = (props) => ({ geometry: { type: 'Polygon', coordinates: [[[1, 50], [2, 50], [2, 51], [1, 50]]] },
+  properties: { name: 'Z', code: 'Z', restriction: 'PROHIBITED', lower_limit_altitude_meter_agl: 0, upper_limit_altitude_meter_agl: 50, ...props } });
+const zonesOf = async (...props) => { stub(ok(JSON.stringify({ features: props.map(feat) }))); return (await run()).body.zones; };
+
+test('D4: Untergrenze als numerischer String wird gelesen (120-m-Regel greift); negativ zählt als 0', async () => {
+  assert.deepEqual(await zonesOf({ lower_limit_altitude_meter_agl: '142.9' }), []);
+  const [a] = await zonesOf({ lower_limit_altitude_meter_agl: '80', upper_limit_altitude_meter_agl: '99.6' });
+  assert.equal(a.lower, '80 m AGL');
+  assert.equal(a.upper, '100 m AGL');
+  const [b] = await zonesOf({ lower_limit_altitude_meter_agl: -5 });
+  assert.equal(b.lower, 'GND');
+});
+
+test('D6: unbekannte restriction wird PROHIBITED (rot)', async () => {
+  const [z, y] = await zonesOf({ restriction: 'WHATEVER' }, { restriction: null });
+  assert.equal(z.type, 'PROHIBITED');
+  assert.equal(z.color, '#ef4444');
+  assert.equal(y.type, 'PROHIBITED');
+});
+
+test('D2: Timeout beim Lesen des Bodys wird als Timeout gemeldet', async () => {
+  fn._test.setTimeoutMs(20);
+  stub(async (u, o) => ({ ok: true, status: 200, text: () => new Promise((_, reject) => {
+    o.signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; reject(e); });
+  }) }));
+  const r = await run();
+  assert.equal(r.status, 502);
+  assert.match(r.body.error, /timeout/i);
+});

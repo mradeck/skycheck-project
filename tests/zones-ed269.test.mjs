@@ -423,3 +423,16 @@ test('all=1 trägt inactive für eine Zone mit nur künftigem Fenster', async ()
     assert.equal(z.color, '#64748b');
   } finally { fn._test.setNow(null); }
 });
+
+test('D1: Uhr springt zwischen zwei Lesungen über den Start eines Fensters → Antwort 200, kein Wurf', async () => {
+  try {
+    useEeZones([mkZone('S1', 'PROHIBITED', [{ startDateTime: '2026-10-09T12:00:00.500Z', endDateTime: '2026-10-10T00:00:00Z' }])]);
+    const base = Date.parse('2026-10-09T12:00:00Z');
+    let reads = 0;
+    // erste Lesung vor dem Start (inaktiv), alle weiteren danach (aktiv)
+    fn._test.setNow(() => base + (reads++ === 0 ? 0 : 5000));
+    const r = await call(Q);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.zones.length, 1);
+  } finally { fn._test.setNow(null); }
+});

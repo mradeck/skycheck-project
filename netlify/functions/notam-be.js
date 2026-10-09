@@ -53,18 +53,23 @@ function bestText(v) {
   return s;
 }
 
+// Zahl oder numerischer String → Zahl, sonst NaN.
+const num = v => (typeof v === 'number' ? v : (typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN));
+
 function toZone(feature) {
   const p = (feature && feature.properties) || {};
   const geometry = polygonsOf(feature && feature.geometry);
   if (!geometry.length) return null;
-  const lowerM = Number.isFinite(p.lower_limit_altitude_meter_agl) ? p.lower_limit_altitude_meter_agl : 0;
+  const lowRaw = num(p.lower_limit_altitude_meter_agl);
+  const lowerM = Number.isFinite(lowRaw) ? Math.max(0, lowRaw) : 0;
+  const upperM = num(p.upper_limit_altitude_meter_agl);
   if (lowerM > MAX_LOWER_M) return null;
   const type = Object.prototype.hasOwnProperty.call(COLORS, p.restriction) ? p.restriction : 'PROHIBITED';
   return {
     name: bestText(p.name) || String(p.code || p.unique_identifier || 'NOTAM'),
     type,
     lower: Math.round(lowerM) === 0 ? 'GND' : `${Math.round(lowerM)} m AGL`,
-    upper: Number.isFinite(p.upper_limit_altitude_meter_agl) ? `${Math.round(p.upper_limit_altitude_meter_agl)} m AGL` : '—',
+    upper: Number.isFinite(upperM) ? `${Math.round(upperM)} m AGL` : '—',
     legal: 'BCAA / skeyes (Droneguide)',
     legalUrl: SITE_URL,
     desc: bestText(p.description),
@@ -76,21 +81,25 @@ function toZone(feature) {
 
 exports.handler = async () => {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutOverride === null ? DEFAULT_TIMEOUT_MS : timeoutOverride);
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, timeoutOverride === null ? DEFAULT_TIMEOUT_MS : timeoutOverride);
   try {
     const res = await fetch(UPSTREAM, {
       signal: ctrl.signal,
       headers: { 'User-Agent': 'SkyCheck-NOTAM-Proxy/1.0 (+https://github.com/mradeck/skycheck-project)' },
     });
     if (!res.ok) return json(502, { error: `Upstream HTTP ${res.status}` });
+    let body;
+    try { body = await res.text(); }
+    catch (e) { if (ctrl.signal.aborted) throw e; return json(502, { error: 'Upstream body unreadable' }); }
     let data;
-    try { data = JSON.parse(await res.text()); }
+    try { data = JSON.parse(body); }
     catch (_) { return json(502, { error: 'Upstream returned invalid JSON' }); }
     if (!data || !Array.isArray(data.features)) return json(502, { error: 'Upstream returned no feature list' });
     const zones = data.features.map(toZone).filter(Boolean);
     return json(200, { country: 'BE', fetchedAt: new Date().toISOString(), zones }, 300);
   } catch (e) {
-    return json(502, { error: e && e.name === 'AbortError' ? 'Upstream timeout' : 'Upstream unreachable' });
+    return json(502, { error: timedOut || (e && e.name === 'AbortError') ? 'Upstream timeout' : 'Upstream unreachable' });
   } finally {
     clearTimeout(timer);
   }

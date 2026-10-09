@@ -18,7 +18,7 @@ const INACTIVE_COLOR = '#64748b';
 
 // "Jetzt" läuft über eine Stelle, damit Tests die Uhr setzen können.
 let nowOverride = null;
-const now = () => (nowOverride === null ? Date.now() : nowOverride);
+const now = () => (nowOverride === null ? Date.now() : typeof nowOverride === 'function' ? nowOverride() : nowOverride);
 
 function findDataFile(cc) {
   const name = `uas-zones-${cc}.json`;
@@ -174,7 +174,7 @@ function inactivity(f) {
   return { endedAt, startsAt };
 }
 
-function normalizeLight(f) {
+function normalizeLight(f, state = inactivity(f)) {
   const restriction = f.restriction || '';
   const z = {
     name: f.name || f.identifier || '—',
@@ -182,7 +182,7 @@ function normalizeLight(f) {
     color: zoneColor(restriction),
     geometry: geometryOf(f),
   };
-  if (inactivity(f)) {
+  if (state) {
     z.inactive = true;
     z.type = 'TEMPORARY_INACTIVE';
     z.color = INACTIVE_COLOR;
@@ -197,10 +197,10 @@ function baseDescription(f, lang) {
   return f.typeCode ? String(f.typeCode).replace(/_/g, ' ') : '';
 }
 
-function describe(f, light, lang) {
+function describe(f, state, lang) {
   const text = baseDescription(f, lang);
-  if (!light.inactive) return text;
-  const { startsAt, endedAt } = inactivity(f);
+  if (!state) return text;
+  const { startsAt, endedAt } = state;
   const day = ms => new Date(ms).toISOString().slice(0, 10);
   const note = startsAt !== null
     ? `Not yet active — starts ${day(startsAt)}. May change — check the official source.`
@@ -209,7 +209,8 @@ function describe(f, light, lang) {
 }
 
 function normalize(f, lang) {
-  const light = normalizeLight(f);
+  const state = inactivity(f);                           // einmal pro Zone: eine Uhrablesung
+  const light = normalizeLight(f, state);
   const g0 = (f.geometry && f.geometry[0]) || {};
   const auth = (Array.isArray(f.zoneAuthority) && f.zoneAuthority[0]) || {};
   const z = {
@@ -219,7 +220,7 @@ function normalize(f, lang) {
     upper: formatAlt(g0.upperLimit, g0.upperVerticalReference, g0.uomDimensions),
     legal: auth.name || '—',
     legalUrl: /^https?:\/\//i.test(auth.siteURL || '') ? auth.siteURL : '',
-    desc: describe(f, light, lang),
+    desc: describe(f, state, lang),
     color: light.color,
     geometry: light.geometry,
   };
