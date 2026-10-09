@@ -3593,6 +3593,7 @@
         msIndustry: 'Industrie/Energie', msHospital: 'Krankenhaus',
         msGroundMsl: 'Geländehöhe', msOpenDipul: 'Punkt in DiPUL öffnen',
         notamLoad: 'NOTAM-Sperrgebiete laden', notamLoading: 'NOTAM werden geladen …', notamAsOf: t => `NOTAM · Stand ${t}`, notamError: 'NOTAM-Daten nicht verfügbar', notamHint: 'Befristete NOTAM-Sperrgebiete sind erst nach dem Laden sichtbar.', notamBadge: 'NOTAM',
+        zoneInactive: 'derzeit inaktiv',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3776,6 +3777,7 @@
         msIndustry: 'Industry/Energy', msHospital: 'Hospital',
         msGroundMsl: 'Ground elevation', msOpenDipul: 'Open point in DiPUL',
         notamLoad: 'Load NOTAM restrictions', notamLoading: 'Loading NOTAM …', notamAsOf: t => `NOTAM · as of ${t}`, notamError: 'NOTAM data unavailable', notamHint: 'Temporary NOTAM restrictions are only shown after loading.', notamBadge: 'NOTAM',
+        zoneInactive: 'currently inactive',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3951,6 +3953,7 @@
         msIndustry: 'Industrie/Énergie', msHospital: 'Hôpital',
         msGroundMsl: 'Altitude du terrain', msOpenDipul: 'Ouvrir le point dans DiPUL',
         notamLoad: 'Charger les restrictions NOTAM', notamLoading: 'Chargement des NOTAM …', notamAsOf: t => `NOTAM · état ${t}`, notamError: 'Données NOTAM indisponibles', notamHint: 'Les restrictions NOTAM temporaires ne sont visibles qu’après chargement.', notamBadge: 'NOTAM',
+        zoneInactive: 'actuellement inactive',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -4134,6 +4137,7 @@
         msIndustry: 'Industria/Energía', msHospital: 'Hospital',
         msGroundMsl: 'Altitud del terreno', msOpenDipul: 'Abrir punto en DiPUL',
         notamLoad: 'Cargar restricciones NOTAM', notamLoading: 'Cargando NOTAM …', notamAsOf: t => `NOTAM · a las ${t}`, notamError: 'Datos NOTAM no disponibles', notamHint: 'Las restricciones NOTAM temporales solo se muestran tras cargarlas.', notamBadge: 'NOTAM',
+        zoneInactive: 'actualmente inactiva',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -4317,6 +4321,7 @@
         msIndustry: 'Przemysł/Energetyka', msHospital: 'Szpital',
         msGroundMsl: 'Wysokość terenu', msOpenDipul: 'Otwórz punkt w DiPUL',
         notamLoad: 'Wczytaj ograniczenia NOTAM', notamLoading: 'Wczytywanie NOTAM …', notamAsOf: t => `NOTAM · stan ${t}`, notamError: 'Dane NOTAM niedostępne', notamHint: 'Tymczasowe ograniczenia NOTAM są widoczne dopiero po wczytaniu.', notamBadge: 'NOTAM',
+        zoneInactive: 'obecnie nieaktywna',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -7448,7 +7453,12 @@
       for (const z of zones) {
         const t = (z.type || '').toLowerCase();
         let msg = '', zLvl = 'warn';
-        if (isCtrZone(z)) {
+        if (z.inactive) {
+          // abgelaufenes Aktivierungsfenster: gelb, aber als "derzeit inaktiv" erkennbar.
+          // Zonenname ist Fremddaten-Text und landet in innerHTML (renderStatus) → hier escapen;
+          // andere Gründe sind i18n-Strings (dürfen Entities enthalten) und bleiben unverändert.
+          msg = escapeHtml(z.name || _t('zoneRestrict')) + ' · ' + _t('zoneInactive');
+        } else if (isCtrZone(z)) {
           const f = z.ctrFlight;
           if (z.zoneNum === 1) {
             zLvl = 'nogo'; msg = _t('ctrZone1Reason');
@@ -7482,7 +7492,7 @@
         } else if (t.includes('waterway') || t.includes('wasserstra')) {
           msg = _t('zoneWaterway');
         } else {
-          msg = z.name || _t('zoneRestrict');
+          msg = escapeHtml(z.name || _t('zoneRestrict'));
         }
         if (zLvl === 'nogo') lvl = 'nogo';
         else if (lvl !== 'nogo') lvl = 'warn';
@@ -8320,6 +8330,9 @@
         const name = z?.name || '';
         const t = (type || '').toLowerCase();
         const n = (name || '');
+        // Labels landen unescaped in innerHTML (i18n-Strings enthalten Entities); nur der aus dem
+        // Zonennamen abgeleitete Text (Fremddaten) wird hier escaped.
+        if (z?.inactive) return { label: escapeHtml(name || _t('zoneRestrict')) + ' · ' + _t('zoneInactive'), color: '#64748b' };
         if (z?.zoneNum) {
           const f = z.ctrFlight;
           const suffix = f?.available && !f.requiresIndividual && z.zoneNum !== 1
@@ -8361,7 +8374,7 @@
           return { label: _t('msIndustry'), color: '#887733' };
         if (t.includes('krankenhaus') || t.includes('hospital'))
           return { label: _t('msHospital'), color: '#ff6688' };
-        return { label: name.length > 28 ? name.slice(0, 26) + '…' : name, color: '#6688aa' };
+        return { label: escapeHtml(name.length > 28 ? name.slice(0, 26) + '…' : name), color: '#6688aa' };
       };
 
       // Unique simplified zone labels
