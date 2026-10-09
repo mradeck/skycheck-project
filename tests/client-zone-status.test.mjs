@@ -218,3 +218,79 @@ test('DE: ServiceException, ein Layer defekt, alle anderen nicht erreichbar → 
   await assert.rejects(result);
   assert.deepEqual([...bad], ['a']);
 });
+
+// ---- Task 2: strikte ArcGIS-Anbindung der Punkt-Adapter ----
+function arcgisStrict(fetchImpl, call) {
+  return new Function('fetch', `
+    const console = { warn() {} };
+    const DK_LAYERS = [{ url: 'u-dk', color: '#111' }];
+    const IE_LAYER = 'u-ie', NL_LAYER = 'u-nl', PT_LAYER = 'u-pt', ES_EASA_LAYER = 'u-es';
+    const _mapDK = f => f, _mapIE = f => f, _mapNL = f => f, _mapPT = f => f, _mapESEasa = f => f;
+    ${grab('_arcgisQuery')}
+    ${grab('_envParams')}
+    ${grab('fetchZonesDK')}
+    ${grab('fetchAllZonesDK')}
+    ${grab('fetchZonesIE')}
+    ${grab('fetchZonesNL')}
+    ${grab('fetchZonesPT')}
+    ${grab('fetchZonesESEasa')}
+    return (${call});`)(fetchImpl);
+}
+const http500 = async () => ({ ok: false, status: 500, json: async () => ({}) });
+const err200 = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: 400 } }) });
+
+for (const name of ['DK', 'IE', 'NL', 'PT', 'ESEasa']) {
+  test(`fetchZones${name}: HTTP 500 → wirft (strict verdrahtet)`, async () => {
+    await assert.rejects(arcgisStrict(http500, `fetchZones${name}(50, 8, 100)`));
+  });
+  test(`fetchZones${name}: 200 mit error-Body → wirft (strict verdrahtet)`, async () => {
+    await assert.rejects(arcgisStrict(err200, `fetchZones${name}(50, 8, 100)`));
+  });
+}
+test('fetchAllZonesDK (Overlay) bleibt lenient: Fehler → Array', async () => {
+  assert.ok(Array.isArray(await arcgisStrict(http500, 'fetchAllZonesDK()')));
+  assert.ok(Array.isArray(await arcgisStrict(err200, 'fetchAllZonesDK()')));
+});
+test('_arcgisQuery strict: error-Zweig allein wirft, auch bei vorhandener features-Liste', async () => {
+  const f = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: 400 }, features: [] }) });
+  await assert.rejects(arcgisStrict(f, `_arcgisQuery('u', {}, true)`), /ArcGIS-Fehler 400/);
+});
+
+// ---- Task 2: renderZones mit Platzhalter ----
+function zonesRender(zones) {
+  const mk = () => ({ textContent: '', className: '', innerHTML: '' });
+  const els = { 'z-count': mk(), 'zones-hdr-text': mk(), 'zones-body': mk() };
+  new Function('els', 'zones', `
+    const $ = id => els[id];
+    const _t = k => (k === 'zonesCount' ? (n => 'T:zonesCount:' + n) : 'T:' + k);
+    const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+    const ctrHeightHtml = () => '';
+    const getLegalLink = () => '#';
+    const COUNTRY = 'de';
+    const COUNTRY_ZONE_SOURCES = { de: [{ label: 'DiPUL-Quelle', url: 'https://example.test/quelle' }] };
+    let lastZones = [];
+    ${grab('renderZones')}
+    renderZones(zones);`)(els, zones);
+  return els;
+}
+test('renderZones: nur Platzhalter → "!" ohne ok, Hinweiskasten mit Quelle, kein zonesNone', () => {
+  const els = zonesRender([PLACEHOLDER]);
+  assert.equal(els['z-count'].textContent, '!');
+  assert.ok(!/\bok\b/.test(els['z-count'].className));
+  assert.ok(els['zones-hdr-text'].innerHTML.includes('T:zonesUnavailable'));
+  const body = els['zones-body'].innerHTML;
+  assert.ok(body.includes('z-unavailable'));
+  assert.ok(body.includes('T:zonesUnavailableHint'));
+  assert.ok(body.includes('https://example.test/quelle'));
+  assert.ok(!body.includes('zonesNone'));
+  assert.ok(!els['zones-hdr-text'].innerHTML.includes('zonesNone'));
+});
+test('renderZones: NOTAM-Zone + Platzhalter → "!" und Kasten plus Zonenname', () => {
+  const notam = { name: 'ENR412', type: 'PROHIBITED', notam: true, color: '#ef4444', lower: 'GND', upper: '100 m', legal: 'NOTAM', legalUrl: '', desc: '' };
+  const els = zonesRender([notam, PLACEHOLDER]);
+  assert.equal(els['z-count'].textContent, '!');
+  const body = els['zones-body'].innerHTML;
+  assert.ok(body.includes('z-unavailable'));
+  assert.ok(body.includes('ENR412'));
+  assert.ok(els['zones-hdr-text'].innerHTML.includes('T:zonesCount:1'));   // Platzhalter zählt nicht mit
+});

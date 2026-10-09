@@ -2403,6 +2403,8 @@
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em;
       color: #fff; background: #ef4444; border-radius: 4px; vertical-align: middle;
     }
+    .z-unavailable { border-left: 3px solid #f59e0b; }
+    .z-unavailable .z-details { display: block; font-size: 0.85rem; line-height: 1.45; }
 
     .ms-coordinates {
       margin-top: 0.3rem;
@@ -3601,6 +3603,8 @@
         zoneInactive: 'derzeit inaktiv',
         eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
         zoneDataUnavailable: 'Zonendaten nicht verfügbar — Luftraum nicht geprüft',
+        zonesUnavailable: 'Zonendaten konnten nicht geladen werden.',
+        zonesUnavailableHint: 'Der Luftraum an diesem Standort wurde nicht geprüft. Bitte erneut laden oder die amtliche Quelle prüfen:',
         footerText: 'Nur für {country} · Betrieb in VLOS · Keine Haftung',
         infoTitle: 'Ueber SkyCheck', settingsTitle: 'Einstellungen',
         settingsSave: 'Einstellung übernehmen', otherApps: 'Weitere Apps',
@@ -3787,6 +3791,8 @@
         zoneInactive: 'currently inactive',
         eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
         zoneDataUnavailable: 'Zone data unavailable — airspace not checked',
+        zonesUnavailable: 'Zone data could not be loaded.',
+        zonesUnavailableHint: 'The airspace at this location was not checked. Please reload or check the official source:',
         footerText: '{country} only · VLOS operations · No liability',
         infoTitle: 'About SkyCheck', settingsTitle: 'Settings',
         settingsSave: 'Apply settings', otherApps: 'More Apps',
@@ -3965,6 +3971,8 @@
         zoneInactive: 'actuellement inactive',
         eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
         zoneDataUnavailable: 'Données de zones indisponibles — espace aérien non vérifié',
+        zonesUnavailable: 'Les données de zones n\'ont pas pu être chargées.',
+        zonesUnavailableHint: 'L\'espace aérien à cet endroit n\'a pas été vérifié. Rechargez ou consultez la source officielle :',
         footerText: '{country} uniquement · Opérations VLOS · Sans responsabilité',
         infoTitle: 'À propos de SkyCheck', settingsTitle: 'Paramètres',
         settingsSave: 'Appliquer les paramètres', otherApps: 'Autres applications',
@@ -4151,6 +4159,8 @@
         zoneInactive: 'actualmente inactiva',
         eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
         zoneDataUnavailable: 'Datos de zonas no disponibles — espacio aéreo no comprobado',
+        zonesUnavailable: 'No se pudieron cargar los datos de zonas.',
+        zonesUnavailableHint: 'El espacio aéreo en esta ubicación no se ha comprobado. Recargue o consulte la fuente oficial:',
         footerText: 'Solo {country} · Operaciones VLOS · Sin responsabilidad',
         infoTitle: 'Acerca de SkyCheck', settingsTitle: 'Ajustes',
         settingsSave: 'Aplicar ajustes', otherApps: 'Más aplicaciones',
@@ -4337,6 +4347,8 @@
         zoneInactive: 'obecnie nieaktywna',
         eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
         zoneDataUnavailable: 'Dane stref niedostępne — przestrzeń nie została sprawdzona',
+        zonesUnavailable: 'Nie udało się wczytać danych stref.',
+        zonesUnavailableHint: 'Przestrzeń w tym miejscu nie została sprawdzona. Odśwież lub sprawdź oficjalne źródło:',
         footerText: 'Tylko {country} · Operacje VLOS · Bez odpowiedzialności',
         infoTitle: 'O SkyCheck', settingsTitle: 'Ustawienia',
         settingsSave: 'Zastosuj ustawienia', otherApps: 'Inne aplikacje',
@@ -5548,7 +5560,7 @@
             if (ceil && ceil.m < 300 && ceil.m !== Infinity) {
               const ms = evalStatus(now, kpVal);
               if (ceil.m < 150) ms.lvl = 'nogo'; else if (ms.lvl !== 'nogo') ms.lvl = 'warn';
-              const msg = _t('metarCeilingMsg')(sorted[0].icaoId, ceil.text);
+              const msg = _t('metarCeilingMsg')(escapeHtml(sorted[0].icaoId), escapeHtml(ceil.text));
               if (!ms.reasons.some(r => r.includes('METAR'))) ms.reasons.push(msg);
               renderStatus(ms, lastZoneStatus);
             }
@@ -8076,19 +8088,32 @@
     }
 
     function renderZones(zones) {
-      const cnt = zones.length;
+      const unavailable = zones.some(z => z && z.unavailable);
+      const real = zones.filter(z => !(z && z.unavailable));
+      const cnt = real.length;
       const $zc = $('z-count');
-      $zc.textContent = cnt;
-      $zc.className = 'z-count' + (cnt === 0 ? ' ok' : '');
+      $zc.textContent = unavailable ? '!' : cnt;
+      $zc.className = 'z-count' + (!unavailable && cnt === 0 ? ' ok' : '');
 
-      lastZones = zones;
-      $('zones-hdr-text').innerHTML = cnt > 0
-        ? _t('zonesCount')(cnt)
-        : _t('zonesNone');
+      lastZones = zones;   // vollständige Liste inkl. Platzhalter (Sprachwechsel/Re-Render lesen sie)
+      $('zones-hdr-text').innerHTML = unavailable
+        ? escapeHtml(_t('zonesUnavailable')) + (cnt > 0 ? ' ' + _t('zonesCount')(cnt) : '')
+        : (cnt > 0 ? _t('zonesCount')(cnt) : _t('zonesNone'));
 
-      $('zones-body').innerHTML = cnt === 0
+      let unavailHtml = '';
+      if (unavailable) {
+        const src = (COUNTRY_ZONE_SOURCES[COUNTRY] || COUNTRY_ZONE_SOURCES.de)[0];
+        unavailHtml = `<div class="z-item z-unavailable">
+        <div class="z-name">⚠ ${escapeHtml(_t('zoneDataUnavailable'))}</div>
+        <div class="z-details">${escapeHtml(_t('zonesUnavailableHint'))}
+          <a href="${encodeURI(src.url)}" target="_blank" rel="noopener" style="color:var(--accent);">${escapeHtml(src.label)} ↗</a>
+        </div>
+      </div>`;
+      }
+
+      $('zones-body').innerHTML = unavailHtml + (cnt === 0
         ? ''
-        : zones.map(z => `<div class="z-item">
+        : real.map(z => `<div class="z-item">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
           <div style="background:${z.color}; width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
           <div class="z-name">${z.notam ? `<span class="z-notam">${escapeHtml(_t('notamBadge'))}</span>` : ''}${escapeHtml(z.name)}</div>
@@ -8106,7 +8131,7 @@
           </span></div>
           ${z.desc ? `<div class="z-row"><span class="z-lbl">Info</span><span class="z-val">${escapeHtml(z.desc)}</span></div>` : ''}
         </div>
-      </div>`).join('');
+      </div>`).join(''));
     }
 
     // Map-Overlay für Geozonen aus dem Country-Provider (z. B. FR via JSON).
@@ -8388,6 +8413,7 @@
         const n = (name || '');
         // Labels landen unescaped in innerHTML (i18n-Strings enthalten Entities); nur der aus dem
         // Zonennamen abgeleitete Text (Fremddaten) wird hier escaped.
+        if (z?.unavailable) return { label: escapeHtml(_t('zoneDataUnavailable')), color: '#64748b' };
         if (z?.inactive) return { label: escapeHtml(name || _t('zoneRestrict')) + ' · ' + _t('zoneInactive'), color: '#64748b' };
         if (z?.zoneNum) {
           const f = z.ctrFlight;
@@ -8451,8 +8477,9 @@
         zoneHtml += `<div class="ms-zone-item" style="color:var(--go)">${_t('msNoRestr')}</div>`;
       } else {
         items.forEach(it => {
+          const dot = /^#[0-9a-f]{3,8}$/i.test(it.color || '') ? it.color : '#64748b';
           zoneHtml += `<div class="ms-zone-item">
-        <span class="ms-zone-dot" style="background:${it.color}"></span>
+        <span class="ms-zone-dot" style="background:${dot}"></span>
         <span>${it.label}</span>
       </div>`;
         });
