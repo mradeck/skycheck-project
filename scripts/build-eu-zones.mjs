@@ -73,7 +73,7 @@ const SE_TEXT = {
   RWY5K: `Airport zone, 5 km around an airport. ${SE_RULES}`,
   HKP1K: `Heliport zone, 1 km around a heliport. ${SE_RULES}`,
 };
-const SE_RESTRICTION = { RSTA: 'REQ_AUTHORISATION', RWY5K: 'REQ_AUTHORISATION',
+const SE_RESTRICTION = { RSTA: 'PROHIBITED', RWY5K: 'REQ_AUTHORISATION',
   DNGA: 'CONDITIONAL', CTR: 'CONDITIONAL', ATZ: 'CONDITIONAL', TIZ: 'CONDITIONAL', HKP1K: 'CONDITIONAL' };
 
 // Höhe aus den LFV-Textfeldern: 'GND' → 0 AGL; Zahl → Fuß AMSL; 'FL nnn' → nnn×100 Fuß, Bezug STD;

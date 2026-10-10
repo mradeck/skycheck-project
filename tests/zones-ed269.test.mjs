@@ -281,8 +281,8 @@ test('SE: Punkt an der Ecke einer RSTA-Zone trifft; Form, Höhen in ft, Behörde
     assert.equal(r.body.country, 'SE');
     const z = r.body.zones.find(x => x.name === 'ES R107 FORSMARK');
     assert.ok(z);
-    assert.equal(z.type, 'REQ_AUTHORISATION');
-    assert.equal(z.color, '#f59e0b');
+    assert.equal(z.type, 'PROHIBITED');
+    assert.equal(z.color, '#ef4444');
     assert.equal(z.lower, 'GND');
     assert.equal(z.upper, '2000 ft AMSL');
     assert.match(z.legal, /LFV/);

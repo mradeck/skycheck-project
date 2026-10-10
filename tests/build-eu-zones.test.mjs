@@ -106,13 +106,22 @@ test('SE: Gesamtzahl und eindeutige, stabile Kennungen SE-<Layer>-<Schlüssel>',
   assert.deepEqual(z[0].zoneAuthority, [{ name: 'LFV / Transportstyrelsen (CC BY 4.0)', siteURL: 'https://dronechart.lfv.se/' }]);
 });
 
-test('SE RSTA: nur LOWER === GND, REQ_AUTHORISATION, Name = LOCATION, Beschreibung = COMMENT_2', () => {
+test('SE RSTA: nur LOWER === GND, PROHIBITED, Name = LOCATION, Beschreibung = COMMENT_2', () => {
   const r = layerOf(seZones(), 'RSTA');
   assert.equal(r.length, 1);                                   // ES R129 (400), R210 (FL 95), R204A (3000) fallen weg
-  assert.equal(r[0].restriction, 'REQ_AUTHORISATION');
+  assert.equal(r[0].restriction, 'PROHIBITED');
   assert.equal(r[0].name, 'ES R107 FORSMARK');
   assert.match(r[0].message, /^Kärnkraftverk\./);
   assert.equal(r[0].identifier, 'SE-RSTA-ES_R107');
+});
+
+test('SE: Einstufung je Layer (RSTA rot, 5-km-Flughafenbereich genehmigungspflichtig, Rest bedingt)', () => {
+  const z = seZones();
+  const lv = {};
+  for (const x of z.filter(x => !('applicability' in x))) (lv[x.identifier.split('-')[1]] ||= new Set()).add(x.restriction);
+  const got = Object.fromEntries(Object.entries(lv).map(([k, v]) => [k, [...v].join(',')]));
+  assert.deepEqual(got, { RSTA: 'PROHIBITED', RWY5K: 'REQ_AUTHORISATION', DNGA: 'CONDITIONAL',
+    CTR: 'CONDITIONAL', ATZ: 'CONDITIONAL', TIZ: 'CONDITIONAL', HKP1K: 'CONDITIONAL' });
 });
 
 test('SE Höhen: GND → 0 AGL; Zahl → Fuß AMSL', () => {
