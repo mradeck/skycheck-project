@@ -355,7 +355,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 **Zweck:** Amtliche UAS-Geozonen (EU-Format ED-269) für **Luxemburg** (`lu`), **Norwegen** (`no`), **Estland** (`ee`), **Schweden** (`se`) und **Belgien** (`be`). Die Function liest die Snapshots `data/uas-zones-<cc>.json`, die wöchentlich per GitHub Action aktualisiert werden (Quellen: DAC Luxemburg CC0, Luftfartstilsynet / dronesoner.no NLOD 2.0, EANS, LFV / Transportstyrelsen CC BY 4.0, BCAA / skeyes Droneguide ohne vom Herausgeber angegebene Lizenz). Snapshot-Größen Stand 2026-10-09: LU 43, NO 1390, EE 241, SE 390, BE 582 Zonen. Die Client-App nennt die Quelle des jeweiligen Landes in der Leaflet-Attribution der Haupt- und der Alarmkarte (`ZONE_ATTRIBUTION`); bei Schweden mit Link auf CC BY 4.0 und dem Vermerk „adapted“.
 
-**Schweden:** sieben LFV-WFS-Layer (`mais:RSTA`, `DAIM_TOPO:RWY5K`, `mais:CTR`, `mais:ATZ`, `mais:TIZ`, `DAIM_TOPO:HKP1K`, `mais:DNGA`) plus die ED-318-Zonendatei der Transportstyrelsen (68 UAS-Zonen mit ihren Gültigkeitsfenstern). Einstufung: Restriktionsgebiete (ab Boden) und 5-km-Flughafenbereiche = `REQ_AUTHORISATION`; Kontrollzonen, Verkehrs(informations)zonen, 1-km-Heliport-Bereiche und Gefahrengebiete = `CONDITIONAL`; die UAS-Zonen wie in der Datei angegeben.
+**Schweden:** sieben LFV-WFS-Layer (`mais:RSTA`, `DAIM_TOPO:RWY5K`, `mais:CTR`, `mais:ATZ`, `mais:TIZ`, `DAIM_TOPO:HKP1K`, `mais:DNGA`) plus die ED-318-Zonendatei der Transportstyrelsen (68 UAS-Zonen mit ihren Gültigkeitsfenstern). Einstufung: Restriktionsgebiete (ab Boden) = `PROHIBITED`; 5-km-Flughafenbereiche = `REQ_AUTHORISATION`; Kontrollzonen, Verkehrs(informations)zonen, 1-km-Heliport-Bereiche und Gefahrengebiete = `CONDITIONAL`; die UAS-Zonen wie in der Datei angegeben.
 
 **Belgien:** Droneguide-WFS (skeyes, im Auftrag der BCAA). Der Snapshot enthält weder Welt-Zeitzonen-Polygone noch NOTAM- und temporäre Flugverbotszonen (die kommen live über `notam-be`) und lässt Zonen weg, deren Untergrenze über 120 m AGL liegt (wie die Standardansicht der amtlichen Karte). Fehlt der Text der Quelle, dient der lesbare Zonenart-Code (z. B. `CIV HELISTRIP`) als Beschreibung. Die Weiterverwendung stützt sich auf die dokumentierte Auskunft der BCAA (Az. G26-187 vom 2026-09-16, wiedergegeben in github.com/CallMarcus/dji-drone-metadata-embedder/issues/562); die BCAA empfiehlt vier Hinweise, die die App dauerhaft unter der Zonenliste zeigt.
 
@@ -664,4 +664,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.118.0 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.118.1 · Oktober 2026*
