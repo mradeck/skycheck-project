@@ -73,7 +73,7 @@ const SE_TEXT = {
   RWY5K: `Airport zone, 5 km around an airport. ${SE_RULES}`,
   HKP1K: `Heliport zone, 1 km around a heliport. ${SE_RULES}`,
 };
-const SE_RESTRICTION = { RSTA: 'REQ_AUTHORISATION', RWY5K: 'REQ_AUTHORISATION',
+const SE_RESTRICTION = { RSTA: 'PROHIBITED', RWY5K: 'REQ_AUTHORISATION',
   DNGA: 'CONDITIONAL', CTR: 'CONDITIONAL', ATZ: 'CONDITIONAL', TIZ: 'CONDITIONAL', HKP1K: 'CONDITIONAL' };
 
 // Höhe aus den LFV-Textfeldern: 'GND' → 0 AGL; Zahl → Fuß AMSL; 'FL nnn' → nnn×100 Fuß, Bezug STD;
@@ -179,18 +179,21 @@ function seEd318(f) {
 
 export function buildSeZones(files, opts = {}) {
   const out = [];
-  const lfv = (layer, keyOf, nameOf, msgOf, { withHeights = true, keep = () => true } = {}) => {
+  const lfv = (layer, keyOf, nameOf, msgOf, { withHeights = true, keep = () => true, level = () => SE_RESTRICTION[layer] } = {}) => {
     for (const f of seFeatures(files[layer], layer)) {
       const p = f.properties;
       if (!keep(p)) continue;
       out.push(seZone(layer, keyOf(p), nameOf(p), msgOf(p),
-        polygonVolumes(f.geometry, seLfvLimits(p, withHeights)), SE_RESTRICTION[layer]));
+        polygonVolumes(f.geometry, seLfvLimits(p, withHeights)), level(p)));
     }
   };
   const loc = p => p.LOCATION || p.NAMEOFAREA;
   const byName = p => idPart(p.NAMEOFAREA);
   const byMsid = p => idPart(p.MSID);
-  lfv('RSTA', byName, loc, p => p.COMMENT_2 || '', { keep: p => /^GND$/i.test(String(p.LOWER).trim()) });
+  // Genehmigung laut Beschreibung nur bei Bekanntgabe per NOTAM/AIP SUP → gelb statt rot (Aktivierung zeigt der Live-Knopf rot).
+  const SE_NOTAM_ONLY = /(?:endast\s+när\s+så\s+tillkännages|only\s+when\s+so\s+is\s+promulgated)\s+(?:genom|by)\s+NOTAM/i;
+  lfv('RSTA', byName, loc, p => p.COMMENT_2 || '', { keep: p => /^GND$/i.test(String(p.LOWER).trim()),
+    level: p => SE_NOTAM_ONLY.test(String(p.COMMENT_2 || '')) ? 'REQ_AUTHORISATION' : SE_RESTRICTION.RSTA });
   lfv('DNGA', byName, loc, p => p.COMMENT_2 || '');
   lfv('CTR', byMsid, loc, () => SE_TEXT.CTR, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });
   lfv('ATZ', byName, loc, () => SE_TEXT.ATZ, { keep: p => p.POSITIONINDICATOR !== 'ESGP' });

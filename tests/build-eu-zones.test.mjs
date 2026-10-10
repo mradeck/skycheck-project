@@ -106,13 +106,41 @@ test('SE: Gesamtzahl und eindeutige, stabile Kennungen SE-<Layer>-<Schlüssel>',
   assert.deepEqual(z[0].zoneAuthority, [{ name: 'LFV / Transportstyrelsen (CC BY 4.0)', siteURL: 'https://dronechart.lfv.se/' }]);
 });
 
-test('SE RSTA: nur LOWER === GND, REQ_AUTHORISATION, Name = LOCATION, Beschreibung = COMMENT_2', () => {
+test('SE RSTA: nur LOWER === GND, PROHIBITED, Name = LOCATION, Beschreibung = COMMENT_2', () => {
   const r = layerOf(seZones(), 'RSTA');
   assert.equal(r.length, 1);                                   // ES R129 (400), R210 (FL 95), R204A (3000) fallen weg
-  assert.equal(r[0].restriction, 'REQ_AUTHORISATION');
+  assert.equal(r[0].restriction, 'PROHIBITED');
   assert.equal(r[0].name, 'ES R107 FORSMARK');
   assert.match(r[0].message, /^Kärnkraftverk\./);
   assert.equal(r[0].identifier, 'SE-RSTA-ES_R107');
+});
+
+// RSTA mit Genehmigungspflicht nur per NOTAM/AIP SUP bleibt gelb (REQ_AUTHORISATION), alle anderen rot.
+const rstaWith = (comment) => {
+  const d = JSON.parse(SE_RAW.RSTA); d.features[0].properties.COMMENT_2 = comment;
+  return layerOf(buildSe({ RSTA: JSON.stringify(d) }), 'RSTA').find(x => x.identifier === 'SE-RSTA-ES_R107').restriction;
+};
+test('SE RSTA: schwedischer NOTAM/AIP-SUP-Satz → REQ_AUTHORISATION', () => {
+  assert.equal(rstaWith('Tillstånd krävs endast när så tillkännages genom NOTAM eller AIP SUP.\n\nPermission required only when so is promulgated by NOTAM or AIP SUP.'), 'REQ_AUTHORISATION');
+});
+test('SE RSTA: englischer NOTAM/AIP-SUP-Satz, andere Schreibweise und Zeilenumbrüche → REQ_AUTHORISATION', () => {
+  assert.equal(rstaWith('Military area.\nPERMISSION REQUIRED ONLY\n  WHEN   SO IS\nPROMULGATED BY notam or AIP SUP.'), 'REQ_AUTHORISATION');
+});
+test('SE RSTA: anderer Text mit NOTAM-Erwähnung → PROHIBITED', () => {
+  assert.equal(rstaWith('Militär verksamhet. Tillstånd kan erhållas från STOCKHOLM ACC. Aktiveras genom NOTAM.'), 'PROHIBITED');
+});
+test('SE RSTA: leeres COMMENT_2 → PROHIBITED', () => {
+  assert.equal(rstaWith(''), 'PROHIBITED');
+  assert.equal(rstaWith(null), 'PROHIBITED');
+});
+
+test('SE: Einstufung je Layer (RSTA rot, 5-km-Flughafenbereich genehmigungspflichtig, Rest bedingt)', () => {
+  const z = seZones();
+  const lv = {};
+  for (const x of z.filter(x => !('applicability' in x))) (lv[x.identifier.split('-')[1]] ||= new Set()).add(x.restriction);
+  const got = Object.fromEntries(Object.entries(lv).map(([k, v]) => [k, [...v].join(',')]));
+  assert.deepEqual(got, { RSTA: 'PROHIBITED', RWY5K: 'REQ_AUTHORISATION', DNGA: 'CONDITIONAL',
+    CTR: 'CONDITIONAL', ATZ: 'CONDITIONAL', TIZ: 'CONDITIONAL', HKP1K: 'CONDITIONAL' });
 });
 
 test('SE Höhen: GND → 0 AGL; Zahl → Fuß AMSL', () => {
