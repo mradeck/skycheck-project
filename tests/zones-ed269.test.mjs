@@ -1,6 +1,6 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -288,6 +288,25 @@ test('SE: Punkt an der Ecke einer RSTA-Zone trifft; Form, Höhen in ft, Behörde
     assert.match(z.legal, /LFV/);
     assert.match(z.legalUrl, /^https:\/\/dronechart\.lfv\.se/);
   } finally { fn._test.setNow(null); }
+});
+
+test('SE: echter Snapshot — ES R21 (Genehmigung nur per NOTAM/AIP SUP) ist gelb, nicht rot', async () => {
+  const snap = readFileSync(new URL('../data/uas-zones-se.json', import.meta.url), 'utf8');
+  const ring = JSON.parse(snap).find(x => x.name.startsWith('ES R21 ')).geometry[0].horizontalProjection.coordinates[0];
+  const lon = ring.reduce((a, c) => a + c[0], 0) / ring.length;          // Eckenmittel liegt im (nahezu konvexen) Polygon
+  const lat = ring.reduce((a, c) => a + c[1], 0) / ring.length;
+  const prev = process.env.SKYCHECK_DATA_DIR;
+  const dir = mkdtempSync(join(tmpdir(), 'ed269-real-'));
+  writeFileSync(join(dir, 'uas-zones-se.json'), snap);
+  process.env.SKYCHECK_DATA_DIR = dir; fn._test.resetCache();
+  try {
+    at('2026-10-09T12:00:00Z');
+    const r = await call({ country: 'se', lat: String(lat), lon: String(lon), radius: '5' });
+    const z = r.body.zones.find(x => x.name === 'ES R21 SOUTHERN PART OF THE STOCKHOLM ARCHIPELAGO');
+    assert.ok(z, 'Punkt im Polygon trifft ES R21');
+    assert.equal(z.type, 'REQ_AUTHORISATION');
+    assert.notEqual(z.color, '#ef4444');
+  } finally { fn._test.setNow(null); process.env.SKYCHECK_DATA_DIR = prev; fn._test.resetCache(); }
 });
 
 test('SE: Kreis-Zone aus ED-318 (Point + extent) trifft im Radius, nicht außerhalb', async () => {

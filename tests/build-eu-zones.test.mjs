@@ -115,6 +115,25 @@ test('SE RSTA: nur LOWER === GND, PROHIBITED, Name = LOCATION, Beschreibung = CO
   assert.equal(r[0].identifier, 'SE-RSTA-ES_R107');
 });
 
+// RSTA mit Genehmigungspflicht nur per NOTAM/AIP SUP bleibt gelb (REQ_AUTHORISATION), alle anderen rot.
+const rstaWith = (comment) => {
+  const d = JSON.parse(SE_RAW.RSTA); d.features[0].properties.COMMENT_2 = comment;
+  return layerOf(buildSe({ RSTA: JSON.stringify(d) }), 'RSTA').find(x => x.identifier === 'SE-RSTA-ES_R107').restriction;
+};
+test('SE RSTA: schwedischer NOTAM/AIP-SUP-Satz → REQ_AUTHORISATION', () => {
+  assert.equal(rstaWith('Tillstånd krävs endast när så tillkännages genom NOTAM eller AIP SUP.\n\nPermission required only when so is promulgated by NOTAM or AIP SUP.'), 'REQ_AUTHORISATION');
+});
+test('SE RSTA: englischer NOTAM/AIP-SUP-Satz, andere Schreibweise und Zeilenumbrüche → REQ_AUTHORISATION', () => {
+  assert.equal(rstaWith('Military area.\nPERMISSION REQUIRED ONLY\n  WHEN   SO IS\nPROMULGATED BY notam or AIP SUP.'), 'REQ_AUTHORISATION');
+});
+test('SE RSTA: anderer Text mit NOTAM-Erwähnung → PROHIBITED', () => {
+  assert.equal(rstaWith('Militär verksamhet. Tillstånd kan erhållas från STOCKHOLM ACC. Aktiveras genom NOTAM.'), 'PROHIBITED');
+});
+test('SE RSTA: leeres COMMENT_2 → PROHIBITED', () => {
+  assert.equal(rstaWith(''), 'PROHIBITED');
+  assert.equal(rstaWith(null), 'PROHIBITED');
+});
+
 test('SE: Einstufung je Layer (RSTA rot, 5-km-Flughafenbereich genehmigungspflichtig, Rest bedingt)', () => {
   const z = seZones();
   const lv = {};
