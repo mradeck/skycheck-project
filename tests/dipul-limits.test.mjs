@@ -28,6 +28,15 @@ const lib = new Function(`
 `)();
 const { dipulLimits, computeCtrFlightInfo } = lib;
 
+// fetchCtrSubzones mit gestubbtem safeFetch/DIPUL_WFS_URL (Verdrahtung WFS -> dipulLimits).
+const wfsFetch = new Function('safeFetch', 'DIPUL_WFS_URL', `
+  const FT_TO_M = 0.3048;
+  ${grab('altitudeToMetres')}
+  ${grab('dipulLimits')}
+  ${grab('fetchCtrSubzones')}
+  return fetchCtrSubzones;
+`);
+
 test('WFS numerisch, EDDM Zone 3: 1634.6 ft MSL -> 498.2 m, max 40 m AGL bei 458 m Gelände', () => {
   const r = dipulLimits({ lower_limit_m_agl: 45, lower_limit_ft_msl: 1634.6, upper_limit_ft_msl: 3500, upper_limit_fl_pa: null });
   assert.ok(Math.abs(r.lowerMslM - 498.2) < 0.05);
@@ -94,4 +103,25 @@ test('Altes Schema bleibt Fallback', () => {
   assert.equal(dipulLimits({ untere_grenze: '0.0', obere_grenze: 'UNL' }).lower, 'GND');
   assert.equal(dipulLimits({}).lower, 'GND');
   assert.equal(dipulLimits({}).upper, '—');
+});
+
+test('Altes Schema: MSL ohne explizite Einheit -> Höhe unbekannt (lowerMslM null)', () => {
+  const r = dipulLimits({ lower_limit_altitude: '1634.6', lower_limit_alt_ref: 'MSL' });
+  assert.equal(r.lowerMslM, null);
+});
+
+test('fetchCtrSubzones: echte WFS-Features (EDDM Zone 3 und 1) -> lowerMslM', async () => {
+  const ring = [[11.7, 48.3], [11.8, 48.3], [11.8, 48.4], [11.7, 48.3]];
+  const mk = (code, props) => ({ type: 'Feature', properties: { type_code_detail: code, ...props }, geometry: { type: 'Polygon', coordinates: [ring] } });
+  const data = { features: [
+    mk('U_CONTROL_ZONE_3', { lower_limit_ft_msl: 1634.6, lower_limit_m_agl: 45, upper_limit_ft_msl: 3500 }),
+    mk('U_CONTROL_ZONE_1', { lower_limit_ft_msl: 1487, lower_limit_m_agl: 0, upper_limit_ft_msl: 3500 }),
+  ] };
+  const fn = wfsFetch(async () => ({ ok: true, json: async () => data }), 'https://example.test/wfs');
+  const feats = await fn(48.35, 11.75);
+  assert.equal(feats.length, 2);
+  assert.equal(feats[0].zoneNum, 1);
+  assert.ok(Math.abs(feats[0].lowerMslM - 453.2) < 0.05);
+  assert.equal(feats[1].zoneNum, 3);
+  assert.ok(Math.abs(feats[1].lowerMslM - 498.2) < 0.05);
 });

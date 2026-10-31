@@ -6061,7 +6061,8 @@
       const lowerRef = p.lower_limit_alt_ref || 'AGL';
       const lowerUnit = p.lower_limit_unit || 'm';
       const isMsl = String(lowerRef).toUpperCase() === 'MSL';
-      const lowerMslM = isMsl ? altitudeToMetres(lowerRaw, lowerUnit) : null;
+      // Ohne explizite Einheit ist die Höhe unbekannt (nicht als Meter lesen → zu permissiv).
+      const lowerMslM = isMsl && p.lower_limit_unit ? altitudeToMetres(lowerRaw, p.lower_limit_unit) : null;
       const lower = Number(lowerRaw) === 0 && !isMsl ? 'GND' : `${lowerRaw} ${lowerUnit} ${lowerRef}`.trim();
       let upper = p.upper_limit_altitude || p.obere_grenze || '';
       if (upper === '99999.0' || upper === 'UNL') upper = 'UNL';
