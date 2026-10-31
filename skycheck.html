@@ -3449,7 +3449,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.118.2';
+    const APP_VER = '26.10.118.3';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -7455,10 +7455,40 @@
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
-      }).sort((a, b) => Number(isCtrZone(b)) - Number(isCtrZone(a)));
+      }).sort((a, b) => Number(isCtrZone(b)) - Number(isCtrZone(a)) || Number(!!a.inactive) - Number(!!b.inactive));
       // Teilergebnis: gefundene Zonen bleiben sichtbar, der Ausfall eines Layers wird zusätzlich gemeldet.
       if (partialLayers) out.push(zoneDataUnavailable());
       return out;
+    }
+
+    // DiPUL-Zeiten (GFI "Oct 31, 2026, 7:00:00 AM" bzw. WFS "2026-10-31T07:00:00Z") sind UTC.
+    // Explizit geparst statt Date.parse (lokale Zeit, Safari uneinheitlich); unlesbar -> null.
+    function parseDipulTime(s) {
+      s = String(s ?? '').trim();
+      let m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.\d+)?)?\s*(Z|[+-]\d\d:?\d\d)?$/i.exec(s);
+      let y, mo, d, h, mi, sec, off = 0;
+      if (m) {
+        [y, mo, d, h, mi, sec] = [+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)];
+        if (m[7] && m[7].toUpperCase() !== 'Z') {
+          const o = /([+-])(\d\d):?(\d\d)/.exec(m[7]);
+          off = (o[1] === '-' ? -1 : 1) * (+o[2] * 60 + +o[3]);
+        }
+      } else if ((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4}),?\s+(\d{1,2}):(\d\d)(?::(\d\d))?\s*(AM|PM)$/i.exec(s))) {
+        mo = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(m[1].toLowerCase());
+        [y, d, h, mi, sec] = [+m[3], +m[2], +m[4], +m[5], +(m[6] || 0)];
+        if (mo < 0 || h < 1 || h > 12) return null;
+        h = (h % 12) + (m[7].toUpperCase() === 'PM' ? 12 : 0);
+      } else return null;
+      if (d < 1 || d > 31 || h > 23 || mi > 59 || sec > 59) return null;
+      const t = Date.UTC(y, mo, d, h, mi, sec) - off * 60000;
+      return Number.isFinite(t) ? t : null;
+    }
+
+    // true nur bei sicher lesbarem Fenster: Ende vor jetzt oder Start nach jetzt + SOON_MS (wie ed269Inactivity).
+    // Fehlende/unlesbare Zeiten -> false (= aktiv, fail-safe).
+    function dipulWindowInactive(startStr, endStr, now = Date.now()) {
+      const end = parseDipulTime(endStr), start = parseDipulTime(startStr);
+      return (end !== null && end < now) || (start !== null && start > now + SOON_MS);
     }
 
     // Parst eine GeoServer-GetFeatureInfo-HTML-Antwort in Zonen-Objekte.
@@ -7492,6 +7522,8 @@
           const { lowerMslM, lower, lowerRaw, lowerRef, lowerUnit, upper } = dipulLimits(f);
 
           const legal = f.legal_ref || f.rechtliche_grundlage || '—';
+          // U_NFZ (temporäre Einschränkung) trägt ein Zeitfenster: nur bei sicher lesbarem Fenster außerhalb inaktiv.
+          const inactive = /^U_NFZ$/i.test(type) && dipulWindowInactive(f.start_time, f.end_time);
 
           params.push({
             fid: f.fid || '',
@@ -7508,7 +7540,8 @@
             lowerMslM,
             upper,
             legal,
-            color: zoneColor(type),
+            ...(inactive ? { inactive: true } : {}),
+            color: inactive ? '#64748b' : zoneColor(type),
           });
         }
       });
@@ -7530,7 +7563,7 @@
     function zoneColor(t = '') {
       t = t.toUpperCase();
       if (t.includes('CONTROL_ZONE') || t.includes('CTR')) return '#f59e0b';
-      if (t.includes('RESTRICTED') || t.includes('PROHIBITED')) return '#ef4444';
+      if (t.includes('RESTRICTED') || t.includes('PROHIBITED') || t.includes('U_NFZ')) return '#ef4444';
       if (t.includes('DANGER')) return '#f97316';
       if (t.includes('AIRPORT') || t.includes('HELIPORT')) return '#f59e0b';
       if (t.includes('NATIONAL_PARK') || t.includes('NATURE')) return '#22c55e';
@@ -7660,7 +7693,7 @@
           } else {
             zLvl = 'nogo'; msg = _t('zoneCtr');
           }
-        } else if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr')) {
+        } else if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr') || t.includes('u_nfz')) {
           zLvl = 'nogo'; msg = _t('zoneNoFly');
         } else if (t.includes('airport') || t.includes('flughafen') || t.includes('flugplatz') || t.includes('aerodrome')) {
           zLvl = 'nogo'; msg = _t('zoneAirfield');
@@ -8568,7 +8601,7 @@
           return { label: _t('msAerodrome'), color: '#e07832' };
         if (t.includes('kontrollzone') || t === 'ctr')
           return { label: _t('msCTR'), color: '#e05252' };
-        if (t.includes('flugbeschraenkung') || t.includes('beschraenkung') || t.includes('tfr') || t.includes('prohibited'))
+        if (t.includes('flugbeschraenkung') || t.includes('beschraenkung') || t.includes('tfr') || t.includes('prohibited') || t.includes('u_nfz'))
           return { label: _t('msProhibited'), color: '#cc2244' };
         if (t.includes('temporaere') || t.includes('teb'))
           return { label: _t('msTempRestr'), color: '#dd6600' };
