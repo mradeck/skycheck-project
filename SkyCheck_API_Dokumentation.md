@@ -287,13 +287,22 @@ flughaefen                  – Kontrollzone um Flughäfen
 kontrollzonen               – CTR
 nationalparks               – Naturschutzgebiete
 naturschutzgebiete          – NSG
-temporaere_betriebseinschraenkungen – Aktuelle TEBs
+temporaere_betriebseinschraenkungen – Aktuelle TEBs (type_code U_NFZ)
+inaktive_temporaere_betriebseinschraenkungen – TEBs außerhalb ihres Zeitfensters
 flugplaetze                 – Segelflugplätze etc.
 industrieanlagen            – Industrieanlagen
 kraftwerke                  – Kraftwerke
 ```
 
 **Vollständige Layer-Liste:** 33 Layer insgesamt (in `DIPUL_ALL_LAYERS` in skycheck.html).
+
+**Temporäre Betriebseinschränkungen (`U_NFZ`):** Die beiden TEB-Ebenen liefern Zonen mit `start_time` und `end_time` (GFI-Form `Oct 31, 2026, 7:00:00 AM`, explizit als UTC gelesen). Die Inaktiv-Ebene hat keine `type_code`-Spalte; erkannt wird eine U_NFZ dort über den `fid`-Präfix. Die Statuslogik bewertet eine U_NFZ so:
+
+- Fenster läuft oder beginnt binnen 24 Stunden → aktiv, rot („Flugverbot/-beschränkung“, No-Go)
+- Fenster beendet oder beginnt später → inaktiv, grau („derzeit inaktiv“), mit Start-/Endhinweis in UTC; Höhengrenzen der Inaktiv-Ebene werden angezeigt
+- Zeit unlesbar oder `recurrence_rule` gesetzt → aktiv (sicherer Standard)
+
+Flugplatz-Codes (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) bleiben bewusst gelb.
 
 ### WMS GetMap (Kartendarstellung)
 
@@ -666,4 +675,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.118.2 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.118.3 · Oktober 2026*
