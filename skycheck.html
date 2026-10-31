@@ -3449,7 +3449,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.118.3';
+    const APP_VER = '26.10.118.4';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3570,6 +3570,7 @@
         ctxProtected: 'Schutzgebiete', ctxMotorways: 'Autobahnen', ctxPowerlines: 'Stromleitungen', ctxRail: 'Bahn',
         hgridToggle: 'Höhengitter', hgridMax: 'Max. Flughöhe', hgridLegendTitle: 'Max. Flughöhe (Näherung)',
         hgridLow: 'niedrig', hgridHigh: 'hoch', hgridZoneShort: 'Zone', hgridIndiv: 'individuelle Freigabe',
+        hgridNfz: 'Temporäres Flugverbot', hgridNfzUnchecked: 'Temporäre Flugverbote nicht prüfbar',
         hgridNote: 'Näherung je CTR-Sub-Zone aus DiPUL-Grenze + Gelände. Verbindlich: DiPUL / NfL.',
         mapAllZones: 'Alle Geozonen', mapRiskyZones: 'Nur Risikozonen',
         mapZonesShort: 'Zonen', mapAircraftShort: 'Flüge', mapAllShort: 'Alle', mapRiskShort: 'Risiko',
@@ -3762,6 +3763,7 @@
         ctxProtected: 'Protected areas', ctxMotorways: 'Motorways', ctxPowerlines: 'Power lines', ctxRail: 'Railways',
         hgridToggle: 'Height grid', hgridMax: 'Max. height', hgridLegendTitle: 'Max. flight height (approx.)',
         hgridLow: 'low', hgridHigh: 'high', hgridZoneShort: 'Zone', hgridIndiv: 'individual clearance',
+        hgridNfz: 'Temporary no-fly zone', hgridNfzUnchecked: 'temporary no-fly zones could not be checked',
         hgridNote: 'Approximation per CTR sub-zone from DiPUL limit + terrain. Binding: DiPUL / NfL.',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         mapZonesShort: 'Zones', mapAircraftShort: 'Flights', mapAllShort: 'All', mapRiskShort: 'Risk',
@@ -3946,6 +3948,7 @@
         ctxProtected: 'Zones protégées', ctxMotorways: 'Autoroutes', ctxPowerlines: 'Lignes électriques', ctxRail: 'Voies ferrées',
         hgridToggle: 'Grille de hauteur', hgridMax: 'Hauteur max.', hgridLegendTitle: 'Hauteur de vol max. (approx.)',
         hgridLow: 'basse', hgridHigh: 'haute', hgridZoneShort: 'Zone', hgridIndiv: 'autorisation individuelle',
+        hgridNfz: 'Zone interdite temporaire', hgridNfzUnchecked: 'zones interdites temporaires non vérifiables',
         hgridNote: 'Approximation par sous-zone CTR : limite DiPUL + relief. Contraignant : DiPUL / NfL.',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         mapZonesShort: 'Zones', mapAircraftShort: 'Vols', mapAllShort: 'Toutes', mapRiskShort: 'Risque',
@@ -4138,6 +4141,7 @@
         ctxProtected: 'Áreas protegidas', ctxMotorways: 'Autopistas', ctxPowerlines: 'Líneas eléctricas', ctxRail: 'Ferrocarriles',
         hgridToggle: 'Rejilla de altura', hgridMax: 'Altura máx.', hgridLegendTitle: 'Altura máx. de vuelo (aprox.)',
         hgridLow: 'baja', hgridHigh: 'alta', hgridZoneShort: 'Zona', hgridIndiv: 'autorización individual',
+        hgridNfz: 'Zona prohibida temporal', hgridNfzUnchecked: 'zonas prohibidas temporales no comprobables',
         hgridNote: 'Aproximación por subzona CTR: límite DiPUL + terreno. Vinculante: DiPUL / NfL.',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         mapZonesShort: 'Zonas', mapAircraftShort: 'Vuelos', mapAllShort: 'Todas', mapRiskShort: 'Riesgo',
@@ -4330,6 +4334,7 @@
         ctxProtected: 'Obszary chronione', ctxMotorways: 'Autostrady', ctxPowerlines: 'Linie energetyczne', ctxRail: 'Koleje',
         hgridToggle: 'Siatka wysokości', hgridMax: 'Maks. wysokość', hgridLegendTitle: 'Maks. wysokość lotu (przybliż.)',
         hgridLow: 'niska', hgridHigh: 'wysoka', hgridZoneShort: 'Strefa', hgridIndiv: 'zezwolenie indywidualne',
+        hgridNfz: 'Tymczasowa strefa zakazu lotów', hgridNfzUnchecked: 'tymczasowych stref zakazu nie sprawdzono',
         hgridNote: 'Przybliżenie na podstrefę CTR: granica DiPUL + teren. Wiążące: DiPUL / NfL.',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         mapZonesShort: 'Strefy', mapAircraftShort: 'Loty', mapAllShort: 'Wszystkie', mapRiskShort: 'Ryzyko',
@@ -6283,6 +6288,48 @@
       feats.sort((a, b) => a.zoneNum - b.zoneNum);
       return feats;
     }
+    // Temporäre Flugverbote (U_NFZ) als Polygone aus dem WFS-GeoJSON. Liefert ALLE Features mit
+    // lesbarer Geometrie (auch abgelaufene/künftige); aktiv/inaktiv wird erst beim Hover bzw. Raster-
+    // bau über das Zeitfenster entschieden (hgridNfzAt). Fremdtypen (type_code gesetzt, aber != U_NFZ)
+    // werden ignoriert.
+    function nfzFromWfs(data) {
+      const out = [];
+      ((data && data.features) || []).forEach(f => {
+        const p = f.properties || {}, g = f.geometry;
+        if (p.type_code && !/^U_NFZ$/i.test(String(p.type_code))) return;
+        if (!g) return;
+        const polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+        if (!polys.length) return;
+        let minX = 180, minY = 90, maxX = -180, maxY = -90;
+        polys.forEach(rings => rings.forEach(ring => ring.forEach(c => {
+          if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+          if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+        })));
+        out.push({ name: String(p.name || p.generated_name_de || p.generated_name_en || ''),
+          start: p.start_time, end: p.end_time, polys, bbox: [minX, minY, maxX, maxY] });
+      });
+      return out;
+    }
+    // DiPUL-WFS temporaere_betriebseinschraenkungen. Die Inaktiv-Ebene
+    // (inaktive_temporaere_betriebseinschraenkungen) ist WMS-only und per WFS NICHT abrufbar — sie
+    // wird hier bewusst nicht berücksichtigt (inaktive Zonen beeinflussen das Höhengitter ohnehin nicht).
+    // Wirft bei HTTP-/Netzfehler, damit der Aufrufer „nicht prüfbar" sichtbar machen kann.
+    async function fetchNfzPolygons(lat, lon) {
+      const dLat = 0.45, dLon = 0.6;
+      const bbox = `${(lat - dLat).toFixed(4)},${(lon - dLon).toFixed(4)},${(lat + dLat).toFixed(4)},${(lon + dLon).toFixed(4)}`;
+      const url = `${DIPUL_WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=dipul:temporaere_betriebseinschraenkungen&outputFormat=application/json&count=300&bbox=${bbox}`;
+      const r = await safeFetch(url, 9000);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return nfzFromWfs(await r.json());
+    }
+    // Erste zum Zeitpunkt nowMs AKTIVE U_NFZ, die den Punkt enthält (Zeitfenster wie in der Zonenliste:
+    // unlesbar = aktiv, laufend oder Start binnen 24 h = aktiv). Sonst null.
+    function hgridNfzAt(lon, lat, nfz, nowMs) {
+      for (const n of nfz || []) {
+        if (pointInFeature(lon, lat, n) && !dipulWindowInactive(n.start, n.end, nowMs)) return n;
+      }
+      return null;
+    }
     /* Live-Hover-Tooltip: rechnet die max. Flughöhe an der EXAKTEN Cursorposition. Das Gelände kommt
        aus den DEM-Kacheln (~25 m/Pixel, bereits geladen) — der Wert ist damit SOFORT präzise, kein
        Nachladen/Warten mehr. */
@@ -6301,15 +6348,23 @@
       // Geländehöhe am Cursor als DHHN2016 (DEM-MSL ≈ DHHN2016 in DE innerhalb Sub-Meter, unter DEM-Genauigkeit).
       return `${_t('hgridZoneShort')} ${feat.zoneNum} · ${_t('hgridMax')}: ${info.maxAglM} m AGL · ${_t('msGroundMsl')} ≈ ${Math.round(groundMslM)} m DHHN2016`;
     }
+    // Hover-Text an (lat,lon): aktive U_NFZ gewinnt (Flugverbot + Name, KEINE Höhe), sonst CTR-Höhe.
+    // Fehlgeschlagener NFZ-Abruf (nfzOk === false) hängt einen Hinweis an die Höhe an (fail-visible).
+    function hgridHoverLabel(m, lat, lon, nowMs = Date.now()) {
+      const nfz = hgridNfzAt(lon, lat, m.nfz, nowMs);
+      if (nfz) return nfz.name ? `${_t('hgridNfz')} · ${escapeHtml(nfz.name)}` : _t('hgridNfz');
+      const feat = m.feats.find(f => pointInFeature(lon, lat, f));
+      if (!feat) return null;
+      const label = _hgridLabel(feat, feat.zoneNum === 1 ? null : m.sampleTerrain(lat, lon));
+      return label && m.nfzOk === false ? `${label} · ${_t('hgridNfzUnchecked')}` : label;
+    }
     function onHgridHover(e) {
       const m = S._hgridModel;
       if (!m || !S.hgridOn || !S.map) return;
       const lat = e.latlng.lat, lon = e.latlng.lng;
-      const feat = m.feats.find(f => pointInFeature(lon, lat, f));
       const tip = _hgridTooltip();
-      if (!feat) { S.map.closeTooltip(tip); return; }
       // Präziser Wert direkt aus den DEM-Kacheln (verzögerungsfrei).
-      const label = _hgridLabel(feat, feat.zoneNum === 1 ? null : m.sampleTerrain(lat, lon));
+      const label = hgridHoverLabel(m, lat, lon);
       if (label) { tip.setLatLng(e.latlng).setContent(label); S.map.openTooltip(tip); }
       else S.map.closeTooltip(tip);
     }
@@ -6332,8 +6387,13 @@
       const seq = ++S._hgridSeq;
       const lat = S.lat, lon = S.lon;
       let feats;
+      // NFZ parallel holen; ein Ausfall darf das CTR-Gitter nie blanken (nfzOk=false -> Hinweis im Hover).
+      const nfzP = fetchNfzPolygons(lat, lon).then(list => ({ list, ok: true }),
+        e => { console.warn('Höhengitter-NFZ:', e.message); return { list: [], ok: false }; });
       try { feats = await fetchCtrSubzones(lat, lon); }
       catch (e) { console.warn('Höhengitter-WFS:', e.message); return; }
+      const { list: nfz, ok: nfzOk } = await nfzP;
+      const nowMs = Date.now();
       if (seq !== S._hgridSeq) return;
       if (!feats.length) {
         if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
@@ -6367,9 +6427,10 @@
       for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
         const cy = minLat + (r + 0.5) * cLat, cx = minLon + (c + 0.5) * cLon;
         const feat = feats.find(f => pointInFeature(cx, cy, f));
-        if (!feat) continue;                        // außerhalb der CTR → transparent (alpha 0)
+        const inNfz = hgridNfzAt(cx, cy, nfz, nowMs);   // aktives temporäres Flugverbot: wie Zone 1 rot
+        if (!feat && !inNfz) continue;              // außerhalb der CTR → transparent (alpha 0)
         let rgb;
-        if (feat.zoneNum === 1) {
+        if (inNfz || feat.zoneNum === 1) {
           rgb = HGRID_STOPS[0][1];   // Zone 1 = individuelle Freigabe → rot
         } else {
           const g = terrAt(cy, cx);
@@ -6390,7 +6451,7 @@
       if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
       S.layers.heightGrid = overlay;
       S._hgridBBox = { minLat, minLon, maxLat, maxLon };
-      S._hgridModel = { feats, sampleTerrain: terrAt };   // für den Live-Hover
+      S._hgridModel = { feats, sampleTerrain: terrAt, nfz, nfzOk };   // für den Live-Hover
       if (S.hgridOn) { overlay.addTo(S.map); hgridHoverOn(); }
     }
     // Nach jedem Check: Toggle in DE stets sichtbar; Grid nur neu bauen, wenn der Pin
