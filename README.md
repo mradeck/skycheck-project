@@ -32,7 +32,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All fourteen are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.10.118.3
+📦 **Current version:** v26.10.118.4
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -144,6 +144,7 @@ scripts/
   fetch-context.sh          ← robust driver: curl-fetch (retry) + gen-context per layer, idempotent
   build-fr-spatial-data.mjs ← builds the 2° spatial tiles for France (zones index + context layers)
   build-gcg-web-grid.mjs    ← converts the official GCG2016 GeoTIFF into the compact web grid
+  check-dipul-schema.mjs    ← weekly DiPUL schema check (`node scripts/check-dipul-schema.mjs`, read-only)
   README.md                 ← how to add context layers for a new country
   test-coordinate-tools.cjs ← Node check for coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← Node tests (`node --test "tests/*.test.mjs"`)
@@ -152,6 +153,7 @@ tests/                      ← Node tests (`node --test "tests/*.test.mjs"`)
     update-at-zones.yml     ← monthly job: fetch newest Austro Control ED-269 → commit data file
     update-eu-zones.yml     ← weekly job (Mondays): refresh the LU/NO/EE/SE/BE ED-269 snapshots → commit data files
     update-de-airac.yml     ← weekly job: check the Mobilithek AIRAC offer → extract the DiPUL air-traffic layers
+    check-dipul-schema.yml  ← weekly job (Wednesdays): DiPUL schema and service check, no commit
 redirect.html               ← optional redirect page
 ```
 
@@ -262,6 +264,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.10.118.4 | 🇩🇪 **Height grid: an active temporary no-fly zone takes precedence; weekly DiPUL schema check.** Active temporary no-fly zones (U_NFZ, WFS `dipul:temporaere_betriebseinschraenkungen`) now appear as a separate red vector layer above the raster instead of coloured cells (small zones fell through the raster). The hover shows "Temporary no-fly zone · <name>" instead of a height. The list is queried for the whole CTR area and refreshed on every check without rebuilding the raster. If the fetch fails, known zones stay, and the legend and hover show "Temporary no-fly zones could not be checked". Known limit: `inaktive_temporaere_betriebseinschraenkungen` is WMS-only, so a row that the zone list treats as active is unknown to the hover and the vector layer. New: `.github/workflows/check-dipul-schema.yml` and `scripts/check-dipul-schema.mjs` (Wednesdays 06:23 UTC, no artifacts or cache) check fields, layers, values, the GetFeatureInfo path and the bbox order. A red run is the alarm (schema change, block or total outage); a partial outage is a warning only. |
 | v26.10.118.3 | 🇩🇪 **Temporary DiPUL no-fly zones (U_NFZ) now show red.** Temporary restrictions fell back to yellow in the status logic because the type was unknown there. An active U_NFZ is now red ("No-fly/restricted zone") and counts as No-Go. Validity follows the start and end times: a zone that is running or starts within 24 hours counts as active; a zone that has ended or starts later appears grey as "currently inactive", with its start or end time in UTC, and the limits of the inactive layer are shown. Unreadable times, or a set recurrence rule, count as active (safe default). No-Go reasons now come first in the banner and the map status. Airfield codes (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) deliberately stay yellow. |
 | v26.10.118.2 | 🇩🇪 **CTR heights after the DiPUL schema change.** DiPUL renamed its altitude-limit fields (`lower_limit_altitude`/`_alt_ref`/`_unit` etc. → `lower_limit_ft_msl`, `lower_limit_m_agl`, `upper_limit_ft_msl`, `upper_limit_fl_pa`), so SkyCheck no longer received an MSL limit: the height grid coloured only zone 1 and the maximum height in metres was missing for all airports. The new `dipulLimits()` reads both formats; the height formula is unchanged. Upper and lower limits in the zone panel show values again. |
 | v26.10.118.1 | 🇸🇪 **Sweden's permanent restricted areas now show red.** 146 of the 160 restricted areas (LFV layer `mais:RSTA`, from ground) are now classified as prohibited (red traffic light, red polygon) instead of authorisation required (yellow) — consistent with the temporary NOTAM/AIP SUP restricted areas. The descriptions from the data, including notes on possible permits from the Transportstyrelsen, are unchanged; 5 km airport areas stay authorisation required. The 14 areas whose official description requires a permit only when announced by NOTAM or AIP SUP (e.g. the southern Stockholm archipelago, northern Gotland) stay authorisation required (yellow); once activated they appear red via the live button. Owner's decision; snapshot `data/uas-zones-se.json` regenerated, no client change. |

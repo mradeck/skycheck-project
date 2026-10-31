@@ -32,7 +32,7 @@ Wetter, Luftverkehr, METAR/TAF, Kp-Index und Geocoding sind überall identisch; 
 
 > Alle vierzehn sind **dasselbe** Deployment von `skycheck.html` aus diesem Repo, jeweils auf einer eigenen Netlify-Site ausgeliefert. Länder-Erkennung: Hostname (`skycheck-<xx>.netlify.app`) oder der URL-Parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Default: `de`. Jede Länder-Variante setzt zusätzlich die **UI-Sprache**, einen **Hauptstadt-Wahrzeichen-Suchhinweis** sowie eine **länderabhängige Adresssuche** voreingestellt.
 
-📦 **Aktuelle Version:** v26.10.118.3
+📦 **Aktuelle Version:** v26.10.118.4
 
 ---
 
@@ -137,6 +137,7 @@ scripts/
   fetch-context.sh          ← robuster Treiber: curl-Abruf (Retry) + gen-context je Layer, idempotent
   build-fr-spatial-data.mjs ← erzeugt die räumlichen 2°-Kacheln für Frankreich (Zonenindex + Kontextlayer)
   build-gcg-web-grid.mjs    ← wandelt das amtliche GCG2016-GeoTIFF in das kompakte Web-Raster um
+  check-dipul-schema.mjs    ← wöchentlicher DiPUL-Schemawächter (`node scripts/check-dipul-schema.mjs`, nur lesend)
   README.md                 ← Anleitung: Kontextlayer für ein neues Land ergänzen
   test-coordinate-tools.cjs ← Node-Prüfung für coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← Node-Tests (`node --test "tests/*.test.mjs"`)
@@ -145,6 +146,7 @@ tests/                      ← Node-Tests (`node --test "tests/*.test.mjs"`)
     update-at-zones.yml     ← monatlicher Job: neuestes Austro-Control-ED-269 abrufen → Datendatei committen
     update-eu-zones.yml     ← wöchentlicher Job (montags): ED-269-Snapshots für LU/NO/EE/SE/BE aktualisieren → Datendateien committen
     update-de-airac.yml     ← wöchentlicher Job: Mobilithek-AIRAC-Angebot prüfen → DiPUL-Luftverkehrslayer extrahieren
+    check-dipul-schema.yml  ← wöchentlicher Job (mittwochs): DiPUL-Schema- und Dienstprüfung, kein Commit
 redirect.html               ← optionale Weiterleitungsseite
 ```
 
@@ -255,6 +257,7 @@ netlify dev
 
 | Version | Änderung |
 |---|---|
+| v26.10.118.4 | 🇩🇪 **Höhengitter: aktives temporäres Flugverbot hat Vorrang; wöchentlicher DiPUL-Schema-Wächter.** Aktive temporäre Flugverbote (U_NFZ, WFS `dipul:temporaere_betriebseinschraenkungen`) liegen als eigener roter Vektor-Layer über dem Raster, statt Zellen zu färben (kleine Zonen fielen durchs Raster). Der Hover nennt im aktiven Flugverbot „Temporäres Flugverbot · <Name>“ statt einer Flughöhe. Die Liste wird über die gesamte CTR-Fläche abgefragt und bei jedem Check aktualisiert, ohne das Raster neu aufzubauen. Schlägt der Abruf fehl, bleiben die bekannten Zonen, und Legende sowie Hover zeigen „Temporäre Flugverbote nicht prüfbar“. Bekannte Grenze: Die Inaktiv-Ebene ist nur per WMS abrufbar; eine Zeile, die die Zonenliste als aktiv wertet, ist dem Hover und dem Vektor-Layer deshalb unbekannt. Neu: `.github/workflows/check-dipul-schema.yml` und `scripts/check-dipul-schema.mjs` (mittwochs 06:23 UTC, ohne Artefakte und Cache) prüfen Felder, Ebenen, Werte, GetFeatureInfo-Pfad und BBOX-Reihenfolge. Ein roter Lauf ist der Alarm (Schemaänderung, Blockade, Totalausfall); ein Teilausfall ist nur eine Warnung. |
 | v26.10.118.3 | 🇩🇪 **Temporäre DiPUL-Flugverbote (U_NFZ) zeigen Rot.** Temporäre Betriebseinschränkungen fielen in der Statuslogik auf Gelb, weil der Typ dort nicht bekannt war. Eine aktive U_NFZ ist jetzt rot und zählt als No-Go („Flugverbot/-beschränkung“). Die Gültigkeit richtet sich nach Beginn und Ende: läuft die Zone oder beginnt sie binnen 24 Stunden, gilt sie als aktiv; ist sie beendet oder beginnt sie später, erscheint sie grau als „derzeit inaktiv“ mit Start- bzw. Endzeit in UTC, und die Höhengrenzen der Inaktiv-Ebene werden angezeigt. Unlesbare Zeiten oder eine gesetzte Wiederholungsregel bleiben aktiv (sicherer Standard). No-Go-Gründe stehen jetzt im Banner und im Kartenstatus an erster Stelle. Flugplatz-Codes (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) bleiben bewusst gelb. |
 | v26.10.118.2 | 🇩🇪 **CTR-Höhen nach DiPUL-Schemawechsel.** DiPUL hat seine Höhengrenz-Felder umbenannt (`lower_limit_altitude`/`_alt_ref`/`_unit` u. a. → `lower_limit_ft_msl`, `lower_limit_m_agl`, `upper_limit_ft_msl`, `upper_limit_fl_pa`), sodass SkyCheck keine MSL-Grenze mehr bekam: das Höhengitter färbte nur Zone 1, die maximale Höhe in Metern fehlte an allen Flughäfen. Der neue Helfer `dipulLimits()` liest beide Formate; die Höhenformel ist unverändert. Ober- und Untergrenze im Zonen-Panel zeigen wieder Werte. |
 | v26.10.118.1 | 🇸🇪 **Schwedens dauerhafte Sperrgebiete zeigen Rot.** 146 der 160 Restriktionsgebiete (LFV-Layer `mais:RSTA`, ab Boden) sind jetzt als verboten eingestuft (rote Ampel, rotes Polygon) statt genehmigungspflichtig (gelb) — einheitlich mit den befristeten Sperrgebieten aus NOTAM und AIP SUP. Die Beschreibungen aus den Daten, auch die Hinweise auf mögliche Genehmigungen der Transportstyrelsen, bleiben unverändert; 5-km-Flughafenbereiche bleiben genehmigungspflichtig. Die 14 Gebiete, deren amtliche Beschreibung eine Genehmigung nur bei Bekanntgabe per NOTAM oder AIP SUP verlangt (u. a. südlicher Stockholmer Schärengarten, Nord-Gotland), bleiben genehmigungspflichtig (gelb); einmal aktiviert erscheinen sie über den Live-Knopf rot. Entscheidung des Nutzers; Snapshot `data/uas-zones-se.json` neu erzeugt, keine Client-Änderung. |
