@@ -1,0 +1,36 @@
+name: Check DiPUL schema
+
+# Wöchentlicher Wächter: prüft, ob DiPUL (uas-betrieb.de) noch die Felder/Ebenen liefert, die
+# skycheck.html liest (WFS DescribeFeatureType, echte kontrollzonen-Daten, WMS-Layerliste).
+# DiPUL hat Felder schon einmal ohne Ankündigung umbenannt — dieser Lauf soll das melden.
+# Ein roter Lauf IST der Alarm (GitHub mailt den Repo-Eigentümer). Ein DiPUL-Ausfall ist
+# dagegen nur eine Warnung (Exit 0), kein Schemaalarm. Nichts wird committet.
+# Zeitplan: mittwochs 06:23 UTC (update-eu-zones.yml: montags 04:00, update-de-airac.yml: montags 05:17).
+# Bewusst ohne upload-artifact und ohne Cache (kein Actions-Speicherverbrauch).
+
+on:
+  schedule:
+    - cron: '23 6 * * 3'   # mittwochs 06:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-dipul-schema
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check DiPUL WFS/WMS schema
+        timeout-minutes: 8
+        run: node scripts/check-dipul-schema.mjs

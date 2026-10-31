@@ -304,6 +304,8 @@ kraftwerke                  – Kraftwerke
 
 Flugplatz-Codes (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) bleiben bewusst gelb.
 
+**WFS im Höhengitter (`temporaere_betriebseinschraenkungen`):** Das DE-Höhengitter holt die U_NFZ-Polygone per WFS (`dipul:temporaere_betriebseinschraenkungen`, GeoJSON) für die gesamte CTR-Fläche und aktualisiert die Liste bei jedem Check, ohne das Raster neu aufzubauen. Aktive Flugverbote liegen als roter Vektor-Layer über dem Raster; der Hover nennt dort „Temporäres Flugverbot · <Name>“ statt einer Flughöhe. Die Inaktiv-Ebene `inaktive_temporaere_betriebseinschraenkungen` ist nur per WMS abrufbar. Eine Zeile, die die Zonenliste als aktiv wertet, ist dem Höhengitter deshalb unbekannt (bekannte Grenze). Schlägt der WFS-Abruf fehl, bleiben die bekannten Zonen, und Legende sowie Hover zeigen „Temporäre Flugverbote nicht prüfbar“. Der wöchentliche Schema-Wächter (`scripts/check-dipul-schema.mjs`) prüft Felder und Ebenen dieses Abrufs.
+
 ### WMS GetMap (Kartendarstellung)
 
 ```
@@ -675,4 +677,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.118.3 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.118.4 · Oktober 2026*

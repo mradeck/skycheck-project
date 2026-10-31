@@ -32,7 +32,7 @@ La meteorología, el tráfico aéreo, METAR/TAF, el índice Kp y la geocodificac
 
 > Los catorce son el **mismo** despliegue de `skycheck.html` de este repositorio, cada uno servido en su propio sitio Netlify. Detección de país: nombre de host (`skycheck-<xx>.netlify.app`) o el parámetro URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Por defecto: `de`. Cada variante de país también preajusta el **idioma de la interfaz**, una **sugerencia de búsqueda con un monumento de la capital** y la **búsqueda de direcciones acotada al país**.
 
-📦 **Versión actual:** v26.10.118.3
+📦 **Versión actual:** v26.10.118.4
 
 ---
 
@@ -137,6 +137,7 @@ scripts/
   fetch-context.sh          ← controlador robusto: descarga con curl (reintento) + gen-context por capa, idempotente
   build-fr-spatial-data.mjs ← genera las teselas espaciales de 2° para Francia (índice de zonas + capas de contexto)
   build-gcg-web-grid.mjs    ← convierte el GeoTIFF oficial GCG2016 en la malla web compacta
+  check-dipul-schema.mjs    ← comprobación semanal del esquema de DiPUL (`node scripts/check-dipul-schema.mjs`, solo lectura)
   README.md                 ← cómo añadir capas de contexto para un país nuevo
   test-coordinate-tools.cjs ← comprobación Node para coordinate-tools.js (`node scripts/test-coordinate-tools.cjs`)
 tests/                      ← tests de Node (`node --test "tests/*.test.mjs"`)
@@ -145,6 +146,7 @@ tests/                      ← tests de Node (`node --test "tests/*.test.mjs"`)
     update-at-zones.yml     ← job mensual: obtiene la ED-269 más reciente de Austro Control → commit del fichero de datos
     update-eu-zones.yml     ← job semanal (lunes): actualiza los snapshots ED-269 de LU/NO/EE/SE/BE → commit de los ficheros de datos
     update-de-airac.yml     ← job semanal: comprueba la oferta AIRAC de Mobilithek → extrae las capas de tráfico aéreo de DiPUL
+    check-dipul-schema.yml  ← job semanal (miércoles): comprobación del esquema y del servicio DiPUL, sin commit
 redirect.html               ← página de redirección opcional
 ```
 
@@ -255,6 +257,7 @@ netlify dev
 
 | Versión | Cambio |
 |---|---|
+| v26.10.118.4 | 🇩🇪 **Mapa de altura: una zona temporal de prohibición de vuelo activa tiene prioridad; comprobación semanal del esquema de DiPUL.** Las zonas temporales de prohibición activas (U_NFZ, WFS `dipul:temporaere_betriebseinschraenkungen`) aparecen como una capa vectorial roja separada sobre la trama, en lugar de colorear celdas (las zonas pequeñas se perdían entre la trama). El cursor muestra «Zona prohibida temporal · <nombre>» en lugar de una altura. La lista se consulta para toda la zona CTR y se actualiza en cada comprobación sin reconstruir la trama. Si la consulta falla, se mantienen las zonas conocidas y la leyenda y el cursor muestran «Zonas prohibidas temporales no comprobables». Límite conocido: `inaktive_temporaere_betriebseinschraenkungen` solo es accesible por WMS, así que una fila que la lista de zonas considera activa es desconocida para el cursor y la capa vectorial. Nuevo: `.github/workflows/check-dipul-schema.yml` y `scripts/check-dipul-schema.mjs` (miércoles 06:23 UTC, sin artefactos ni caché) comprueban campos, capas, valores, la ruta de GetFeatureInfo y el orden del BBOX. Una ejecución en rojo es la alarma (cambio de esquema, bloqueo o caída total); una caída parcial es solo una advertencia. |
 | v26.10.118.3 | 🇩🇪 **Las prohibiciones temporales de vuelo de DiPUL (U_NFZ) se muestran en rojo.** Las restricciones temporales caían a amarillo en la lógica de estado, porque allí no se conocía el tipo. Una U_NFZ activa es ahora roja („Zona prohibida/restringida“) y cuenta como No-Go. La validez depende de la hora de inicio y fin: una zona en curso o que empieza en 24 horas se considera activa; una zona terminada o que empieza más tarde aparece en gris como „actualmente inactiva“, con su hora de inicio o fin en UTC, y se muestran los límites de la capa inactiva. Las horas ilegibles o una regla de repetición establecida siguen activas (valor seguro por defecto). Los motivos de No-Go aparecen ahora primero en el banner y en el estado del mapa. Los códigos de aeródromo (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) siguen en amarillo a propósito. |
 | v26.10.118.2 | 🇩🇪 **Alturas CTR tras el cambio de esquema de DiPUL.** DiPUL renombró sus campos de límites de altura (`lower_limit_altitude`/`_alt_ref`/`_unit` etc. → `lower_limit_ft_msl`, `lower_limit_m_agl`, `upper_limit_ft_msl`, `upper_limit_fl_pa`), por lo que SkyCheck ya no recibía un límite MSL: la cuadrícula de alturas solo coloreaba la zona 1 y faltaba la altura máxima en metros en todos los aeropuertos. El nuevo `dipulLimits()` lee ambos formatos; la fórmula de altura no cambia. Los límites superior e inferior del panel de zonas vuelven a mostrar valores. |
 | v26.10.118.1 | 🇸🇪 **Las zonas restringidas permanentes de Suecia se muestran en rojo.** 146 de las 160 áreas restringidas (capa LFV `mais:RSTA`, desde el suelo) se clasifican ahora como prohibidas (semáforo rojo, polígono rojo) en lugar de requerir autorización (amarillo), de forma coherente con las áreas restringidas temporales de NOTAM y AIP SUP. Las descripciones de los datos, incluidas las indicaciones sobre posibles permisos de la Transportstyrelsen, no cambian; las áreas de 5 km alrededor de aeropuertos siguen requiriendo autorización. Las 14 áreas cuya descripción oficial exige un permiso solo cuando se anuncia mediante NOTAM o AIP SUP (p. ej. el sur del archipiélago de Estocolmo, el norte de Gotland) siguen requiriendo autorización (amarillo); una vez activadas aparecen en rojo mediante el botón en directo. Decisión del propietario; instantánea `data/uas-zones-se.json` regenerada, sin cambios en el cliente. |

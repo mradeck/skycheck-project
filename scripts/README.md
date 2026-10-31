@@ -70,6 +70,14 @@ node scripts/build-eu-zones.mjs se <eingabeverzeichnis> <ausgabe.json> [--min N]
 
 **Automatisches Update:** `.github/workflows/update-eu-zones.yml` läuft jeden Montag um 04:00 UTC für alle fünf Länder und lässt sich manuell per „Run workflow“ für ein Land oder alle starten. Committet wird nur bei inhaltlicher Änderung; Artefakte und Cache werden bewusst nicht verwendet. Jeder Länder-Schritt hat ein Zeitlimit von 4 Minuten, der Job eines von 25 Minuten, damit ein langsamer Host den Commit-Schritt nicht verhindert. Schlägt ein Land fehl, bleibt sein bisheriger Snapshot erhalten, und der Workflow endet mit Fehler.
 
+## DiPUL-Schema-Wächter
+
+`node scripts/check-dipul-schema.mjs` prüft gegen den **Live-Dienst** (uas-betrieb.de), ob DiPUL noch die Felder und Ebenen liefert, die `skycheck.html` liest: WFS-`DescribeFeatureType` für `kontrollzonen`, `flugbeschraenkungsgebiete`, `temporaere_betriebseinschraenkungen`; echte `kontrollzonen`-Daten (Zonen 1–4 kommen vor, `lower_limit_ft_msl` > 0, `lower_limit_m_agl` 25/45/100 für Zone 2–4, so fest in `computeCtrFlightInfo`); lesbare U_NFZ-Zeiten und Höhengrenzen; alle Layer aus `DIPUL_ALL_LAYERS` in der WMS-Capabilities; die Spalten der WMS-only-Ebene `inaktive_temporaere_betriebseinschraenkungen` per GetFeatureInfo (keine Zeile ist kein Fehler). Layerliste, `parseDipulTime` und `dipulLimits` werden direkt aus `skycheck.html` gelesen, nicht kopiert.
+
+- **Exit 1** bei Schema-/Semantikproblem (Zeile je Ebene + Feld + Folge für SkyCheck); **Exit 0 mit `::warning::`** bei Ausfall (Timeout, 5xx, Wartungsseite mit 200) — ein DiPUL-Ausfall ist kein Schemaalarm.
+- Reine Vergleichslogik ist exportiert und in `tests/check-dipul-schema.test.mjs` ohne Netzwerk getestet.
+- Läuft wöchentlich über `.github/workflows/check-dipul-schema.yml` (mittwochs 06:23 UTC, auch manuell); ein roter Lauf ist der Alarm. Ohne Artefakte, ohne Cache, ohne Commits.
+
 ---
 
 ## Hinweise
