@@ -272,8 +272,10 @@ GET https://uas-betrieb.de/geoservices/dipul/wms
 |--------------------------|----------------------|
 | `name` / `bezeichnung`   | Zonenname            |
 | `type_code` / `geozone_art` | Zonentyp          |
-| `lower_limit_altitude`   | Untere Grenze        |
-| `upper_limit_altitude`   | Obere Grenze         |
+| `lower_limit_m_agl`      | Untere Grenze in m über Grund |
+| `lower_limit_ft_msl`     | Untere Grenze in ft MSL (0 = Boden) |
+| `upper_limit_ft_msl`     | Obere Grenze in ft MSL |
+| `upper_limit_fl_pa`      | Obere Grenze als Flugfläche |
 | `legal_ref`              | Rechtsgrundlage      |
 | `external_reference`     | Externe ID           |
 
@@ -664,4 +666,4 @@ Da `kp.gfz.de` keinen `Access-Control-Allow-Origin`-Header sendet, ist ein serve
 
 ---
 
-*Dokumentation erstellt aus SkyCheck v26.10.118.1 · Oktober 2026*
+*Dokumentation erstellt aus SkyCheck v26.10.118.2 · Oktober 2026*

@@ -3449,7 +3449,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.118.1';
+    const APP_VER = '26.10.118.2';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -6026,7 +6026,7 @@
        CTR-D-Zonen 1–4: punktgenaue Höhenberechnung nach NfL/DiPUL.
 
        DiPUL kodiert bei Zone 2–4 die zulässige Bezugshöhe als
-       lower_limit_altitude (MSL). Daraus folgt am Aufstiegsort:
+       lower_limit_ft_msl (seit DiPUL-Schemawechsel 2026-10; früher lower_limit_altitude). Daraus folgt am Aufstiegsort:
        Zone 2 = min(25 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL)
        Zone 3 = min(45 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL)
        Zone 4 = min(100 m AGL, max(50 m AGL, DiPUL-MSL-Grenze minus Gelände-MSL))
@@ -6040,6 +6040,35 @@
       if (String(unit || '').toLowerCase() === 'ft') return n * FT_TO_M;
       if (String(unit || '').toLowerCase() === 'm') return n;
       return null;
+    }
+
+    /* DiPUL-Höhengrenzen aus WFS-Properties bzw. GFI-Zellen (Werte Zahl ODER String).
+       Neues Schema: lower_limit_m_agl, lower_limit_ft_msl, upper_limit_ft_msl, upper_limit_fl_pa.
+       0 ft MSL bei plain CTR/RESTRICTED heißt Boden, nicht echte MSL-Grenze → GND.
+       Altes Schema (lower_limit_altitude/_alt_ref/_unit, untere_grenze …) bleibt Fallback. */
+    function dipulLimits(p) {
+      const num = v => (v == null || String(v).trim() === '' ? null : (Number.isFinite(Number(v)) ? Number(v) : null));
+      const NEW = ['lower_limit_m_agl', 'lower_limit_ft_msl', 'upper_limit_ft_msl', 'upper_limit_fl_pa'];
+      if (NEW.some(k => k in p)) {
+        const ft = num(p.lower_limit_ft_msl), agl = num(p.lower_limit_m_agl);
+        const upFt = num(p.upper_limit_ft_msl), upFl = num(p.upper_limit_fl_pa);
+        const upper = upFt != null ? `${upFt} ft MSL` : upFl != null ? `FL ${upFl}` : '—';
+        if (ft > 0) return { lowerMslM: altitudeToMetres(ft, 'ft'), lower: `${ft} ft MSL`, lowerRaw: ft, lowerRef: 'MSL', lowerUnit: 'ft', upper };
+        if (agl > 0) return { lowerMslM: null, lower: `${agl} m AGL`, lowerRaw: agl, lowerRef: 'AGL', lowerUnit: 'm', upper };
+        return { lowerMslM: null, lower: 'GND', lowerRaw: 0, lowerRef: 'AGL', lowerUnit: 'm', upper };
+      }
+      const lowerRaw = p.lower_limit_altitude || p.untere_grenze || '0.0';
+      const lowerRef = p.lower_limit_alt_ref || 'AGL';
+      const lowerUnit = p.lower_limit_unit || 'm';
+      const isMsl = String(lowerRef).toUpperCase() === 'MSL';
+      // Ohne explizite Einheit ist die Höhe unbekannt (nicht als Meter lesen → zu permissiv).
+      const lowerMslM = isMsl && p.lower_limit_unit ? altitudeToMetres(lowerRaw, p.lower_limit_unit) : null;
+      const lower = Number(lowerRaw) === 0 && !isMsl ? 'GND' : `${lowerRaw} ${lowerUnit} ${lowerRef}`.trim();
+      let upper = p.upper_limit_altitude || p.obere_grenze || '';
+      if (upper === '99999.0' || upper === 'UNL') upper = 'UNL';
+      else if (upper) upper = `${upper} ${p.upper_limit_unit || ''} ${p.upper_limit_alt_ref || ''}`.trim();
+      else upper = '—';
+      return { lowerMslM, lower, lowerRaw: Number(lowerRaw), lowerRef, lowerUnit, upper };
     }
 
     function isCtrZone(z) {
@@ -6118,7 +6147,7 @@
        über die GESAMTE DFS-CTR, nach dem tschechischen GRID-Vorbild
        (Ampel Rot→Grün). Die exakte Sub-Zonen-Geometrie kommt aus dem
        DiPUL-WFS (dipul:kontrollzonen; je U_CONTROL_ZONE_1…4 ein (Multi-)Polygon
-       mit lower_limit_altitude MSL). Jede Rasterzelle wird per Punkt-in-Polygon
+       mit lower_limit_ft_msl). Jede Rasterzelle wird per Punkt-in-Polygon
        ihrer Sub-Zone zugeordnet, das Gelände (Open-Meteo) geholt und via
        computeCtrFlightInfo eingefärbt. Ergebnis wird pro CTR EINMAL berechnet
        und gecacht — Pin-Klicks innerhalb derselben CTR bauen nichts neu.
@@ -6234,8 +6263,7 @@
         const zm = /^U_CONTROL_ZONE_([1-4])$/i.exec(String(p.type_code_detail || ''));
         if (!zm || !g) return;
         const zoneNum = Number(zm[1]);
-        const lowerMslM = String(p.lower_limit_alt_ref || '').toUpperCase() === 'MSL'
-          ? altitudeToMetres(p.lower_limit_altitude, p.lower_limit_unit) : null;
+        const lowerMslM = dipulLimits(p).lowerMslM;
         const polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
         if (!polys.length) return;
         let minX = 180, minY = 90, maxX = -180, maxY = -90;
@@ -7461,22 +7489,7 @@
           const zoneNum = zoneMatch ? Number(zoneMatch[1]) : null;
           const ctr = rawType.toUpperCase() === 'KONTROLLZONE' || typeDetail.toUpperCase() === 'CTR' || Boolean(zoneMatch);
 
-          const lowerRaw = f.lower_limit_altitude || f.untere_grenze || '0.0';
-          let lowerRef = f.lower_limit_alt_ref || 'AGL';
-          let lowerUnit = f.lower_limit_unit || 'm';
-          const lowerMslM = String(lowerRef).toUpperCase() === 'MSL'
-            ? altitudeToMetres(lowerRaw, lowerUnit)
-            : null;
-          let lower = lowerRaw;
-          if (Number(lower) === 0 && String(lowerRef).toUpperCase() === 'AGL') lower = 'GND';
-          else lower = `${lower} ${lowerUnit} ${lowerRef}`.trim();
-
-          let upper = f.upper_limit_altitude || f.obere_grenze || '';
-          let upperRef = f.upper_limit_alt_ref || '';
-          let upperUnit = f.upper_limit_unit || '';
-          if (upper === '99999.0' || upper === 'UNL') upper = 'UNL';
-          else if (upper) upper = `${upper} ${upperUnit} ${upperRef}`.trim();
-          else upper = '—';
+          const { lowerMslM, lower, lowerRaw, lowerRef, lowerUnit, upper } = dipulLimits(f);
 
           const legal = f.legal_ref || f.rechtliche_grundlage || '—';
 
@@ -7489,7 +7502,7 @@
             zoneNum,
             isCtr: ctr,
             lower,
-            lowerRaw: Number(lowerRaw),
+            lowerRaw,
             lowerRef,
             lowerUnit,
             lowerMslM,
