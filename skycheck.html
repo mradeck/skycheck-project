@@ -1291,6 +1291,8 @@
     .hgrid-overlay { image-rendering: pixelated; image-rendering: crisp-edges; }
     .hgl-scale { display: flex; justify-content: space-between; margin-top: 3px; opacity: .85; font-size: 9.5px; font-variant-numeric: tabular-nums; }
     .hgl-note { margin-top: 6px; opacity: .7; font-size: 9.5px; }
+    .hgl-warn { opacity: 1; color: #f59e0b; font-weight: 600; }
+    .hgl-warn[hidden] { display: none; }
     :root.light-mode .hgrid-legend { background: rgba(255,255,255,0.92); color: #17202a; box-shadow: 0 4px 16px rgba(20,40,60,.18); }
 
     /* [S-ALARM] === ALARM VIEW === */
@@ -3216,6 +3218,7 @@
           <div class="hgl-ramp" id="hgl-ramp"></div>
           <div class="hgl-scale"><span>0</span><span>25</span><span>45</span><span>≥65</span><span>100&nbsp;m</span></div>
           <div class="hgl-note" data-i18n="hgridNote">Näherung aus Gelände + erkannter CTR-Zone. Verbindlich: DiPUL / NfL.</div>
+          <div class="hgl-note hgl-warn" id="hgl-nfzwarn" data-i18n="hgridNfzUnchecked" hidden>Temporäre Flugverbote nicht prüfbar</div>
         </div>
       </div>
     </div>
@@ -3763,7 +3766,7 @@
         ctxProtected: 'Protected areas', ctxMotorways: 'Motorways', ctxPowerlines: 'Power lines', ctxRail: 'Railways',
         hgridToggle: 'Height grid', hgridMax: 'Max. height', hgridLegendTitle: 'Max. flight height (approx.)',
         hgridLow: 'low', hgridHigh: 'high', hgridZoneShort: 'Zone', hgridIndiv: 'individual clearance',
-        hgridNfz: 'Temporary no-fly zone', hgridNfzUnchecked: 'temporary no-fly zones could not be checked',
+        hgridNfz: 'Temporary no-fly zone', hgridNfzUnchecked: 'Temporary no-fly zones could not be checked',
         hgridNote: 'Approximation per CTR sub-zone from DiPUL limit + terrain. Binding: DiPUL / NfL.',
         mapAllZones: 'All Geo-zones', mapRiskyZones: 'Risk Zones Only',
         mapZonesShort: 'Zones', mapAircraftShort: 'Flights', mapAllShort: 'All', mapRiskShort: 'Risk',
@@ -3948,7 +3951,7 @@
         ctxProtected: 'Zones protégées', ctxMotorways: 'Autoroutes', ctxPowerlines: 'Lignes électriques', ctxRail: 'Voies ferrées',
         hgridToggle: 'Grille de hauteur', hgridMax: 'Hauteur max.', hgridLegendTitle: 'Hauteur de vol max. (approx.)',
         hgridLow: 'basse', hgridHigh: 'haute', hgridZoneShort: 'Zone', hgridIndiv: 'autorisation individuelle',
-        hgridNfz: 'Zone interdite temporaire', hgridNfzUnchecked: 'zones interdites temporaires non vérifiables',
+        hgridNfz: 'Zone interdite temporaire', hgridNfzUnchecked: 'Zones interdites temporaires non vérifiables',
         hgridNote: 'Approximation par sous-zone CTR : limite DiPUL + relief. Contraignant : DiPUL / NfL.',
         mapAllZones: 'Toutes les géozones', mapRiskyZones: 'Zones à risque uniquement',
         mapZonesShort: 'Zones', mapAircraftShort: 'Vols', mapAllShort: 'Toutes', mapRiskShort: 'Risque',
@@ -4141,7 +4144,7 @@
         ctxProtected: 'Áreas protegidas', ctxMotorways: 'Autopistas', ctxPowerlines: 'Líneas eléctricas', ctxRail: 'Ferrocarriles',
         hgridToggle: 'Rejilla de altura', hgridMax: 'Altura máx.', hgridLegendTitle: 'Altura máx. de vuelo (aprox.)',
         hgridLow: 'baja', hgridHigh: 'alta', hgridZoneShort: 'Zona', hgridIndiv: 'autorización individual',
-        hgridNfz: 'Zona prohibida temporal', hgridNfzUnchecked: 'zonas prohibidas temporales no comprobables',
+        hgridNfz: 'Zona prohibida temporal', hgridNfzUnchecked: 'Zonas prohibidas temporales no comprobables',
         hgridNote: 'Aproximación por subzona CTR: límite DiPUL + terreno. Vinculante: DiPUL / NfL.',
         mapAllZones: 'Todas las geozonas', mapRiskyZones: 'Solo zonas de riesgo',
         mapZonesShort: 'Zonas', mapAircraftShort: 'Vuelos', mapAllShort: 'Todas', mapRiskShort: 'Riesgo',
@@ -4334,7 +4337,7 @@
         ctxProtected: 'Obszary chronione', ctxMotorways: 'Autostrady', ctxPowerlines: 'Linie energetyczne', ctxRail: 'Koleje',
         hgridToggle: 'Siatka wysokości', hgridMax: 'Maks. wysokość', hgridLegendTitle: 'Maks. wysokość lotu (przybliż.)',
         hgridLow: 'niska', hgridHigh: 'wysoka', hgridZoneShort: 'Strefa', hgridIndiv: 'zezwolenie indywidualne',
-        hgridNfz: 'Tymczasowa strefa zakazu lotów', hgridNfzUnchecked: 'tymczasowych stref zakazu nie sprawdzono',
+        hgridNfz: 'Tymczasowa strefa zakazu lotów', hgridNfzUnchecked: 'Nie sprawdzono tymczasowych stref zakazu',
         hgridNote: 'Przybliżenie na podstrefę CTR: granica DiPUL + teren. Wiążące: DiPUL / NfL.',
         mapAllZones: 'Wszystkie geozony', mapRiskyZones: 'Tylko strefy ryzyka',
         mapZonesShort: 'Strefy', mapAircraftShort: 'Loty', mapAllShort: 'Wszystkie', mapRiskShort: 'Ryzyko',
@@ -4847,7 +4850,7 @@
       mapAnalysisSequence: 0,
       pinPopupWanted: true,
       layers: { dipul: null, dipulHover: null, aircraft: null, radius: null, radius1500: null, pin: null, heightGrid: null },
-      hgridOn: false, _hgridSeq: 0, _hgridBBox: null, _hgridModel: null,   // DE-Höhengitter: an/aus, Stale-Guard, gecachte CTR-Ausdehnung, Hover-Modell
+      hgridOn: false, _hgridSeq: 0, _hgridNfzSeq: 0, _hgridBBox: null, _hgridModel: null,   // DE-Höhengitter: an/aus, Stale-Guard, gecachte CTR-Ausdehnung, Hover-Modell
       layerVisible: { dipul: true, aircraft: true, radius: true, radius1500: true },
       ctxLayers: {}, ctxCache: {},   // Länder-Zusatzebenen: aktive Leaflet-Layer + GeoJSON-Cache
       ctxVisible: { protected: true, motorways: true, powerlines: true, rail: true },
@@ -6310,17 +6313,65 @@
       });
       return out;
     }
-    // DiPUL-WFS temporaere_betriebseinschraenkungen. Die Inaktiv-Ebene
-    // (inaktive_temporaere_betriebseinschraenkungen) ist WMS-only und per WFS NICHT abrufbar — sie
-    // wird hier bewusst nicht berücksichtigt (inaktive Zonen beeinflussen das Höhengitter ohnehin nicht).
-    // Wirft bei HTTP-/Netzfehler, damit der Aufrufer „nicht prüfbar" sichtbar machen kann.
-    async function fetchNfzPolygons(lat, lon) {
-      const dLat = 0.45, dLon = 0.6;
-      const bbox = `${(lat - dLat).toFixed(4)},${(lon - dLon).toFixed(4)},${(lat + dLat).toFixed(4)},${(lon + dLon).toFixed(4)}`;
-      const url = `${DIPUL_WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=dipul:temporaere_betriebseinschraenkungen&outputFormat=application/json&count=300&bbox=${bbox}`;
+    // Union-BBox aller CTR-Sub-Zonen {minLon,minLat,maxLon,maxLat} (feats tragen bbox [minX,minY,maxX,maxY]).
+    function hgridUnionBBox(feats) {
+      let minLon = 180, minLat = 90, maxLon = -180, maxLat = -90;
+      feats.forEach(f => { minLon = Math.min(minLon, f.bbox[0]); minLat = Math.min(minLat, f.bbox[1]); maxLon = Math.max(maxLon, f.bbox[2]); maxLat = Math.max(maxLat, f.bbox[3]); });
+      return { minLon, minLat, maxLon, maxLat };
+    }
+    // WFS-2.0-BBOX in EPSG:4326-Achsenfolge lat,lon: minLat,minLon,maxLat,maxLon (wie fetchCtrSubzones).
+    function nfzBboxParam(b) {
+      return `${b.minLat.toFixed(4)},${b.minLon.toFixed(4)},${b.maxLat.toFixed(4)},${b.maxLon.toFixed(4)}`;
+    }
+    // DiPUL-WFS temporaere_betriebseinschraenkungen über die CTR-Union-BBox (nicht um den Pin: sonst
+    // fehlen NFZ am anderen Ende einer großen CTR). Bekannte Grenze: die Inaktiv-Ebene
+    // inaktive_temporaere_betriebseinschraenkungen ist WMS-only und per WFS NICHT abrufbar. Eine Zeile,
+    // die die Zonenliste als aktiv wertet (laufend, Start binnen 24 h oder mit recurrence_rule), ist
+    // Hover und Vektor-Layer deshalb nicht bekannt.
+    // Wirft bei HTTP-/Netzfehler, damit der Aufrufer „nicht prüfbar“ sichtbar machen kann.
+    async function fetchNfzPolygons(bbox) {
+      const url = `${DIPUL_WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typeNames=dipul:temporaere_betriebseinschraenkungen&outputFormat=application/json&count=300&bbox=${nfzBboxParam(bbox)}`;
       const r = await safeFetch(url, 9000);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return nfzFromWfs(await r.json());
+    }
+    // Zum Zeitpunkt nowMs aktive Zonen (Zeitfenster wie in der Zonenliste).
+    function hgridActiveNfz(nfz, nowMs) {
+      return (nfz || []).filter(n => !dipulWindowInactive(n.start, n.end, nowMs));
+    }
+    // Aktive NFZ als eigener roter Vektor-Layer über dem Raster (nicht interaktiv → Hover bleibt nutzbar).
+    // Vektor statt Zellmalerei: Zellmitten-Tests verfehlen kleine Zonen (z. B. 88 × 95 m).
+    function drawHgridNfz(m, nowMs = Date.now()) {
+      if (!m || !m.nfzLayer) return;
+      if (S.map && !S.map.getPane('hgridNfz')) {
+        const pane = S.map.createPane('hgridNfz'); pane.style.zIndex = 405; pane.style.pointerEvents = 'none';
+      }
+      m.nfzLayer.clearLayers();
+      const [r, g, b] = HGRID_STOPS[0][1], col = `rgb(${r}, ${g}, ${b})`;
+      hgridActiveNfz(m.nfz, nowMs).forEach(n => {
+        const latlngs = n.polys.map(rings => rings.map(ring => ring.map(c => [c[1], c[0]])));
+        m.nfzLayer.addLayer(L.polygon(latlngs, { pane: 'hgridNfz', interactive: false, color: col, weight: 1.5, fillColor: col, fillOpacity: 0.6 }));
+      });
+    }
+    // Hinweiszeile in der Legende, wenn der NFZ-Abruf fehlschlug (auch ohne Hover sichtbar, z. B. Touch).
+    function setHgridNfzWarning(show) {
+      const el = document.getElementById('hgl-nfzwarn');
+      if (el) el.hidden = !show;
+    }
+    // Pro Check: NFZ für die gecachte CTR neu holen, OHNE das Raster neu zu bauen. Späte Antworten
+    // (anderes Modell/neuerer Lauf) werden verworfen; bei Fehler bleiben die letzten Zonen stehen.
+    async function refreshHgridNfz() {
+      const m = S._hgridModel;
+      if (!m || !m.bbox) return;
+      const seq = ++S._hgridNfzSeq;
+      let list = null;
+      try { list = await fetchNfzPolygons(m.bbox); }
+      catch (e) { console.warn('Höhengitter-NFZ-Refresh:', e.message); }
+      if (seq !== S._hgridNfzSeq || S._hgridModel !== m) return;
+      if (list) m.nfz = list;
+      m.nfzOk = Boolean(list);
+      drawHgridNfz(m);
+      setHgridNfzWarning(!list);
     }
     // Erste zum Zeitpunkt nowMs AKTIVE U_NFZ, die den Punkt enthält (Zeitfenster wie in der Zonenliste:
     // unlesbar = aktiv, laufend oder Start binnen 24 h = aktiv). Sonst null.
@@ -6387,21 +6438,20 @@
       const seq = ++S._hgridSeq;
       const lat = S.lat, lon = S.lon;
       let feats;
-      // NFZ parallel holen; ein Ausfall darf das CTR-Gitter nie blanken (nfzOk=false -> Hinweis im Hover).
-      const nfzP = fetchNfzPolygons(lat, lon).then(list => ({ list, ok: true }),
-        e => { console.warn('Höhengitter-NFZ:', e.message); return { list: [], ok: false }; });
       try { feats = await fetchCtrSubzones(lat, lon); }
       catch (e) { console.warn('Höhengitter-WFS:', e.message); return; }
-      const { list: nfz, ok: nfzOk } = await nfzP;
-      const nowMs = Date.now();
       if (seq !== S._hgridSeq) return;
       if (!feats.length) {
         if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
-        S.layers.heightGrid = null; S._hgridBBox = null; S._hgridModel = null; hgridHoverOff(); return;
+        S.layers.heightGrid = null; S._hgridBBox = null; S._hgridModel = null; S._hgridNfzSeq++; setHgridNfzWarning(false); hgridHoverOff(); return;
       }
       // Union-BBox aller Sub-Zonen = tatsächliche CTR-Ausdehnung.
-      let minLon = 180, minLat = 90, maxLon = -180, maxLat = -90;
-      feats.forEach(f => { minLon = Math.min(minLon, f.bbox[0]); minLat = Math.min(minLat, f.bbox[1]); maxLon = Math.max(maxLon, f.bbox[2]); maxLat = Math.max(maxLat, f.bbox[3]); });
+      const ubox = hgridUnionBBox(feats);
+      const { minLon, minLat, maxLon, maxLat } = ubox;
+      // NFZ über die CTR-Union-BBox (parallel zum Geländeladen); ein Ausfall blankt das Gitter nie
+      // (nfzOk=false -> Hinweis in Legende und Hover).
+      const nfzP = fetchNfzPolygons(ubox).then(list => ({ list, ok: true }),
+        e => { console.warn('Höhengitter-NFZ:', e.message); return { list: [], ok: false }; });
       const spanLat = maxLat - minLat, spanLon = maxLon - minLon;
       // Kachelgröße in Grad (Längengrad um Breitenkosinus korrigiert), gedeckelt auf HGRID_DIM_CAP.
       const mPerDeg = 111320, lonScale = Math.max(0.2, Math.cos((minLat + maxLat) / 2 * Math.PI / 180));
@@ -6413,6 +6463,7 @@
 
       // Gelände aus DEM-Höhenkacheln (volle Auflösung über die ganze CTR, in einem Rutsch geladen).
       const tileTerr = await buildTileTerrainSampler(minLat, minLon, maxLat, maxLon);
+      const { list: nfz, ok: nfzOk } = await nfzP;
       if (seq !== S._hgridSeq) return;
       const terrAt = (la, lo) => tileTerr.at(la, lo);
 
@@ -6427,10 +6478,9 @@
       for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
         const cy = minLat + (r + 0.5) * cLat, cx = minLon + (c + 0.5) * cLon;
         const feat = feats.find(f => pointInFeature(cx, cy, f));
-        const inNfz = hgridNfzAt(cx, cy, nfz, nowMs);   // aktives temporäres Flugverbot: wie Zone 1 rot
-        if (!feat && !inNfz) continue;              // außerhalb der CTR → transparent (alpha 0)
+        if (!feat) continue;                        // außerhalb der CTR → transparent (alpha 0)
         let rgb;
-        if (inNfz || feat.zoneNum === 1) {
+        if (feat.zoneNum === 1) {
           rgb = HGRID_STOPS[0][1];   // Zone 1 = individuelle Freigabe → rot
         } else {
           const g = terrAt(cy, cx);
@@ -6449,10 +6499,16 @@
         opacity: 0.82, interactive: false, className: 'hgrid-overlay',
       });
       if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) S.map.removeLayer(S.layers.heightGrid);
-      S.layers.heightGrid = overlay;
+      // Raster + NFZ-Vektor-Layer als EINE Gruppe: gemeinsam ein-/ausgeblendet.
+      const nfzLayer = L.layerGroup();
+      const group = L.layerGroup([overlay, nfzLayer]);
+      S.layers.heightGrid = group;
       S._hgridBBox = { minLat, minLon, maxLat, maxLon };
-      S._hgridModel = { feats, sampleTerrain: terrAt, nfz, nfzOk };   // für den Live-Hover
-      if (S.hgridOn) { overlay.addTo(S.map); hgridHoverOn(); }
+      S._hgridModel = { feats, sampleTerrain: terrAt, nfz, nfzOk, nfzLayer, bbox: ubox };   // für Hover und NFZ-Refresh
+      S._hgridNfzSeq++;                                                                      // laufende Refreshs des alten Modells verwerfen
+      drawHgridNfz(S._hgridModel);
+      setHgridNfzWarning(!nfzOk);
+      if (S.hgridOn) { group.addTo(S.map); hgridHoverOn(); }
     }
     // Nach jedem Check: Toggle in DE stets sichtbar; Grid nur neu bauen, wenn der Pin
     // die gecachte CTR verlassen hat (sonst stabil — "einmal berechnet").
@@ -6466,6 +6522,7 @@
       const inside = b && S.lat >= b.minLat && S.lat <= b.maxLat && S.lon >= b.minLon && S.lon <= b.maxLon
         && S.layers.heightGrid && S.map && S.map.hasLayer(S.layers.heightGrid);
       if (!inside) buildHeightGrid();
+      else refreshHgridNfz();          // gecachte CTR: nur NFZ aktualisieren, Raster bleibt
     }
 
     function terrainSamplePoints(lat, lon, radiusM) {
@@ -9138,6 +9195,7 @@
           if (!inside) { btn.classList.add('loading'); await buildHeightGrid(); btn.classList.remove('loading'); }
           if (S.layers.heightGrid && !S.map.hasLayer(S.layers.heightGrid)) S.layers.heightGrid.addTo(S.map);
           hgridHoverOn();
+          if (inside) refreshHgridNfz();
         } else if (S.layers.heightGrid && S.map.hasLayer(S.layers.heightGrid)) {
           S.map.removeLayer(S.layers.heightGrid);
           hgridHoverOff();
