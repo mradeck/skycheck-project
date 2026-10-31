@@ -3606,6 +3606,7 @@
         msGroundMsl: 'Geländehöhe', msOpenDipul: 'Punkt in DiPUL öffnen',
         notamLoad: 'NOTAM-Sperrgebiete laden', notamLoading: 'NOTAM werden geladen …', notamAsOf: t => `NOTAM · Stand ${t}`, notamError: 'NOTAM-Daten nicht verfügbar', notamHint: 'Befristete NOTAM-Sperrgebiete sind erst nach dem Laden sichtbar.', notamBadge: 'NOTAM',
         zoneInactive: 'derzeit inaktiv',
+        nfzStarts: t => `Beginnt erst ${t}. Zeitangaben in UTC.`, nfzEnded: t => `Endete ${t}. Zeitangaben in UTC.`, nfzUntil: t => `Gilt bis ${t}. Zeitangaben in UTC.`,
         eeStaleHint: 'Kurzzeitige Sperrgebiete können bis zu 7 Tage alt sein — aktuelle Lage auf utm.eans.ee prüfen.',
         beNotice: 'Quelle: Droneguide (skeyes, im Auftrag der BCAA). SkyCheck ist keine offizielle Anwendung der BCAA oder belgischer Behörden. Maßgeblich sind allein die amtlichen Kanäle (Droneguide, AIP/NOTAM, CIS). Die Verantwortung für die Einhaltung der Vorschriften bleibt beim Fernpiloten und beim UAS-Betreiber.',
         beNoticeShort: 'Keine offizielle Anwendung der BCAA — Hinweise unter der Zonenliste.',
@@ -3797,6 +3798,7 @@
         msGroundMsl: 'Ground elevation', msOpenDipul: 'Open point in DiPUL',
         notamLoad: 'Load NOTAM restrictions', notamLoading: 'Loading NOTAM …', notamAsOf: t => `NOTAM · as of ${t}`, notamError: 'NOTAM data unavailable', notamHint: 'Temporary NOTAM restrictions are only shown after loading.', notamBadge: 'NOTAM',
         zoneInactive: 'currently inactive',
+        nfzStarts: t => `Not yet active — starts ${t}. Times in UTC.`, nfzEnded: t => `Ended ${t}. Times in UTC.`, nfzUntil: t => `Active until ${t}. Times in UTC.`,
         eeStaleHint: 'Short-term restricted areas may be up to 7 days old — check utm.eans.ee for the current situation.',
         beNotice: 'Source: Droneguide (skeyes, on behalf of the BCAA). SkyCheck is not an official application of the BCAA or the Belgian authorities. Only the official channels (Droneguide, AIP/NOTAM, CIS) are authoritative. Responsibility for regulatory compliance remains with the remote pilot and the UAS operator.',
         beNoticeShort: 'Not an official BCAA application — see the notice below the zone list.',
@@ -3980,6 +3982,7 @@
         msGroundMsl: 'Altitude du terrain', msOpenDipul: 'Ouvrir le point dans DiPUL',
         notamLoad: 'Charger les restrictions NOTAM', notamLoading: 'Chargement des NOTAM …', notamAsOf: t => `NOTAM · état ${t}`, notamError: 'Données NOTAM indisponibles', notamHint: 'Les restrictions NOTAM temporaires ne sont visibles qu’après chargement.', notamBadge: 'NOTAM',
         zoneInactive: 'actuellement inactive',
+        nfzStarts: t => `Pas encore active — débute ${t}. Heures en UTC.`, nfzEnded: t => `Terminée le ${t}. Heures en UTC.`, nfzUntil: t => `Active jusqu'au ${t}. Heures en UTC.`,
         eeStaleHint: 'Les zones temporaires peuvent dater de 7 jours — vérifiez la situation actuelle sur utm.eans.ee.',
         beNotice: 'Source : Droneguide (skeyes, pour le compte de la BCAA). SkyCheck n\'est pas une application officielle de la BCAA ni des autorités belges. Seuls les canaux officiels (Droneguide, AIP/NOTAM, CIS) font foi. Le respect de la réglementation reste de la responsabilité du télépilote et de l\'exploitant d\'UAS.',
         beNoticeShort: 'Application non officielle de la BCAA — voir la mention sous la liste des zones.',
@@ -4171,6 +4174,7 @@
         msGroundMsl: 'Altitud del terreno', msOpenDipul: 'Abrir punto en DiPUL',
         notamLoad: 'Cargar restricciones NOTAM', notamLoading: 'Cargando NOTAM …', notamAsOf: t => `NOTAM · a las ${t}`, notamError: 'Datos NOTAM no disponibles', notamHint: 'Las restricciones NOTAM temporales solo se muestran tras cargarlas.', notamBadge: 'NOTAM',
         zoneInactive: 'actualmente inactiva',
+        nfzStarts: t => `Aún no activa — comienza ${t}. Horas en UTC.`, nfzEnded: t => `Finalizó el ${t}. Horas en UTC.`, nfzUntil: t => `Activa hasta ${t}. Horas en UTC.`,
         eeStaleHint: 'Las zonas temporales pueden tener hasta 7 días — consulte la situación actual en utm.eans.ee.',
         beNotice: 'Fuente: Droneguide (skeyes, por cuenta de la BCAA). SkyCheck no es una aplicación oficial de la BCAA ni de las autoridades belgas. Solo los canales oficiales (Droneguide, AIP/NOTAM, CIS) son vinculantes. La responsabilidad del cumplimiento normativo sigue siendo del piloto a distancia y del operador de UAS.',
         beNoticeShort: 'No es una aplicación oficial de la BCAA — véase el aviso bajo la lista de zonas.',
@@ -4362,6 +4366,7 @@
         msGroundMsl: 'Wysokość terenu', msOpenDipul: 'Otwórz punkt w DiPUL',
         notamLoad: 'Wczytaj ograniczenia NOTAM', notamLoading: 'Wczytywanie NOTAM …', notamAsOf: t => `NOTAM · stan ${t}`, notamError: 'Dane NOTAM niedostępne', notamHint: 'Tymczasowe ograniczenia NOTAM są widoczne dopiero po wczytaniu.', notamBadge: 'NOTAM',
         zoneInactive: 'obecnie nieaktywna',
+        nfzStarts: t => `Jeszcze nieaktywna — start ${t}. Czas w UTC.`, nfzEnded: t => `Zakończona ${t}. Czas w UTC.`, nfzUntil: t => `Aktywna do ${t}. Czas w UTC.`,
         eeStaleHint: 'Strefy tymczasowe mogą mieć do 7 dni — sprawdź aktualną sytuację na utm.eans.ee.',
         beNotice: 'Źródło: Droneguide (skeyes, w imieniu BCAA). SkyCheck nie jest oficjalną aplikacją BCAA ani władz belgijskich. Wiążące są wyłącznie oficjalne kanały (Droneguide, AIP/NOTAM, CIS). Odpowiedzialność za zgodność z przepisami spoczywa na pilocie bezzałogowego statku powietrznego i operatorze UAS.',
         beNoticeShort: 'Nieoficjalna aplikacja BCAA — zob. informację pod listą stref.',
@@ -6057,16 +6062,17 @@
         if (agl > 0) return { lowerMslM: null, lower: `${agl} m AGL`, lowerRaw: agl, lowerRef: 'AGL', lowerUnit: 'm', upper };
         return { lowerMslM: null, lower: 'GND', lowerRaw: 0, lowerRef: 'AGL', lowerUnit: 'm', upper };
       }
-      const lowerRaw = p.lower_limit_altitude || p.untere_grenze || '0.0';
-      const lowerRef = p.lower_limit_alt_ref || 'AGL';
+      // Inaktiv-Ebene (inaktive_temporaere_betriebseinschraenkungen) nennt die Felder lower_limit_value/_reference.
+      const lowerRaw = p.lower_limit_altitude || p.lower_limit_value || p.untere_grenze || '0.0';
+      const lowerRef = p.lower_limit_alt_ref || p.lower_limit_reference || 'AGL';
       const lowerUnit = p.lower_limit_unit || 'm';
       const isMsl = String(lowerRef).toUpperCase() === 'MSL';
       // Ohne explizite Einheit ist die Höhe unbekannt (nicht als Meter lesen → zu permissiv).
       const lowerMslM = isMsl && p.lower_limit_unit ? altitudeToMetres(lowerRaw, p.lower_limit_unit) : null;
       const lower = Number(lowerRaw) === 0 && !isMsl ? 'GND' : `${lowerRaw} ${lowerUnit} ${lowerRef}`.trim();
-      let upper = p.upper_limit_altitude || p.obere_grenze || '';
+      let upper = p.upper_limit_altitude || p.upper_limit_value || p.obere_grenze || '';
       if (upper === '99999.0' || upper === 'UNL') upper = 'UNL';
-      else if (upper) upper = `${upper} ${p.upper_limit_unit || ''} ${p.upper_limit_alt_ref || ''}`.trim();
+      else if (upper) upper = `${upper} ${p.upper_limit_unit || ''} ${p.upper_limit_alt_ref || p.upper_limit_reference || ''}`.trim();
       else upper = '—';
       return { lowerMslM, lower, lowerRaw: Number(lowerRaw), lowerRef, lowerUnit, upper };
     }
@@ -7473,15 +7479,17 @@
           const o = /([+-])(\d\d):?(\d\d)/.exec(m[7]);
           off = (o[1] === '-' ? -1 : 1) * (+o[2] * 60 + +o[3]);
         }
-      } else if ((m = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4}),?\s+(\d{1,2}):(\d\d)(?::(\d\d))?\s*(AM|PM)$/i.exec(s))) {
+      } else if ((m = /^([A-Za-z]{3})\.?\s+(\d{1,2}),\s*(\d{4}),?\s+(\d{1,2}):(\d\d)(?::(\d\d))?\s*(AM|PM)$/i.exec(s))) {
         mo = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(m[1].toLowerCase());
         [y, d, h, mi, sec] = [+m[3], +m[2], +m[4], +m[5], +(m[6] || 0)];
         if (mo < 0 || h < 1 || h > 12) return null;
         h = (h % 12) + (m[7].toUpperCase() === 'PM' ? 12 : 0);
       } else return null;
-      if (d < 1 || d > 31 || h > 23 || mi > 59 || sec > 59) return null;
-      const t = Date.UTC(y, mo, d, h, mi, sec) - off * 60000;
-      return Number.isFinite(t) ? t : null;
+      if (mo < 0 || mo > 11 || d < 1 || d > 31 || h > 23 || mi > 59 || sec > 59) return null;
+      const u = new Date(Date.UTC(y, mo, d, h, mi, sec));
+      // Round-Trip: 2026-13-01 / Feb 31 würden sonst überlaufen und still ein anderes Datum ergeben.
+      if (u.getUTCFullYear() !== y || u.getUTCMonth() !== mo || u.getUTCDate() !== d) return null;
+      return u.getTime() - off * 60000;
     }
 
     // true nur bei sicher lesbarem Fenster: Ende vor jetzt oder Start nach jetzt + SOON_MS (wie ed269Inactivity).
@@ -7489,6 +7497,16 @@
     function dipulWindowInactive(startStr, endStr, now = Date.now()) {
       const end = parseDipulTime(endStr), start = parseDipulTime(startStr);
       return (end !== null && end < now) || (start !== null && start > now + SOON_MS);
+    }
+
+    // Hinweistext zum Zeitfenster einer U_NFZ (UTC): beginnt erst / endete / gilt bis. Leer, wenn nichts lesbar.
+    function dipulWindowNote(startStr, endStr, inactive, now = Date.now()) {
+      const start = parseDipulTime(startStr), end = parseDipulTime(endStr);
+      const stamp = ms => `${new Date(ms).toISOString().slice(0, 10)} ${new Date(ms).toISOString().slice(11, 16)} UTC`;
+      if (inactive && end !== null && end < now) return _t('nfzEnded')(stamp(end));
+      if (inactive && start !== null) return _t('nfzStarts')(stamp(start));
+      if (!inactive && end !== null && end >= now) return _t('nfzUntil')(stamp(end));
+      return '';
     }
 
     // Parst eine GeoServer-GetFeatureInfo-HTML-Antwort in Zonen-Objekte.
@@ -7510,9 +7528,12 @@
           headers.forEach((h, idx) => f[h] = cells[idx].textContent.trim());
 
           const rawName = f.name || f.generated_name_de || f.bezeichnung || '';
-          const rawType = f.type_code || f.geozone_art || 'Spezifische Geozone';
+          // Temporäre Einschränkungen: Ebene temporaere_… liefert type_code U_NFZ; die Inaktiv-Ebene hat
+          // gar keine type_code-Spalte → über das fid-Präfix als U_NFZ erkennen.
+          const isNfz = /^U_NFZ$/i.test(f.type_code || '') || /^(inaktive_)?temporaere_betriebseinschraenkungen\./i.test(f.fid || '');
+          const rawType = isNfz ? 'U_NFZ' : (f.type_code || f.geozone_art || 'Spezifische Geozone');
           const typeDetail = f.type_code_detail || '';
-          const type = typeDetail || rawType;
+          const type = isNfz ? 'U_NFZ' : (typeDetail || rawType);
           const name = rawName || type;
           const extRef = f.external_reference || f.identifikation || '';
           const zoneMatch = /^U_CONTROL_ZONE_([1-4])$/i.exec(typeDetail);
@@ -7523,11 +7544,14 @@
 
           const legal = f.legal_ref || f.rechtliche_grundlage || '—';
           // U_NFZ (temporäre Einschränkung) trägt ein Zeitfenster: nur bei sicher lesbarem Fenster außerhalb inaktiv.
-          const inactive = /^U_NFZ$/i.test(type) && dipulWindowInactive(f.start_time, f.end_time);
+          // recurrence_rule wird nicht interpretiert: bei gesetzter Regel nie inaktiv (fail-safe aktiv, rot).
+          const recurring = Boolean((f.recurrence_rule || '').trim());
+          const inactive = isNfz && !recurring && dipulWindowInactive(f.start_time, f.end_time);
+          const desc = isNfz && !recurring ? dipulWindowNote(f.start_time, f.end_time, inactive) : '';
 
           params.push({
             fid: f.fid || '',
-            name: name + (!ctr && rawName && extRef && extRef !== 'null' ? ` (${extRef})` : ''),
+            name: name + (!ctr && !isNfz && rawName && extRef && extRef !== 'null' ? ` (${extRef})` : ''),
             type,
             typeDetail,
             rawType,
@@ -7541,6 +7565,7 @@
             upper,
             legal,
             ...(inactive ? { inactive: true } : {}),
+            ...(desc ? { desc } : {}),
             color: inactive ? '#64748b' : zoneColor(type),
           });
         }
@@ -7665,17 +7690,18 @@
 
     function evalZoneStatus(zones) {
       if (!zones || zones.length === 0) return { lvl: 'go', reasons: [] };
-      const reasons = []; let lvl = 'go';
+      const reasons = [], nogoReasons = [], front = []; let lvl = 'go';
       const seen = new Set();
       // Fehlgeschlagener Zonenabruf: mindestens Gelb, Grund an erster Stelle (Banner zeigt nur zwei).
       if (zones.some(z => z && z.unavailable)) {
         lvl = 'warn';
         const msg = _t('zoneDataUnavailable');
-        seen.add(msg); reasons.push(msg);
+        seen.add(msg); front.push(msg);
       }
       for (const z of zones) {
         if (!z || z.unavailable) continue;
         const t = (z.type || '').toLowerCase();
+        const isNfz = t === 'u_nfz' || String(z.rawType || '').toLowerCase() === 'u_nfz';
         let msg = '', zLvl = 'warn';
         if (z.inactive) {
           // abgelaufenes Aktivierungsfenster: gelb, aber als "derzeit inaktiv" erkennbar.
@@ -7693,7 +7719,7 @@
           } else {
             zLvl = 'nogo'; msg = _t('zoneCtr');
           }
-        } else if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr') || t.includes('u_nfz')) {
+        } else if (t.includes('prohibited') || t.includes('restricted') || t.includes('flugbeschr') || isNfz) {
           zLvl = 'nogo'; msg = _t('zoneNoFly');
         } else if (t.includes('airport') || t.includes('flughafen') || t.includes('flugplatz') || t.includes('aerodrome')) {
           zLvl = 'nogo'; msg = _t('zoneAirfield');
@@ -7720,9 +7746,10 @@
         }
         if (zLvl === 'nogo') lvl = 'nogo';
         else if (lvl !== 'nogo') lvl = 'warn';
-        if (!seen.has(msg)) { seen.add(msg); reasons.push(msg); }
+        if (!seen.has(msg)) { seen.add(msg); (zLvl === 'nogo' ? nogoReasons : reasons).push(msg); }
       }
-      return { lvl, reasons };
+      // Das Banner zeigt nur zwei Gründe: Datenausfall zuerst, dann No-Go, dann der Rest (jeweils in Listenreihenfolge).
+      return { lvl, reasons: front.concat(nogoReasons, reasons) };
     }
 
     /* [J-RENDER-BNR] ====================================================
@@ -8634,7 +8661,9 @@
       // Unique simplified zone labels
       const seen = new Set();
       const items = [];
-      (zones || []).forEach(z => {
+      // No-Go-Zonen zuerst (stabil), damit die erste Zeile zum Gesamtstatus passt.
+      const nogoRank = z => (z && !z.unavailable && evalZoneStatus([z]).lvl === 'nogo' ? 0 : 1);
+      [...(zones || [])].sort((a, b) => nogoRank(a) - nogoRank(b)).forEach(z => {
         const { label, color } = simplify(z);
         if (!seen.has(label)) {
           seen.add(label);
