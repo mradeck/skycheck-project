@@ -1416,7 +1416,7 @@
       display: block;
     }
     .av-banner.nodata {
-      background: rgba(190, 110, 0, 0.95);
+      background: rgb(160, 90, 0);
     }
 
     .av-lowalt {
@@ -2234,6 +2234,11 @@
 
     .alarm-dismiss:hover {
       background: rgba(255, 255, 255, .15);
+    }
+
+    /* Datenausfall: gleiches Amber wie .av-banner.nodata statt rotem Alarm */
+    #alarm-banner.nodata {
+      background: rgb(160, 90, 0);
     }
 
     /* [S-EXTRAS] ── Radius group (5m / 100m) ──────────────── */
@@ -3486,7 +3491,7 @@
   <script>
     'use strict';
 
-    const APP_VER = '26.10.118.5';
+    const APP_VER = '26.10.118.6';
     const APP_VERSION_CODE = 'v' + APP_VER;
 
     // [COUNTRY] Adapter-Layer für länderspezifische Datenquellen (Geozonen etc.)
@@ -3683,6 +3688,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
         avWatch: '● Beobachte',
         avNoData: 'Keine Luftverkehrsdaten – Flugzeug-Alarm nicht aktiv',
+        alarmNoData: 'Keine Luftverkehrsdaten – Tiefflieger-Warnung nicht aktiv',
         avNoDataShort: 'Keine Daten',
         avConnecting: '… Verbinde',
         avLowAltHdr: '⚠ Tiefflieger (&lt;300 m)',
@@ -3879,6 +3885,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
         avWatch: '● Watching',
         avNoData: 'No air traffic data – aircraft alarm not active',
+        alarmNoData: 'No air traffic data – low-flyer warning not active',
         avNoDataShort: 'No data',
         avConnecting: '… Connecting',
         avLowAltHdr: '⚠ Low-altitude aircraft (&lt;300 m)',
@@ -4075,6 +4082,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
         avWatch: '● Surveillance',
         avNoData: 'Aucune donnée de trafic aérien – alarme avion inactive',
+        alarmNoData: 'Aucune donnée de trafic aérien – alerte aéronefs à basse altitude inactive',
         avNoDataShort: 'Pas de données',
         avConnecting: '… Connexion',
         avLowAltHdr: '⚠ Aéronefs à basse altitude (&lt;300 m)',
@@ -4271,6 +4279,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
         avWatch: '● Observando',
         avNoData: 'Sin datos de tráfico aéreo – alarma de aeronaves inactiva',
+        alarmNoData: 'Sin datos de tráfico aéreo – aviso de aeronaves a baja altura inactivo',
         avNoDataShort: 'Sin datos',
         avConnecting: '… Conectando',
         avLowAltHdr: '⚠ Aeronaves a baja altitud (&lt;300 m)',
@@ -4467,6 +4476,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
         avWatch: '● Obserwacja',
         avNoData: 'Brak danych o ruchu lotniczym – alarm samolotów nieaktywny',
+        alarmNoData: 'Brak danych o ruchu lotniczym – ostrzeżenie o niskich lotach nieaktywne',
         avNoDataShort: 'Brak danych',
         avConnecting: '… Łączenie',
         avLowAltHdr: '⚠ Statki powietrzne na małej wysokości (&lt;300 m)',
@@ -4709,6 +4719,7 @@
         renderUpdated();
       }
       avRelang();   // Status-/Warntext folgt dem Sprachwechsel
+      alarmRelang();   // Datenausfall-Banner der Hauptansicht folgt dem Sprachwechsel
     }
     document.addEventListener('DOMContentLoaded', () => {
       applyLang();
@@ -4913,7 +4924,7 @@
         refreshSequence: 0,
         moveTimer: null,
       },
-      alarm: { active: false, silenced: false, intervalId: null },
+      alarm: { active: false, silenced: false, intervalId: null, noData: false, noDataDismissed: false },
     };
     const MAP_STYLES = [
       { n: 'Dark', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '© OpenStreetMap', s: 'abc', dark: true },
@@ -4973,6 +4984,7 @@
       $res.style.display = 'none';
       $land.style.display = 'flex';
       S.lat = S.lon = null;
+      alarmReset();
       if (S.map) {
         if (COUNTRY === 'fr') resetFrContextMapState();
         S.map.remove();
@@ -5277,6 +5289,10 @@
       avClearMarkers();
       const bn = $('av-banner'); if (bn) { bn.className = 'av-banner'; bn.textContent = ''; }
       AV.failCount = 0; AV.state = 'connecting';
+      // avOpen hat den Ausfall-Hinweis der Hauptansicht ausgeblendet: wieder zeigen (Bedrohungsbanner nicht)
+      if (S.alarm && S.alarm.noData && !S.alarm.noDataDismissed) {
+        const _ab = document.getElementById('alarm-banner'); if (_ab) _ab.classList.add('active');
+      }
     }
 
     function avInitMap() {
@@ -9747,6 +9763,31 @@
 
     function checkAircraftAlarm(aircraft) {
       if (!S.lat || !S.lon || !Array.isArray(aircraft)) return;
+      const banner = document.getElementById('alarm-banner');
+      if (!banner) return;
+      // Ausfall-Hinweis gilt nur für den Ort, an dem er geschlossen wurde
+      if (S.alarm.checkLat !== S.lat || S.alarm.checkLon !== S.lon) {
+        S.alarm.noDataDismissed = false;
+        S.alarm.checkLat = S.lat; S.alarm.checkLon = S.lon;
+      }
+      // Datenausfall: Warnung ist nicht aktiv – das sichtbar machen statt still "keine Bedrohung" zu melden
+      if (aircraft.length > 0 && aircraft[0] && aircraft[0].api_error) {
+        if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+        S.alarm.active = false;   // kein Glockenton für den Ausfall selbst
+        S.alarm.noData = true;
+        alarmRenderNoData();
+        banner.classList.add('nodata');
+        if (S.alarm.noDataDismissed) banner.classList.remove('active');
+        else banner.classList.add('active');
+        return;
+      }
+      if (S.alarm.noData) {   // Daten sind zurück: Ausfall-Zustand verlassen, danach normale Logik
+        S.alarm.noData = false;
+        S.alarm.noDataDismissed = false;
+        banner.classList.remove('nodata');
+        banner.classList.remove('active');
+        alarmSetDismissLabel(false);
+      }
       const threats = aircraft
         .filter(a => {
           if (a.api_error) return false;
@@ -9755,9 +9796,6 @@
           return alt < 300 && dist <= 1500;
         })
         .sort((a, b) => _distM(S.lat, S.lon, a.lat, a.lon) - _distM(S.lat, S.lon, b.lat, b.lon));
-
-      const banner = document.getElementById('alarm-banner');
-      if (!banner) return;
 
       if (threats.length > 0 && !S.alarm.silenced) {
         const t = threats[0];
@@ -9783,7 +9821,36 @@
       }
     }
 
+    function alarmSetDismissLabel(noData) {
+      const btn = document.getElementById('alarm-dismiss');
+      if (!btn) return;
+      if (noData) { btn.textContent = '✕'; btn.setAttribute('aria-label', _t('closeAria')); }
+      else { btn.textContent = 'Stumm schalten ✕'; btn.removeAttribute('aria-label'); }
+    }
+    function alarmRenderNoData() {
+      const t = document.getElementById('alarm-text');
+      if (t) t.textContent = '⚠️ ' + _t('alarmNoData');
+      alarmSetDismissLabel(true);
+    }
+    // Sprachwechsel: Ausfalltext neu setzen (applyLang überschreibt #alarm-text mit alarmIdle)
+    // Zurück zur Startseite: Alarmzustand und Banner vollständig löschen
+    function alarmReset() {
+      if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+      S.alarm.active = S.alarm.silenced = S.alarm.noData = S.alarm.noDataDismissed = false;
+      S.alarm.checkLat = S.alarm.checkLon = undefined;
+      const b = document.getElementById('alarm-banner');
+      if (b) { b.classList.remove('active'); b.classList.remove('nodata'); }
+      alarmSetDismissLabel(false);
+    }
+    function alarmRelang() { if (S.alarm.noData) alarmRenderNoData(); }
+
     function silenceAlarm() {
+      if (S.alarm.noData) {   // Ausfall-Hinweis schließen; Bedrohungs-Stummschaltung bleibt unberührt
+        S.alarm.noDataDismissed = true;
+        const nb = document.getElementById('alarm-banner');
+        if (nb) nb.classList.remove('active');
+        return;
+      }
       S.alarm.silenced = true;
       if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
       const b = document.getElementById('alarm-banner');
@@ -9838,7 +9905,7 @@
   </script>
   <div id="alarm-banner">
     <span id="alarm-text" data-i18n="alarmIdle">⚠️ Fluggerät in Alarmzone!</span>
-    <button class="alarm-dismiss" onclick="silenceAlarm()">Stumm schalten ✕</button>
+    <button class="alarm-dismiss" id="alarm-dismiss" onclick="silenceAlarm()">Stumm schalten ✕</button>
   </div>
 <script>
   // [J-PWA-INSTALL] PWA Install Banner
