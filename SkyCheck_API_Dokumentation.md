@@ -176,29 +176,33 @@ exports.handler = async (event) => {
 
 ---
 
-## 4. Luftverkehr — Airplanes.live (ADS-B)
+## 4. Luftverkehr — adsb.lol / adsb.fi (ADS-B, über Function)
 
 **Zweck:** Echtzeit-Flugbewegungen im Umkreis (Transponder-Daten)
 
-**Basis-URL:** `https://api.airplanes.live/v2/point`
+**Quellen:** `https://api.adsb.lol/v2/point/{lat}/{lon}/{dist}` (primär) und `https://opendata.adsb.fi/api/v3/lat/{lat}/lon/{lon}/dist/{dist}` (Reserve)
 
-**Kein API-Key erforderlich · CORS erlaubt · kostenlos**
+**Kein API-Key erforderlich · kostenlos · ⚠️ kein CORS-Header bei den Quellen** (Browser-Zugriff nur über die SkyCheck-Function, same-origin)
 
-### Endpunkt
+Hintergrund: airplanes.live hat seine öffentliche API 2026 geschlossen (jede Anfrage HTTP 403, „Please contact us“). Die Function `adsb` ersetzt deshalb die frühere Direktabfrage.
+
+### Endpunkt (SkyCheck-Function)
 
 ```
-GET https://api.airplanes.live/v2/point/{lat}/{lon}/{radius_nm}
+GET /.netlify/functions/adsb?lat={lat}&lon={lon}&dist={radius_nm}
 ```
 
 | Parameter   | Typ   | Beschreibung                                     |
 |-------------|-------|--------------------------------------------------|
 | `lat`       | float | Breitengrad (4 Dezimalstellen)                   |
 | `lon`       | float | Längengrad (4 Dezimalstellen)                    |
-| `radius_nm` | int   | Radius in Nautischen Meilen (SkyCheck: 108 = ~200 km) |
+| `dist`      | int   | Radius in Nautischen Meilen (Standard 108 = ~200 km, zulässig 1–250) |
 
 **Antwort:**
 ```json
 {
+  "source": "adsb.lol",
+  "now": 1763280000000,
   "ac": [
     {
       "hex":      "3c6581",
@@ -214,6 +218,8 @@ GET https://api.airplanes.live/v2/point/{lat}/{lon}/{radius_nm}
   ]
 }
 ```
+
+Die Function antwortet mit `source` (die Quelle, die geantwortet hat: `adsb.lol` oder `adsb.fi`) und einer Liste `ac` mit nur den Feldern `hex, flight, lat, lon, alt_baro, alt_geom, gs, track, category`. Antwortet keine der beiden Quellen, liefert sie HTTP 502 mit `upstream_unavailable`.
 
 **Wichtige Felder und Umrechnungen:**
 
@@ -643,7 +649,7 @@ GET /.netlify/functions/notam-be
 | DWD BrightSky   | `api.brightsky.dev/weather`            | ✅   | –    | kostenlos |
 | GFZ Potsdam Kp  | `kp.gfz.de/app/json/`                  | ❌   | –    | kostenlos |
 | NOAA SWPC       | `services.swpc.noaa.gov`               | ✅   | –    | kostenlos |
-| Airplanes.live  | `api.airplanes.live/v2/point`          | ✅   | –    | kostenlos |
+| adsb.lol / adsb.fi | `api.adsb.lol/v2/point`, `opendata.adsb.fi/api/v3` — über die Function `/.netlify/functions/adsb` | ✅ (über die Function) | – | kostenlos; Function mit 8,5 s Budget, 3 s Cache |
 | DiPUL WMS       | `uas-betrieb.de/geoservices/dipul/wms` | ✅   | –    | kostenlos |
 | OSM-Kacheln     | `{s}.tile.openstreetmap.org`           | ✅   | –    | Fair Use (Tile Usage Policy) |
 | Esri Satellit   | `server.arcgisonline.com`              | ✅   | –    | kostenlos (Attribution) |
