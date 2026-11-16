@@ -13,7 +13,7 @@ const json = (obj, status = 200) => async () => ({ ok: status >= 200 && status <
 const badJson = async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('x'); }, text: async () => '<html>' });
 const fail403 = json({ error: 'nope' }, 403);
 const call = async (qs) => { const r = await fn.handler({ queryStringParameters: qs }); return { status: r.statusCode, headers: r.headers, body: JSON.parse(r.body) }; };
-const AC = { hex: 'abc123', flight: 'DLH1 ', lat: 52.5, lon: 13.4, alt_baro: 1200, alt_geom: 1300, gs: 140, track: 90, category: 'A3' };
+const AC = { hex: 'abc123', flight: 'DLH1', lat: 52.5, lon: 13.4, alt_baro: 1200, alt_geom: 1300, gs: 140, track: 90, category: 'A3' };
 
 test('Primärquelle adsb.lol: exakte URL, User-Agent, Antwortform und Cache-Header', async () => {
   const calls = [];
@@ -27,7 +27,8 @@ test('Primärquelle adsb.lol: exakte URL, User-Agent, Antwortform und Cache-Head
   assert.equal(r.body.now, 1234);
   assert.deepEqual(r.body.ac, [AC]);
   assert.equal(r.headers['Content-Type'], 'application/json');
-  assert.equal(r.headers['Access-Control-Allow-Origin'], '*');
+  assert.equal(r.headers['Access-Control-Allow-Origin'], undefined);
+  assert.ok(!Object.keys(r.headers).some(k => /^access-control/i.test(k)));
   assert.equal(r.headers['Cache-Control'], 'public, max-age=3');
 });
 
@@ -112,4 +113,81 @@ test('Feld-Whitelist: Zusatzfelder entfallen, Einträge ohne numerische lat/lon 
   assert.equal(r.body.ac.length, 2);
   assert.deepEqual(r.body.ac[0], AC);
   assert.deepEqual(r.body.ac[1], { hex: 'minimal', lat: 0, lon: 0, alt_baro: 'ground' });
+});
+
+// ── Review-Fixes ──────────────────────────────────────────────────────────────
+const hang = (signal, onAbort) => new Promise((_, rej) => signal.addEventListener('abort', () => rej(onAbort())));
+const withLimits = async (l, f) => { const old = { ...fn.LIMITS }; Object.assign(fn.LIMITS, l); try { await f(); } finally { Object.assign(fn.LIMITS, old); } };
+const abortErr = () => Object.assign(new Error('aborted'), { name: 'AbortError' });
+
+test('Standard-Budget liegt unter dem Netlify-Limit von 10 s', () => {
+  assert.ok(fn.LIMITS.totalMs <= 8500 && fn.LIMITS.primaryMs <= 4000);
+});
+
+test('Primärquelle hängt → Timeout, Fallback liefert innerhalb des Budgets', async () => {
+  await withLimits({ primaryMs: 40, totalMs: 300, minFallbackMs: 10 }, async () => {
+    globalThis.fetch = async (u, o) => u.startsWith('https://api.adsb.lol') ? hang(o.signal, abortErr) : json({ ac: [AC] })();
+    const t = Date.now();
+    const r = await call({ lat: '1', lon: '2' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.source, 'adsb.fi');
+    assert.ok(Date.now() - t < 300);
+  });
+});
+
+test('beide hängen → 502 mit timeout, Gesamtdauer ≤ Gesamtbudget', async () => {
+  await withLimits({ primaryMs: 40, totalMs: 200, minFallbackMs: 10 }, async () => {
+    globalThis.fetch = async (u, o) => hang(o.signal, abortErr);
+    const t = Date.now();
+    const r = await call({ lat: '1', lon: '2' });
+    const dt = Date.now() - t;
+    assert.equal(r.status, 502);
+    assert.deepEqual(r.body.tried.map(x => x.reason), ['timeout', 'timeout']);
+    assert.ok(dt < 200 + 100, 'Dauer ' + dt);
+  });
+});
+
+test('Abbruch beim Lesen des Bodys wird als timeout gemeldet, nicht als invalid_json', async () => {
+  await withLimits({ primaryMs: 30, totalMs: 200, minFallbackMs: 10 }, async () => {
+    globalThis.fetch = async (u, o) => ({ ok: true, status: 200, json: () => hang(o.signal, () => new SyntaxError('Unexpected end')) });
+    const r = await call({ lat: '1', lon: '2' });
+    assert.equal(r.status, 502);
+    assert.equal(r.body.tried[0].reason, 'timeout');
+  });
+});
+
+test('msg ≠ "No error" → Quelle gilt als ausgefallen (upstream_msg), Fallback greift', async () => {
+  globalThis.fetch = async (u) => u.startsWith('https://api.adsb.lol') ? json({ msg: 'Rate limited', ac: [AC] })() : json({ msg: 'No error', ac: [AC] })();
+  const r = await call({ lat: '1', lon: '2' });
+  assert.equal(r.body.source, 'adsb.fi');
+  globalThis.fetch = json({ msg: 'boom', ac: [AC] });
+  const r2 = await call({ lat: '1', lon: '2' });
+  assert.equal(r2.status, 502);
+  assert.deepEqual(r2.body.tried.map(x => x.reason), ['upstream_msg', 'upstream_msg']);
+});
+
+test('leeres ac mit msg "No error" ist gültig (keine Flugzeuge)', async () => {
+  let n = 0;
+  globalThis.fetch = async () => { n++; return json({ msg: 'No error', now: 7, ac: [] })(); };
+  const r = await call({ lat: '1', lon: '2' });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.source, 'adsb.lol');
+  assert.deepEqual(r.body.ac, []);
+  assert.equal(n, 1);
+});
+
+test('Typ-Bereinigung der Felder', async () => {
+  globalThis.fetch = json({ ac: [
+    { hex: 'abc123', flight: '  DLH123456789 ', lat: 1, lon: 2, category: 'A3', alt_baro: 'ground', alt_geom: 5, gs: 6, track: 7 },
+    { hex: 'toolongHEX', flight: 123, lat: 1, lon: 2, category: 'TOOLONG', alt_baro: {}, alt_geom: '5', gs: NaN, track: null },
+    { hex: 42, flight: null, lat: 1, lon: 2, alt_baro: 'abc', gs: Infinity },
+    { lat: 1, lon: 2, alt_baro: 0 },
+  ] });
+  const r = await call({ lat: '1', lon: '2' });
+  assert.deepEqual(r.body.ac, [
+    { lat: 1, lon: 2, hex: 'abc123', flight: 'DLH12345', category: 'A3', alt_baro: 'ground', alt_geom: 5, gs: 6, track: 7 },
+    { lat: 1, lon: 2 },
+    { lat: 1, lon: 2 },
+    { lat: 1, lon: 2, alt_baro: 0 },
+  ]);
 });

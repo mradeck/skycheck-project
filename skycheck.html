@@ -1361,6 +1361,12 @@
       border: 1px solid #4f4;
     }
 
+    .av-stat.connecting {
+      background: rgba(150, 160, 175, 0.2);
+      color: #b5bdc8;
+      border: 1px solid #8a94a3;
+    }
+
     .av-stat.nodata {
       background: rgba(255, 170, 0, 0.3);
       color: #ffb020;
@@ -1488,6 +1494,12 @@
 
     #alarm-view.av-light .av-loc {
       color: #333;
+    }
+
+    #alarm-view.av-light .av-stat.connecting {
+      background: rgba(100, 110, 125, 0.12);
+      color: #556070;
+      border-color: #7a8493;
     }
 
     #alarm-view.av-light .av-stat.nodata {
@@ -3271,7 +3283,7 @@
       <div class="av-topbar">
         <button class="av-back" id="av-back" data-i18n="avBack">← Zurück</button>
         <span class="av-loc" id="av-loc">—</span>
-        <span class="av-stat watch" id="av-stat">● Beobachte</span>
+        <span class="av-stat connecting" id="av-stat">… Verbinde</span>
       </div>
       <div class="av-banner" id="av-banner"></div>
       <div class="av-lowalt" id="av-lowalt"></div>
@@ -3666,6 +3678,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
         avWatch: '● Beobachte',
         avNoData: 'Keine Luftverkehrsdaten – Flugzeug-Alarm nicht aktiv',
+        avConnecting: '… Verbinde',
         avLowAltHdr: '⚠ Tiefflieger (&lt;300 m)',
         zoneNoFly: 'Flugverbot/-beschränkung',
         zoneCtr: 'Kontrollzone — genehmigungspflichtig',
@@ -3860,6 +3873,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
         avWatch: '● Watching',
         avNoData: 'No air traffic data – aircraft alarm not active',
+        avConnecting: '… Connecting',
         avLowAltHdr: '⚠ Low-altitude aircraft (&lt;300 m)',
         zoneNoFly: 'No-fly/restricted zone',
         zoneCtr: 'Control zone — permit required',
@@ -4054,6 +4068,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
         avWatch: '● Surveillance',
         avNoData: 'Aucune donnée de trafic aérien – alarme avion inactive',
+        avConnecting: '… Connexion',
         avLowAltHdr: '⚠ Aéronefs à basse altitude (&lt;300 m)',
         zoneNoFly: 'Zone interdite/à restrictions',
         zoneCtr: 'Zone de contrôle — autorisation requise',
@@ -4248,6 +4263,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
         avWatch: '● Observando',
         avNoData: 'Sin datos de tráfico aéreo – alarma de aeronaves inactiva',
+        avConnecting: '… Conectando',
         avLowAltHdr: '⚠ Aeronaves a baja altitud (&lt;300 m)',
         zoneNoFly: 'Zona prohibida/restringida',
         zoneCtr: 'Zona de control — autorización requerida',
@@ -4442,6 +4458,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
         avWatch: '● Obserwacja',
         avNoData: 'Brak danych o ruchu lotniczym – alarm samolotów nieaktywny',
+        avConnecting: '… Łączenie',
         avLowAltHdr: '⚠ Statki powietrzne na małej wysokości (&lt;300 m)',
         zoneNoFly: 'Strefa zakazu/ograniczeń lotów',
         zoneCtr: 'Strefa kontrolowana — wymagane zezwolenie',
@@ -4681,7 +4698,7 @@
         }
         renderUpdated();
       }
-      if (AV.noData) avRenderNoData();   // Warntext folgt dem Sprachwechsel
+      avRelang();   // Status-/Warntext folgt dem Sprachwechsel
     }
     document.addEventListener('DOMContentLoaded', () => {
       applyLang();
@@ -5172,7 +5189,7 @@
       map: null, tileL: null, dipulL: null, acLayer: null, trailLayer: null, trails: {}, radiusCirc: null, scanCirc: null,
       interval: null, beepInterval: null, lat: null, lon: null, locationSeq: 0,
       zonesOn: true, lightMode: false, alarmOn: false, styleIdx: 0,
-      RADIUS_KM: 2, POLL_MS: 5000, pollSeq: 0, failCount: 0, noData: false, ALT_LIMIT_FT: 984, SCAN_KM: 18.52, TRAIL_SEC: 60,
+      RADIUS_KM: 2, POLL_MS: 5000, pollSeq: 0, failCount: 0, state: 'connecting', inflight: null, ctrl: null, TIMEOUT_MS: 9000, ALT_LIMIT_FT: 984, SCAN_KM: 18.52, TRAIL_SEC: 60,
       STYLES: [
         { n: 'Dark', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '\u00a9OSM', dark: true },
         { n: 'OSM', u: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', a: '\u00a9OSM' },
@@ -5247,8 +5264,9 @@
       $('alarm-view').classList.remove('av-open');
       document.body.style.overflow = '';
       AV.alarmOn = false;
-      AV.trails = {};
-      AV.failCount = 0; AV.noData = false;
+      avClearMarkers();
+      const bn = $('av-banner'); if (bn) { bn.className = 'av-banner'; bn.textContent = ''; }
+      AV.failCount = 0; AV.state = 'connecting';
     }
 
     function avInitMap() {
@@ -5298,59 +5316,91 @@
       });
     }
 
-    function avStartPoll() {
-      AV.pollSeq++; AV.failCount = 0; avClearNoData();
-      avPoll(); AV.interval = setInterval(avPoll, AV.POLL_MS);
-    }
-    function avStopPoll() { clearInterval(AV.interval); AV.interval = null; AV.pollSeq++; }
+    // Callsign-Helfer: Fremddaten können Nicht-Strings enthalten
+    function _csTrim(v) { return typeof v === 'string' ? v.trim() : ''; }
+    function _acLabel(a) { return _csTrim(a && a.flight) || (a && typeof a.hex === 'string' && a.hex) || '?'; }
 
-    // Warnzustand „keine Luftverkehrsdaten“: Der Alarm überwacht dann NICHTS — das muss sichtbar sein.
+    // Zustände der Alarm-Ansicht: 'connecting' (noch keine Daten) → 'watch' (Daten da) ↔ 'nodata' (Ausfall)
+    function avRenderConnecting() {
+      const st = $('av-stat'); if (!st) return;
+      st.className = 'av-stat connecting'; st.textContent = _t('avConnecting');
+    }
     function avRenderNoData() {
       $('av-stat').className = 'av-stat nodata';
-      $('av-stat').textContent = '\u26a0 ' + _t('avNoData');
+      $('av-stat').textContent = '⚠ ' + _t('avNoData');
       $('av-banner').className = 'av-banner show nodata';
-      $('av-banner').textContent = '\u26a0 ' + _t('avNoData');
+      $('av-banner').textContent = '⚠ ' + _t('avNoData');
     }
-    function avSetNoData() {
-      AV.noData = true;
-      // veraltete Positionen wären irreführend
-      if (AV.acLayer) AV.acLayer.clearLayers();
-      if (AV.trailLayer) AV.trailLayer.clearLayers();
-      AV.trails = {};
-      avUpdateLowAlt([]);
-      if (AV.alarmOn && AV.beepInterval) { clearInterval(AV.beepInterval); AV.beepInterval = null; }
-      AV.alarmOn = false;
-      avRenderNoData();
-    }
-    function avClearNoData() {
-      AV.noData = false;
+    function avRenderWatch() {
       const st = $('av-stat');
       if (st) { st.className = 'av-stat watch'; st.textContent = _t('avWatch'); }
       const bn = $('av-banner');
       if (bn) { bn.className = 'av-banner'; bn.textContent = ''; }
     }
+    // Sprachwechsel: Text des aktuellen Zustands neu setzen (Alarm-Text bleibt unberührt)
+    function avRelang() {
+      if (AV.state === 'nodata') avRenderNoData();
+      else if (AV.state === 'connecting') avRenderConnecting();
+      else { const st = $('av-stat'); if (st && st.classList.contains('watch')) st.textContent = _t('avWatch'); }
+    }
+    function avClearMarkers() {
+      if (AV.acLayer) AV.acLayer.clearLayers();
+      if (AV.trailLayer) AV.trailLayer.clearLayers();
+      AV.trails = {};
+      avUpdateLowAlt([]);
+    }
+    function avSetNoData() {
+      AV.state = 'nodata';
+      avClearMarkers();   // veraltete Positionen wären irreführend
+      if (AV.alarmOn && AV.beepInterval) { clearInterval(AV.beepInterval); AV.beepInterval = null; }
+      AV.alarmOn = false;
+      avRenderNoData();
+    }
+
+    function avStartPoll() {
+      AV.pollSeq++; AV.failCount = 0; AV.state = 'connecting'; avRenderConnecting();
+      avPoll(); AV.interval = setInterval(avPoll, AV.POLL_MS);
+    }
+    function avStopPoll() {
+      clearInterval(AV.interval); AV.interval = null; AV.pollSeq++;
+      if (AV.ctrl) { try { AV.ctrl.abort(); } catch (e) { } AV.ctrl = null; }
+    }
 
     async function avPoll() {
       const seq = AV.pollSeq, locId = AV.locationSeq;
+      if (AV.inflight === seq) return;   // Poll läuft noch: Tick überspringen (weder Erfolg noch Fehler)
+      AV.inflight = seq;
+      const ctrl = new AbortController();
+      AV.ctrl = ctrl;
+      const timer = setTimeout(() => ctrl.abort(), AV.TIMEOUT_MS);
       let planes = null;
       try {
-        const r = await fetch(ADSB_URL + '?lat=' + AV.lat + '&lon=' + AV.lon + '&dist=10');
+        const r = await fetch(ADSB_URL + '?lat=' + AV.lat + '&lon=' + AV.lon + '&dist=10', { signal: ctrl.signal });
         if (r.ok) {
           const d = await r.json();
           if (d && Array.isArray(d.ac)) planes = d.ac;
         }
       } catch (e) { }
+      finally { clearTimeout(timer); if (AV.inflight === seq) AV.inflight = null; if (AV.ctrl === ctrl) AV.ctrl = null; }
       // Antwort nach Schließen der Ansicht oder Standortwechsel verwerfen
       if (seq !== AV.pollSeq || locId !== AV.locationSeq) return;
-      if (planes === null) {
-        AV.failCount++;
-        if (AV.failCount >= 2) avSetNoData();
-        return;
+      if (planes !== null) {
+        const prev = AV.state;
+        if (prev !== 'watch') { AV.state = 'watch'; avRenderWatch(); }
+        try {
+          avUpdateMarkers(planes);
+          avCheckProx(planes);
+          AV.failCount = 0;
+          return;
+        } catch (e) {
+          console.warn('Alarm-Ansicht: Auswertung fehlgeschlagen', e);
+          AV.state = prev;
+          if (prev === 'connecting') avRenderConnecting();
+          else if (prev === 'nodata') avRenderNoData();
+        }
       }
-      AV.failCount = 0;
-      if (AV.noData) avClearNoData();
-      avUpdateMarkers(planes);
-      avCheckProx(planes);
+      AV.failCount++;
+      if (AV.failCount >= 2) avSetNoData();
     }
 
     function avUpdateMarkers(planes) {
@@ -5377,7 +5427,7 @@
           className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
         });
         const m = L.marker([a.lat, a.lon], { icon }).addTo(AV.acLayer);
-        const cs = escapeHtml(a.flight ? a.flight.trim() : (a.hex || '?'));
+        const cs = escapeHtml(_acLabel(a));
         const altM = alt != null ? Math.round(alt * 0.3048) : '?';
         const info = '<b>' + cs + '</b><br>' + dist.toFixed(1) + ' km \u00b7 ' + altM + ' m (' + escapeHtml(a.alt_baro || '?') + ' ft) \u00b7 ' + escapeHtml(a.gs || '?') + ' kts';
         m.bindPopup(info);
@@ -5421,7 +5471,7 @@
       const near = low.filter(a => avDist(AV.lat, AV.lon, a.lat, a.lon) < AV.RADIUS_KM);
       if (near.length) {
         const a = near[0];
-        const cs = a.flight ? a.flight.trim() : (a.hex || '?');
+        const cs = _acLabel(a);
         const d = avDist(AV.lat, AV.lon, a.lat, a.lon);
         $('av-stat').className = 'av-stat alarm';
         $('av-stat').textContent = '\u26a0 ' + near.length + ' Flugzeug' + (near.length > 1 ? 'e' : '');
@@ -5452,7 +5502,7 @@
       el.className = 'av-lowalt show';
       const rows = lowPlanes
         .map(a => {
-          const cs = escapeHtml(a.flight ? a.flight.trim() : (a.hex || '?'));
+          const cs = escapeHtml(_acLabel(a));
           const alt = (a.alt_baro == null || a.alt_baro === 'ground') ? 0 : +a.alt_baro;
           const altM = Math.round(alt * 0.3048);
           const dist = avDist(AV.lat, AV.lon, a.lat, a.lon);
@@ -5950,7 +6000,10 @@
         return _acCache;
       }
       _acLastFetch = now; _acLastLat = lat; _acLastLon = lon;
-      _acCache = await fetchAircraft(lat, lon);
+      const res = await fetchAircraft(lat, lon);
+      // Fehlschläge nicht cachen (sonst würde ein Ausfall 60 s lang weiterverteilt); Erfolg behält den Cooldown
+      if (Array.isArray(res) && res[0] && res[0].api_error) { _acCache = null; _acLastFetch = 0; return res; }
+      _acCache = res;
       return _acCache;
     }
 
@@ -6009,7 +6062,7 @@
             const rb = a.alt_baro, rg = a.alt_geom;
             return {
               icao: a.hex,
-              callsign: (a.flight || '').trim(),
+              callsign: _csTrim(a.flight),
               lon: a.lon,
               lat: a.lat,
               altBaro: (rb == null || rb === 'ground') ? null : +rb * ftM,  // metres; null = Boden/unbekannt (kein Fehlalarm)
@@ -8038,7 +8091,7 @@
           acHtml = `
       <div class="fc-val ${clName}" style="font-size:0.95rem;line-height:1.2;">
         ${_t('airDist')(distKm.toFixed(1))}<br>
-        <span style="font-size:0.75rem; color:var(--text2)">${cls.ac.callsign || _t('airUnknown')} / ${_t('airAlt')}: ~${(cls.ac.altGeo ?? cls.ac.altBaro ?? 0).toFixed(0)}m</span>
+        <span style="font-size:0.75rem; color:var(--text2)">${escapeHtml(cls.ac.callsign) || _t('airUnknown')} / ${_t('airAlt')}: ~${(cls.ac.altGeo ?? cls.ac.altBaro ?? 0).toFixed(0)}m</span>
       </div>`;
         }
       }
