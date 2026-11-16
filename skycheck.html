@@ -1416,7 +1416,7 @@
       display: block;
     }
     .av-banner.nodata {
-      background: rgba(190, 110, 0, 0.95);
+      background: rgb(160, 90, 0);
     }
 
     .av-lowalt {
@@ -2238,7 +2238,7 @@
 
     /* Datenausfall: gleiches Amber wie .av-banner.nodata statt rotem Alarm */
     #alarm-banner.nodata {
-      background: rgba(190, 110, 0, 0.97);
+      background: rgb(160, 90, 0);
     }
 
     /* [S-EXTRAS] ── Radius group (5m / 100m) ──────────────── */
@@ -4984,6 +4984,7 @@
       $res.style.display = 'none';
       $land.style.display = 'flex';
       S.lat = S.lon = null;
+      alarmReset();
       if (S.map) {
         if (COUNTRY === 'fr') resetFrContextMapState();
         S.map.remove();
@@ -5288,6 +5289,10 @@
       avClearMarkers();
       const bn = $('av-banner'); if (bn) { bn.className = 'av-banner'; bn.textContent = ''; }
       AV.failCount = 0; AV.state = 'connecting';
+      // avOpen hat den Ausfall-Hinweis der Hauptansicht ausgeblendet: wieder zeigen (Bedrohungsbanner nicht)
+      if (S.alarm && S.alarm.noData && !S.alarm.noDataDismissed) {
+        const _ab = document.getElementById('alarm-banner'); if (_ab) _ab.classList.add('active');
+      }
     }
 
     function avInitMap() {
@@ -9760,6 +9765,11 @@
       if (!S.lat || !S.lon || !Array.isArray(aircraft)) return;
       const banner = document.getElementById('alarm-banner');
       if (!banner) return;
+      // Ausfall-Hinweis gilt nur für den Ort, an dem er geschlossen wurde
+      if (S.alarm.checkLat !== S.lat || S.alarm.checkLon !== S.lon) {
+        S.alarm.noDataDismissed = false;
+        S.alarm.checkLat = S.lat; S.alarm.checkLon = S.lon;
+      }
       // Datenausfall: Warnung ist nicht aktiv – das sichtbar machen statt still "keine Bedrohung" zu melden
       if (aircraft.length > 0 && aircraft[0] && aircraft[0].api_error) {
         if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
@@ -9823,6 +9833,15 @@
       alarmSetDismissLabel(true);
     }
     // Sprachwechsel: Ausfalltext neu setzen (applyLang überschreibt #alarm-text mit alarmIdle)
+    // Zurück zur Startseite: Alarmzustand und Banner vollständig löschen
+    function alarmReset() {
+      if (S.alarm.intervalId) { clearInterval(S.alarm.intervalId); S.alarm.intervalId = null; }
+      S.alarm.active = S.alarm.silenced = S.alarm.noData = S.alarm.noDataDismissed = false;
+      S.alarm.checkLat = S.alarm.checkLon = undefined;
+      const b = document.getElementById('alarm-banner');
+      if (b) { b.classList.remove('active'); b.classList.remove('nodata'); }
+      alarmSetDismissLabel(false);
+    }
     function alarmRelang() { if (S.alarm.noData) alarmRenderNoData(); }
 
     function silenceAlarm() {

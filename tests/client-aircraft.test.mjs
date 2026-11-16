@@ -253,9 +253,10 @@ function alarmEnv() {
     ${grab('alarmSetDismissLabel')}
     ${grab('alarmRenderNoData')}
     ${grab('alarmRelang')}
+    ${grab('alarmReset')}
     ${grab('silenceAlarm')}
     ${grab('checkAircraftAlarm')}
-    return { checkAircraftAlarm, silenceAlarm, alarmRelang };`;
+    return { checkAircraftAlarm, silenceAlarm, alarmRelang, alarmReset };`;
   const S = { lat: 50, lon: 8, alarm: { active: false, silenced: false, intervalId: null, noData: false, noDataDismissed: false } };
   const document = { getElementById: id => els[id] || null };
   const api = new Function('S', 'document', '_t', 'playBell', 'setInterval', 'clearInterval', code)(
@@ -368,4 +369,46 @@ test('Alarm: Sprachwechsel setzt Ausfalltext neu, sonst nichts', () => {
 test('alarmNoData existiert in allen fünf Sprachen', () => {
   assert.equal((html.match(/^\s*alarmNoData: '/gm) || []).length, 5);
   assert.ok(html.includes("alarmNoData: 'Keine Luftverkehrsdaten – Tiefflieger-Warnung nicht aktiv'"));
+});
+
+test('alarmReset (Zurück-Button): löscht Zustand, Banner, Intervall und Label', () => {
+  const e = alarmEnv();
+  e.checkAircraftAlarm(THREAT);
+  e.alarmReset();
+  assert.deepEqual(e.log.cleared, [1]);
+  assert.equal(e.b.contains('active'), false);
+  assert.ok(!e.S.alarm.active && !e.S.alarm.silenced && !e.S.alarm.intervalId);
+  const e2 = alarmEnv();
+  e2.checkAircraftAlarm(OUT); e2.silenceAlarm();
+  e2.alarmReset();
+  assert.equal(e2.b.contains('nodata'), false);
+  assert.ok(!e2.S.alarm.noData && !e2.S.alarm.noDataDismissed);
+  assert.equal(e2.els['alarm-dismiss'].textContent, 'Stumm schalten ✕');
+  assert.ok(/\$\('btn-back'\)[\s\S]{0,400}alarmReset\(\)/.test(html), 'Back-Handler ruft alarmReset');
+});
+
+test('Alarm: Ausfall-Dismissal gilt nur für denselben Ort', () => {
+  const e = alarmEnv();
+  e.checkAircraftAlarm(OUT); e.silenceAlarm();
+  e.checkAircraftAlarm(OUT);                       // gleicher Ort: bleibt zu
+  assert.equal(e.b.contains('active'), false);
+  e.S.lat = 51;                                    // anderer Ort
+  e.checkAircraftAlarm(OUT);
+  assert.ok(e.b.contains('active'));
+  assert.equal(e.S.alarm.noDataDismissed, false);
+});
+
+test('avClose zeigt den Ausfall-Hinweis wieder, aber kein Bedrohungsbanner', () => {
+  const body = grab('avClose');
+  assert.ok(/S\.alarm\.noData && !S\.alarm\.noDataDismissed/.test(body));
+  assert.ok(/classList\.add\('active'\)/.test(body));
+  assert.ok(!/threat/i.test(body));
+});
+
+test('amber Banner-Hintergrund kontrastreich und in beiden Ansichten gleich', () => {
+  assert.equal((html.match(/background: rgb\(160, 90, 0\)/g) || []).length, 2);
+});
+
+test('switchLang ruft alarmRelang', () => {
+  assert.ok(/alarmRelang\(\);/.test(grab('switchLang')));
 });
