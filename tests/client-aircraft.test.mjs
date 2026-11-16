@@ -120,6 +120,7 @@ test('avPoll: ein Fehler → noch keine Warnung, zweiter in Folge → noData; Er
   await e.avPoll();                                       // 2. Fehler (200 ohne ac-Liste)
   assert.equal(e.AV.state, 'nodata');
   assert.equal(e.els['av-stat'].className, 'av-stat nodata');
+  assert.equal(e.els['av-stat'].textContent, '\u26a0 T:avNoDataShort');   // Chip kurz
   assert.equal(e.els['av-banner'].className, 'av-banner show nodata');
   assert.equal(e.els['av-banner'].textContent, '⚠ T:avNoData');
   assert.ok(e.log.clears >= 2);
@@ -223,8 +224,16 @@ test('avClose räumt Marker, Spuren und Tiefflieger-Liste auf', () => {
 test('avConnecting existiert in allen fünf Sprachen', () => {
   assert.equal((html.match(/avConnecting: '/g) || []).length, 5);
   assert.equal((html.match(/avNoData: '/g) || []).length, 5);
+  assert.equal((html.match(/avNoDataShort: '/g) || []).length, 5);
 });
 
 test('Callsign in der Hauptansicht-Karte wird escaped', () => {
   assert.match(html, /\$\{escapeHtml\(cls\.ac\.callsign\) \|\| _t\('airUnknown'\)\}/);
+});
+
+test('avPositionStatus: Panel liegt unter dem sichtbaren Banner, Offset wird wieder entfernt', () => {
+  const els = { 'av-banner': { offsetTop: 36, offsetHeight: 45 }, 'av-map-status': { style: { top: '' } } };
+  const f = new Function('els', `const $ = id => els[id];\n${grab('avPositionStatus')}\nreturn avPositionStatus;`)(els);
+  f(); assert.equal(els['av-map-status'].style.top, '89px');
+  els['av-banner'].offsetHeight = 0; f(); assert.equal(els['av-map-status'].style.top, '');
 });

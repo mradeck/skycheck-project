@@ -1353,6 +1353,11 @@
       border-radius: 20px;
       font-weight: 700;
       white-space: nowrap;
+      flex-shrink: 1;
+      min-width: 0;
+      max-width: 55%;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .av-stat.watch {
@@ -3678,6 +3683,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m entfernt, Höhe nur ${alt} m!`,
         avWatch: '● Beobachte',
         avNoData: 'Keine Luftverkehrsdaten – Flugzeug-Alarm nicht aktiv',
+        avNoDataShort: 'Keine Daten',
         avConnecting: '… Verbinde',
         avLowAltHdr: '⚠ Tiefflieger (&lt;300 m)',
         zoneNoFly: 'Flugverbot/-beschränkung',
@@ -3873,6 +3879,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m away, altitude only ${alt} m!`,
         avWatch: '● Watching',
         avNoData: 'No air traffic data – aircraft alarm not active',
+        avNoDataShort: 'No data',
         avConnecting: '… Connecting',
         avLowAltHdr: '⚠ Low-altitude aircraft (&lt;300 m)',
         zoneNoFly: 'No-fly/restricted zone',
@@ -4068,6 +4075,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — à ${dist} m, altitude seulement ${alt} m !`,
         avWatch: '● Surveillance',
         avNoData: 'Aucune donnée de trafic aérien – alarme avion inactive',
+        avNoDataShort: 'Pas de données',
         avConnecting: '… Connexion',
         avLowAltHdr: '⚠ Aéronefs à basse altitude (&lt;300 m)',
         zoneNoFly: 'Zone interdite/à restrictions',
@@ -4263,6 +4271,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — a ${dist} m, altitud solo ${alt} m!`,
         avWatch: '● Observando',
         avNoData: 'Sin datos de tráfico aéreo – alarma de aeronaves inactiva',
+        avNoDataShort: 'Sin datos',
         avConnecting: '… Conectando',
         avLowAltHdr: '⚠ Aeronaves a baja altitud (&lt;300 m)',
         zoneNoFly: 'Zona prohibida/restringida',
@@ -4458,6 +4467,7 @@
         alarmMsg: (lbl, dist, alt) => `${lbl} — ${dist} m stąd, wysokość tylko ${alt} m!`,
         avWatch: '● Obserwacja',
         avNoData: 'Brak danych o ruchu lotniczym – alarm samolotów nieaktywny',
+        avNoDataShort: 'Brak danych',
         avConnecting: '… Łączenie',
         avLowAltHdr: '⚠ Statki powietrzne na małej wysokości (&lt;300 m)',
         zoneNoFly: 'Strefa zakazu/ograniczeń lotów',
@@ -5327,7 +5337,7 @@
     }
     function avRenderNoData() {
       $('av-stat').className = 'av-stat nodata';
-      $('av-stat').textContent = '⚠ ' + _t('avNoData');
+      $('av-stat').textContent = '⚠ ' + _t('avNoDataShort');   // Chip kurz, Banner mit vollem Satz
       $('av-banner').className = 'av-banner show nodata';
       $('av-banner').textContent = '⚠ ' + _t('avNoData');
     }
@@ -5337,6 +5347,20 @@
       const bn = $('av-banner');
       if (bn) { bn.className = 'av-banner'; bn.textContent = ''; }
     }
+    // Geozonen-Panel (#av-map-status) liegt über dem Banner (z-index 1004 > 1003) und würde ihn verdecken.
+    // Banner bricht auf schmalen Schirmen um → Offset aus der gemessenen Banner-Unterkante, nicht fest.
+    function avPositionStatus() {
+      const bn = $('av-banner'), st = $('av-map-status');
+      if (!bn || !st) return;
+      st.style.top = bn.offsetHeight > 0 ? (bn.offsetTop + bn.offsetHeight + 8) + 'px' : '';
+    }
+    (function initAvStatusLayout() {
+      const bn = $('av-banner');
+      if (!bn) return;
+      if (typeof ResizeObserver === 'function') new ResizeObserver(avPositionStatus).observe(bn);   // Ein-/Ausblenden und Umbruch
+      window.addEventListener('resize', avPositionStatus);
+      window.addEventListener('orientationchange', avPositionStatus);
+    })();
     // Sprachwechsel: Text des aktuellen Zustands neu setzen (Alarm-Text bleibt unberührt)
     function avRelang() {
       if (AV.state === 'nodata') avRenderNoData();
