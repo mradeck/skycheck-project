@@ -32,7 +32,7 @@ Weather, air traffic, METAR/TAF, Kp-index and geocoding are identical everywhere
 
 > All fourteen are the **same** deployment of `skycheck.html` from this repo, each served on its own Netlify site. Country detection: hostname (`skycheck-<xx>.netlify.app`) or the URL parameter `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Default: `de`. Each country variant also presets the **UI language**, a **capital-landmark search hint**, and **country-scoped address search**.
 
-📦 **Current version:** v26.10.118.4
+📦 **Current version:** v26.10.118.5
 
 Version format: `vYY.MM.major.subversion`, matching PointCloud Manager. The
 existing sequential SkyCheck release is the `major` component; feature
@@ -51,7 +51,7 @@ the app header.
 | **METAR / TAF** | Real-time aviation weather from nearby airports (NOAA Aviation Weather Center), including flight-category light VFR / MVFR / IFR / LIFR |
 | **Wind profile** | Extrapolation of wind speed by altitude (10 / 60 / 120 / 150 m AGL) via power law |
 | **Kp-index** | Current Kp from NOAA + GFZ Potsdam Hp30 bar chart (last 4 × 30 min + forecast) |
-| **Air traffic** | ADS-B real-time flight movements in the surroundings with altitude colours and radar icons (Airplanes.live) |
+| **Air traffic** | ADS-B real-time flight movements in the surroundings with altitude colours and radar icons (adsb.lol, fallback adsb.fi) |
 | **Aircraft alarm view** | Full-screen map with audible aircraft alarm: announces approaching aircraft within an adjustable radius |
 | **Airspace map** | Country-specific drone geo-zones (DE: DiPUL · FR/AT: ED-269 · CH: geo.admin.ch · ES: ENAIRE · DK/IE: ArcGIS) — no-fly zones, control zones, nature reserves; search radius switchable between 5 m and 100 m |
 | **48 h forecast** | Hourly weather forecast over 2 days (scrollable, drone-flight light per hour) |
@@ -79,7 +79,7 @@ the app header.
 | [NOAA Aviation Weather Center](https://aviationweather.gov/) | METAR / TAF | ❌ → Netlify Function `awc.js` |
 | [GFZ Potsdam](https://kp.gfz.de/) | Kp-index, Hp30 (30-min resolution) | ❌ → Netlify Function `gfz.js` |
 | [NOAA SWPC](https://www.swpc.noaa.gov/) | Kp-index fallback | ✅ |
-| [Airplanes.live](https://airplanes.live/) | ADS-B flight movements | ✅ |
+| [adsb.lol](https://adsb.lol/) / [adsb.fi](https://adsb.fi/) | ADS-B flight movements | ❌ → Netlify Function `adsb.js` |
 | [Photon (Komoot)](https://photon.komoot.io/) | Geocoding / location search | ✅ |
 | [Windy.com](https://www.windy.com/) | External link for detailed cloud view | — |
 | **Geo-zones 🇩🇪** [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Drone airspace zones (WMS + GetFeatureInfo) | ✅ |
@@ -264,6 +264,7 @@ netlify dev
 
 | Version | Change |
 |---|---|
+| v26.10.118.5 | ✈️ **Air traffic via adsb.lol/adsb.fi.** Airplanes.live closed its public API, so live air traffic was missing in all country variants and the app showed a misleading "rate limit" message. A new Netlify function `adsb` now queries adsb.lol and falls back to adsb.fi. The message now reads "Air traffic data currently unavailable". The aircraft alarm view polls every 5 seconds, shows "Connecting" until the first data arrives, and shows an orange banner "No air traffic data – aircraft alarm not active" after two failed polls instead of failing silently. Known limit: in the main view the low-flyer alarm still switches off silently during an outage; only the air traffic card shows it. |
 | v26.10.118.4 | 🇩🇪 **Height grid: an active temporary no-fly zone takes precedence; weekly DiPUL schema check.** Active temporary no-fly zones (U_NFZ, WFS `dipul:temporaere_betriebseinschraenkungen`) now appear as a separate red vector layer above the raster instead of coloured cells (small zones fell through the raster). The hover shows "Temporary no-fly zone · <name>" instead of a height. The list is queried for the whole CTR area and refreshed on every check without rebuilding the raster. If the fetch fails, known zones stay, and the legend and hover show "Temporary no-fly zones could not be checked". Known limit: `inaktive_temporaere_betriebseinschraenkungen` is WMS-only, so a row that the zone list treats as active is unknown to the hover and the vector layer. New: `.github/workflows/check-dipul-schema.yml` and `scripts/check-dipul-schema.mjs` (Wednesdays 06:23 UTC, no artifacts or cache) check fields, layers, values, the GetFeatureInfo path and the bbox order. A red run is the alarm (schema change, block or total outage); a partial outage is a warning only. |
 | v26.10.118.3 | 🇩🇪 **Temporary DiPUL no-fly zones (U_NFZ) now show red.** Temporary restrictions fell back to yellow in the status logic because the type was unknown there. An active U_NFZ is now red ("No-fly/restricted zone") and counts as No-Go. Validity follows the start and end times: a zone that is running or starts within 24 hours counts as active; a zone that has ended or starts later appears grey as "currently inactive", with its start or end time in UTC, and the limits of the inactive layer are shown. Unreadable times, or a set recurrence rule, count as active (safe default). No-Go reasons now come first in the banner and the map status. Airfield codes (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) deliberately stay yellow. |
 | v26.10.118.2 | 🇩🇪 **CTR heights after the DiPUL schema change.** DiPUL renamed its altitude-limit fields (`lower_limit_altitude`/`_alt_ref`/`_unit` etc. → `lower_limit_ft_msl`, `lower_limit_m_agl`, `upper_limit_ft_msl`, `upper_limit_fl_pa`), so SkyCheck no longer received an MSL limit: the height grid coloured only zone 1 and the maximum height in metres was missing for all airports. The new `dipulLimits()` reads both formats; the height formula is unchanged. Upper and lower limits in the zone panel show values again. |
@@ -355,4 +356,4 @@ SkyCheck does not track or store any user data. The app is purely a web applicat
 
 Germany, France, Austria, Switzerland, Spain, Denmark & Ireland · Operation in VLOS · No liability for completeness or accuracy of the displayed data. Using the app does not replace any required official authorisation. SkyCheck is an **orientation aid** — the legally required authorisation and final airspace clearance are issued via the competent national portals (e.g. **DFS Aviation Services** for DE, **Austro Control Dronespace** for AT, **skyguide** for CH).
 
-Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE, Trafikstyrelsen, EASA).
+Data sources are subject to their respective licences (DWD Open Data, GFZ CC BY 4.0, adsb.lol (ODbL), adsb.fi, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE, Trafikstyrelsen, EASA).

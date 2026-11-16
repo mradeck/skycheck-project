@@ -32,7 +32,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 
 > Wszystkie czternaście to **to samo** wdrożenie pliku `skycheck.html` z tego repozytorium, każde serwowane na własnej witrynie Netlify. Wykrywanie kraju: nazwa hosta (`skycheck-<xx>.netlify.app`) lub parametr URL `?country=de|fr|at|ch|es|dk|ie|nl|pt|lu|no|ee|se|be`. Domyślnie: `de`. Każdy wariant krajowy dodatkowo ustawia wstępnie **język interfejsu**, **wskazówkę wyszukiwania z punktem orientacyjnym stolicy** oraz **wyszukiwanie adresów ograniczone do danego kraju**.
 
-📦 **Aktualna wersja:** v26.10.118.4
+📦 **Aktualna wersja:** v26.10.118.5
 
 ---
 
@@ -45,7 +45,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | **METAR / TAF** | Dane meteorologiczne lotnicze w czasie rzeczywistym z pobliskich lotnisk (NOAA Aviation Weather Center), z kategorią lotu VFR / MVFR / IFR / LIFR |
 | **Profil wiatru** | Ekstrapolacja prędkości wiatru wg wysokości (10 / 60 / 120 / 150 m AGL) prawem potęgowym |
 | **Indeks Kp** | Aktualny Kp z NOAA + wykres słupkowy Hp30 z GFZ Potsdam (ostatnie 4 × 30 min + prognoza) |
-| **Ruch lotniczy** | Ruch ADS-B w czasie rzeczywistym w okolicy z kolorami wysokości i ikonami radaru (Airplanes.live) |
+| **Ruch lotniczy** | Ruch ADS-B w czasie rzeczywistym w okolicy z kolorami wysokości i ikonami radaru (adsb.lol, rezerwa adsb.fi) |
 | **Widok alarmu samolotów** | Pełnoekranowa mapa z dźwiękowym alarmem: sygnalizuje zbliżające się statki powietrzne w ustawianym promieniu |
 | **Mapa przestrzeni powietrznej** | Specyficzne dla kraju geostrefy dla dronów (DE: DiPUL · FR/AT: ED-269 · CH: geo.admin.ch · ES: ENAIRE · DK/IE: ArcGIS) — strefy zakazu lotów, strefy kontrolowane, rezerwaty przyrody; promień wyszukiwania przełączalny między 5 m a 100 m |
 | **Prognoza 48 h** | Prognoza godzinowa na 2 dni (przewijalna, sygnalizator lotu dla każdej godziny) |
@@ -73,7 +73,7 @@ Pogoda, ruch lotniczy, METAR/TAF, indeks Kp i geokodowanie są identyczne wszęd
 | [NOAA Aviation Weather Center](https://aviationweather.gov/) | METAR / TAF | ❌ → Netlify Function `awc.js` |
 | [GFZ Potsdam](https://kp.gfz.de/) | Indeks Kp, Hp30 (rozdzielczość 30 min) | ❌ → Netlify Function `gfz.js` |
 | [NOAA SWPC](https://www.swpc.noaa.gov/) | Zapasowy indeks Kp | ✅ |
-| [Airplanes.live](https://airplanes.live/) | Ruch ADS-B | ✅ |
+| [adsb.lol](https://adsb.lol/) / [adsb.fi](https://adsb.fi/) | Ruch ADS-B | ❌ → Netlify Function `adsb.js` |
 | [Photon (Komoot)](https://photon.komoot.io/) | Geokodowanie / wyszukiwanie miejsc | ✅ |
 | [Windy.com](https://www.windy.com/) | Link zewnętrzny do szczegółowego widoku zachmurzenia | — |
 | **Geostrefy 🇩🇪** [DiPUL / uas-betrieb.de](https://uas-betrieb.de/) | Strefy przestrzeni powietrznej dla dronów (WMS + GetFeatureInfo) | ✅ |
@@ -257,6 +257,7 @@ netlify dev
 
 | Wersja | Zmiana |
 |---|---|
+| v26.10.118.5 | ✈️ **Ruch lotniczy przez adsb.lol/adsb.fi.** airplanes.live zamknął swoje publiczne API, więc ruch lotniczy brakował we wszystkich wariantach krajowych, a aplikacja pokazywała mylący komunikat „rate limit”. Nowa funkcja Netlify `adsb` pyta teraz adsb.lol i w razie potrzeby przechodzi na adsb.fi. Komunikat brzmi teraz „Dane o ruchu lotniczym są obecnie niedostępne”. Widok alarmu samolotów odpytuje co 5 sekund, pokazuje „Łączenie”, aż pojawią się pierwsze dane, a po dwóch nieudanych zapytaniach z rzędu pomarańczowy baner „Brak danych o ruchu lotniczym – alarm samolotów nieaktywny” zamiast cichej awarii. Znana granica: w widoku głównym alarm niskich lotów nadal wyłącza się cicho przy braku danych; tylko karta „Ruch lotniczy” pokazuje awarię. |
 | v26.10.118.4 | 🇩🇪 **Siatka wysokości: aktywna tymczasowa strefa zakazu lotów ma pierwszeństwo; cotygodniowe sprawdzenie schematu DiPUL.** Aktywne tymczasowe strefy zakazu lotów (U_NFZ, WFS `dipul:temporaere_betriebseinschraenkungen`) są teraz osobną czerwoną warstwą wektorową nad rastrem, zamiast kolorować komórki (małe strefy wypadały między oczkami). Dymek po najechaniu pokazuje „Tymczasowa strefa zakazu lotów · <nazwa>” zamiast wysokości. Lista jest pobierana dla całego obszaru CTR i odświeżana przy każdym sprawdzeniu bez przebudowy rastra. Gdy pobieranie się nie powiedzie, znane strefy pozostają, a legenda i dymek pokazują „Nie sprawdzono tymczasowych stref zakazu”. Znane ograniczenie: `inaktive_temporaere_betriebseinschraenkungen` jest dostępna tylko przez WMS, więc wiersz, który lista stref uznaje za aktywny, jest nieznany dymkowi i warstwie wektorowej. Nowe: `.github/workflows/check-dipul-schema.yml` i `scripts/check-dipul-schema.mjs` (środy 06:23 UTC, bez artefaktów i cache) sprawdzają pola, warstwy, wartości, ścieżkę GetFeatureInfo i kolejność BBOX. Czerwony przebieg to alarm (zmiana schematu, blokada lub całkowita awaria); częściowa awaria to tylko ostrzeżenie. |
 | v26.10.118.3 | 🇩🇪 **Tymczasowe zakazy lotów DiPUL (U_NFZ) są wyświetlane na czerwono.** Tymczasowe ograniczenia były w logice statusu oznaczane na żółto, ponieważ ten typ był tam nieznany. Aktywna U_NFZ jest teraz czerwona i liczy się jako No-Go („Strefa zakazu/ograniczeń lotów”). Ważność zależy od godziny początku i końca: strefa trwająca lub rozpoczynająca się w ciągu 24 godzin jest aktywna; strefa zakończona lub rozpoczynająca się później jest szara i oznaczona jako „obecnie nieaktywna”, z godziną początku lub końca w UTC, a limity warstwy nieaktywnej są wyświetlane. Nieczytelne godziny lub ustawiona reguła powtarzania pozostają aktywne (bezpieczne ustawienie domyślne). Powody No-Go pojawiają się teraz na pierwszym miejscu w banerze i w statusie mapy. Kody lotnisk (`INT_APT`, `CIVIL`, `GLIDING`, `LIGHT_AIRCRAFT`, `OTHER`) celowo pozostają żółte. |
 | v26.10.118.2 | 🇩🇪 **Wysokości CTR po zmianie schematu DiPUL.** DiPUL zmienił nazwy pól granic wysokości (`lower_limit_altitude`/`_alt_ref`/`_unit` itd. → `lower_limit_ft_msl`, `lower_limit_m_agl`, `upper_limit_ft_msl`, `upper_limit_fl_pa`), przez co SkyCheck nie otrzymywał już granicy MSL: siatka wysokości kolorowała tylko strefę 1, a maksymalnej wysokości w metrach brakowało dla wszystkich lotnisk. Nowy `dipulLimits()` czyta oba formaty; wzór na wysokość bez zmian. Górna i dolna granica w panelu stref znów pokazują wartości. |
@@ -348,4 +349,4 @@ SkyCheck nie śledzi ani nie zapisuje żadnych danych użytkownika. Aplikacja to
 
 Niemcy, Francja, Austria, Szwajcaria, Hiszpania, Dania i Irlandia · Operacje w VLOS · Brak odpowiedzialności za kompletność lub poprawność wyświetlanych danych. Korzystanie z aplikacji nie zastępuje żadnego wymaganego oficjalnego zezwolenia. SkyCheck jest **pomocą orientacyjną** — prawnie wymagane zezwolenie i ostateczne zwolnienie przestrzeni powietrznej są wydawane przez właściwe krajowe portale (np. **DFS Aviation Services** dla DE, **Austro Control Dronespace** dla AT, **skyguide** dla CH).
 
-Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, Airplanes.live Fair Use, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE, Trafikstyrelsen, EASA).
+Źródła danych podlegają własnym licencjom (DWD Open Data, GFZ CC BY 4.0, adsb.lol (ODbL), adsb.fi, NOAA Public Domain, DiPUL, Austro Control, BAZL / swisstopo geo.admin.ch, ENAIRE, Trafikstyrelsen, EASA).
